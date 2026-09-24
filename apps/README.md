@@ -1,5 +1,5 @@
 # Applications
 
-本目录用于未来可独立部署或运行的应用，例如顾问 Web 工作台和后端 API。
+本目录包含本地香港 FSIE 聊天研究 Demo 与 FastAPI 服务。
 
-当前尚未创建应用工程。加入具体应用前，应先确认技术栈、认证方式、数据处理边界和部署环境。
+`api/main.py` 提供本地会话、对话与健康接口，`api/static/` 提供中文聊天页。运行 `make demo` 后打开 http://127.0.0.1:8000 。默认不调用模型、不依赖数据库；仅作受控 L0 研究演示。详见 `docs/implementation/CHAT_DEMO_RUNBOOK.md`。

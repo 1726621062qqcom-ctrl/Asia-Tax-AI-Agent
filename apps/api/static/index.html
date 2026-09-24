@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="香港 FSIE 境外股息研究对话：梳理公司事实，查询官方依据，比较有条件的合规路径。">
+  <title>Asia Tax · 香港税务研究</title>
+  <link rel="stylesheet" href="/static/app.css"><script src="/static/app.js" defer></script>
+</head>
+<body>
+<div class="workspace">
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Asia Tax 首页"><span class="brand-mark">A<span>·</span>T</span><span>ASIA TAX<small>税务研究助手</small></span></a>
+    <button id="new-chat" class="new-chat">＋ 新建对话</button>
+    <div class="sidebar-label">当前研究范围</div>
+    <div class="scope"><span class="scope-dot"></span>香港 · 境外股息<small>Foreign-sourced Income Exemption</small></div>
+    <div class="sidebar-label">从一个问题开始</div>
+    <nav class="examples" aria-label="示例问题">
+      <button data-prompt="香港 FSIE 对境外股息有哪些规定？请解释适用条件并给出官方依据。">查找适用条文 <span>↗</span></button>
+      <button data-prompt="假设我们是一家香港投资控股公司，持有境外子公司 60% 股份，计划收取现金股息。应该核实哪些条件才能判断香港税务处理？">分析一笔境外股息 <span>↗</span></button>
+      <button data-prompt="假设香港公司准备收取海外子公司的股息，有哪些有实际商业基础的合法税务筹划路径？请比较适用条件和限制。">比较合规安排 <span>↗</span></button>
+    </nav>
+    <div class="sidebar-bottom"><span class="badge">L0 · 内部研究</span><p>官方依据可追溯<br>候选分析待专业复核</p><button id="about-toggle" class="text-button" aria-expanded="false" aria-controls="about-detail">资料与运行状态 ↗</button><div id="about-detail" hidden></div></div>
+  </aside>
+  <main class="main">
+    <header class="topbar"><div><span class="eyebrow">香港税务研究</span><h1>从公司情况，到法律依据</h1></div><div id="mode" class="mode"><span></span>正在连接</div></header>
+    <div class="mobile-actions"><button id="mobile-new" class="text-button">＋ 新建对话</button><button id="facts-toggle" class="text-button" aria-expanded="false">查看公司事实</button></div>
+    <div class="conversation" id="conversation" aria-label="研究对话">
+      <section class="welcome" id="welcome">
+        <div class="welcome-label">RESEARCH CONVERSATION</div>
+        <h2>你的公司，正在遇到<br>什么税务问题？</h2>
+        <p>描述境外股息安排，或直接询问法律条文。<br>我会梳理条件、指出缺失信息，并附上官方资料。</p>
+        <div class="welcome-examples">
+          <button data-prompt="香港 FSIE 对境外股息有哪些规定？请解释适用条件并给出官方依据。"><span>01 / 查条文</span>境外股息有哪些豁免条件？<b>↗</b></button>
+          <button data-prompt="假设我们是一家香港投资控股公司，持有境外子公司 60% 股份，计划收取现金股息。应该核实哪些条件才能判断香港税务处理？"><span>02 / 讲情况</span>持有海外公司 60%，接下来查什么？<b>↗</b></button>
+          <button data-prompt="假设香港公司准备收取海外子公司的股息，有哪些有实际商业基础的合法税务筹划路径？请比较适用条件和限制。"><span>03 / 比较路径</span>有哪些合规安排可以考虑？<b>↗</b></button>
+        </div>
+      </section>
+      <div id="messages" role="log" aria-live="polite" aria-relevant="additions"></div>
+    </div>
+    <div class="composer-area">
+      <div id="status" class="status" role="status"></div>
+      <form id="chat-form" class="composer">
+        <label class="sr-only" for="message">描述公司情况或输入法律问题</label>
+        <textarea id="message" rows="2" maxlength="4000" placeholder="例如：假设香港公司将收到海外子公司的股息，需要先核实哪些条件？"></textarea>
+        <div class="composer-bottom"><span id="counter">Enter 发送 · Shift + Enter 换行</span><button id="send" type="submit" aria-label="发送消息">发送 <span>↑</span></button></div>
+      </form>
+      <label class="ack"><input type="checkbox" id="synthetic-ack">本次仅讨论一般法律问题或虚构案例，不输入真实客户、个人资料或密钥。</label>
+      <p class="footer-note">研究演示，不构成正式税务意见。<span id="coverage">正在读取资料版本…</span></p>
+    </div>
+  </main>
+  <aside class="facts-panel" id="facts-panel" aria-label="公司事实">
+    <div class="facts-heading"><span class="eyebrow">CASE CONTEXT</span><h2>对公司情况的理解</h2><p>候选事实来自你的描述。<br>可直接在对话中补充或更正。</p></div>
+    <div id="facts"><div class="empty-facts"><span>◎</span><p>等待你的公司描述</p><small>主体、持股、收取路径与时间<br>会随着对话逐步整理。</small></div></div>
+    <div class="source-key"><div><span class="key-dot"></span>用户描述 ≠ 文件核实</div><p>尚未说明的条件保持未知，不会自动补全。</p></div>
+  </aside>
+</div>
+<dialog id="clear-dialog"><h2>开始一段新对话？</h2><p>当前对话和公司事实将被清空。此 Demo 不保存历史档案。</p><div class="dialog-actions"><button id="cancel-clear">继续当前对话</button><button id="confirm-clear">新建对话</button></div></dialog>
+</body>
+</html>

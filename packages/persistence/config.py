@@ -14,6 +14,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     # Default points at the local docker-compose PostgreSQL.
     database_url: str = "postgresql+psycopg://fsie:fsie@localhost:5432/fsie_l0"
+    chat_enable_model: bool = False
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -1,0 +1,184 @@
+{
+  "$defs": {
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "paragraph": {
+          "title": "Paragraph",
+          "type": "string"
+        },
+        "quote": {
+          "minLength": 1,
+          "title": "Quote",
+          "type": "string"
+        }
+      },
+      "required": [
+        "paragraph",
+        "quote"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "Observation": {
+      "additionalProperties": false,
+      "properties": {
+        "predicate": {
+          "enum": [
+            "incorporation_place",
+            "business_activity",
+            "parent_of",
+            "wholly_owned_by",
+            "holding_pct",
+            "holding_since",
+            "enterprise_tax_rate_pct",
+            "dividend_withholding_rate_pct",
+            "distribution",
+            "event_date",
+            "same_day_as",
+            "redomiciled_to",
+            "operates_in",
+            "hk_presence",
+            "dividend_amount",
+            "dividend_currency",
+            "fair_value_amount",
+            "bank_account",
+            "profit_basis",
+            "tax_borne_by",
+            "valuation_basis"
+          ],
+          "title": "Predicate",
+          "type": "string"
+        },
+        "subject": {
+          "minLength": 1,
+          "title": "Subject",
+          "type": "string"
+        },
+        "object": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Object"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "status": {
+          "default": "stated",
+          "enum": [
+            "stated",
+            "not_disclosed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "event_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Event Id"
+        },
+        "asset": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Asset"
+        },
+        "time_precision": {
+          "anyOf": [
+            {
+              "enum": [
+                "year",
+                "month",
+                "day"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Time Precision"
+        },
+        "modality": {
+          "default": "unspecified",
+          "enum": [
+            "planned",
+            "completed",
+            "unspecified"
+          ],
+          "title": "Modality",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/Evidence"
+          },
+          "minItems": 1,
+          "title": "Evidence",
+          "type": "array"
+        }
+      },
+      "required": [
+        "predicate",
+        "subject",
+        "value",
+        "evidence"
+      ],
+      "title": "Observation",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "observations": {
+      "items": {
+        "$ref": "#/$defs/Observation"
+      },
+      "title": "Observations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "observations"
+  ],
+  "title": "GroundedFacts",
+  "type": "object"
+}

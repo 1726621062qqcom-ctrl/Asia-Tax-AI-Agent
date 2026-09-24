@@ -1,0 +1,389 @@
+{
+  "version": "0.1.0",
+  "review_date": "2026-09-21",
+  "review_method": "assistant_draft_user_assisted_review",
+  "review_record": "docs/project/2026-09-15-extraction-review-guide.md",
+  "scope": "17 reviewed claims, not exhaustive facts or tax gold labels; locator references are not verbatim evidence spans",
+  "cases": [
+    {
+      "case_number": 74,
+      "synthetic": false,
+      "model_input_authorized": false,
+      "professional_validation_status": "unverified",
+      "source_url": "https://www.ird.gov.hk/eng/ppr/advance74.htm",
+      "source_manifest_sha256": "fcdf9bb98bb552550b8d8e60c8e087cc14f15a28bfee9547b9c34a55af86ce41",
+      "annotations": [
+        {
+          "annotation_id": "74-1",
+          "claim_zh": "Applicant 在香港注册，主营投资控股",
+          "evidence": {
+            "source_id": "hk_ird_advance_74",
+            "locator": "2(a)",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "注册地不自动等于所有法律身份结论",
+          "structured_candidate": {
+            "entity": "Applicant",
+            "incorporation_place": "HK",
+            "principal_activity": "investment_holding"
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        },
+        {
+          "annotation_id": "74-2",
+          "claim_zh": "Applicant 持有 Company F 的 60% 股份",
+          "evidence": {
+            "source_id": "hk_ird_advance_74",
+            "locator": "2(b)",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "实体与持股方向不能反转",
+          "structured_candidate": {
+            "holder": "Applicant",
+            "investee": "Company F",
+            "holding_pct": 60
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        },
+        {
+          "annotation_id": "74-3",
+          "claim_zh": "持股从 1992 年开始，月日未披露",
+          "evidence": {
+            "source_id": "hk_ird_advance_74",
+            "locator": "2(b)",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "不补成 1992-01-01；不凭当前日期计算精确持股月数",
+          "structured_candidate": {
+            "holder": "Applicant",
+            "investee": "Company F",
+            "holding_since": {
+              "value": "1992",
+              "precision": "year"
+            }
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        },
+        {
+          "annotation_id": "74-4",
+          "claim_zh": "Jurisdiction F 的企业所得税率为 25%",
+          "evidence": {
+            "source_id": "hk_ird_advance_74",
+            "locator": "2(c)",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "标明税种和管辖区；不是预提税率",
+          "structured_candidate": {
+            "jurisdiction": "Jurisdiction F",
+            "tax_type": "enterprise_income_tax",
+            "rate_pct": 25
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        },
+        {
+          "annotation_id": "74-5",
+          "claim_zh": "Jurisdiction F 对非居民企业股息的预提税率为 10%",
+          "evidence": {
+            "source_id": "hk_ird_advance_74",
+            "locator": "2(c)",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "与 25% 分开记录",
+          "structured_candidate": {
+            "jurisdiction": "Jurisdiction F",
+            "tax_type": "dividend_withholding_tax",
+            "recipient_class": "non_resident_enterprise",
+            "rate_pct": 10
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        },
+        {
+          "annotation_id": "74-6",
+          "claim_zh": "Company F 计划将缴纳企业所得税后的部分利润作为股息派给 Applicant；Applicant 将承担 10% 预提税",
+          "evidence": {
+            "source_id": "hk_ird_advance_74",
+            "locator": "3(a)",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "计划事件不应误记为已付税/已收款",
+          "structured_candidate": {
+            "event_id": "E1",
+            "sender": "Company F",
+            "recipient": "Applicant",
+            "form": "dividend",
+            "profit_basis": "after_enterprise_income_tax",
+            "modality": "planned",
+            "withholding": {
+              "taxpayer": "Applicant",
+              "rate_pct": 10
+            }
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        },
+        {
+          "annotation_id": "74-7",
+          "claim_zh": "股息具体金额、币种、完整派息日期未披露",
+          "evidence": {
+            "source_id": "hk_ird_advance_74",
+            "locator": "2–3",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "保持未知，不从裁定日期推导",
+          "structured_candidate": {
+            "event_id": "E1",
+            "undisclosed": [
+              "dividend_amount",
+              "dividend_currency",
+              "full_distribution_date"
+            ]
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        },
+        {
+          "annotation_id": "74-8",
+          "claim_zh": "裁定日期 2023-11-07；适用课税年度 2023/24–2027/28",
+          "evidence": {
+            "source_id": "hk_ird_advance_74",
+            "locator": "5、7",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "只作来源元数据，不当作交易日期",
+          "structured_candidate": {
+            "metadata_only": true,
+            "ruling_issued": "2023-11-07",
+            "assessment_years": [
+              "2023/24",
+              "2024/25",
+              "2025/26",
+              "2026/27",
+              "2027/28"
+            ]
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        }
+      ]
+    },
+    {
+      "case_number": 75,
+      "synthetic": false,
+      "model_input_authorized": false,
+      "professional_validation_status": "unverified",
+      "source_url": "https://www.ird.gov.hk/eng/ppr/advance75.htm",
+      "source_manifest_sha256": "b9bec4f81643fc081cc8e2905838f128bbf524ce61f66847f070355bd9be8fe2",
+      "annotations": [
+        {
+          "annotation_id": "75-1",
+          "claim_zh": "Company P 是 Applicant 的直接母公司；S1 是 Applicant 全资子公司",
+          "evidence": {
+            "source_id": "hk_ird_advance_75",
+            "locator": "2(a)–(b)",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "P、Applicant、S1 必须是不同实体",
+          "structured_candidate": {
+            "relations": [
+              {
+                "subject": "Company P",
+                "relation": "immediate_parent_of",
+                "object": "Applicant"
+              },
+              {
+                "subject": "Company S1",
+                "relation": "wholly_owned_by",
+                "object": "Applicant"
+              }
+            ]
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        },
+        {
+          "annotation_id": "75-2",
+          "claim_zh": "重组前 S1 持有 S2 的 100% 股份",
+          "evidence": {
+            "source_id": "hk_ird_advance_75",
+            "locator": "2(b)",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "这是重组前状态，不默认是重组后状态",
+          "structured_candidate": {
+            "holder": "Company S1",
+            "investee": "Company S2",
+            "holding_pct": 100,
+            "temporal_scope": "before_restructuring"
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        },
+        {
+          "annotation_id": "75-3",
+          "claim_zh": "S2 在 Jurisdiction A 注册，相关时点已迁册至 B 并在那里经营",
+          "evidence": {
+            "source_id": "hk_ird_advance_75",
+            "locator": "2(c)",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "初始注册地与迁册后所在地分别保留",
+          "structured_candidate": {
+            "entity": "Company S2",
+            "original_incorporation_place": "Jurisdiction A",
+            "redomiciled_to": "Jurisdiction B",
+            "operates_in": "Jurisdiction B"
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        },
+        {
+          "annotation_id": "75-4",
+          "claim_zh": "S2 在香港没有机构、业务或资产",
+          "evidence": {
+            "source_id": "hk_ird_advance_75",
+            "locator": "2(c)",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "不把这个描述套到其他实体",
+          "structured_candidate": {
+            "entity": "Company S2",
+            "jurisdiction": "HK",
+            "establishments": false,
+            "operations": false,
+            "assets": false
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        },
+        {
+          "annotation_id": "75-5",
+          "claim_zh": "S1 将所持 S2 股份按公允价值作为实物股息分派给 Applicant",
+          "evidence": {
+            "source_id": "hk_ird_advance_75",
+            "locator": "3(a)",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "派息人 S1，接收人 Applicant，标的为 S2 股份",
+          "structured_candidate": {
+            "event_id": "E1",
+            "sender": "Company S1",
+            "recipient": "Applicant",
+            "asset_issuer": "Company S2",
+            "form": "in_kind",
+            "valuation_basis": "fair_value"
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        },
+        {
+          "annotation_id": "75-6",
+          "claim_zh": "同日 Applicant 将这些股份作为实物股息分派给其唯一股东 P",
+          "evidence": {
+            "source_id": "hk_ird_advance_75",
+            "locator": "3(b)",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "第二笔交易方向 Applicant → P；标的仍为 S2 股份",
+          "structured_candidate": {
+            "event_id": "E2",
+            "sender": "Applicant",
+            "recipient": "Company P",
+            "asset_issuer": "Company S2",
+            "form": "in_kind",
+            "same_day_as": "E1",
+            "recipient_relationship": "sole_shareholder"
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        },
+        {
+          "annotation_id": "75-7",
+          "claim_zh": "发生于 2024 年某日，具体月日未披露",
+          "evidence": {
+            "source_id": "hk_ird_advance_75",
+            "locator": "3(a)",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "不补成裁定日期；保留同日关系",
+          "structured_candidate": {
+            "event_ids": [
+              "E1",
+              "E2"
+            ],
+            "event_date": {
+              "value": "2024",
+              "precision": "year"
+            },
+            "same_day": true
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        },
+        {
+          "annotation_id": "75-8",
+          "claim_zh": "股息是股份分派；金额、公允价值具体数值及银行账户未披露",
+          "evidence": {
+            "source_id": "hk_ird_advance_75",
+            "locator": "2–3",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "不编造现金汇款；未提及账户不等于证明完全没有账户",
+          "structured_candidate": {
+            "event_ids": [
+              "E1",
+              "E2"
+            ],
+            "undisclosed": [
+              "dividend_amount",
+              "fair_value_amount",
+              "bank_account"
+            ]
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        },
+        {
+          "annotation_id": "75-9",
+          "claim_zh": "裁定日期 2024-09-30；适用课税年度 2024/25",
+          "evidence": {
+            "source_id": "hk_ird_advance_75",
+            "locator": "5、7",
+            "kind": "paragraph_reference",
+            "quote": null
+          },
+          "review_status": "user_assisted_confirmed",
+          "interpretation_guard": "不等于业务发生日期",
+          "structured_candidate": {
+            "metadata_only": true,
+            "ruling_issued": "2024-09-30",
+            "assessment_years": [
+              "2024/25"
+            ]
+          },
+          "structured_candidate_status": "engineering_transcription_not_separately_user_reviewed"
+        }
+      ]
+    }
+  ]
+}

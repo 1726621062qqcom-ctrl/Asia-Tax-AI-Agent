@@ -18,6 +18,10 @@ help:
 	@echo "make intake-demo     run the 3 NL fixtures end-to-end (needs model adapter)"
 	@echo "make knowledge-build fetch+snapshot+segment official sources into legal units"
 	@echo "make run-api         start the FastAPI shell (uvicorn)"
+	@echo "make extraction-check validate the 12 synthetic evidence-bearing extraction fixtures"
+	@echo "make extraction-eval  evaluate those fixtures with the configured model (no DB)"
+	@echo "make demo            start the local chat demo at http://127.0.0.1:8000 (no DB)"
+	@echo "make demo-check      run offline consultation behavior scenarios"
 
 venv:
 	python3 -m venv .venv
@@ -80,3 +84,17 @@ intake-demo:
 
 run-api:
 	.venv/bin/uvicorn apps.api.main:app --reload
+
+.PHONY: extraction-check extraction-eval
+extraction-check:
+	.venv/bin/python -m packages.intake.benchmark
+
+extraction-eval:
+	.venv/bin/python -m packages.intake.benchmark --run-model
+
+.PHONY: demo demo-check
+demo:
+	.venv/bin/uvicorn apps.api.main:app --host 127.0.0.1 --port 8000
+
+demo-check:
+	.venv/bin/python scripts/check_chat_demo.py

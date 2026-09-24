@@ -41,3 +41,9 @@ jobs:
 
       - name: Validate FSIE knowledge package
         run: python scripts/validate_fsie_package.py
+
+      - name: Validate synthetic extraction benchmark (no model calls)
+        run: python -m packages.intake.benchmark
+
+      - name: Check local consultation scenarios (no model calls)
+        run: python scripts/check_chat_demo.py

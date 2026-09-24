@@ -1,0 +1,624 @@
+{
+  "version": "0.1.0",
+  "status": "frozen_engineering_expectations",
+  "professional_validation_status": "unverified",
+  "description": "12 authored synthetic extraction fixtures; not tax gold cases. Public ruling outcomes are excluded.",
+  "cases": [
+    {
+      "case_id": "SYN-RATE-01",
+      "synthetic": true,
+      "coverage": [
+        "tax_rate_variation"
+      ],
+      "paragraphs": {
+        "P1": "Jurisdiction Z has an enterprise income tax rate of 23% and a dividend withholding tax rate of 8% for non-resident companies."
+      },
+      "expected": {
+        "observations": [
+          {
+            "predicate": "enterprise_tax_rate_pct",
+            "subject": "Jurisdiction Z",
+            "value": 23,
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "Jurisdiction Z has an enterprise income tax rate of 23% and a dividend withholding tax rate of 8% for non-resident companies."
+              }
+            ]
+          },
+          {
+            "predicate": "dividend_withholding_rate_pct",
+            "subject": "Jurisdiction Z",
+            "value": 8,
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "Jurisdiction Z has an enterprise income tax rate of 23% and a dividend withholding tax rate of 8% for non-resident companies."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "SYN-RATE-02",
+      "synthetic": true,
+      "coverage": [
+        "tax_rate_swap"
+      ],
+      "paragraphs": {
+        "P1": "Jurisdiction Z has an enterprise income tax rate of 8% and a dividend withholding tax rate of 23% for non-resident companies."
+      },
+      "expected": {
+        "observations": [
+          {
+            "predicate": "enterprise_tax_rate_pct",
+            "subject": "Jurisdiction Z",
+            "value": 8,
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "Jurisdiction Z has an enterprise income tax rate of 8% and a dividend withholding tax rate of 23% for non-resident companies."
+              }
+            ]
+          },
+          {
+            "predicate": "dividend_withholding_rate_pct",
+            "subject": "Jurisdiction Z",
+            "value": 23,
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "Jurisdiction Z has an enterprise income tax rate of 8% and a dividend withholding tax rate of 23% for non-resident companies."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "SYN-RATE-03",
+      "synthetic": true,
+      "coverage": [
+        "tax_rate_variation"
+      ],
+      "paragraphs": {
+        "P1": "Jurisdiction Z has an enterprise income tax rate of 17% and a dividend withholding tax rate of 0% for non-resident companies."
+      },
+      "expected": {
+        "observations": [
+          {
+            "predicate": "enterprise_tax_rate_pct",
+            "subject": "Jurisdiction Z",
+            "value": 17,
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "Jurisdiction Z has an enterprise income tax rate of 17% and a dividend withholding tax rate of 0% for non-resident companies."
+              }
+            ]
+          },
+          {
+            "predicate": "dividend_withholding_rate_pct",
+            "subject": "Jurisdiction Z",
+            "value": 0,
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "Jurisdiction Z has an enterprise income tax rate of 17% and a dividend withholding tax rate of 0% for non-resident companies."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "SYN-RATE-04",
+      "synthetic": true,
+      "coverage": [
+        "missing_rate"
+      ],
+      "paragraphs": {
+        "P1": "Jurisdiction Z has an enterprise income tax rate of 23%. The dividend withholding tax rate is not disclosed."
+      },
+      "expected": {
+        "observations": [
+          {
+            "predicate": "enterprise_tax_rate_pct",
+            "subject": "Jurisdiction Z",
+            "value": 23,
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "Jurisdiction Z has an enterprise income tax rate of 23%. The dividend withholding tax rate is not disclosed."
+              }
+            ]
+          },
+          {
+            "predicate": "dividend_withholding_rate_pct",
+            "subject": "Jurisdiction Z",
+            "value": null,
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "Jurisdiction Z has an enterprise income tax rate of 23%. The dividend withholding tax rate is not disclosed."
+              }
+            ],
+            "status": "not_disclosed"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "SYN-HOLD-01",
+      "synthetic": true,
+      "coverage": [
+        "entity_direction",
+        "year_precision"
+      ],
+      "paragraphs": {
+        "P1": "Orchid has held 67% of Maple since 2001; no month or day is specified."
+      },
+      "expected": {
+        "observations": [
+          {
+            "predicate": "holding_pct",
+            "subject": "Orchid",
+            "value": 67,
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "Orchid has held 67% of Maple since 2001; no month or day is specified."
+              }
+            ],
+            "object": "Maple"
+          },
+          {
+            "predicate": "holding_since",
+            "subject": "Orchid",
+            "value": "2001",
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "Orchid has held 67% of Maple since 2001; no month or day is specified."
+              }
+            ],
+            "object": "Maple",
+            "time_precision": "year"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "SYN-HOLD-02",
+      "synthetic": true,
+      "coverage": [
+        "entity_direction",
+        "year_precision"
+      ],
+      "paragraphs": {
+        "P1": "Maple has held 67% of Orchid since 2001; no month or day is specified."
+      },
+      "expected": {
+        "observations": [
+          {
+            "predicate": "holding_pct",
+            "subject": "Maple",
+            "value": 67,
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "Maple has held 67% of Orchid since 2001; no month or day is specified."
+              }
+            ],
+            "object": "Orchid"
+          },
+          {
+            "predicate": "holding_since",
+            "subject": "Maple",
+            "value": "2001",
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "Maple has held 67% of Orchid since 2001; no month or day is specified."
+              }
+            ],
+            "object": "Orchid",
+            "time_precision": "year"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "SYN-HOLD-03",
+      "synthetic": true,
+      "coverage": [
+        "entity_direction",
+        "year_precision"
+      ],
+      "paragraphs": {
+        "P1": "Cedar has held 42% of Birch since 1998; no month or day is specified."
+      },
+      "expected": {
+        "observations": [
+          {
+            "predicate": "holding_pct",
+            "subject": "Cedar",
+            "value": 42,
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "Cedar has held 42% of Birch since 1998; no month or day is specified."
+              }
+            ],
+            "object": "Birch"
+          },
+          {
+            "predicate": "holding_since",
+            "subject": "Cedar",
+            "value": "1998",
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "Cedar has held 42% of Birch since 1998; no month or day is specified."
+              }
+            ],
+            "object": "Birch",
+            "time_precision": "year"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "SYN-EVENT-01",
+      "synthetic": true,
+      "coverage": [
+        "in_kind",
+        "direction",
+        "event_modality"
+      ],
+      "paragraphs": {
+        "P1": "On a day in 2025, Orchid distributed shares of Birch to Maple as an in-kind dividend.",
+        "P2": "On that same day, Maple distributed those shares of Birch to Cedar as an in-kind dividend."
+      },
+      "expected": {
+        "observations": [
+          {
+            "predicate": "distribution",
+            "subject": "Orchid",
+            "value": "in_kind",
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "On a day in 2025, Orchid distributed shares of Birch to Maple as an in-kind dividend."
+              }
+            ],
+            "object": "Maple",
+            "event_id": "E1",
+            "asset": "Birch",
+            "modality": "completed"
+          },
+          {
+            "predicate": "event_date",
+            "subject": "E1",
+            "value": "2025",
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "On a day in 2025, Orchid distributed shares of Birch to Maple as an in-kind dividend."
+              }
+            ],
+            "time_precision": "year",
+            "modality": "completed"
+          },
+          {
+            "predicate": "distribution",
+            "subject": "Maple",
+            "value": "in_kind",
+            "evidence": [
+              {
+                "paragraph": "P2",
+                "quote": "On that same day, Maple distributed those shares of Birch to Cedar as an in-kind dividend."
+              }
+            ],
+            "object": "Cedar",
+            "event_id": "E2",
+            "asset": "Birch",
+            "modality": "completed"
+          },
+          {
+            "predicate": "same_day_as",
+            "subject": "E2",
+            "value": true,
+            "evidence": [
+              {
+                "paragraph": "P2",
+                "quote": "On that same day, Maple distributed those shares of Birch to Cedar as an in-kind dividend."
+              }
+            ],
+            "object": "E1"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "SYN-EVENT-02",
+      "synthetic": true,
+      "coverage": [
+        "in_kind",
+        "direction",
+        "event_modality"
+      ],
+      "paragraphs": {
+        "P1": "On a day in 2025, Cedar distributed shares of Birch to Maple as an in-kind dividend.",
+        "P2": "On that same day, Maple distributed those shares of Birch to Orchid as an in-kind dividend."
+      },
+      "expected": {
+        "observations": [
+          {
+            "predicate": "distribution",
+            "subject": "Cedar",
+            "value": "in_kind",
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "On a day in 2025, Cedar distributed shares of Birch to Maple as an in-kind dividend."
+              }
+            ],
+            "object": "Maple",
+            "event_id": "E1",
+            "asset": "Birch",
+            "modality": "completed"
+          },
+          {
+            "predicate": "event_date",
+            "subject": "E1",
+            "value": "2025",
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "On a day in 2025, Cedar distributed shares of Birch to Maple as an in-kind dividend."
+              }
+            ],
+            "time_precision": "year",
+            "modality": "completed"
+          },
+          {
+            "predicate": "distribution",
+            "subject": "Maple",
+            "value": "in_kind",
+            "evidence": [
+              {
+                "paragraph": "P2",
+                "quote": "On that same day, Maple distributed those shares of Birch to Orchid as an in-kind dividend."
+              }
+            ],
+            "object": "Orchid",
+            "event_id": "E2",
+            "asset": "Birch",
+            "modality": "completed"
+          },
+          {
+            "predicate": "same_day_as",
+            "subject": "E2",
+            "value": true,
+            "evidence": [
+              {
+                "paragraph": "P2",
+                "quote": "On that same day, Maple distributed those shares of Birch to Orchid as an in-kind dividend."
+              }
+            ],
+            "object": "E1"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "SYN-EVENT-03",
+      "synthetic": true,
+      "coverage": [
+        "in_kind",
+        "direction",
+        "paragraph_order"
+      ],
+      "paragraphs": {
+        "P2": "On that same day, Maple distributed those shares of Birch to Cedar as an in-kind dividend.",
+        "P1": "On a day in 2025, Orchid distributed shares of Birch to Maple as an in-kind dividend."
+      },
+      "expected": {
+        "observations": [
+          {
+            "predicate": "distribution",
+            "subject": "Orchid",
+            "value": "in_kind",
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "On a day in 2025, Orchid distributed shares of Birch to Maple as an in-kind dividend."
+              }
+            ],
+            "object": "Maple",
+            "event_id": "E1",
+            "asset": "Birch",
+            "modality": "completed"
+          },
+          {
+            "predicate": "event_date",
+            "subject": "E1",
+            "value": "2025",
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "On a day in 2025, Orchid distributed shares of Birch to Maple as an in-kind dividend."
+              }
+            ],
+            "time_precision": "year",
+            "modality": "completed"
+          },
+          {
+            "predicate": "distribution",
+            "subject": "Maple",
+            "value": "in_kind",
+            "evidence": [
+              {
+                "paragraph": "P2",
+                "quote": "On that same day, Maple distributed those shares of Birch to Cedar as an in-kind dividend."
+              }
+            ],
+            "object": "Cedar",
+            "event_id": "E2",
+            "asset": "Birch",
+            "modality": "completed"
+          },
+          {
+            "predicate": "same_day_as",
+            "subject": "E2",
+            "value": true,
+            "evidence": [
+              {
+                "paragraph": "P2",
+                "quote": "On that same day, Maple distributed those shares of Birch to Cedar as an in-kind dividend."
+              }
+            ],
+            "object": "E1"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "SYN-EVENT-04",
+      "synthetic": true,
+      "coverage": [
+        "in_kind",
+        "direction",
+        "event_modality"
+      ],
+      "paragraphs": {
+        "P1": "On a day in 2025, Orchid plans to distribute shares of Birch to Maple as an in-kind dividend.",
+        "P2": "On that same day, Maple plans to distribute those shares of Birch to Cedar as an in-kind dividend."
+      },
+      "expected": {
+        "observations": [
+          {
+            "predicate": "distribution",
+            "subject": "Orchid",
+            "value": "in_kind",
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "On a day in 2025, Orchid plans to distribute shares of Birch to Maple as an in-kind dividend."
+              }
+            ],
+            "object": "Maple",
+            "event_id": "E1",
+            "asset": "Birch",
+            "modality": "planned"
+          },
+          {
+            "predicate": "event_date",
+            "subject": "E1",
+            "value": "2025",
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "On a day in 2025, Orchid plans to distribute shares of Birch to Maple as an in-kind dividend."
+              }
+            ],
+            "time_precision": "year",
+            "modality": "planned"
+          },
+          {
+            "predicate": "distribution",
+            "subject": "Maple",
+            "value": "in_kind",
+            "evidence": [
+              {
+                "paragraph": "P2",
+                "quote": "On that same day, Maple plans to distribute those shares of Birch to Cedar as an in-kind dividend."
+              }
+            ],
+            "object": "Cedar",
+            "event_id": "E2",
+            "asset": "Birch",
+            "modality": "planned"
+          },
+          {
+            "predicate": "same_day_as",
+            "subject": "E2",
+            "value": true,
+            "evidence": [
+              {
+                "paragraph": "P2",
+                "quote": "On that same day, Maple plans to distribute those shares of Birch to Cedar as an in-kind dividend."
+              }
+            ],
+            "object": "E1"
+          }
+        ]
+      }
+    },
+    {
+      "case_id": "SYN-MISSING-01",
+      "synthetic": true,
+      "coverage": [
+        "missing_values",
+        "no_invented_cash"
+      ],
+      "paragraphs": {
+        "P1": "The dividend amount, currency, fair value amount and bank account are not disclosed for Orchid."
+      },
+      "expected": {
+        "observations": [
+          {
+            "predicate": "dividend_amount",
+            "subject": "Orchid",
+            "value": null,
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "The dividend amount, currency, fair value amount and bank account are not disclosed for Orchid."
+              }
+            ],
+            "status": "not_disclosed"
+          },
+          {
+            "predicate": "dividend_currency",
+            "subject": "Orchid",
+            "value": null,
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "The dividend amount, currency, fair value amount and bank account are not disclosed for Orchid."
+              }
+            ],
+            "status": "not_disclosed"
+          },
+          {
+            "predicate": "fair_value_amount",
+            "subject": "Orchid",
+            "value": null,
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "The dividend amount, currency, fair value amount and bank account are not disclosed for Orchid."
+              }
+            ],
+            "status": "not_disclosed"
+          },
+          {
+            "predicate": "bank_account",
+            "subject": "Orchid",
+            "value": null,
+            "evidence": [
+              {
+                "paragraph": "P1",
+                "quote": "The dividend amount, currency, fair value amount and bank account are not disclosed for Orchid."
+              }
+            ],
+            "status": "not_disclosed"
+          }
+        ]
+      }
+    }
+  ]
+}

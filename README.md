@@ -14,6 +14,10 @@
 
 ## 核心文档
 
+- [Project Framework — English](docs/architecture/PROJECT_FRAMEWORK.md)：当前项目框架图，区分已实现链路与待接通部分。
+
+- [本地聊天 Demo 运行说明](docs/implementation/CHAT_DEMO_RUNBOOK.md)：运行 `make demo`，打开 `http://127.0.0.1:8000`。支持香港 FSIE 研究问答、候选事实更正、官方引用和条件化筹划路径；无模型配置时明确使用本地资料模式，不需要 PostgreSQL。
+
 - [产品需求文档](docs/product/PRD.md)
 - [技术路线图](docs/architecture/TECHNICAL_ROADMAP.md)
 - [2026 项目计划](docs/project/PROJECT_PLAN_2026.md)
@@ -25,14 +29,14 @@
 | 目录 | 当前用途 |
 |---|---|
 | `docs/` | 产品、架构、项目计划、审查和设计记录 |
-| `apps/` | 未来可部署应用的边界说明 |
-| `packages/` | 未来规则、检索、评测和共享模块的边界说明 |
+| `apps/` | 本地聊天工作台与 FastAPI 服务 |
+| `packages/` | 事实抽取、资料检索、咨询编排、规则、报告和持久化模块 |
 | `knowledge/` | 可公开并允许版本管理的资料清单、标注定义和规则元数据 |
-| `tests/` | 未来自动化测试和案例评测约定 |
-| `scripts/` | 未来可重复执行的工程和资料处理脚本 |
-| `infrastructure/` | 未来部署、数据库和环境配置边界 |
+| `tests/` | 自动化测试、合成事实抽取及咨询行为评测 |
+| `scripts/` | 知识包校验、语料整理和离线演示检查 |
+| `infrastructure/` | 本地 PostgreSQL 配置 |
 
-当前不会为了填充目录而创建不可运行的代码。每个未来代码目录先通过 README 说明职责，实际工程将在相应设计和实施计划确认后加入。
+聊天 Demo 可独立运行；原有命令行规则评测与数据库链路继续保留。聊天输出仍为未经专业验证的研究内容，且不代表原有税务规则已扩展为完整咨询系统。
 
 ## 知识与数据安全
 
