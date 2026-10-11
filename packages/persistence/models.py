@@ -371,7 +371,7 @@ class Source(Base, TimestampMixin):
     source_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
     url: Mapped[str] = mapped_column(String(1024), nullable=False)
     structured_data_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
-    jurisdiction: Mapped[str] = mapped_column(String(8), nullable=False, server_default="HK")
+    jurisdiction: Mapped[str] = mapped_column(String(8), nullable=False, server_default="HK", index=True)
     language: Mapped[str] = mapped_column(String(8), nullable=False, server_default="en")
     topic_tags: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     publication_date: Mapped[date | None] = mapped_column(Date, nullable=True)

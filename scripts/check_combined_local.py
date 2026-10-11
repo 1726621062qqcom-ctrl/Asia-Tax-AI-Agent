@@ -1,12 +1,8 @@
 """Real loopback C HTTP + real Li + temporary case SQLite; no model substitute claims."""
 import json
-import os
 from pathlib import Path
-import socket
-import subprocess
 import sys
 from tempfile import TemporaryDirectory
-from time import monotonic, sleep
 from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -14,34 +10,19 @@ sys.path.insert(0, str(ROOT))
 
 
 def main():
-    import httpx
+    from scripts.combined_runtime import knowledge_server
     from packages.chat.service import ChatService
     from packages.chat.store import ChatStore
-    from packages.domain_bridge.bridge import release_path, verify_release
     from packages.agent.providers import CKnowledgeProvider, RoutedKnowledgeProvider, LegacyKnowledgeProvider
     from packages.agent.review import report_hash
-    verify_release(release_path())
-    with socket.socket() as sock:
-        sock.bind(('127.0.0.1', 0)); port = sock.getsockname()[1]
-    env = dict(os.environ); env['FSIE_AGENT_C_TOKEN'] = ''
-    process = subprocess.Popen([sys.executable, '-m', 'uvicorn', 'apps.knowledge_api.main:app', '--host',
-                                '127.0.0.1', '--port', str(port), '--log-level', 'error'],
-                               cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     results = {'database': 'isolated_sqlite', 'model': 'not_called', 'knowledge_transport': 'real_loopback_http', 'checks': {}}
-    try:
-        start = monotonic()
-        while True:
-            try:
-                if httpx.get(f'http://127.0.0.1:{port}/health', timeout=2).json().get('knowledge_ready'): break
-            except httpx.HTTPError: pass
-            if process.poll() is not None or monotonic() - start > 15: raise RuntimeError('knowledge_server_unavailable')
-            sleep(.1)
+    with knowledge_server() as (url, token):
         with TemporaryDirectory(prefix='combined-http-') as directory:
             store = ChatStore('sqlite:///' + str(Path(directory) / 'case.sqlite'))
             try:
                 # Synthetic ruling reader validates explicit source routing only;
                 # it does not establish availability of the cloud ruling corpus.
-                provider = RoutedKnowledgeProvider(CKnowledgeProvider(f'http://127.0.0.1:{port}'),
+                provider = RoutedKnowledgeProvider(CKnowledgeProvider(url, token),
                                                     LegacyKnowledgeProvider(lambda _: {'status': 'no_matching_units', 'passages': []}))
                 service = ChatService(store, provider=provider); owner = 'user:http-smoke'
                 doc = store.create(owner)
@@ -64,10 +45,6 @@ def main():
                 results['checks']['reload'] = store.get(owner, doc['id'])['revision'] == doc['revision']
                 results['status'] = 'passed' if results['checks']['report_frozen'] and results['checks']['fsie_locators'] == 21 and results['checks']['reload'] else 'failed'
             finally: store.engine.dispose()
-    finally:
-        process.terminate()
-        try: process.wait(timeout=5)
-        except subprocess.TimeoutExpired: process.kill(); process.wait()
     print(json.dumps(results, ensure_ascii=False))
     return 0 if results['status'] == 'passed' else 1
 

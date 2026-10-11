@@ -62,7 +62,7 @@ flowchart TD
 | `apps/web/src/components/StructurePanel.tsx`、`DomainResult.tsx` | 表单、题目、计算结果、研究稿下载 |
 | `tests/integration/fixtures/holding.synthetic.json` | 可分享的 CNY 合成样例 |
 | `tests/integration/`、`apps/web/tests/structure.spec.ts` | 自动联调回归与浏览器测试 |
-| `scripts/install_li_release.py`、`check_combined_live.py` | 固定依赖安装、真实模型/数据库复测 |
+| `scripts/install_li_release.py`、`check_combined_live.py`、`check_postgres_acceptance.py` | 固定依赖安装、真实模型/数据库复测、一次性 PostgreSQL 全套验收 |
 | `docs/implementation/COMBINED_INTEGRATION_ACCEPTANCE.md` | 本次实测结果、局限和后续责任人 |
 
 ## 4. 新组员安装
@@ -161,9 +161,25 @@ python scripts/check_combined_local.py
 python scripts/check_combined_live.py --env-file .env --output data/combined-live-result.json
 ```
 
-数据库未就绪时，可加 `--model-only` 单独测两轮模型与 Li，此时输出明确标识 SQLite，不能算 PostgreSQL 通过。macOS Python 缺省 CA 文件时，可先安装 `truststore` 并加 `--system-trust` 使用系统已信任证书；始终保留 HTTPS 校验。`401/invalid_api_key` 需配置负责人在本地更新有效密钥。
+数据库未就绪时，可加 `--model-only` 单独测两轮模型与 Li，此时输出明确标识 SQLite，不能算 PostgreSQL 通过。模型未就绪时，可加 `--database-only` 测真实 PostgreSQL、真实 C HTTP、Li 及裁定回读，输出明确标识模型 `not_called`。两种单项模式互斥。配置分开存放时，用 `--model-env-file` 指定另一份本地模型配置，数据库仍从 `--env-file` 读取。
+
+macOS Python 缺省 CA 文件时，可先安装 `truststore` 并加 `--system-trust` 使用系统已信任证书；始终保留 HTTPS 校验。`401/invalid_api_key` 需配置负责人在本地更新有效密钥。
 
 脚本在指定 PostgreSQL 新建随机测试 schema，测试案件/恢复/隔离/报告，结束清理该 schema；原公共知识表仅读取。运行账号必须能建 schema。输出不包含连接串/密钥，包含真实模型命中的字段、人工补录步骤后的结果、法规/裁定覆盖数和状态。**它会调用配置的模型 API，可能消耗用量。**模型识别缺字段时，脚本单独记录人工确认的合成样例补录，不把补录算成模型准确率。
+
+数据库完整验收另有一个入口：
+
+```sh
+python scripts/check_postgres_acceptance.py --env-file .env.integration --system-trust
+```
+
+先把专用 PostgreSQL 连接写入本地 `.env.integration` 的 `FSIE_DATABASE_URL`。服务器需安装 pgvector，账号需能创建数据库。没有服务器时，可用仓库已有的 `infrastructure/postgres/docker-compose.yml` 启动本地环境。`--system-trust` 仅在安装了 `truststore` 时使用，其余机器可以省略。
+
+这个脚本新建随机数据库，执行迁移、规则包导入、官方资料构建、`tests/persistence` 和真实 HTTP/Li 合并验收，最后删除自己创建的库；不会迁移或清空连接配置中原有的数据库。资料快照保存在忽略目录，网页与清单的哈希差异会记录下来。模型测试明确跳过，单独补测。输出和脱敏子步骤日志默认在 `data/` 下。
+
+2026-10-11 已用 PostgreSQL 17.11 / pgvector 0.8.7 跑通：持久化检查 14 项通过、2 项模型检查跳过；10 份官方资料解析出 697 个单元；真实 HTTP 合并报告取得 21 个法规定位和 7 段裁定。脱敏结果见 [PostgreSQL 验收结果](docs/implementation/COMBINED_POSTGRES_RESULT_2026_10_11.json)。本次还补齐 Alembic 的聊天表元数据与 Source 地区索引声明，验证降级保留聊天数据及 RLS、再升级继续使用同一案件。
+
+本次联调机器另保留了项目内的隔离数据库运行时及 `.env.integration`，均不上传。本机可用 `data/local-postgres/runtime/bin/pg_ctl -D data/local-postgres/cluster -l data/local-postgres/server.log start` 启动，`data/local-postgres/runtime/bin/pg_ctl -D data/local-postgres/cluster stop` 停止。这份运行时只适用于本机；其他组员按自己的 PostgreSQL 环境配置连接。
 
 ## 7. 手工验收：下一位组员逐项测试
 
@@ -188,7 +204,8 @@ python scripts/check_combined_live.py --env-file .env --output data/combined-liv
 
 | 后续事项 | 找谁 | 具体怎么补 |
 |---|---|---|
-| 本轮实测未通过的外部环境 | 运行组员 / 数据库和模型配置负责人 | 启动 PostgreSQL、核对可用连接与权限/模型额度，再跑 live 脚本；裁定空库按原知识导入流程补齐 |
+| 真实模型与联合验收 | 模型配置负责人 + 运行组员 | 更新有效模型密钥后先跑 `--model-only`，再用已备好的专用 PostgreSQL 跑完整 live 脚本；本机数据库已实测通过 |
+| 正常账号页面验收 | 环境负责人 + 运行组员 | 配置 Supabase 邮箱认证，用测试账号按第 7 节走完页面；现有自动浏览器测试使用测试认证 |
 | 税务口径、适用期、专业裁量 | Li 协调知识维护者及税务负责人 | 核对 D14–D31、参数单位、上下界条件、现有图与 planner 的差异，提供有出处的认可/退回记录 |
 | 换汇与 HKD/SGD | 集成侧 + 税务负责人 | 明确汇率来源、日期、阈值单位和税额折算，再补样例与测试；不要只改币种标签 |
 | 复杂模板与已缴请求 | 集成侧 + Li | 逐模板提供真实跑通的合成样例、期限/关闭字段、预期结果及专业复核，再开放业务入口 |

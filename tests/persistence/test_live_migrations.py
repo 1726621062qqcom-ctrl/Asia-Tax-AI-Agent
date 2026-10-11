@@ -5,8 +5,9 @@ so a baseline that only works incrementally goes unnoticed. This test creates a
 throwaway database next to the configured one and checks that:
 
 1. ``alembic upgrade head`` succeeds on an empty database;
-2. the migrated schema matches the ORM (autogenerate finds no difference);
-3. ``downgrade base`` then ``upgrade head`` round-trips cleanly.
+2. the migrated schema matches research and chat metadata (no autogenerate diff);
+3. ``downgrade base`` preserves chat rows and RLS, then ``upgrade head`` adopts
+   that table without losing data or drifting from the combined schema.
 
 Needs a role allowed to CREATE DATABASE (the local docker-compose role is).
 """
@@ -22,12 +23,13 @@ from pathlib import Path
 import pytest
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import MetaData, create_engine, inspect, text
 from sqlalchemy.engine import make_url
 
 from packages.persistence import models  # noqa: F401  (register every table)
 from packages.persistence.base import Base
 from packages.persistence.config import get_settings
+from packages.chat.store import metadata as chat_metadata
 
 pytestmark = [
     pytest.mark.integration,
@@ -38,6 +40,10 @@ pytestmark = [
 ]
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+# ChatStore uses separate portable metadata; both are part of the migrated DB.
+EXPECTED_METADATA = MetaData()
+for table in [*Base.metadata.tables.values(), *chat_metadata.tables.values()]:
+    table.to_metadata(EXPECTED_METADATA)
 
 
 def _alembic(url: str, *args: str) -> None:
@@ -72,7 +78,7 @@ def _schema_diff(url: str) -> list:
     try:
         with engine.connect() as conn:
             context = MigrationContext.configure(conn, opts={"compare_type": True})
-            return compare_metadata(context, Base.metadata)
+            return compare_metadata(context, EXPECTED_METADATA)
     finally:
         engine.dispose()
 
@@ -87,13 +93,25 @@ def _user_tables(url: str) -> set[str]:
 
 def test_upgrade_head_on_an_empty_database_matches_the_orm(fresh_database_url):
     _alembic(fresh_database_url, "upgrade", "head")
-    assert _user_tables(fresh_database_url) == set(Base.metadata.tables)
+    assert _user_tables(fresh_database_url) == set(EXPECTED_METADATA.tables)
     assert _schema_diff(fresh_database_url) == []
 
 
 def test_downgrade_base_then_upgrade_head_round_trips(fresh_database_url):
     _alembic(fresh_database_url, "upgrade", "head")
+    engine = create_engine(fresh_database_url)
+    with engine.begin() as connection:
+        connection.execute(text("""INSERT INTO chat_cases (id, owner, revision, document)
+            VALUES ('synthetic-migration', 'user:migration', 5,
+                    '{"synthetic": true, "revision": 5}')"""))
     _alembic(fresh_database_url, "downgrade", "base")
-    assert _user_tables(fresh_database_url) == set()
+    # 0004 deliberately preserves chat records and deny-by-default RLS.
+    assert _user_tables(fresh_database_url) == {'chat_cases'}
+    with engine.connect() as connection:
+        assert connection.execute(text("SELECT relrowsecurity FROM pg_class WHERE oid = 'chat_cases'::regclass")).scalar() is True
+        assert connection.execute(text("SELECT revision FROM chat_cases WHERE id = 'synthetic-migration'")).scalar() == 5
     _alembic(fresh_database_url, "upgrade", "head")
+    with engine.connect() as connection:
+        assert connection.execute(text("SELECT document FROM chat_cases WHERE id = 'synthetic-migration'")).scalar() == {'synthetic': True, 'revision': 5}
+    engine.dispose()
     assert _schema_diff(fresh_database_url) == []

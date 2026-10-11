@@ -2,7 +2,7 @@
 
 日期：2026-10-11。代码基线为 `zijian-Luo / 1de0163`，Li 依赖为固定提交 `771e4524961bcc36718db1c9331e7a5f4cda0ce7`。安装、框架和逐项接手测试见 [合并 README](../../README_MERGED.md)。
 
-本次交付包括共同事实模型、旧字段归属绑定、真实领域调用、固定结构和规划两模式、问题分类与回写、只读资料接口、组合来源路由、页面、合并研究稿/导出/复核、固定发布安装及复测脚本。代码具备可复测链路；真实模型和 PostgreSQL 的联合验收受现有环境阻塞，尚未达到方案 P4 全部外部依赖通过的门槛。
+本次交付包括共同事实模型、旧字段归属绑定、真实领域调用、固定结构和规划两模式、问题分类与回写、只读资料接口、组合来源路由、页面、合并研究稿/导出/复核、固定发布安装及复测脚本。首期合并逻辑完成，真实 PostgreSQL + C HTTP + Li 链路已通过；真实模型密钥仍返回 401，尚未达到方案 P4 全部外部依赖联合通过的门槛。
 
 ## 固定发布核验
 
@@ -32,16 +32,19 @@ Li 的税额项 `cites` 是规则 ID。适配器现保留 `rule_citations/citati
 | 两轮 planner | 真实引擎连续三次运行（初次+两次答案），共同事实和结果保存/恢复通过。关键金额答 unknown 时最终正确返回 blocked，不伪造可计算方案 |
 | 状态回归 | 旧案迁移、双向绑定、未知/false、实体隔离、重复请求/异内容、owner/revision、失败不提交、暂缓/暂停、过期问题、专业权限/撤销、确认/部分稿/冻结/过期均覆盖 |
 | 真实模型 | 未通过：初次 Python 无默认 CA；使用 OS truststore 保持 TLS 校验后，API 返回 HTTP 401 / invalid_api_key。没有用替身数据宣称真实模型通过 |
-| PostgreSQL | 未通过：现有配置指向本机 5432，连接被拒绝；Docker daemon 不可用，启动已安装 Docker 后控制接口仍超时。没有连接成功或写入正式客户案件 |
+| PostgreSQL 全套补测 | 通过：项目内隔离 PostgreSQL 17.11 / pgvector 0.8.7；新库迁移、规则包、官方资料构建、持久化检查 14 项通过；2 项真实模型检查明确跳过。测试数据库结束删除 |
+| PostgreSQL 合并链路 | 真实 C HTTP → Li → PostgreSQL → 冻结报告 → 恢复/owner 隔离通过；21 个法规定位、7 段实际裁定、领域未回读引用 0；三轮 planner 保留 16 候选，缺金额时正确 blocked |
 
 报告使用单一 45 秒预算；普通会话原限额保留，显式生成合并报告允许最多 35 次原文回读（FSIE 7、裁定 7、领域 21）和 10 次检索尝试（最多 5 个请求各一次重试），共享回读缓存。超出或无法取得的引用保留缺口。预算扩大仅用于完整报告，不重置子流程预算。
 
-真实 HTTP 样例的裁定来源使用明确空读者，验证来源路由和无法取得时的状态；没有冒称云端裁定库存已联通。真实模型+PostgreSQL脚本将从实际库读取裁定并检查其状态，待环境就绪后执行。
+早期 SQLite HTTP 样例的裁定来源使用明确空读者。追加 PostgreSQL 实测使用实际官方资料库，10 份范围内资料解析出 697 个单元，其中四个裁定各 7 个单元；11 个来源中另一个明确范围外。8 份网页快照与清单存在哈希差异，保留 drift 标志；报告门槛仍为 `insufficient/unverified`。脱敏实测结果见 [PostgreSQL 结果](COMBINED_POSTGRES_RESULT_2026_10_11.json)。没有把本机数据库实测算成云端部署验收。
+
+数据库补测发现并修复两个契约缺口：Alembic 自动比较原先遗漏 ChatStore 的独立元数据，Source 的 ORM 原先遗漏迁移已有的地区索引声明。迁移测试现核对两套表的完整结构，并验证 `downgrade base` 保留聊天案件和 RLS，`upgrade head` 继续保留数据且元数据零差异。没有通过删除聊天表让测试通过。
 
 ## 接手后的必要补测
 
 1. **模型配置负责人**在本地提供有效模型密钥，确认原 API 地址/模型可用；不在 GitHub、聊天或截图中暴露密钥。macOS 若 Python 缺 CA，按 README 使用系统信任库，保持证书验证。
-2. **数据库/环境负责人**启动专用 PostgreSQL，配置连接、创建测试 schema 权限，并按原迁移/导入流程保证官方裁定资料存在。提供 Supabase 邮箱认证配置供正常页面登录。
+2. **数据库复测已完成**，本机另保留已迁移、已导入规则及官方资料的专用库，连接在忽略的 `.env.integration`。其他机器可用 `check_postgres_acceptance.py` 重现。**环境负责人**另提供正常 Supabase 邮箱登录所需配置，运行组员用测试账号补页面实测。
 3. **运行组员**执行 `python scripts/check_combined_live.py --env-file .env`，保存脱敏结果，检查模型实际命中字段、人工补录区分、现有结构+多轮规划、刷新/owner 隔离、组合报告与真实裁定读取。
 4. **Li 与税务负责人**复核 D14–D31、参数单位、规则适用期、上下界的未决条件及特殊安排。工程原文定位/哈希检查不能替代专业审核。
 
@@ -61,10 +64,16 @@ python scripts/install_li_release.py
 python -m pytest -q
 npm --prefix apps/web run build
 python scripts/check_combined_local.py
+# 不调用模型；自动创建、验证并清理一次性 PostgreSQL 数据库
+python scripts/check_postgres_acceptance.py --env-file .env.integration --system-trust
+# 已有资料的专用库：仅补测数据库与真实 HTTP/Li 合并链路
+python scripts/check_combined_live.py --database-only --env-file .env.integration
 # 需有效模型、专用 PostgreSQL 与原裁定资料
 python scripts/check_combined_live.py --env-file .env
 # 只测真实模型，明确不算 PostgreSQL 通过
 python scripts/check_combined_live.py --model-only --system-trust --env-file .env
+# 数据库和模型配置分开时
+python scripts/check_combined_live.py --env-file .env.integration --model-env-file ../Asia-Tax-AI-Agent/.env --system-trust
 ```
 
 每次复测须区分真实依赖、模型替身和合成资料；不能仅用测试条数宣称外部联合验收或税务专业验收完成。
