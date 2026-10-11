@@ -155,17 +155,17 @@ macOS 已有 Chrome 时，可设 `PLAYWRIGHT_CHANNEL=chrome`。浏览器测试�
 python scripts/check_combined_local.py
 ```
 
-真实模型与 PostgreSQL 复测（仅发送合成案情）：
+当前交接先验收数据库与合并链路；按用户 2026-10-11 的安排，真实模型验收暂缓，不作为本轮交接阻塞项：
 
 ```sh
-python scripts/check_combined_live.py --env-file .env --output data/combined-live-result.json
+python scripts/check_combined_live.py --database-only --env-file .env.integration --output data/combined-database-result.json
 ```
 
 数据库未就绪时，可加 `--model-only` 单独测两轮模型与 Li，此时输出明确标识 SQLite，不能算 PostgreSQL 通过。模型未就绪时，可加 `--database-only` 测真实 PostgreSQL、真实 C HTTP、Li 及裁定回读，输出明确标识模型 `not_called`。两种单项模式互斥。配置分开存放时，用 `--model-env-file` 指定另一份本地模型配置，数据库仍从 `--env-file` 读取。
 
-macOS Python 缺省 CA 文件时，可先安装 `truststore` 并加 `--system-trust` 使用系统已信任证书；始终保留 HTTPS 校验。`401/invalid_api_key` 需配置负责人在本地更新有效密钥。
+后续恢复模型验收时，若 macOS Python 缺省 CA 文件，可先安装 `truststore` 并加 `--system-trust` 使用系统已信任证书；始终保留 HTTPS 校验。届时遇到 `401/invalid_api_key`，由配置负责人在本地更新有效密钥。
 
-脚本在指定 PostgreSQL 新建随机测试 schema，测试案件/恢复/隔离/报告，结束清理该 schema；原公共知识表仅读取。运行账号必须能建 schema。输出不包含连接串/密钥，包含真实模型命中的字段、人工补录步骤后的结果、法规/裁定覆盖数和状态。**它会调用配置的模型 API，可能消耗用量。**模型识别缺字段时，脚本单独记录人工确认的合成样例补录，不把补录算成模型准确率。
+脚本在指定 PostgreSQL 新建随机测试 schema，测试案件/恢复/隔离/报告，结束清理该 schema；原公共知识表仅读取。运行账号必须能建 schema。输出不包含连接串/密钥，包含法规/裁定覆盖数和状态。**当前 `--database-only` 不调用模型。**后续完整模式会调用配置的模型 API，并记录模型命中字段与人工补录步骤，可能消耗用量；不把人工补录算成模型准确率。
 
 数据库完整验收另有一个入口：
 
@@ -200,11 +200,11 @@ python scripts/check_postgres_acceptance.py --env-file .env.integration --system
 
 ## 8. 如何判断交接完成、还缺什么
 
-工程验收必须同时保留：Python/构建/浏览器结果、固定发布哈希、真实模型与专用 PostgreSQL 复测结果、至少一个现有结构和一个多轮规划案例。`needs_input`/`blocked` 可以是正确结果，但不能写成“已完成免税结论”。真实依赖不可用时要明确记录，不能用 Mock 报通过。
+本轮工程交接保留：Python/构建/浏览器结果、固定发布哈希、专用 PostgreSQL 与真实 C HTTP/Li 复测结果、至少一个现有结构和一个多轮规划案例。上述首期合并链路已完成。真实模型验收按用户安排暂缓，不要求下一位组员先补密钥；恢复该项时再运行完整 live 脚本。`needs_input`/`blocked` 可以是正确结果，但不能写成“已完成免税结论”。模型替身、合成资料及未实测依赖仍须明确标识。
 
 | 后续事项 | 找谁 | 具体怎么补 |
 |---|---|---|
-| 真实模型与联合验收 | 模型配置负责人 + 运行组员 | 更新有效模型密钥后先跑 `--model-only`，再用已备好的专用 PostgreSQL 跑完整 live 脚本；本机数据库已实测通过 |
+| 真实模型与联合验收（暂缓） | 后续恢复时由模型配置负责人 + 运行组员处理 | 当前不需补密钥或调用模型；恢复后先跑 `--model-only`，再用专用 PostgreSQL 跑完整 live 脚本；未计为已通过 |
 | 正常账号页面验收 | 环境负责人 + 运行组员 | 配置 Supabase 邮箱认证，用测试账号按第 7 节走完页面；现有自动浏览器测试使用测试认证 |
 | 税务口径、适用期、专业裁量 | Li 协调知识维护者及税务负责人 | 核对 D14–D31、参数单位、上下界条件、现有图与 planner 的差异，提供有出处的认可/退回记录 |
 | 换汇与 HKD/SGD | 集成侧 + 税务负责人 | 明确汇率来源、日期、阈值单位和税额折算，再补样例与测试；不要只改币种标签 |
