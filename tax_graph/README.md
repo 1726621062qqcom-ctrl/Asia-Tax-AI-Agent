@@ -1,5 +1,15 @@
 # tax_graph：运行与交接
 
+## 收尾核验：依据核对
+
+```bash
+python -m tax_graph.verify.check_grounding
+python -m tax_graph.verify.grounding tax_graph/examples/meridian.json tax_graph/examples/hk_holding_services.synthetic.json
+python -m tax_graph.verify.grounding --gold
+```
+
+`check_grounding` 检查正常基线，并注入五类依据故障验证检测能力。`grounding` 核对方案步骤的规则、参数、条款、口径与事实来源，并复算金额；存在 `fail` 时返回非零退出码。报告写入 `out/<案例名>.grounding.md`，逐项记录写入 `out/verify/grounding_<案例名>.jsonl`。`warn` 和 `info` 的含义需结合报告查看。
+
 配套目录为同级的 `official/`。所有命令在同时包含这两个目录的项目根目录执行，路径均为相对路径。源资料目录未修改；这里的修改用于让这两个目录可以独立交接。
 
 ## 环境与依赖
