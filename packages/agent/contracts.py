@@ -29,7 +29,7 @@ class FactFilter(Contract):
 
 
 class SearchRequest(Contract):
-    schema_version: Literal['0.1.0'] = '0.1.0'
+    schema_version: Literal['0.1.0', '0.2.0'] = '0.1.0'
     request_id: str
     trace_id: str
     query: str = Field(min_length=2, max_length=500)
@@ -54,6 +54,13 @@ class SearchRequest(Contract):
         if (self.date_status in ('actual', 'planned')) != (self.applicable_date is not None):
             raise ValueError('Date and date_status disagree')
         return self
+
+
+class LocatorSpan(Contract):
+    locator: str
+    start: int = Field(ge=0)
+    end: int = Field(gt=0)
+    content_hash: str = Field(pattern=r'^[a-f0-9]{64}$')
 
 
 class Evidence(Contract):
@@ -86,6 +93,8 @@ class Evidence(Contract):
     restriction_reason: str | None = None
     model_text: str | None = Field(default=None, max_length=30000)
     display_ref: Reference | None = None
+    locator_spans: list[LocatorSpan] = Field(default_factory=list, max_length=50)
+    mapping_version: str | None = None
 
     @model_validator(mode='after')
     def boundary(self):
@@ -124,7 +133,7 @@ class Timings(Contract):
 
 
 class SearchResult(Contract):
-    schema_version: Literal['0.1.0'] = '0.1.0'
+    schema_version: Literal['0.1.0', '0.2.0'] = '0.1.0'
     request_id: str
     trace_id: str
     retrieval_id: str

@@ -144,7 +144,7 @@ export function useWorkspace() {
         setPartial({ caseId: doc.id, text: "" });
         const next = await api.stream(doc, text, approved, requestId, abort.signal, (chunk, reset) =>
           setPartial(previous => previous?.caseId === doc.id ? { ...previous, text: reset ? "" : previous.text + chunk } : previous),
-          entryHint, pending?.id || null);
+          entryHint, text.startsWith("结构答复：") ? doc.domain_workflow?.pending_question_id || null : pending?.id || null);
         update(next);
         setEntrySelections(all => { const copy = { ...all }; delete copy[doc.id]; return copy; });
         setOutbox((all) => all.filter((item) => item.message.id !== localId));
@@ -231,6 +231,7 @@ export function useWorkspace() {
     stop: () => controller.current?.abort(),
     organize,
     current,
+    applyServerCase: update,
     fields,
     busy,
     currentBusy: busy && workingCaseId === current?.id,

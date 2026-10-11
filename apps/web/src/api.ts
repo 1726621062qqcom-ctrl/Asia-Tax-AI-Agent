@@ -89,10 +89,34 @@ export const api = {
       `/knowledge/search?q=${encodeURIComponent(query)}`,
     ),
   session: () =>
-    request<{ fields: FieldSpec[]; model_configured: boolean }>("/session"),
+    request<{ fields: FieldSpec[]; model_configured: boolean; can_review?: boolean }>("/session"),
   list: () => request<Case[]>("/cases"),
   create: () => request<Case>("/cases", "POST"),
   get: (id: string) => request<Case>(`/cases/${id}`),
+  domainCapabilities: () => request<{ready: boolean; release: string; supported_templates: string[]}>("/domain/capabilities"),
+  domainSetup: (doc: Case, caseInput: Record<string, unknown>, dataApproved: boolean, requestId: string,
+                mode = "plan_structure", bindings: Record<string, string> = {}) =>
+    request<Case>(`/cases/${doc.id}/domain-case`, "PUT", { revision: doc.revision, request_id: requestId,
+      case_input: caseInput, data_approved: dataApproved, mode, bindings }),
+  domainDraft: (doc: Case) => request<{case: Record<string, unknown> | null; bindings: Record<string, string>;
+    gaps: string[]; unmapped: string[]}>(`/cases/${doc.id}/domain-draft`),
+  domainControl: (doc: Case, action: string) => request<Case>(`/cases/${doc.id}/domain-control`, "POST",
+    {revision: doc.revision, request_id: crypto.randomUUID(), action}),
+  domainConfirm: (doc: Case) => request<Case>(`/cases/${doc.id}/domain-confirm`, "POST",
+    {revision: doc.revision, request_id: crypto.randomUUID()}),
+  domainReport: (doc: Case, allowPartial: boolean) => request<Case>(`/cases/${doc.id}/domain-report`, "POST",
+    {revision: doc.revision, request_id: crypto.randomUUID(), allow_partial: allowPartial}),
+  domainProfessional: (doc: Case, questionId: string, value: string | string[], reference: Record<string, string>) =>
+    request<Case>(`/cases/${doc.id}/domain-professional`, "POST", {revision: doc.revision,
+      request_id: crypto.randomUUID(), question_id: questionId, value, reference}),
+  finalReview: (doc: Case, reportId: string, reportHash: string, decision: string, note: string) =>
+    request<Case>(`/cases/${doc.id}/analyses/${reportId}/review`, "POST", { revision: doc.revision,
+      request_id: crypto.randomUUID(), report_hash: reportHash, decision, note }),
+  domainPlan: (doc: Case, requestId: string) =>
+    request<Case>(`/cases/${doc.id}/domain-plan`, "POST", { revision: doc.revision, request_id: requestId }),
+  domainAnswer: (doc: Case, key: string, kind: string, value: string, requestId: string, questionId?: string, disposition = "answer") =>
+    request<Case>(`/cases/${doc.id}/domain-answer`, "POST", { revision: doc.revision, request_id: requestId,
+      key, kind, value, question_id: questionId, disposition }),
   mutate: (
     current: Case,
     action: "messages" | "facts" | "confirm" | "analyze" | "organization",

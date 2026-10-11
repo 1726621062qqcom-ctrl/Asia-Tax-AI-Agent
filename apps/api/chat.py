@@ -79,7 +79,9 @@ def call(action, *args):
             raise HTTPException(403, exc.code) from None
         if exc.code in ('request_payload_conflict', 'question_changed'):
             raise HTTPException(409, exc.code) from None
-        raise HTTPException(503 if exc.code.startswith("model_") or exc.code in ('knowledge_unavailable', 'execution_budget_exhausted', 'tool_failed') else 422, exc.code) from None
+        raise HTTPException(503 if exc.code.startswith("model_") or exc.code in (
+            'knowledge_unavailable', 'execution_budget_exhausted', 'tool_failed',
+            'domain_unavailable', 'domain_timeout', 'domain_execution_failed') else 422, exc.code) from None
     except (ValueError, TypeError):
         raise HTTPException(422, "invalid_facts") from None
     except SQLAlchemyError:
@@ -88,7 +90,9 @@ def call(action, *args):
 
 @router.get("/session")
 def session(user=Depends(required_user)):
-    return {"model_configured": current_model_config().is_configured, "fields": catalog()}
+    from packages.agent.providers import ProviderSettings
+    return {"model_configured": current_model_config().is_configured, "fields": catalog(),
+            "can_review": user['id'] in ProviderSettings().reviewer_ids}
 
 
 @router.get('/knowledge/search')
@@ -128,6 +132,17 @@ async def message(case_id: UUID, body: Message, request: Request, response: Resp
     if 'text/event-stream' not in request.headers.get('accept', ''):
         return await asyncio.to_thread(call, service.message, workspace, str(case_id), body.revision, str(body.request_id), text, body.data_approved,
                                        body.entry_hint, body.reply_to_question_id)
+    if (body.reply_to_question_id or '').startswith('li:') or text.startswith('结构答复：'):
+        async def domain_events():
+            yield ': connected\n\n'
+            try:
+                doc = await asyncio.to_thread(call, service.message, workspace, str(case_id), body.revision,
+                    str(body.request_id), text, body.data_approved, body.entry_hint, body.reply_to_question_id)
+                yield 'data: ' + json.dumps({'type': 'done', 'case': doc}, ensure_ascii=False) + '\n\n'
+            except HTTPException as exc:
+                yield 'data: ' + json.dumps({'type': 'error', 'code': exc.detail}) + '\n\n'
+        return StreamingResponse(domain_events(), media_type='text/event-stream',
+                                 headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
     doc, duplicate = await asyncio.to_thread(call, service.load_message, workspace, str(case_id), body.revision, str(body.request_id),
                                             text, body.data_approved, body.entry_hint, body.reply_to_question_id)
     if not duplicate:
@@ -185,6 +200,106 @@ def confirm(case_id: UUID, body: Mutation, workspace: str = Depends(owner), serv
 @router.post("/cases/{case_id}/analyze")
 def run(case_id: UUID, body: Mutation, workspace: str = Depends(owner), service: ChatService = Depends(get_service)):
     return call(service.run, workspace, str(case_id), body.revision, str(body.request_id))
+
+
+class DomainSetup(Mutation):
+    case_input: dict[str, Any]
+    data_approved: bool = False
+    mode: Literal['plan_structure', 'assess_current', 'review_paid'] = 'plan_structure'
+    bindings: dict[str, str] = Field(default_factory=dict, max_length=50)
+
+
+class DomainAnswer(Mutation):
+    key: str = Field(min_length=1, max_length=200)
+    kind: Literal['data', 'blocking', 'joint', 'action']
+    value: str | float | bool
+    question_id: str | None = None
+    disposition: Literal['answer', 'defer'] = 'answer'
+
+
+@router.get('/domain/capabilities')
+def domain_capabilities(workspace: str = Depends(owner)):
+    from packages.domain_bridge.bridge import PINNED_COMMIT, DomainError, release_path, verify_release
+    try:
+        verify_release(release_path())
+        ready = True
+    except DomainError:
+        ready = False
+    return {'ready': ready, 'release': PINNED_COMMIT, 'supported_currencies': ['CNY'],
+            'modes': ['plan_structure', 'assess_current', 'review_paid'], 'supported_templates':
+            ['holding', 'ip', 'services', 'repatriation', 'financing', 'inbound_services']}
+
+
+@router.put('/cases/{case_id}/domain-case')
+def domain_setup(case_id: UUID, body: DomainSetup, workspace: str = Depends(owner),
+                 service: ChatService = Depends(get_service)):
+    return call(service.domain_setup, workspace, str(case_id), body.revision, str(body.request_id),
+                body.case_input, body.data_approved, body.mode, body.bindings)
+
+
+@router.post('/cases/{case_id}/domain-plan')
+def domain_plan(case_id: UUID, body: Mutation, workspace: str = Depends(owner),
+                service: ChatService = Depends(get_service)):
+    return call(service.domain_plan, workspace, str(case_id), body.revision, str(body.request_id))
+
+
+@router.post('/cases/{case_id}/domain-answer')
+def domain_answer(case_id: UUID, body: DomainAnswer, workspace: str = Depends(owner),
+                  service: ChatService = Depends(get_service)):
+    return call(service.domain_answer, workspace, str(case_id), body.revision, str(body.request_id),
+                body.key, body.kind, body.value, body.question_id, body.disposition)
+
+
+@router.get('/cases/{case_id}/domain-draft')
+def domain_draft(case_id: UUID, workspace: str = Depends(owner), service: ChatService = Depends(get_service)):
+    from packages.domain_bridge.state import draft_from_legacy
+    return draft_from_legacy(call(service.store.get, workspace, str(case_id)))
+
+
+class DomainControl(Mutation):
+    action: Literal['pause', 'resume']
+
+
+@router.post('/cases/{case_id}/domain-control')
+def domain_control(case_id: UUID, body: DomainControl, workspace: str = Depends(owner), service: ChatService = Depends(get_service)):
+    return call(service.domain_control, workspace, str(case_id), body.revision, str(body.request_id), body.action)
+
+
+@router.post('/cases/{case_id}/domain-confirm')
+def domain_confirm(case_id: UUID, body: Mutation, workspace: str = Depends(owner), service: ChatService = Depends(get_service)):
+    return call(service.domain_confirm, workspace, str(case_id), body.revision, str(body.request_id))
+
+
+class DomainReport(Mutation):
+    allow_partial: bool = False
+
+
+@router.post('/cases/{case_id}/domain-report')
+def domain_report(case_id: UUID, body: DomainReport, workspace: str = Depends(owner), service: ChatService = Depends(get_service)):
+    return call(service.domain_report, workspace, str(case_id), body.revision, str(body.request_id), body.allow_partial)
+
+
+class ProfessionalAnswer(Mutation):
+    question_id: str
+    value: str | list[str]
+    reference: dict[str, str]
+
+
+@router.post('/cases/{case_id}/domain-professional')
+def domain_professional(case_id: UUID, body: ProfessionalAnswer, workspace: str = Depends(owner),
+                        user=Depends(required_user), service: ChatService = Depends(get_service)):
+    return call(service.domain_professional, workspace, str(case_id), body.revision, str(body.request_id),
+                body.question_id, body.value, body.reference, user['id'])
+
+
+@router.get('/cases/{case_id}/analyses/{report_id}/markdown')
+def report_markdown(case_id: UUID, report_id: UUID, workspace: str = Depends(owner), service: ChatService = Depends(get_service)):
+    doc = call(service.store.get, workspace, str(case_id))
+    report = next((r for r in doc['analyses'] if r['id'] == str(report_id) and r.get('markdown')), None)
+    if not report:
+        raise HTTPException(404, 'report_not_found')
+    return Response(report['markdown'], media_type='text/markdown; charset=utf-8',
+                    headers={'Content-Disposition': 'attachment; filename=research-' + str(report_id) + '.md'})
 
 
 class FinalReview(Mutation):

@@ -178,8 +178,27 @@ class CKnowledgeProvider:
             return EvidenceResult(status='error', reference=reference)
 
 
+class RoutedKnowledgeProvider:
+    """Explicit source routing, never a fallback after failed law retrieval."""
+    def __init__(self, law, rulings):
+        self.law, self.rulings = law, rulings
+
+    def for_request(self):
+        return RoutedKnowledgeProvider(self.law, self.rulings.for_request() if hasattr(self.rulings, 'for_request') else self.rulings)
+
+    def search_evidence(self, request, context):
+        return (self.rulings if request.kind == 'ruling' else self.law).search_evidence(request, context)
+
+    def get_evidence(self, reference, purpose, context):
+        return (self.law if reference.unit_id.startswith('li|') else self.rulings).get_evidence(reference, purpose, context)
+
+    def get_evidence_bounded(self, reference, purpose, context, timeout):
+        provider = self.law if reference.unit_id.startswith('li|') else self.rulings
+        return provider.get_evidence_bounded(reference, purpose, context, timeout) if hasattr(provider, 'get_evidence_bounded') else provider.get_evidence(reference, purpose, context)
+
+
 class ProviderSettings(BaseSettings):
-    provider: Literal['legacy', 'mock', 'c'] = 'legacy'
+    provider: Literal['legacy', 'mock', 'c', 'combined'] = 'legacy'
     mock_scenario: str = 'MOCK-01'
     c_url: str = ''
     c_token: str = Field(default='', repr=False)
@@ -193,4 +212,6 @@ def configured_provider():
         return MockKnowledgeProvider(config.mock_scenario)
     if config.provider == 'c':
         return CKnowledgeProvider(config.c_url, config.c_token)
+    if config.provider == 'combined':
+        return RoutedKnowledgeProvider(CKnowledgeProvider(config.c_url, config.c_token), LegacyKnowledgeProvider())
     return LegacyKnowledgeProvider()

@@ -12,9 +12,11 @@ import {
 import { useLocale } from "../locale";
 import Passages from "./Passages";
 import BrandLoader from "./BrandLoader";
+import DomainResult from "./DomainResult";
 
 function Result({ result, fields }: { result: Analysis; fields: FieldSpec[] }) {
   const { t, locale } = useLocale();
+  if (result.report_kind && result.outcome) return <DomainResult result={result} />;
   const label = (key: string) => {
     const f = fields.find((f) => f.field_name === key);
     return f ? fieldLabel(f, locale) : key;

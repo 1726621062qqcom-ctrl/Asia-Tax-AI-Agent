@@ -194,16 +194,28 @@ def research_query(doc: dict, text: str, query: str) -> str:
     return text + '\n' + query
 
 
-def invalidate(doc: dict) -> None:
+def invalidate(doc: dict, clear_domain_actions=True, clear_domain_professional=True) -> None:
     doc["confirmed_revision"] = None
     doc["confirmed_facts"] = None
     for result in doc["analyses"]:
         result["stale"] = True
         if result.get("review"):
             result["review"]["status"] = "stale"
+    doc['domain_confirmation'] = None
+    if doc.get('domain_outcome'):
+        doc['domain_outcome']['stale'] = True
+    if clear_domain_actions and doc.get('domain_answers'):
+        doc['domain_answers']['actions'] = {}
+    if clear_domain_professional and doc.get('domain_answers'):
+        doc['domain_answers']['rulings'] = {}
+        doc['domain_answers']['library'] = {}
+        for record in doc.get('domain_professional_history', []):
+            record['stale'] = True
 
 
 def apply_facts(doc: dict, patch: dict, source: str, message_id: str | None = None) -> None:
+    from packages.domain_bridge.state import ensure, legacy_write
+    ensure(doc)
     for key, value in patch.items():
         previous = doc["facts"].get(key)
         if previous and previous["value"] == value:
@@ -211,22 +223,26 @@ def apply_facts(doc: dict, patch: dict, source: str, message_id: str | None = No
         record = {"value": value, "origin": source, "status": "candidate" if source == "model" else "user_entered",
                   "message_id": message_id, "revision": doc["revision"] + 1}
         doc["fact_history"].append({"field": key, "before": previous, "after": record, "at": now()})
-        if value is None:
-            doc["facts"].pop(key, None)
-        else:
-            doc["facts"][key] = record
+        legacy_write(doc, key, value, source, message_id)
 
 
 def public(doc: dict) -> dict:
     from packages.agent.dialogue import identification, gaps
-    result = {k: v for k, v in doc.items() if k not in ("receipts",)}
+    from packages.domain_bridge.state import ensure, sync
+    doc = deepcopy(doc)
+    ensure(doc)
+    sync(doc)
+    result = {k: v for k, v in doc.items() if k not in ("receipts", "domain_payloads", "message_payloads", "domain_chat_payloads")}
     result["questions"] = questions(doc)
     result['identification'] = identification(doc)
     result['fact_gaps'] = gaps(doc)
     return result
 
 
-class ChatService:
+from packages.domain_bridge.coordinator import DomainCoordinator
+
+
+class ChatService(DomainCoordinator):
     def __init__(self, store: ChatStore, extractor=None, analyzer=analyze, researcher=None, turner=plan_turn, provider=None,
                  orchestration=None, dynamic_planner=None, planner=None, harness_mode=None, tool_planner=None):
         self.store, self.extractor, self.analyzer, self.researcher = store, extractor, analyzer, researcher
@@ -245,6 +261,8 @@ class ChatService:
 
     def load(self, owner: str, case_id: str, revision: int, request_id: str) -> tuple[dict, bool]:
         doc = self.store.get(owner, case_id)
+        from packages.domain_bridge.state import ensure
+        ensure(doc)
         if request_id in doc["receipts"]:
             return doc, True
         if doc["revision"] != revision:
@@ -252,6 +270,8 @@ class ChatService:
         return doc, False
 
     def finish(self, owner: str, doc: dict, revision: int, request_id: str) -> dict:
+        from packages.domain_bridge.state import sync
+        sync(doc)
         doc["receipts"][request_id] = revision + 1
         # Keep all receipts for the lifetime of a bounded case.
         if len(doc["receipts"]) > 1000:
@@ -260,6 +280,8 @@ class ChatService:
 
     def message(self, owner: str, case_id: str, revision: int, request_id: str, text: str, data_approved: bool,
                 entry_hint='auto', reply_to_question_id=None) -> dict:
+        if (reply_to_question_id or '').startswith('li:') or text.startswith('结构答复：'):
+            return self.domain_message(owner, case_id, revision, request_id, text, reply_to_question_id)
         doc, duplicate = self.load_message(owner, case_id, revision, request_id, text, data_approved,
                                            entry_hint, reply_to_question_id)
         if duplicate:
@@ -413,6 +435,8 @@ class ChatService:
             raise WorkflowError("no_facts")
         if any(f["value"] == "conflict" for f in doc["facts"].values()):
             raise WorkflowError("resolve_conflicts")
+        from packages.domain_bridge.state import confirm
+        confirm(doc)
         doc["confirmed_revision"] = revision + 1
         doc["confirmed_facts"] = deepcopy(raw_facts(doc))
         doc["fact_history"].append({"action": "confirmed", "revision": revision + 1, "facts": deepcopy(doc["facts"]), "at": now()})

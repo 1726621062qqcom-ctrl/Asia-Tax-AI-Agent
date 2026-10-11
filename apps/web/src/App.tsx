@@ -4,6 +4,7 @@ import {
   BookOpen,
   Globe2,
   Menu,
+  Network,
   PanelRightClose,
   PanelRightOpen,
 } from "lucide-react";
@@ -25,6 +26,7 @@ export default function App() {
   const {
     cases,
     current,
+    applyServerCase,
     fields,
     busy,
     currentBusy,
@@ -144,6 +146,15 @@ export default function App() {
             >
               <Globe2 size={14} />
               <span>{locale === "zh" ? "EN" : "中文"}</span>
+            </HintButton>
+            <HintButton
+              className="icon-button"
+              aria-label={t("结构分析")}
+              title={t("结构分析")}
+              aria-expanded={panel === "structure"}
+              onClick={() => openPanel("structure")}
+            >
+              <Network size={18} />
             </HintButton>
             <HintButton
               className="icon-button"
@@ -272,6 +283,7 @@ export default function App() {
             onRetry={retry}
             onSave={save}
             onSelectSource={setSource}
+            onDomainUpdate={applyServerCase}
           />
         </div>
       )}

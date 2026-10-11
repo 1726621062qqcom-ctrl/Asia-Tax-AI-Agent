@@ -73,13 +73,26 @@ def retrieve(provider, request: SearchRequest, context: TrustedContext):
             url = evidence.url
             if url and urlsplit(url).scheme not in ('https', 'http'):
                 url = None
-            passages.append({'unit_id': evidence.unit_id, 'source_id': evidence.source_id,
+            passage = {'unit_id': evidence.unit_id, 'source_id': evidence.source_id,
                 'evidence_id': evidence.evidence_id, 'source_version_id': evidence.source_version_id,
                 'locator': evidence.locator, 'text': display.text, 'title': evidence.title, 'url': url,
                 'text_sha256': evidence.content_hash, 'is_synthetic': evidence.is_synthetic or result.is_synthetic,
                 'model_use': evidence.model_use, 'policy_version': evidence.policy_version,
                 'drift': evidence.drift, 'heading': evidence.heading, 'retrieved_at': evidence.retrieved_at,
-                'snapshot_sha256': evidence.snapshot_sha256, 'coverage_cutoff': evidence.coverage_cutoff})
+                'snapshot_sha256': evidence.snapshot_sha256, 'coverage_cutoff': evidence.coverage_cutoff,
+                'reference': evidence.reference().model_dump(), 'mapping_version': evidence.mapping_version}
+            if evidence.locator_spans:
+                for span in evidence.locator_spans:
+                    text = display.text or ''
+                    if span.end <= span.start or span.end > len(text) or sha256(text[span.start:span.end].encode()).hexdigest() != span.content_hash:
+                        gaps.append('子条款定位校验失败：' + span.locator)
+                        continue
+                    passages.append({**passage, 'unit_id': evidence.unit_id + ':' + span.locator,
+                                     'locator': span.locator, 'text': text[span.start:span.end],
+                                     'text_sha256': span.content_hash, 'parent_content_hash': evidence.content_hash,
+                                     'parent_span': [span.start, span.end]})
+            else:
+                passages.append(passage)
         # Permission to model alone is NOT permission to disclose a derived answer.
         if evidence.model_use == 'allowed' and evidence.display_use == 'allowed' and display is not None and evidence.model_text:
             if sha256(evidence.model_text.encode()).hexdigest() != evidence.content_hash:

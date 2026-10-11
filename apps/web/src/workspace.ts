@@ -91,6 +91,8 @@ export type KnowledgeResult = {
   query?: string;
 };
 export type Analysis = {
+  fsie_assessment?: Analysis | null;
+  report_kind?: string; outcome?: DomainOutcome; markdown?: string;
   intake_gaps?: { field: string; reason: string; impact: string }[];
   partial_output_authorized?: boolean;
   is_synthetic?: boolean;
@@ -129,6 +131,14 @@ export type Analysis = {
   passages: Passage[];
 };
 export type Case = {
+  schema_version?: string;
+  legacy_bindings?: Record<string, string>;
+  domain_confirmation?: { facts_hash: string; revision: number } | null;
+  domain_workflow?: { mode: string; status: string; pending_question_id: string | null };
+  domain_case?: Record<string, unknown> | null;
+  domain_answers?: { data: Record<string, unknown>; actions: Record<string, string> };
+  domain_outcome?: DomainOutcome | null;
+  domain_today?: string | null;
   orchestration?: { schema_version: string; active_task: BusinessTask | null;
     suspended_task: BusinessTask | null; queued_tasks: { kind: string }[] };
   identification?: { status: string; scenario: string | null; missing_fields: string[] };
@@ -151,7 +161,20 @@ export type Case = {
   confirmed_revision: number | null;
   data_approved: boolean;
 };
-export type Panel = "facts" | "sources" | "about" | null;
+export type DomainQuestion = { id: string; key: string; kind: string; region: string[]; prompt: string;
+  why: string[]; impact: number | null; source_hint: string; forms: string[];
+  answer_schema?: { type: string; hint: string } };
+export type DomainOutcome = { status: "needs_input" | "ready" | "blocked" | "unsupported"; release: string;
+  mode: string; currency: string; facts_hash: string;
+  input_hash: string; today: string; stale?: boolean; questions: DomainQuestion[]; question_count?: number;
+  candidate_count: number; note?: string; candidate?: Record<string, unknown>;
+  upper?: { value: number | null; status: string }; lower?: { value: number | null; status: string };
+  structure?: { entities: [string, string, string][]; holds: [string, string, number, string][];
+    flows: [string, string, string, string, number, string][] };
+  regions?: { jurisdictions: string[]; actions: unknown[]; guaranteed: [string, string, string, string, number, string[], boolean][];
+    best: unknown[]; deadlines: unknown[]; conditions: unknown[] }[];
+  notes?: string[]; unmodelled?: unknown[] };
+export type Panel = "facts" | "sources" | "structure" | "about" | null;
 export function fieldLabel(field: FieldSpec, locale: string) {
   return locale === "en" ? field.label_en : field.description_zh;
 }
