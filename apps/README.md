@@ -6,4 +6,4 @@
 
 旧 Web 演示及其案例分析 API 保留在 `demo/hk-web` 分支，未合并。
 
-本开发分支的 [`web/`](web/README.md) 是中英文税务聊天工作台，使用 React、TypeScript 和 Vite，已连接上述 API。模型配置不足时明确报错，不生成固定替代答案。完整运行和验证边界见 [网页研究链路记录](../docs/project/LIVE_CHAT_SLICE.md)。
+当前 `main` 的 [`web/`](web/README.md) 是中英文税务聊天工作台，使用 React、TypeScript 和 Vite，已连接上述 API。模型配置不足时明确报错，不生成固定替代答案。完整运行和验证边界见 [集成运行说明](../README_MERGED.md)与[验收入口](../docs/verification/README.md)。

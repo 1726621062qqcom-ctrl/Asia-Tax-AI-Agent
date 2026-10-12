@@ -1,6 +1,6 @@
 # Taxora 税衡
 
-本分支已接入 Zijian × Li 的合并编排、共同事实与数据库接口。**安装、框架介绍和下一位组员的逐项测试入口见 [合并交接 README](README_MERGED.md)**；实测与未完成的外部验收见 [集成验收记录](docs/implementation/COMBINED_INTEGRATION_ACCEPTANCE.md)。
+当前 `main` 包含税务聊天工作台、A/B 联调代码，以及接入指定版本 Li 组件的合并编排、共同事实和数据库接口。安装与运行见 [集成运行说明](README_MERGED.md)；开始检验前先看 [验收入口](docs/verification/README.md)。Li 组件按固定版本安装，C 分支后续提交不会自动进入 `main`。
 
 邮箱登录与云端用户数据配置见 [账号与认证说明](docs/project/TAXORA_AUTH.md)。
 
@@ -29,18 +29,20 @@
 
 | 目录 | 当前用途 |
 |---|---|
-| `docs/` | 产品、架构、项目计划、审查和设计记录 |
-| `apps/` | FastAPI 健康检查与独立的税务聊天前端 |
+| `docs/` | 产品、架构、项目计划、集成验收和设计记录 |
+| `apps/` | FastAPI API 与 React 税务聊天前端 |
 | `packages/` | 数据契约、事实提取、知识处理、规则执行、持久化和报告模块 |
 | `knowledge/` | 可公开并允许版本管理的资料清单、标注定义和规则元数据 |
-| `tests/` | 离线单元测试、数据库集成测试和虚构案例评测资料 |
-| `scripts/` | 知识包校验与裁定来源内容检查脚本 |
+| `tests/` | 离线单元测试和数据库集成测试 |
+| `evals/` | 评测输入、历史运行结果与说明 |
+| `scripts/` | 启动、知识校验和验收脚本 |
 | `infrastructure/` | 本地 PostgreSQL / pgvector 的 Docker Compose 配置 |
 | `alembic/` | 数据库版本迁移 |
+| `data/` | 本地运行时数据；由 Git 忽略，不是分发内容 |
 
-主分支已包含 L0 后端研究原型。Web 演示及其分析 API 仍在 `demo/hk-web` 分支，尚未整体合并。开发命令见 `Makefile`；其中虚拟环境路径及 Shell 命令按 Linux / WSL 编写。
+早期 Web 演示及其案例分析 API 仍在 `demo/hk-web` 分支，没有整体合并；当前 `main` 的聊天工作台是另一套已集成的前端和 API。开发命令见 `Makefile`；其中虚拟环境路径及 Shell 命令按 Linux / WSL 编写。
 
-本开发分支新增 [税务聊天工作台](apps/web/README.md)，未合并旧 demo。简洁中英文界面连接云端 PostgreSQL，支持案件访谈、事实确认、规则分析和刷新恢复；官方法条及四个裁定案例支持编号和中英文关键词检索。引用保留原文、哈希、抓取日期和内容变化提示。其他开发环境需要配置数据库连接和模型密钥。实现范围与缺口见 [网页研究链路记录](docs/project/LIVE_CHAT_SLICE.md)及[云端研究链路验收](docs/project/CLOUD_KNOWLEDGE_SLICE.md)。
+[税务聊天工作台](apps/web/README.md)提供中英文界面，并通过 API 连接云端 PostgreSQL；支持案件访谈、事实确认、规则分析和刷新恢复。官方法条及四个裁定案例支持编号和中英文关键词检索。引用保留原文、哈希、抓取日期和内容变化提示。其他开发环境需要配置数据库连接和模型密钥。实现范围与缺口见 [网页研究链路记录](docs/project/LIVE_CHAT_SLICE.md)及[云端研究链路验收](docs/project/CLOUD_KNOWLEDGE_SLICE.md)。
 
 ```sh
 cd apps/web
