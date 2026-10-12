@@ -70,7 +70,7 @@ flowchart TD
 需要 Python 3.11+（本次使用 3.12）、Node.js 20.19+ 或 22.12+、Git，以及可连接的 PostgreSQL。Windows 建议 WSL；下面命令以 macOS/Linux 为例。
 
 ```sh
-git clone --branch zijian-Luo https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent.git
+git clone --branch main https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent.git
 cd Asia-Tax-AI-Agent
 python3 -m venv .venv
 source .venv/bin/activate
