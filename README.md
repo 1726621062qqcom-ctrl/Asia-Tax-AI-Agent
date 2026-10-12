@@ -1,5 +1,7 @@
 # Taxora 税衡
 
+本分支已接入 Zijian × Li 的合并编排、共同事实与数据库接口。**安装、框架介绍和下一位组员的逐项测试入口见 [合并交接 README](README_MERGED.md)**；实测与未完成的外部验收见 [集成验收记录](docs/implementation/COMBINED_INTEGRATION_ACCEPTANCE.md)。
+
 邮箱登录与云端用户数据配置见 [账号与认证说明](docs/project/TAXORA_AUTH.md)。
 
 

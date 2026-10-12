@@ -1,0 +1,52 @@
+import { test, expect } from "@playwright/test";
+
+test("structure panel saves a Li case, runs it, and restores the result", async ({ page }) => {
+  test.skip(!process.env.FSIE_LI_RELEASE_DIR, "Pinned Li release is required");
+  await page.goto("/");
+  await page.getByRole("button", { name: "结构分析", exact: true }).click();
+  await page.getByRole("button", { name: "载入合成示例" }).click();
+  await page.getByRole("checkbox", { name: /本次仅提交合成研究资料/ }).check();
+  await page.getByRole("button", { name: "保存结构案情" }).click();
+  await expect(page.getByRole("button", { name: "运行结构规划" })).toBeEnabled();
+  await page.getByRole("button", { name: "运行结构规划" }).click();
+  await expect(page.getByRole("region", { name: "结构分析结果" })).toContainText("候选结构", { timeout: 30000 });
+  const id = page.url().split("#")[1];
+  const saved = await (await page.request.get(`/api/cases/${id}`)).json();
+  expect(saved.domain_case.roles.OP.loc).toBe("CN");
+  expect(saved.domain_outcome.release).toMatch(/^771e452/);
+  await page.reload();
+  await page.getByRole("button", { name: "结构分析", exact: true }).click();
+  await expect(page.getByRole("region", { name: "结构分析结果" })).toContainText("候选结构");
+});
+
+test("current structure supports unknown answer, partial frozen report and export", async ({ page }) => {
+  test.skip(!process.env.FSIE_LI_RELEASE_DIR, "Pinned Li release is required");
+  await page.goto("/");
+  await page.getByRole("button", { name: "结构分析", exact: true }).click();
+  await page.getByRole("button", { name: "载入合成示例" }).click();
+  await page.getByRole("checkbox", { name: /本次仅提交合成研究资料/ }).check();
+  await page.getByRole("button", { name: "保存结构案情" }).click();
+  await expect(page.getByRole("button", { name: "运行结构规划" })).toBeEnabled();
+  await page.getByRole("button", { name: "运行结构规划" }).click();
+  await expect(page.getByRole("button", { name: "事实未知", exact: true })).toBeVisible({ timeout: 30000 });
+  await page.getByRole("button", { name: "事实未知", exact: true }).click();
+  await expect(page.getByRole("button", { name: "确认当前结构事实" })).toBeEnabled({ timeout: 30000 });
+  await page.getByRole("button", { name: "确认当前结构事实" }).click();
+  await page.getByRole("checkbox", { name: /同意按当前信息生成部分研究稿/ }).check();
+  await expect(page.getByRole("button", { name: "生成合并研究稿" })).toBeEnabled();
+  await page.getByRole("button", { name: "生成合并研究稿" }).click();
+  const id = page.url().split("#")[1];
+  await expect.poll(async () => (await (await page.request.get(`/api/cases/${id}`)).json()).analyses.length).toBe(1);
+  const saved = await (await page.request.get(`/api/cases/${id}`)).json();
+  const report = saved.analyses[0];
+  expect(report.report_kind).toBe("current_structure");
+  expect(report.report_hash).toMatch(/^[a-f0-9]{64}$/);
+  expect(report.partial_output_authorized).toBe(true);
+  expect(report.evidence_gate).toBe("insufficient");
+  expect(Object.values(saved.canonical_fact_records).some((r: any) => r.status === "unknown")).toBe(true);
+  const exported = await page.request.get(`/api/cases/${id}/analyses/${report.id}/markdown`);
+  expect(exported.status()).toBe(200);
+  expect(await exported.text()).toContain("合并编排研究稿");
+  await page.reload();
+  await expect(page.getByText("合并编排研究稿", { exact: false }).first()).toBeVisible();
+});

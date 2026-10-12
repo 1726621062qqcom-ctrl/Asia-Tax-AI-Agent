@@ -15,7 +15,45 @@ export type FieldSpec = {
   data_type: string;
   enum_values?: string[];
 };
+export type WorkflowInfo = {
+  version: string;
+  trace_id: string;
+  status: string;
+  reason_code: string | null;
+  trace: string[];
+  timings_ms: Record<string, number>;
+  retrieval_calls?: number;
+  entry_hint?: EntryHint;
+  effective_task?: string;
+  task_results?: { kind: string; status: string; reason_code: string; query?: string }[];
+  error_code?: string;
+  retryable?: boolean;
+  harness_version?: string;
+  harness_stop?: string;
+  tool_calls?: { tool: string; status: string; reason_code: string | null; query?: string; duration_ms?: number }[];
+};
+export type EntryHint = "auto" | "dividend_consultation" | "fact_intake" | "reference_lookup";
+export type BusinessTask = { id: string; kind: "consultation" | "fact_intake" | "reference_lookup";
+  status: string; pending_question_id?: string };
+export type EvidenceAnswer = {
+  summary: string;
+  conditions: string[];
+  claims: { text: string; evidence_ids: string[]; kind: "excerpt" }[];
+  limitations: string[];
+  review_status: "pending_final_review";
+  text: string;
+};
+export type GuidedQuestion = {
+  id: string; kind: "fact" | "choice" | "mode"; field: string | null;
+  text: string; why: string; example: string; attempt: number; based_on_revision: number;
+  task_id?: string;
+};
 export type Message = {
+  research_results?: KnowledgeResult[];
+  guided?: boolean;
+  question?: GuidedQuestion | null;
+  workflow?: WorkflowInfo;
+  answer?: EvidenceAnswer;
   delivery?: "sending" | "failed";
   id: string;
   role: "user" | "assistant";
@@ -27,6 +65,8 @@ export type Message = {
   research?: KnowledgeResult;
 };
 export type Passage = {
+  is_synthetic?: boolean;
+  model_use?: string;
   context?: Passage[];
   unit_id: string;
   source_id: string;
@@ -42,12 +82,23 @@ export type Passage = {
   coverage_cutoff?: string;
 };
 export type KnowledgeResult = {
+  is_synthetic?: boolean;
+  reason_code?: string;
+  provider?: string;
   status: string;
   passages: Passage[];
   method: string;
   query?: string;
 };
 export type Analysis = {
+  fsie_assessment?: Analysis | null;
+  report_kind?: string; outcome?: DomainOutcome; markdown?: string;
+  intake_gaps?: { field: string; reason: string; impact: string }[];
+  partial_output_authorized?: boolean;
+  is_synthetic?: boolean;
+  report_hash?: string;
+  evidence_gate?: string;
+  review?: { status: string; history: { reviewer: string; decision: string; note: string; report_hash: string; at: string }[] };
   id: string;
   created_at: string;
   stale: boolean;
@@ -80,6 +131,22 @@ export type Analysis = {
   passages: Passage[];
 };
 export type Case = {
+  schema_version?: string;
+  legacy_bindings?: Record<string, string>;
+  domain_confirmation?: { facts_hash: string; revision: number } | null;
+  domain_workflow?: { mode: string; status: string; pending_question_id: string | null };
+  domain_case?: Record<string, unknown> | null;
+  domain_answers?: { data: Record<string, unknown>; actions: Record<string, string> };
+  domain_outcome?: DomainOutcome | null;
+  domain_today?: string | null;
+  orchestration?: { schema_version: string; active_task: BusinessTask | null;
+    suspended_task: BusinessTask | null; queued_tasks: { kind: string }[] };
+  identification?: { status: string; scenario: string | null; missing_fields: string[] };
+  fact_gaps?: { field: string; reason: string; impact: string }[];
+  dialogue?: { policy_version?: string; status?: string; pending?: GuidedQuestion | null;
+    partial_consent?: { facts_hash: string; revision: number }; deferred_query?: string };
+  workflow?: WorkflowInfo;
+  fact_conflicts?: Record<string, { previous: FactValue; candidate: FactValue }>;
   archived?: boolean;
   created_at?: string;
   updated_at?: string;
@@ -94,23 +161,39 @@ export type Case = {
   confirmed_revision: number | null;
   data_approved: boolean;
 };
-export type Panel = "facts" | "sources" | "about" | null;
+export type DomainQuestion = { id: string; key: string; kind: string; region: string[]; prompt: string;
+  why: string[]; impact: number | null; source_hint: string; forms: string[];
+  answer_schema?: { type: string; hint: string } };
+export type DomainOutcome = { status: "needs_input" | "ready" | "blocked" | "unsupported"; release: string;
+  mode: string; currency: string; facts_hash: string;
+  input_hash: string; today: string; stale?: boolean; questions: DomainQuestion[]; question_count?: number;
+  candidate_count: number; note?: string; candidate?: Record<string, unknown>;
+  upper?: { value: number | null; status: string }; lower?: { value: number | null; status: string };
+  structure?: { entities: [string, string, string][]; holds: [string, string, number, string][];
+    flows: [string, string, string, string, number, string][] };
+  regions?: { jurisdictions: string[]; actions: unknown[]; guaranteed: [string, string, string, string, number, string[], boolean][];
+    best: unknown[]; deadlines: unknown[]; conditions: unknown[] }[];
+  notes?: string[]; unmodelled?: unknown[] };
+export type Panel = "facts" | "sources" | "structure" | "about" | null;
 export function fieldLabel(field: FieldSpec, locale: string) {
   return locale === "en" ? field.label_en : field.description_zh;
 }
 export const suggestions = [
   {
     id: "dividends",
+    entryHint: "dividend_consultation" as EntryHint,
     title: "境外股息",
     text: "分析境外股息的 FSIE 处理，需要先确认哪些事实？",
   },
   {
     id: "facts",
+    entryHint: "fact_intake" as EntryHint,
     title: "梳理事实",
     text: "帮我整理境外股息分析所需的案例事实和证据清单。",
   },
   {
     id: "sources",
+    entryHint: "reference_lookup" as EntryHint,
     title: "查阅依据",
     text: "研究境外股息的 FSIE 处理，应当查阅哪些官方资料？",
   },

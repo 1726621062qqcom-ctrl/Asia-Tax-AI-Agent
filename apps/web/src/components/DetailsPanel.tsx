@@ -1,6 +1,7 @@
 import HintButton from "./HintButton";
 import FactEditor from "./FactEditor";
 import KnowledgeSearch from "./KnowledgeSearch";
+import StructurePanel from "./StructurePanel";
 import type { FactPatch } from "../api";
 import { isRetryable } from "../api";
 import { BookOpen, CircleHelp, ExternalLink, FileText, X } from "lucide-react";
@@ -25,6 +26,7 @@ export default function DetailsPanel({
   onConfirm,
   error,
   onRetry,
+  onDomainUpdate,
 }: {
   panel: Exclude<Panel, null>;
   current: Case;
@@ -36,13 +38,16 @@ export default function DetailsPanel({
   onConfirm: () => void;
   error: string;
   onRetry: () => void;
+  onDomainUpdate: (next: Case) => void;
   onSelectSource: (id: string) => void;
 }) {
   const { t } = useLocale();
   const title =
     panel === "facts"
       ? t("案例信息")
-      : panel === "sources"
+      : panel === "structure"
+        ? t("结构分析")
+        : panel === "sources"
         ? t("法规与来源")
         : t("关于 Taxora");
   const selected =
@@ -87,6 +92,7 @@ export default function DetailsPanel({
             onConfirm={onConfirm}
           />
         )}
+        {panel === "structure" && <StructurePanel current={current} onUpdate={onDomainUpdate} />}
         {panel === "sources" && (
           <>
             <KnowledgeSearch />

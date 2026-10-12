@@ -4,6 +4,7 @@ import {
   BookOpen,
   Globe2,
   Menu,
+  Network,
   PanelRightClose,
   PanelRightOpen,
 } from "lucide-react";
@@ -25,6 +26,7 @@ export default function App() {
   const {
     cases,
     current,
+    applyServerCase,
     fields,
     busy,
     currentBusy,
@@ -32,6 +34,7 @@ export default function App() {
     setActiveId,
     drafts,
     changeDraft,
+    chooseSuggestion,
     send,
     save,
     confirmAndAnalyze,
@@ -146,6 +149,15 @@ export default function App() {
             </HintButton>
             <HintButton
               className="icon-button"
+              aria-label={t("结构分析")}
+              title={t("结构分析")}
+              aria-expanded={panel === "structure"}
+              onClick={() => openPanel("structure")}
+            >
+              <Network size={18} />
+            </HintButton>
+            <HintButton
+              className="icon-button"
               aria-label={t("法规资料")}
               title={t("法规资料")}
               onClick={() => openPanel("sources")}
@@ -183,6 +195,15 @@ export default function App() {
             )}
           </div>
           <div className="composer-area">
+            {current.orchestration?.active_task && (
+              <div className="key-hint" role="status">
+                {t("当前任务")}：{t(`task:${current.orchestration.active_task.kind}`)}
+                {current.orchestration.active_task.status === "paused" && <HintButton
+                  className="text-button" onClick={() => changeDraft("继续案件")}>{t("恢复任务")}</HintButton>}
+                {current.orchestration.suspended_task && <HintButton className="text-button"
+                  onClick={() => changeDraft("继续案件")}>{t("恢复之前的任务")}</HintButton>}
+              </div>
+            )}
             {error && !panel && (
               <div className="request-error" role="alert">
                 {t(`error:${error}`)}{" "}
@@ -215,8 +236,8 @@ export default function App() {
             />
             {empty && (
               <SuggestedQuestions
-                onSelect={(text) => {
-                  changeDraft(text);
+                onSelect={(text, hint) => {
+                  chooseSuggestion(text, hint);
                   document
                     .querySelector<HTMLTextAreaElement>("textarea")
                     ?.focus();
@@ -262,6 +283,7 @@ export default function App() {
             onRetry={retry}
             onSave={save}
             onSelectSource={setSource}
+            onDomainUpdate={applyServerCase}
           />
         </div>
       )}
