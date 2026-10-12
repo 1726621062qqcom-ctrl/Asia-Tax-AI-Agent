@@ -12,7 +12,7 @@ from logging.config import fileConfig
 from pathlib import Path
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import MetaData, engine_from_config, pool
 
 # Make the repository root importable even without an editable install.
 ROOT = Path(__file__).resolve().parents[1]
@@ -22,14 +22,17 @@ if str(ROOT) not in sys.path:
 from packages.persistence.base import Base  # noqa: E402
 from packages.persistence import models  # noqa: E402,F401  (register mappers)
 from packages.persistence.config import get_settings  # noqa: E402
+from packages.chat.store import metadata as chat_metadata  # noqa: E402
 
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-config.set_main_option("sqlalchemy.url", get_settings().database_url)
-target_metadata = Base.metadata
+config.set_main_option("sqlalchemy.url", get_settings().database_url.replace('%', '%%'))
+target_metadata = MetaData()
+for table in [*Base.metadata.tables.values(), *chat_metadata.tables.values()]:
+    table.to_metadata(target_metadata)
 
 
 def run_migrations_offline() -> None:

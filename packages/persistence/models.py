@@ -15,16 +15,18 @@ Design rules:
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, Sequence
 
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     Float,
     ForeignKey,
     Integer,
+    JSON,
     String,
     Text,
     UniqueConstraint,
@@ -369,8 +371,14 @@ class Source(Base, TimestampMixin):
     source_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
     url: Mapped[str] = mapped_column(String(1024), nullable=False)
     structured_data_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
-    jurisdiction: Mapped[str] = mapped_column(String(8), nullable=False, server_default="HK")
+    jurisdiction: Mapped[str] = mapped_column(String(8), nullable=False, server_default="HK", index=True)
     language: Mapped[str] = mapped_column(String(8), nullable=False, server_default="en")
+    topic_tags: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    publication_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    effective_from: Mapped[date | None] = mapped_column(Date, nullable=True)
+    effective_to: Mapped[date | None] = mapped_column(Date, nullable=True)
+    version_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    coverage_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     manifest_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
     actual_sha256: Mapped[str | None] = mapped_column(String(64), nullable=True)
     content_bytes: Mapped[int | None] = mapped_column(Integer, nullable=True)
