@@ -12,6 +12,7 @@ from packages.chat import analysis
 from packages.chat.facts import validate_patch
 from packages.chat.service import ChatService, WorkflowError
 from packages.chat.store import ChatStore, RevisionConflict
+from packages.agent.providers import LegacyKnowledgeProvider
 
 HEADERS = {"x-asiatax-request": "1"}
 
@@ -26,7 +27,8 @@ def setup(tmp_path, monkeypatch):
         return {"income_type": "dividend", "entity_hk_business_status": "yes"}
     monkeypatch.setattr(analysis, "retrieve_units", lambda _: ([], "unavailable"))
     monkeypatch.setattr(analysis, "related_rulings", lambda _: {'status': 'unavailable', 'passages': []})
-    service = ChatService(store, extractor=extract)
+    service = ChatService(store, extractor=extract,
+                          provider=LegacyKnowledgeProvider(lambda _: {'status': 'unavailable', 'passages': []}))
     app.dependency_overrides[get_service] = lambda: service
     with TestClient(app) as client:
         client.get('/api/session')

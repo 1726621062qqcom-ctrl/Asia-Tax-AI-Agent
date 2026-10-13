@@ -7,6 +7,7 @@
 **启动与固定依赖**
 
 - `run_chat.py`：启动 FastAPI 和构建后的前端。
+- `run_combined.py`：启动构建后的前端、FastAPI 与固定版本知识服务；使用已验收的 hybrid＋combined 路由。
 - `install_li_release.py`：下载并校验集成文档指定的 Li 发布版本，安装在 Git 忽略的本地目录。
 
 **资料与离线检查**

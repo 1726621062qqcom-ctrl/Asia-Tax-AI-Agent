@@ -152,9 +152,12 @@ class TurnWorkflow:
         uses_case = bool(state['patch']) or state['turn'].get('uses_case', False)
         facts = {k: v for k, v in {**raw_facts(state['doc']), **state['patch']}.items() if v is not None} if uses_case else {}
         date, date_status = dialogue.query_date(facts) if uses_case else (None, 'not_needed')
+        from packages.chat.knowledge import references
+        law_refs, ruling_refs = references(state['turn']['query'])
         request = SearchRequest(request_id=state['request_id'], trace_id=state['workflow']['trace_id'],
             query=state['turn']['query'][:500], applicable_date=date,
-            date_status=date_status,
+            date_status=date_status, deadline_ms=10000,
+            kind='ruling' if ruling_refs and not law_refs else 'all',
             intent='case_analysis' if uses_case else 'reference_lookup', income_type=facts.get('income_type'),
             entity_type=facts.get('recipient_type') if facts.get('recipient_type') in ('individual', 'company', 'unknown') else 'not_needed',
             fact_filters=[{'field_name': key, 'value': facts[key]} for key in

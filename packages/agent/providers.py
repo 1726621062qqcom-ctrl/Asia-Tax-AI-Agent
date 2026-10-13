@@ -13,6 +13,7 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from packages.agent.contracts import (SearchRequest, SearchResult, TrustedContext, Reference,
                                       EvidenceResult, Evidence, Coverage, ProviderError)
+from packages.agent.source_policy import public_hk_official
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -26,7 +27,7 @@ def failure(request, provider, code, retryable=False):
 
 class MockKnowledgeProvider:
     def __init__(self, scenario='MOCK-01', path=None):
-        fixtures = json.loads((Path(path) if path else ROOT / 'docs/architecture/knowledge_provider_mock_fixtures.v0.1.json').read_text())
+        fixtures = json.loads((Path(path) if path else ROOT / 'docs/architecture/knowledge_provider_mock_fixtures.v0.1.json').read_text(encoding='utf-8'))
         self.fixture = next(f for f in fixtures['fixtures'] if f['scenario_id'] == scenario)
 
     def search_evidence(self, request, context):
@@ -49,7 +50,7 @@ class MockKnowledgeProvider:
 
 
 class LegacyKnowledgeProvider:
-    """Existing A database adapter. Original content is display-only by default."""
+    """Existing A database adapter; only named public official sources enter models."""
     def __init__(self, searcher=None):
         self.searcher = searcher
         self._snapshot = {}
@@ -85,13 +86,15 @@ class LegacyKnowledgeProvider:
                 version = item.get('snapshot_sha256') or digest
                 self._snapshot[(context.owner, item['unit_id'], version)] = deepcopy(item)
                 ref = Reference(evidence_id=item['unit_id'], source_version_id=version, unit_id=item['unit_id'])
+                official_for_model = public_hk_official(item['source_id'], item.get('url'))
                 evidence.append(Evidence(**ref.model_dump(), source_id=item['source_id'],
                     content_hash=digest, title=item.get('title') or item['source_id'],
                     source_type='legacy_reference', locator=item.get('locator'), url=item.get('url'),
-                    jurisdiction='HK', topic='dividend', model_use='denied', display_use='allowed',
+                    jurisdiction='HK', topic='dividend', model_use='allowed' if official_for_model else 'denied',
+                    model_text=item['text'] if official_for_model else None, display_use='allowed',
                     drift=bool(item.get('drift')), heading=item.get('heading'), retrieved_at=item.get('retrieved_at'),
                     coverage_cutoff=item.get('coverage_cutoff'), snapshot_sha256=item.get('snapshot_sha256'),
-                    policy_version='legacy-display-only-v1', display_ref=ref))
+                    policy_version='public-hk-official-v1' if official_for_model else 'legacy-display-only-v1', display_ref=ref))
             return SearchResult(request_id=request.request_id, trace_id=request.trace_id,
                 retrieval_id=request.request_id, provider='legacy', is_synthetic=False,
                 corpus_version='legacy-unversioned', status='ok' if evidence else 'no_match', evidence=evidence,
@@ -100,7 +103,7 @@ class LegacyKnowledgeProvider:
             return failure(request, 'legacy', 'UNAVAILABLE', True)
 
     def get_evidence(self, reference, purpose, context):
-        if purpose != 'display':
+        if purpose not in ('display', 'model'):
             return EvidenceResult(status='restricted', reference=reference)
         try:
             from packages.chat.knowledge import read_documents
@@ -111,6 +114,8 @@ class LegacyKnowledgeProvider:
                     digest = sha256(item['text'].encode()).hexdigest()
                     if (item.get('snapshot_sha256') or digest) != reference.source_version_id:
                         return EvidenceResult(status='version_unavailable', reference=reference)
+                    if purpose == 'model' and not public_hk_official(item['source_id'], item.get('url')):
+                        return EvidenceResult(status='restricted', reference=reference)
                     return EvidenceResult(status='ok', reference=reference, text=item['text'], content_hash=digest)
             return EvidenceResult(status='not_found', reference=reference)
         except Exception:
@@ -126,24 +131,31 @@ class CKnowledgeProvider:
         if parsed.username or parsed.password or parsed.query or parsed.fragment:
             raise ValueError('Invalid C endpoint')
         self.base_url, self.token, self.transport = base_url.rstrip('/'), token, transport
+        # Reuse the loopback connection for the search followed by bounded
+        # evidence reads. Recreating a client for each read can exhaust the
+        # per-request deadline before any citation is verified on Windows.
+        self._client = httpx.Client(follow_redirects=False, transport=transport,
+                                    trust_env=parsed.hostname not in ('localhost', '127.0.0.1'))
+
+    def close(self):
+        self._client.close()
 
     def _post(self, path, payload, timeout):
         started = monotonic()
-        with httpx.Client(timeout=timeout, follow_redirects=False, transport=self.transport) as client:
-            with client.stream('POST', self.base_url + path, json=payload,
-                               headers={'Authorization': 'Bearer ' + self.token} if self.token else {}) as response:
-                response.raise_for_status()
-                chunks, size = [], 0
-                for chunk in response.iter_bytes():
-                    if monotonic() - started >= timeout:
-                        raise httpx.TimeoutException('Knowledge total deadline exceeded')
-                    size += len(chunk)
-                    if size > 2_000_000:
-                        raise ValueError('Excessive provider response')
-                    chunks.append(chunk)
+        with self._client.stream('POST', self.base_url + path, json=payload, timeout=timeout,
+                                 headers={'Authorization': 'Bearer ' + self.token} if self.token else {}) as response:
+            response.raise_for_status()
+            chunks, size = [], 0
+            for chunk in response.iter_bytes():
                 if monotonic() - started >= timeout:
                     raise httpx.TimeoutException('Knowledge total deadline exceeded')
-                return json.loads(b''.join(chunks))
+                size += len(chunk)
+                if size > 2_000_000:
+                    raise ValueError('Excessive provider response')
+                chunks.append(chunk)
+            if monotonic() - started >= timeout:
+                raise httpx.TimeoutException('Knowledge total deadline exceeded')
+            return json.loads(b''.join(chunks))
 
     def search_evidence(self, request, context):
         try:

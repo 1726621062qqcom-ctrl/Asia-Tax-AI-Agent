@@ -46,7 +46,7 @@ EXPECT_KEYS = {'error','kind','task','facts_empty','facts','facts_absent','quest
 
 
 def load_dataset(path=DATASET):
-    data = json.loads(Path(path).read_text())
+    data = json.loads(Path(path).read_text(encoding='utf-8'))
     ids = [c['id'] for c in data['cases']]
     if len(ids) != len(set(ids)):
         raise ValueError('Duplicate case IDs')

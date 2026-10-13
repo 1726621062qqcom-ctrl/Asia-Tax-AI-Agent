@@ -4,10 +4,12 @@ Only synthetic facts are sent to the model. No URLs, keys, prompts or client dat
 are printed. A temporary schema is dropped in finally; public knowledge is read.
 """
 import argparse
+from hashlib import sha256
 import json
 import os
 from pathlib import Path
 import sys
+import traceback
 from time import monotonic
 from unittest.mock import patch
 from uuid import uuid4
@@ -66,7 +68,7 @@ def main():
                             '更正合成案情：股息金额改成2000000人民币，其他事实不变。', True)
                     results['checks']['corrected_amount'] = doc['facts'].get('dividend_amount', {}).get('value')
                     results['checks']['model_rounds'] = 2
-                    fixture = json.loads((ROOT / 'tests/integration/fixtures/holding.synthetic.json').read_text())
+                    fixture = json.loads((ROOT / 'tests/integration/fixtures/holding.synthetic.json').read_text(encoding='utf-8'))
                     bindings = {'dividend_amount': 'event.dividend'} if doc['facts'].get('dividend_amount', {}).get('value') == 2000000 else {}
                     fixture['event']['dividend'] = 2000000
                     doc = service.domain_setup(owner, doc['id'], doc['revision'], str(uuid4()), fixture, True, 'assess_current', bindings)
@@ -109,6 +111,7 @@ def main():
                         '分析香港境外股息，金额1000000人民币，实际收款日期2026年10月11日。请记录案情，不补猜其他事实。', True)
                 results['checks']['real_model_intake'] = bool(doc['facts'])
                 results['checks']['model_exact_fields'] = [k for k, v in required.items() if doc['facts'].get(k, {}).get('value') == v]
+                results['checks']['model_missing_or_incorrect_fields'] = sorted(set(required) - set(results['checks']['model_exact_fields']))
             else:
                 results['checks']['real_model_intake'] = 'not_run'
             # Explicit fixture confirmation is distinct from model extraction.
@@ -132,13 +135,23 @@ def main():
             from packages.agent.review import report_hash
             results['checks']['report_frozen'] = report_hash(report) == report['report_hash']
             results['checks']['missing_domain_citations'] = len(report['missing_locators'])
+            citation_map = report['outcome'].get('citation_map', {})
+            read_citations = set(report['domain_citation_coverage']['read'])
+            results['checks']['rule_trace_count'] = len(citation_map)
+            results['checks']['rules_missing_readable_basis'] = sorted(
+                rule for rule, citations in citation_map.items()
+                if not citations or not set(citations) <= read_citations)
+            all_passages = report['passages'] + report['fsie_assessment']['related_rulings']['passages']
+            results['checks']['replayed_passage_count'] = len(all_passages)
+            results['checks']['passage_hashes_valid'] = all(
+                sha256(p['text'].encode()).hexdigest() == p['text_sha256'] for p in all_passages)
             try:
                 store.get('user:other', doc['id'])
                 results['checks']['owner_isolation'] = False
             except CaseNotFound:
                 results['checks']['owner_isolation'] = True
             planning = store.create(owner)
-            fixture = json.loads((ROOT / 'tests/integration/fixtures/holding.synthetic.json').read_text())
+            fixture = json.loads((ROOT / 'tests/integration/fixtures/holding.synthetic.json').read_text(encoding='utf-8'))
             planning = service.domain_setup(owner, planning['id'], 0, str(uuid4()), fixture, True, 'plan_structure')
             planning = service.domain_plan(owner, planning['id'], planning['revision'], str(uuid4()))
             for _ in range(2):
@@ -151,11 +164,15 @@ def main():
                 results['checks']['answer_reload'], results['checks']['owner_isolation'], results['checks']['law_locators'] == 21,
                 results['checks']['rulings_status'] == 'available', results['checks']['ruling_passages'] > 0,
                 results['checks']['report_frozen'], results['checks']['missing_domain_citations'] == 0,
+                not results['checks']['rules_missing_readable_basis'], results['checks']['passage_hashes_valid'],
                 results['checks']['fixed_entities'] == ['OP', 'ULT'], results['checks']['planning_rounds'] == 3]) else 'failed'
     except Exception as exc:
         # Never serialize str(exc): DB/model exception messages may contain secrets.
         results['status'] = 'failed'
         results['error'] = exc.code if isinstance(exc, WorkflowError) else type(exc).__name__
+        frames = traceback.extract_tb(exc.__traceback__)
+        if frames:
+            results['error_site'] = f'{Path(frames[-1].filename).name}:{frames[-1].lineno}'
     finally:
         if store: store.engine.dispose()
         if created:

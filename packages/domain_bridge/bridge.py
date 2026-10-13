@@ -15,7 +15,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[2]
 PINNED_DB_SHA256 = '2756d2862330cb746d4103f0e690182fdc9fe7b2436a4ac738b156416aeca143'
-PINNED_SOURCE_SHA256 = 'b1f2c38a996481f1d1099aae43f5cb2ed68e7e2abdb1a32863289306811dd921'
+PINNED_SOURCE_SHA256 = 'd4c5495302fc9c755eb750d70fc181dc99f58e6905a79709e93845ea7b5d37e9'
 PINNED_COMMIT = '771e4524961bcc36718db1c9331e7a5f4cda0ce7'
 
 
@@ -132,10 +132,10 @@ def verify_release(path: Path) -> None:
         raise DomainError('release_hash_mismatch')
     files = sorted({*path.glob('tax_graph/**/*.py'), *path.glob('tax_graph/**/*.csv'),
                     *path.glob('tax_graph/**/*.json'), *path.glob('official/tools/**/*.py'),
-                    *path.glob('official/**/*.csv')})
+                    *path.glob('official/**/*.csv')}, key=lambda file: file.relative_to(path).as_posix())
     source = hashlib.sha256()
     for file in files:
-        source.update(str(file.relative_to(path)).encode() + b'\0')
+        source.update(file.relative_to(path).as_posix().encode() + b'\0')
         source.update(hashlib.sha256(file.read_bytes()).digest())
     if source.hexdigest() != PINNED_SOURCE_SHA256:
         raise DomainError('release_hash_mismatch')
@@ -164,7 +164,7 @@ def run_domain(case: DomainCase, answers: dict, *, today: str, mode: str,
     raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(',', ':'))
     facts_hash = hashlib.sha256(raw.encode()).hexdigest()
     env = {key: os.environ[key] for key in ('PATH', 'LANG', 'LC_ALL', 'SYSTEMROOT') if key in os.environ}
-    env.update({'FSIE_LI_RELEASE_DIR': str(path),
+    env.update({'FSIE_LI_RELEASE_DIR': str(path), 'PYTHONIOENCODING': 'utf-8',
                 'PYTHONPATH': str(ROOT) + os.pathsep + str(path)})
     from packages.agent.budget import current_budget
     budget = current_budget.get()
@@ -174,7 +174,7 @@ def run_domain(case: DomainCase, answers: dict, *, today: str, mode: str,
     started = monotonic()
     try:
         result = subprocess.run([sys.executable, '-m', 'packages.domain_bridge.worker'], input=raw,
-                                text=True, capture_output=True, cwd=path, env=env,
+                                text=True, encoding='utf-8', capture_output=True, cwd=path, env=env,
                                 timeout=timeout, check=False)
     except subprocess.TimeoutExpired:
         raise DomainError('domain_timeout') from None

@@ -14,7 +14,7 @@ from packages.domain_bridge.bridge import DomainCase, DomainError, release_path,
 from packages.agent.providers import MockKnowledgeProvider
 from packages.agent.review import report_hash
 
-FIXTURE = json.loads((Path(__file__).parent / 'fixtures/holding.synthetic.json').read_text())
+FIXTURE = json.loads((Path(__file__).parent / 'fixtures/holding.synthetic.json').read_text(encoding='utf-8'))
 OWNER = 'user:test'
 
 

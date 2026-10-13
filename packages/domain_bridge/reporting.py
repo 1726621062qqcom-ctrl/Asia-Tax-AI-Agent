@@ -32,6 +32,7 @@ def build_report(doc, owner, provider, partial):
             part = retrieve(scoped_provider, SearchRequest(
                 schema_version='0.2.0', request_id=str(uuid4()), trace_id=str(uuid4()),
                 query='结构计算所引用的官方依据', jurisdiction=None, topic=None,
+                deadline_ms=10000,
                 applicable_date=date.fromisoformat(doc['domain_case']['event']['on']),
                 date_status='planned' if outcome['mode'] == 'plan_structure' else 'actual',
                 locators=references[start:start + 7], kind='law'), TrustedContext(owner=owner, case_id=doc['id']))

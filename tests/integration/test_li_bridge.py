@@ -43,7 +43,7 @@ def test_saved_case_planner_question_answer_and_conflict(real_release, tmp_path)
     service = ChatService(store)
     chat_app.dependency_overrides[optional_user] = lambda: USER
     chat_app.dependency_overrides[get_service] = lambda: service
-    source = json.loads((RELEASE / 'tax_graph/examples/meridian.json').read_text())
+    source = json.loads((RELEASE / 'tax_graph/examples/meridian.json').read_text(encoding='utf-8'))
     source['currency'] = 'CNY'
     source['notes'] = ['Synthetic CNY variant for engineering tests; not the original SGD case.']
     try:
@@ -111,7 +111,8 @@ def test_official_search_and_exact_replay(real_release):
         result = response.json()
         assert result['provider'] == 'c' and result['status'] == 'ok'
         hit = result['evidence'][0]
-        assert hit['model_use'] == 'denied' and hit['display_use'] == 'allowed'
+        assert hit['model_use'] == 'allowed' and hit['display_use'] == 'allowed'
+        assert hit['policy_version'] == 'public-hk-official-v1'
         ref = {key: hit[key] for key in ('evidence_id', 'source_version_id', 'unit_id')}
         replay = client.post('/evidence', json={'reference': ref, 'purpose': 'display',
                                                 'trusted_context': {'owner': 'user:test'}}).json()
@@ -120,7 +121,24 @@ def test_official_search_and_exact_replay(real_release):
         assert sha256(replay['text'].encode()).hexdigest() == hit['content_hash']
         restricted = client.post('/evidence', json={'reference': ref, 'purpose': 'model',
                                                     'trusted_context': {'owner': 'user:test'}}).json()
-        assert restricted['status'] == 'restricted'
+        assert restricted['status'] == 'ok'
+        assert restricted['content_hash'] == hit['content_hash']
+
+
+@pytest.mark.parametrize(('query', 'expected'), [
+    ('请查第15K条和第15M条', {'s.15K(1)', 's.15M(1)'}),
+    ('纯股权持有实体经济实质要求和外包条件', {'s.15K(2)', 's.15K(3)'}),
+])
+def test_official_search_navigates_sections_and_chinese_topics(real_release, query, expected):
+    with TestClient(library_app) as client:
+        response = client.post('/search', json={'request': {
+            'request_id': 'navigation', 'trace_id': 'navigation', 'query': query},
+            'trusted_context': {'owner': 'user:test'}})
+        assert response.status_code == 200
+        result = response.json()
+        assert result['status'] == 'ok'
+        locators = {span['locator'] for hit in result['evidence'] for span in hit['locator_spans']}
+        assert expected <= locators
 
 
 def test_existing_b_retriever_gets_bounded_partial_coverage(real_release):
@@ -144,7 +162,8 @@ def test_existing_b_retriever_gets_bounded_partial_coverage(real_release):
             request_id='bounded', trace_id='bounded', query='香港境外股息 FSIE 适用规则',
             intent='case_analysis', locators=locators), TrustedContext(owner='user:test'))
         assert result['status'] == 'available'
-        assert result['reason_code'] == 'evidence_restricted'
+        assert result['reason_code'] == 'evidence_available'
+        assert result['model_evidence']
         assert not result['coverage']['truncated']
         assert {p['locator'] for p in result['passages']} == set(locators)
         assert budget.counts['evidence'] == 7
@@ -179,7 +198,7 @@ def test_b_analysis_reads_li_knowledge_without_approving_gaps(real_release):
 def test_combined_current_report_resolves_rule_ids_to_legal_text(real_release, tmp_path):
     from packages.agent.providers import CKnowledgeProvider, RoutedKnowledgeProvider, LegacyKnowledgeProvider
     from packages.agent.review import report_hash
-    source = json.loads((Path(__file__).parent / 'fixtures/holding.synthetic.json').read_text())
+    source = json.loads((Path(__file__).parent / 'fixtures/holding.synthetic.json').read_text(encoding='utf-8'))
     store = ChatStore(f'sqlite:///{tmp_path}/combined-report.sqlite')
     with TestClient(library_app) as library:
         def dispatch(request):

@@ -125,6 +125,8 @@ python -m alembic upgrade head
 
 启动两个终端（都激活虚拟环境并位于仓库根目录）：
 
+若在一台电脑上直接运行本轮验收过的组合链路，也可以只用一个终端执行 `python -m scripts.run_combined`；它临时启动本机知识服务，并在退出时回收。此入口显式使用 hybrid＋combined，避免遗漏 `.env` 中的相关开关。
+
 ```sh
 # 终端 1
 python -m uvicorn apps.knowledge_api.main:app --host 127.0.0.1 --port 8010

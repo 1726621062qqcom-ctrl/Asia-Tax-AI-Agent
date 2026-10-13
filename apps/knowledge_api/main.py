@@ -1,4 +1,4 @@
-"""C provider wire service. Run on loopback; public text is display-only."""
+"""C provider wire service for pinned, replayable official text."""
 from __future__ import annotations
 
 from datetime import date, timedelta
@@ -19,6 +19,7 @@ from pydantic import BaseModel
 from packages.agent.contracts import (Coverage, Evidence, EvidenceResult, Reference, SearchRequest,
                                       SearchResult, TrustedContext)
 from packages.domain_bridge.bridge import PINNED_DB_SHA256, DomainError, release_path, verify_release
+from packages.agent.source_policy import public_hk_official
 
 app = FastAPI(title='Official tax library read-only API', version='0.1.0')
 _thread = local()
@@ -102,8 +103,8 @@ def _locator_hits(lib, locators):
         text = row[0]
         if len(text) > 30000:
             continue
+        spans = [(m.group(1), m.start()) for m in re.finditer(r'(?m)^\((\d+)\)\s*', text)]
         if subsection:
-            spans = [(m.group(1), m.start()) for m in re.finditer(r'(?m)^\((\d+)\)\s*', text)]
             matches = [i for i, (number, _) in enumerate(spans) if number == subsection]
             if len(matches) != 1:
                 continue
@@ -117,8 +118,17 @@ def _locator_hits(lib, locators):
                 requested_locator='s.' + section if match else cite, locator_spans=[],
                 valid_from=lib.meta[cite]['valid_from'], valid_to=lib.meta[cite]['valid_to'],
                 title=lib.meta[cite]['title'], lang=lib.meta[cite]['lang'])
-        groups[cite].locator_spans.append({'locator': locator, 'start': start, 'end': end,
-                                          'content_hash': sha256(text[start:end].encode()).hexdigest()})
+        requested = [{'locator': locator, 'start': start, 'end': end}]
+        if match and not subsection:
+            requested.extend({'locator': f's.{section}({number})', 'start': offset,
+                              'end': spans[index + 1][1] if index + 1 < len(spans) else len(text)}
+                             for index, (number, offset) in enumerate(spans))
+        existing = {span['locator'] for span in groups[cite].locator_spans}
+        for span in requested:
+            if span['locator'] not in existing:
+                span['content_hash'] = sha256(text[span['start']:span['end']].encode()).hexdigest()
+                groups[cite].locator_spans.append(span)
+                existing.add(span['locator'])
     return list(groups.values())
 
 
@@ -138,27 +148,32 @@ def search(body: SearchWire, request: Request):
                             provider='c', is_synthetic=False, corpus_version=PINNED_DB_SHA256,
                             status='no_match', coverage=Coverage(status='partial', scope='Li official library',
                                                                 missing_requirements=['本资料库不包含独立税务裁定案例']))
+    navigation = list(r.locators)
+    if not navigation and r.jurisdiction == 'HK':
+        from packages.chat.knowledge import outside_scope, references, topic_locators
+        explicit, cases = references(r.query)
+        navigation = explicit or ([] if cases or outside_scope(r.query) else topic_locators(r.query))
     hits = lib.search(r.query, k=r.limit, jur=r.jurisdiction.lower() if r.jurisdiction else None, as_of=r.applicable_date.isoformat() if r.applicable_date else None,
                       channels=('exact', 'bm25'), today=date.today().isoformat())
     retrieval_gap = None
     if not isinstance(hits, list):
         retrieval_gap = hits.reason
         hits = []
-    direct = _locator_hits(lib, r.locators) if r.locators else []
+    direct = _locator_hits(lib, navigation) if navigation else []
     if r.applicable_date:
         when = r.applicable_date.isoformat()
         direct = [hit for hit in direct if (not hit.valid_from or hit.valid_from <= when) and
                   (not hit.valid_to or when < hit.valid_to)]
     selected = []
     seen = set()
-    for hit in direct if r.locators else hits:
+    for hit in direct if navigation and direct else hits:
         key = (hit.cite_id, *hit.span)
         if key not in seen:
             selected.append(hit)
             seen.add(key)
     # Read seven parent sections once, then project all verified child spans.
     # The other seven evidence reads remain available for the routed ruling source.
-    max_evidence = 7 if r.locators else r.limit
+    max_evidence = 7 if navigation else r.limit
     truncated = len(selected) > max_evidence
     selected = selected[:max_evidence]
     evidence = []
@@ -182,14 +197,17 @@ def search(body: SearchWire, request: Request):
         cutoff = date.fromisoformat(hit.valid_to) - timedelta(days=1) if hit.valid_to else None
         source_id = 'hk_hkel_iro_cap112' if meta['expr_id'] == 'hk.cap112.en' else meta['expr_id']
         is_fsie = source_id == 'hk_hkel_iro_cap112' and re.search(r'#s15(?:H|I|J|K|L|M|N|O|P|Q|R|S)$', hit.cite_id)
+        official_for_model = public_hk_official(source_id, doc['url'] if doc else None)
         evidence.append(Evidence(**reference.model_dump(), source_id=source_id, content_hash=sha256(excerpt.encode()).hexdigest(),
                                  title=hit.title or hit.cite_id, source_type=doc['type'] if doc else 'official',
                                  url=doc['url'] if doc else None, locator=getattr(hit, 'requested_locator', hit.cite_id),
                                  heading='Li cite: ' + hit.cite_id, jurisdiction=meta['jur'].upper() if meta['jur'] else None,
                                  topic='dividend' if is_fsie else None, language=hit.lang or '',
                                  effective_from=date.fromisoformat(hit.valid_from) if hit.valid_from else None,
-                                 effective_to=cutoff, verification_status='unverified', model_use='denied',
-                                 display_use='allowed', policy_version='official-display-only-v1', display_ref=reference,
+                                 effective_to=cutoff, verification_status='unverified',
+                                 model_use='allowed' if official_for_model else 'denied',
+                                 model_text=excerpt if official_for_model else None,
+                                 display_use='allowed', policy_version='public-hk-official-v1' if official_for_model else 'official-display-only-v1', display_ref=reference,
                                  locator_spans=getattr(hit, 'locator_spans', []), mapping_version='li-locator-2026-10-11'))
     missing = [retrieval_gap] if retrieval_gap and not direct else []
     if truncated:
@@ -209,13 +227,17 @@ def search(body: SearchWire, request: Request):
 def evidence(body: EvidenceWire, request: Request):
     _authorise(request)
     ref = body.reference
-    if body.purpose == 'model':
-        return EvidenceResult(status='restricted', reference=ref)
     try:
         cite, start, end = _span(ref)
     except HTTPException as exc:
         return EvidenceResult(status='version_unavailable' if exc.status_code == 409 else 'not_found', reference=ref)
     lib = _library()
+    if body.purpose == 'model':
+        meta = lib.meta.get(cite)
+        doc = lib.con.execute('SELECT url FROM doc WHERE id = ?', (meta['expr_id'],)).fetchone() if meta else None
+        source_id = 'hk_hkel_iro_cap112' if meta and meta['expr_id'] == 'hk.cap112.en' else meta['expr_id'] if meta else ''
+        if not public_hk_official(source_id, doc['url'] if doc else None):
+            return EvidenceResult(status='restricted', reference=ref)
     row = lib.con.execute('SELECT text FROM clause WHERE cite_id = ?', (cite,)).fetchone()
     if not row or end > len(row[0]):
         return EvidenceResult(status='not_found', reference=ref)

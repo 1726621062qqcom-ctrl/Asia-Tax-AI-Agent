@@ -51,7 +51,7 @@ def provider_related_rulings(provider, context):
     from packages.agent.contracts import SearchRequest
     from packages.agent.knowledge import retrieve, display_result
     return display_result(retrieve(provider, SearchRequest(request_id=str(uuid4()), trace_id=str(uuid4()),
-        query='dividend', kind='ruling'), context))
+        query='dividend', kind='ruling', deadline_ms=10000), context))
 
 
 def related_rulings(facts: dict) -> dict:
@@ -90,6 +90,7 @@ def analyze(case_id: str, facts: dict, confirmed_revision: int, *, provider=None
         when, date_status = query_date(facts)
         bundle = retrieve(provider, SearchRequest(request_id=str(uuid4()), trace_id=str(uuid4()),
             query='香港境外股息 FSIE 适用规则', intent='case_analysis', locators=locators,
+            deadline_ms=10000,
             applicable_date=when, date_status=date_status,
             entity_type=facts.get('recipient_type') if facts.get('recipient_type') in ('company', 'individual', 'unknown') else 'unknown',
             fact_filters=[{'field_name': key, 'value': facts[key]} for key in

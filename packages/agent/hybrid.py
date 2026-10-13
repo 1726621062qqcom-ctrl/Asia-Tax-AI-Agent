@@ -273,11 +273,14 @@ class HybridWorkflow(TurnWorkflow):
             facts = raw_facts(self.projected(state)) if uses_case else {}
             when, date_status = dialogue.query_date(facts) if uses_case else (None, 'not_needed')
             query = job.get('query') or turn['query']
+            from packages.chat.knowledge import references
+            law_refs, ruling_refs = references(query)
             req = SearchRequest(request_id=state['request_id'], trace_id=meta['trace_id'], query=query,
                 jurisdiction='HK', topic='dividend', applicable_date=when, date_status=date_status,
+                deadline_ms=10000,
                 intent='case_analysis' if uses_case else 'reference_lookup', income_type=facts.get('income_type'),
                 entity_type=facts.get('recipient_type') if facts.get('recipient_type') in ('company', 'individual', 'unknown') else 'not_needed',
-                kind=job.get('tool_kind', 'all'),
+                kind=job.get('tool_kind') or ('ruling' if ruling_refs and not law_refs else 'all'),
                 fact_filters=[{'field_name': k, 'value': facts[k]} for k in
                     ('income_type', 'source_analysis', 'entity_hk_business_status', 'receipt_location', 'recipient_type')
                     if isinstance(facts.get(k), str) and facts[k] not in ('unknown', 'conflict')])
