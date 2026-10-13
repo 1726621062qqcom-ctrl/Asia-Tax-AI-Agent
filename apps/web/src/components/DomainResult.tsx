@@ -30,7 +30,7 @@ export default function DomainResult({ result }: { result: Analysis }) {
   return <article className={`analysis-result ${result.stale ? 'is-stale' : ''}`}>
     <strong>{result.stale ? '研究稿已过期' : `合并编排研究稿 · ${result.review?.status || '待专业复核'}`}</strong>
     <OutcomeView outcome={result.outcome} />
-    {result.fsie_assessment && <details open><summary>Zijian FSIE 规则链（同一事实版本）</summary>
+    {result.fsie_assessment && <details open><summary>香港 FSIE 规则核对（同一案情）</summary>
       <ul>{result.fsie_assessment.nodes.map(n => <li key={n.node}>{n.node}：{n.output}</li>)}</ul></details>}
     <details open><summary>待补问题</summary><ul>{result.outcome.questions.map(q => <li key={q.id}>[{q.kind}] {q.prompt}</li>)}</ul></details>
     <details><summary>本次依据原文</summary><Passages passages={result.passages} /></details>

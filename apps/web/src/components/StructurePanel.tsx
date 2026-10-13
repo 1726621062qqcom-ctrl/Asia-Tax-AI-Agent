@@ -15,7 +15,7 @@ const sample = {
 const errors: Record<string, string> = {
   revision_conflict: "案件已被其他操作更新，已重新读取。请核对后重试。",
   question_changed: "这个问题已过期，请使用当前问题。",
-  currency_required: "请明确填写币种。", domain_unavailable: "请先安装 Li 发布包。",
+  currency_required: "请明确填写币种。", domain_unavailable: "结构分析服务暂不可用，请稍后重试。",
   domain_execution_failed: "引擎未完成计算，案件没有保存半次更新。请查看测试说明。",
   domain_timeout: "本轮计算超时，案件没有部分更新。",
   confirmation_required: "请先确认当前结构事实。", partial_confirmation_required: "仍有缺口；请明确选择生成部分研究稿。",
@@ -81,8 +81,8 @@ export default function StructurePanel({ current, onUpdate }: Props) {
   const question = outcome?.questions.find(q => q.id === current.domain_workflow?.pending_question_id);
   const professional = outcome?.questions.filter(q => ["ruling", "library"].includes(q.kind)) || [];
   return <div className="structure-panel">
-    <p>同一案件的事实交给 Zijian 管理，Li 负责结构计算。金额、比例和时间以明确填写的值为准。</p>
-    <p className="structure-status">引擎：{ready === null ? "检查中" : ready ? "已配置" : "待安装"}；发布版本 {outcome?.release?.slice(0, 8) || "771e452"}</p>
+    <p>根据本案已确认的交易事实进行结构测算。金额、比例和时间以明确填写的值为准。</p>
+    <p className="structure-status">结构分析服务：{ready === null ? "检查中" : ready ? "可用" : "暂不可用"}</p>
     <label>分析目的<select aria-label="分析目的" value={mode} onChange={e => setMode(e.target.value)}>
       <option value="assess_current">只分析现有结构</option><option value="plan_structure">比较新结构方案</option><option value="review_paid">核对已缴税事项（实验入口）</option>
     </select></label>

@@ -111,12 +111,12 @@ def render(report):
         lines.append(f"- {passage.get('locator')} · SHA-256 {passage['text_sha256']} · {passage.get('url') or ''}")
     lines.extend('- ' + gap for gap in report['evidence_gaps'])
     if report.get('fsie_assessment'):
-        lines.extend(['', '## Zijian FSIE 规则链（同一事实版本）', ''])
+        lines.extend(['', '## 香港 FSIE 规则核对（同一案情）', ''])
         for node in report['fsie_assessment']['nodes']:
             lines.append('- ' + node['node'] + '：' + node['output'])
         lines.extend('- 待补：' + gap for gap in report['fsie_assessment'].get('blockers', []))
     else:
-        lines.extend(['', '尚未确认聊天字段与公司/股权的归属，未附加 Zijian FSIE 规则链。'])
+        lines.extend(['', '尚未确认聊天事实与公司、股权的对应关系，未附加香港 FSIE 规则核对。'])
     lines.extend(['', '## 限制', '', '工程校验不代表税务专业核验；模型上界依赖列明事实、行动及规则范围。'])
     lines.extend('- ' + str(item) for item in o.get('unmodelled', []))
     lines.extend('- ' + str(item) for item in o.get('notes', []))
