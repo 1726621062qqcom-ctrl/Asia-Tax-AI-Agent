@@ -40,7 +40,7 @@ def _clean(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-def segment_cap112(xml_bytes: bytes) -> list[UnitDraft]:
+def segment_cap112(xml_bytes: bytes, sections: list[str] | None = None) -> list[UnitDraft]:
     """Split Division 3A into subsection-level units (s.15M(2) granularity).
 
     Sections without subsections become single section-level units.
@@ -48,7 +48,7 @@ def segment_cap112(xml_bytes: bytes) -> list[UnitDraft]:
     root = ET.fromstring(xml_bytes)
     drafts: list[UnitDraft] = []
     ordinal = 0
-    for sec_num in FSIE_SECTIONS:
+    for sec_num in (sections if sections is not None else FSIE_SECTIONS):
         section = None
         for candidate in root.iter(H + "section"):
             if candidate.get("name") == f"s{sec_num}":
@@ -59,13 +59,19 @@ def segment_cap112(xml_bytes: bytes) -> list[UnitDraft]:
         heading = section.find(H + "heading")
         heading_text = _clean("".join(heading.itertext())) if heading is not None else None
 
-        subsections = list(section.iter(H + "subsection"))
+        # Only top-level subsections belong to this section. Descendant
+        # subsections inside notes or amendment history can repeat names.
+        subsections = list(section.findall(H + "subsection"))
         if subsections:
             for sub in subsections:
-                sub_num = sub.get("name")
                 text = _clean("".join(sub.itertext()))
                 if not text:
                     continue
+                # The official XML snapshot has one mislabeled name attribute:
+                # s16(2CD) carries name="2CC". The printed provision number is
+                # authoritative for the locator and avoids a duplicate unit ID.
+                printed = re.match(r"^\(([0-9A-Za-z]+)\)", text)
+                sub_num = printed.group(1) if printed else sub.get("name")
                 ordinal += 1
                 drafts.append(
                     UnitDraft(

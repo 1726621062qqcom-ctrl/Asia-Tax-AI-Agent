@@ -1,4 +1,5 @@
 import manifest from "../../../knowledge/hong_kong/fsie/source_manifest.json";
+import expensesManifest from "../../../knowledge/hong_kong/profits_tax_deductions/source_manifest.json";
 
 export type FactValue = string | number | string[];
 export type FactRecord = {
@@ -13,6 +14,7 @@ export type FieldSpec = {
   description_zh: string;
   label_en: string;
   data_type: string;
+  domain?: string;
   enum_values?: string[];
 };
 export type WorkflowInfo = {
@@ -220,13 +222,35 @@ export const sourceInfo = [
     tag: "税务局 · 常见问题",
     description: "结合案例事实和所属期间阅读相关解答。",
   },
-].map((info) => {
-  const source = manifest.sources.find((s) => s.source_id === info.id)!;
+].concat([
+  {
+    id: "hk_hkel_iro_cap112_expenses",
+    label: "企业费用扣除 · 第 16、17 条",
+    tag: "香港电子法例 · 法例",
+    description: "核对一般费用扣除条件及不得扣除的项目。",
+  },
+  {
+    id: "hk_ird_profits_tax_deductions",
+    label: "利得税费用扣除指引",
+    tag: "税务局 · 指引",
+    description: "了解税务局对普通经营费用和排除项目的说明。",
+  },
+  {
+    id: "hk_ird_bir51_notes_deductions",
+    label: "BIR51 公司报税说明",
+    tag: "税务局 · 报税说明",
+    description: "核对公司报税时的费用调整和所需资料。",
+  },
+]).map((info) => {
+  const source = [...manifest.sources, ...expensesManifest.sources].find((s) => s.source_id === info.id)!;
   return {
     ...info,
     url: source.url,
     title: source.title,
-    captured: source.retrieved_at?.slice(0, 10) || "未记录",
+    coverageCutoff: expensesManifest.sources.some((entry) => entry.source_id === info.id)
+      ? expensesManifest.legal_coverage_cutoff : manifest.legal_coverage_cutoff,
+    captured: "retrieved_at" in source && typeof source.retrieved_at === "string"
+      ? source.retrieved_at.slice(0, 10) : "未记录",
   };
 });
 export const coverageCutoff = manifest.legal_coverage_cutoff;

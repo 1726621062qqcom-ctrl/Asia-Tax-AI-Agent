@@ -56,6 +56,7 @@ class Message(Mutation):
     data_approved: bool = False
     entry_hint: Literal['auto', 'dividend_consultation', 'fact_intake', 'reference_lookup'] = 'auto'
     reply_to_question_id: str | None = Field(default=None, min_length=1, max_length=200)
+    locale: Literal['zh', 'en'] = 'zh'
 
 
 class FactEdit(Mutation):
@@ -99,6 +100,12 @@ def session(user=Depends(required_user)):
 def knowledge_search(q: str = Query(min_length=2, max_length=500),
                      kind: Literal['all', 'law', 'ruling', 'guidance'] = 'all',
                      workspace: str = Depends(owner), provider=Depends(get_provider)):
+    from packages.chat import expenses
+    if expenses.should_handle({}, q):
+        result = expenses.search(q.strip(), kind=kind)
+        if result['status'] == 'unavailable':
+            raise HTTPException(503, 'knowledge_unavailable')
+        return result
     from packages.agent.contracts import SearchRequest, TrustedContext
     from packages.agent.knowledge import retrieve, display_result
     from uuid import uuid4
@@ -131,20 +138,20 @@ async def message(case_id: UUID, body: Message, request: Request, response: Resp
         raise HTTPException(422, "empty_message")
     if 'text/event-stream' not in request.headers.get('accept', ''):
         return await asyncio.to_thread(call, service.message, workspace, str(case_id), body.revision, str(body.request_id), text, body.data_approved,
-                                       body.entry_hint, body.reply_to_question_id)
+                                       body.entry_hint, body.reply_to_question_id, body.locale)
     if (body.reply_to_question_id or '').startswith('li:') or text.startswith('结构答复：'):
         async def domain_events():
             yield ': connected\n\n'
             try:
                 doc = await asyncio.to_thread(call, service.message, workspace, str(case_id), body.revision,
-                    str(body.request_id), text, body.data_approved, body.entry_hint, body.reply_to_question_id)
+                    str(body.request_id), text, body.data_approved, body.entry_hint, body.reply_to_question_id, body.locale)
                 yield 'data: ' + json.dumps({'type': 'done', 'case': doc}, ensure_ascii=False) + '\n\n'
             except HTTPException as exc:
                 yield 'data: ' + json.dumps({'type': 'error', 'code': exc.detail}) + '\n\n'
         return StreamingResponse(domain_events(), media_type='text/event-stream',
                                  headers={'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no'})
     doc, duplicate = await asyncio.to_thread(call, service.load_message, workspace, str(case_id), body.revision, str(body.request_id),
-                                            text, body.data_approved, body.entry_hint, body.reply_to_question_id)
+                                            text, body.data_approved, body.entry_hint, body.reply_to_question_id, body.locale)
     if not duplicate:
         if not (doc['data_approved'] or body.data_approved):
             raise HTTPException(422, 'data_confirmation_required')
@@ -162,7 +169,7 @@ async def message(case_id: UUID, body: Message, request: Request, response: Resp
                 return
             async with asyncio.timeout(90), aclosing(events(service, doc, workspace, body.revision, str(body.request_id), text, request.is_disconnected,
                     entry_hint=body.entry_hint, reply_to_question_id=body.reply_to_question_id,
-                    data_approved=body.data_approved)) as stream:
+                    data_approved=body.data_approved, locale=body.locale)) as stream:
                 async for event in stream:
                     yield encode(event)
         except RevisionConflict:

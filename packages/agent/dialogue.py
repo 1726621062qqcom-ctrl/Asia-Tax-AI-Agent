@@ -185,7 +185,20 @@ def mode_question(doc):
             'example': '查一般规定 / 分析这笔交易', 'attempt': 1, 'based_on_revision': doc.get('revision', 0) + 1}
 
 
-def render_question(q):
+def render_question(q, locale='zh'):
+    if locale == 'en':
+        if q.get('field'):
+            from packages.chat.facts import catalog
+            label = next((f.get('label_en', q['field']) for f in catalog()
+                          if f['field_name'] == q['field']), q['field'])
+            prompt = label if label.endswith(('?', '.')) else label + '.'
+            return f'Please clarify: {prompt} If this is unknown, you can say so; no assumption will be made.'
+        if q.get('kind') == 'choice':
+            return 'Would you like to add more information, see a partial draft, or pause?'
+        if q.get('kind') == 'mode':
+            if q['text'].isascii():
+                return q['text'] + '\n\n' + q['why'] + '\nFor example: ' + q['example']
+            return 'Would you like to check the general rules or analyze your own transaction?'
     return q['text'] + '\n\n' + q['why'] + '\n例如：' + q['example']
 
 
@@ -324,7 +337,7 @@ def summary_text(doc):
             '\n\n本次仅汇总信息，原追问进度保留；不会自动确认事实或授权部分分析稿。')
 
 
-def update_dialogue(doc, turn, patch):
+def update_dialogue(doc, turn, patch, locale='zh'):
     """Returns metadata, question and reply. doc already contains projected candidate facts."""
     state = deepcopy(doc.get('dialogue', {}))
     state.setdefault('policy_version', VERSION)
@@ -338,11 +351,17 @@ def update_dialogue(doc, turn, patch):
                 state['deferred'].pop(field, None)
                 state['attempts'].pop(field, None)
     action = turn.get('action', 'continue')
+    english = locale == 'en'
     if action == 'summary':
+        if english:
+            from packages.chat.facts import catalog
+            labels = {f['field_name']: f.get('label_en', f['field_name']) for f in catalog()}
+            rows = [f'- {labels.get(key, key)}: {value}' for key, value in values(doc).items()]
+            return state, None, 'Recorded case facts (unconfirmed):\n' + '\n'.join(rows or ['- None yet']) + '\nReview the facts and sources before drawing a tax conclusion.'
         return state, None, summary_text(doc)
     if action == 'new_case':
         state['status'] = 'suspended'
-        return state, None, '这是另一笔案件，请使用“新对话”建立独立记录，避免覆盖当前案件。'
+        return state, None, 'This is a separate case. Start a new chat so it does not overwrite the current record.' if english else '这是另一笔案件，请使用“新对话”建立独立记录，避免覆盖当前案件。'
     if turn['intent'] in ('chat', 'research'):
         state['status'] = 'suspended'
         return state, None, turn['reply']
@@ -351,20 +370,20 @@ def update_dialogue(doc, turn, patch):
         return state, None, turn['reply']
     if action == 'pause':
         state['status'] = 'paused'
-        return state, None, '已暂停并保存当前进度。需要继续时可以说“继续案件”。'
+        return state, None, 'Paused and saved. Say “resume” when you are ready to continue.' if english else '已暂停并保存当前进度。需要继续时可以说“继续案件”。'
     doc = {**doc, 'dialogue': state}
     if action == 'partial':
         state['status'], state['pending'] = 'partial', None
         state['partial_consent'] = {'facts_hash': fingerprint(doc), 'revision': doc.get('revision', 0) + 1}
-        return state, None, partial_text(doc)
+        return state, None, ('Partial draft requested. Known facts are retained, and unresolved items still require review.' if english else partial_text(doc))
     if turn['intent'] == 'clarify':
         q = mode_question(doc)
         state['status'], state['pending'] = 'active', q
-        return state, q, render_question(q)
+        return state, q, render_question(q, locale)
     if action == 'resume' and not patch and state.get('pending') and state['pending'].get('field') and \
             not resolved(values(doc).get(state['pending']['field'])):
         state['status'] = 'active'
-        return state, state['pending'], render_question(state['pending'])
+        return state, state['pending'], render_question(state['pending'], locale)
     pending = state['pending']
     unresolved_response = action in ('unknown', 'unavailable') or any(v == 'unknown' for v in patch.values())
     if (unresolved_response and pending and pending.get('field') and
@@ -373,23 +392,23 @@ def update_dialogue(doc, turn, patch):
     if unresolved_response:
         q = choice(doc)
         state['status'], state['pending'] = 'active', q
-        return state, q, '已保留未知或暂缺信息，相关判断会暂停。\n\n' + render_question(q)
+        return state, q, ('Unknown or unavailable information remains unresolved.\n\n' if english else '已保留未知或暂缺信息，相关判断会暂停。\n\n') + render_question(q, locale)
     field = next_field(doc)
     if field:
         attempt = state['attempts'].get(field, 0) + 1
         if attempt > 2:
             state['deferred'][field] = 'unanswered'
             q = choice(doc)
-            reply = '这项信息仍未确定，先保留缺口。\n\n' + render_question(q)
+            reply = ('This information remains unresolved.\n\n' if english else '这项信息仍未确定，先保留缺口。\n\n') + render_question(q, locale)
         else:
             q = question(doc, field, attempt)
             state['attempts'][field] = attempt
-            reply = ('已记录本次信息。\n\n' if patch else '') + render_question(q)
+            reply = (('Information recorded.\n\n' if english else '已记录本次信息。\n\n') if patch else '') + render_question(q, locale)
         state['status'], state['pending'] = 'active', q
         return state, q, reply
     if gaps(doc):
         q = choice(doc)
         state['status'], state['pending'] = 'active', q
-        return state, q, '目前仍有未知、暂缺或冲突信息，不能形成完整判断。\n\n' + render_question(q)
+        return state, q, ('Unknown, missing or conflicting information prevents a complete assessment.\n\n' if english else '目前仍有未知、暂缺或冲突信息，不能形成完整判断。\n\n') + render_question(q, locale)
     state['status'], state['pending'] = 'ready', None
-    return state, None, '当前任务所需的描述已整理，请核对事实后开始研究分析。判断性事项和依据仍需最终复核。'
+    return state, None, 'The facts needed for this task have been organized. Review them before analysis; judgments and sources still need final review.' if english else '当前任务所需的描述已整理，请核对事实后开始研究分析。判断性事项和依据仍需最终复核。'

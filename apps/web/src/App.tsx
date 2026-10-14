@@ -1,7 +1,6 @@
 import HintButton from "./components/HintButton";
 import { useEffect, useRef, useState } from "react";
 import {
-  BookOpen,
   Globe2,
   Menu,
   Network,
@@ -48,9 +47,7 @@ export default function App() {
   const [panel, setPanel] = useState<Panel>(null);
   const [source, setSource] = useState(sourceInfo[0].id);
   const [mobileNav, setMobileNav] = useState(false);
-  const [narrow, setNarrow] = useState(
-    () => window.matchMedia("(max-width: 1100px)").matches,
-  );
+  const [narrow, setNarrow] = useState(() => window.matchMedia("(max-width: 1100px)").matches);
   const panelRef = useRef<HTMLDivElement>(null),
     navRef = useRef<HTMLDivElement>(null);
   const empty = !current || current.messages.length === 0;
@@ -63,7 +60,7 @@ export default function App() {
     media.addEventListener("change", update);
     return () => media.removeEventListener("change", update);
   }, []);
-  useOverlayFocus(panelRef, Boolean(panel), narrow, () => setPanel(null));
+  useOverlayFocus(panelRef, Boolean(panel), false, () => setPanel(null));
   useOverlayFocus(navRef, mobileNav, true, () => setMobileNav(false));
   function openPanel(next: Panel) {
     setMobileNav(false);
@@ -82,7 +79,7 @@ export default function App() {
     setShowConsent(false);
     void send(text, consent);
   }
-  const modalOpen = mobileNav || (narrow && Boolean(panel));
+  const modalOpen = mobileNav;
   if (!current)
     return (
       <main className="startup">
@@ -96,7 +93,7 @@ export default function App() {
       </main>
     );
   return (
-    <div className={`app-shell ${panel && !narrow ? "with-panel" : ""}`}>
+    <div className={`app-shell ${panel ? "panel-workspace" : ""}`}>
       <div
         ref={navRef}
         className={`sidebar-slot ${mobileNav ? "is-open" : ""}`}
@@ -122,7 +119,7 @@ export default function App() {
       </div>
       <main
         className={`main-workspace ${empty ? "is-empty" : ""}`}
-        inert={modalOpen ? true : undefined}
+        inert={modalOpen || Boolean(panel) ? true : undefined}
       >
         <header className="topbar">
           <div className="page-title">
@@ -145,7 +142,7 @@ export default function App() {
               onClick={() => setLocale(locale === "zh" ? "en" : "zh")}
             >
               <Globe2 size={14} />
-              <span>{locale === "zh" ? "EN" : "中文"}</span>
+              <span>{locale === "zh" ? "中文" : "EN"}</span>
             </HintButton>
             <HintButton
               className="icon-button"
@@ -158,20 +155,12 @@ export default function App() {
             </HintButton>
             <HintButton
               className="icon-button"
-              aria-label={t("法规资料")}
-              title={t("法规资料")}
-              onClick={() => openPanel("sources")}
-            >
-              <BookOpen size={18} />
-            </HintButton>
-            <HintButton
-              className="icon-button"
-              aria-label={panel ? t("收起案例信息") : t("打开案例信息")}
+              aria-label={panel === "facts" ? t("收起案例信息") : t("打开案例信息")}
               title={t("案例信息")}
               aria-expanded={panel === "facts"}
-              onClick={() => setPanel(panel ? null : "facts")}
+              onClick={() => setPanel(panel === "facts" ? null : "facts")}
             >
-              {panel ? (
+              {panel === "facts" ? (
                 <PanelRightClose size={19} />
               ) : (
                 <PanelRightOpen size={19} />
@@ -264,9 +253,8 @@ export default function App() {
         <div
           className="panel-slot"
           ref={panelRef}
-          role={narrow ? "dialog" : undefined}
-          aria-modal={narrow || undefined}
-          aria-label={narrow ? t("研究详情") : undefined}
+          role="main"
+          aria-label={t("研究详情")}
         >
           <DetailsPanel
             key={`${current.id}-${panel}`}

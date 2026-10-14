@@ -77,6 +77,15 @@ p {
 .app-shell.with-panel {
   grid-template-columns: 252px minmax(0, 1fr) 390px;
 }
+.app-shell.panel-workspace {
+  grid-template-columns: 252px minmax(0, 1fr);
+}
+.panel-workspace > .main-workspace { display: none; }
+.panel-workspace > .panel-slot {
+  grid-column: 2;
+  min-width: 0;
+  height: 100%;
+}
 .sidebar-slot {
   min-height: 0;
 }
@@ -511,6 +520,18 @@ p {
   gap: 9px;
   color: #597454;
 }
+.panel-help-button {
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: help;
+}
+.panel-help-button:hover,
+.panel-help-button:focus-visible { background: #eaf0e9; }
 .panel-header h2 {
   font-size: 16px;
   font-weight: 550;
@@ -521,6 +542,83 @@ p {
   flex: 1;
   padding: 23px;
   scrollbar-width: thin;
+}
+.panel-workspace .panel-header { padding: 0 clamp(20px, 4vw, 52px); }
+.panel-workspace .panel-body { padding: clamp(20px, 4vw, 52px); }
+.panel-workspace .structure-panel { max-width: 960px; margin: 0 auto; }
+.panel-workspace .knowledge-search,
+.panel-workspace .source-selector,
+.panel-workspace .source-detail,
+.panel-workspace .panel-description,
+.panel-workspace .about-content { max-width: 960px; margin-left: auto; margin-right: auto; }
+.facts-guide {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  column-gap: clamp(28px, 4vw, 64px);
+  row-gap: 28px;
+  color: #304b40;
+}
+.facts-intro { grid-column: 1 / -1; max-width: 720px; }
+.facts-kicker { color: #61806b; font-size: 13px; font-weight: 650; letter-spacing: .05em; }
+.facts-intro h3 { margin: 8px 0 10px; font-size: clamp(24px, 2.6vw, 34px); line-height: 1.25; }
+.facts-intro > p:not(.facts-kicker) { line-height: 1.7; color: #62766b; }
+.facts-intro .facts-progress { margin-top: 16px; font-size: 13px; }
+.facts-steps { display: grid; align-content: start; gap: 5px; position: sticky; top: 0; }
+.facts-steps button {
+  display: flex; align-items: center; gap: 12px; text-align: left;
+  padding: 12px; border: 0; border-radius: 9px; background: transparent;
+  color: #63776b; line-height: 1.4;
+}
+.facts-steps button.active { background: #eaf1e8; color: #214a38; font-weight: 650; }
+.facts-steps button:hover { background: #f1f5ef; }
+.facts-step-content { min-width: 0; max-width: 810px; }
+.facts-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 24px; }
+.facts-field-grid .fact-field { min-width: 0; }
+.facts-field-grid .fact-field label { min-height: 2.5em; line-height: 1.45; font-size: 15px; font-weight: 550; }
+.facts-guide input,
+.facts-guide select {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d8e3d8;
+  border-radius: 9px;
+  background: #fff;
+  color: #304b40;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.facts-field-grid .fact-field input,
+.facts-field-grid .fact-field select,
+.facts-add-field select { min-height: 48px; margin-top: 0; }
+.facts-field-grid .fact-tools { margin-top: 3px; font-size: 12px; }
+.facts-guide .fact-tools button { border: 0; background: none; padding: 2px 0; color: #426e4f; font-size: 12px; text-decoration: underline; }
+.facts-add-field { display: grid; gap: 10px; margin-top: 28px; max-width: 440px; color: #526a58; }
+.facts-empty { padding: 30px; border: 1px dashed #cedccf; border-radius: 12px; color: #62766b; line-height: 1.7; }
+.facts-navigation { display: flex; justify-content: space-between; gap: 12px; margin-top: 36px; }
+.facts-navigation button { min-width: 110px; padding: 11px 18px; border: 1px solid #ccd9ca; border-radius: 8px; background: white; }
+.facts-navigation button.primary-button { background: #416d42; color: white; border-color: #416d42; }
+.facts-review-list { display: grid; gap: 28px; }
+.facts-review-list section { border: 1px solid #dfe8dc; border-radius: 12px; padding: 20px 24px; background: #fff; }
+.facts-review-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.facts-review-heading h4 { margin: 0; font-size: 17px; }
+.facts-review-heading button { border: 0; background: none; color: #3f704c; text-decoration: underline; }
+.facts-review-list dl { margin: 12px 0 0; }
+.facts-review-list dl > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(100px, .8fr); gap: 16px; padding: 11px 0; border-top: 1px solid #eef1eb; line-height: 1.55; }
+.facts-review-list dt { color: #62766b; }
+.facts-review-list dd { margin: 0; overflow-wrap: anywhere; }
+.facts-submit { display: grid; justify-items: start; gap: 14px; margin-top: 30px; }
+.facts-submit .primary-button { min-width: 220px; }
+.fact-conflict { color: #9a4a3d; font-size: 13px; line-height: 1.5; }
+@media (max-width: 780px) {
+  .facts-guide { grid-template-columns: 1fr; gap: 20px; }
+  .facts-intro { grid-column: 1; }
+  .facts-steps { display: flex; overflow-x: auto; position: static; padding-bottom: 5px; }
+  .facts-steps button { white-space: nowrap; flex: 0 0 auto; }
+  .facts-field-grid { grid-template-columns: 1fr; }
+  .facts-field-grid .fact-field label { min-height: 0; }
 }
 .panel-description {
   color: #7c8c71;
@@ -695,8 +793,15 @@ summary {
 }
 @media (max-width: 1100px) {
   .app-shell,
-  .app-shell.with-panel {
+  .app-shell.with-panel,
+  .app-shell.panel-workspace {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .panel-workspace > .panel-slot {
+    position: static;
+    grid-column: 1;
+    width: 100%;
+    box-shadow: none;
   }
   .sidebar-slot {
     display: none;

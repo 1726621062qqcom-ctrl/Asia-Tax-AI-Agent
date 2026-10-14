@@ -112,11 +112,11 @@ async def model_turn(doc, text):
 
 
 async def events(service, doc, owner, revision, request_id, text, disconnected,
-                 entry_hint='auto', reply_to_question_id=None, data_approved=True):
+                 entry_hint='auto', reply_to_question_id=None, data_approved=True, locale='zh'):
     # Ordinary HTTP and SSE use the same graph. Never expose unvalidated route text.
     turn = None
     if getattr(service, 'streamer', None) and service.orchestration != 'hybrid':
-        async with aclosing(service.streamer(doc, text)) as stream:
+        async with aclosing(service.streamer({**doc, '_ui_locale': locale}, text)) as stream:
             async for event in stream:
                 if await disconnected():
                     return
@@ -125,8 +125,8 @@ async def events(service, doc, owner, revision, request_id, text, disconnected,
     if await disconnected():
         return
     prepared = await asyncio.to_thread(service.prepare_turn, owner, doc, request_id, text, turn,
-                                       entry_hint=entry_hint, reply_to_question_id=reply_to_question_id)
-    prepared['payload_hash'] = service.message_hash(text, data_approved, entry_hint, reply_to_question_id)
+                                       entry_hint=entry_hint, reply_to_question_id=reply_to_question_id, locale=locale)
+    prepared['payload_hash'] = service.message_hash(text, data_approved, entry_hint, reply_to_question_id, locale)
     if await disconnected():
         return
     result = await asyncio.to_thread(service.commit_prepared, owner, doc, revision, request_id, text, prepared)

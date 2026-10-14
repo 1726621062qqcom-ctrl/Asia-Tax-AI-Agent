@@ -120,7 +120,7 @@ class TurnWorkflow:
         case_request = turn['intent'] == 'intake' or bool(patch) or turn.get('uses_case', False)
         if turn['intent'] == 'unsupported' or (case_request and action not in ('pause', 'new_case', 'summary') and not dialogue.supported(known)):
             turn['intent'] = 'unsupported'
-            turn['reply'] = '目前案件分析仅支持香港境外股息 FSIE 的企业场景。本次问题超出已实现的能力范围，已记录范围缺口。'
+            turn['reply'] = 'Case analysis currently supports Hong Kong foreign-dividend FSIE for corporate recipients. This request is outside that scope.' if doc.get('_ui_locale') == 'en' else '目前案件分析仅支持香港境外股息 FSIE 的企业场景。本次问题超出已实现的能力范围，已记录范围缺口。'
             meta.update(status='unsupported', reason_code='out_of_scope')
         elif active_conflicts and case_request and action not in ('partial', 'pause', 'new_case', 'unknown', 'unavailable'):
             if turn['intent'] == 'research':
@@ -132,7 +132,7 @@ class TurnWorkflow:
         elif turn['intent'] == 'chat':
             meta.update(status='completed', reason_code='ordinary_chat')
         turn['facts'] = patch
-        interview, question, reply = dialogue.update_dialogue(projected, turn, patch)
+        interview, question, reply = dialogue.update_dialogue(projected, turn, patch, locale=doc.get('_ui_locale', 'zh'))
         turn['reply'] = reply
         if question:
             meta.update(status='waiting_user', reason_code='fact_conflict' if active_conflicts and question.get('field') else
@@ -188,13 +188,13 @@ class TurnWorkflow:
         return {'research': bundle, 'workflow': meta, 'dialogue': interview}
 
     def compose(self, state):
-        answer = compose_answer(state['research'])
+        answer = compose_answer(state['research'], locale=state['doc'].get('_ui_locale', 'zh'))
         turn = deepcopy(state['turn'])
         turn['reply'] = answer['text']
         if state['patch']:
-            turn['reply'] = '本次案情修订已保存，旧分析如受影响需重新确认。\n\n' + turn['reply']
+            turn['reply'] = ('These fact changes were saved. Reconfirm any affected earlier analysis.\n\n' if state['doc'].get('_ui_locale') == 'en' else '本次案情修订已保存，旧分析如受影响需重新确认。\n\n') + turn['reply']
         if state['research']['status'] == 'unavailable':
-            turn['reply'] += '\n可回复“重试检索”继续查询；已保存事实不会重复写入。'
+            turn['reply'] += '\nReply “retry search” to continue. Saved facts will not be written again.' if state['doc'].get('_ui_locale') == 'en' else '\n可回复“重试检索”继续查询；已保存事实不会重复写入。'
         update = {'turn': turn, 'answer': answer}
         if state['research']['status'] != 'unavailable' and (state['patch'] or turn.get('uses_case', False)):
             projected = deepcopy(state['doc'])
@@ -204,7 +204,7 @@ class TurnWorkflow:
                 else:
                     projected['facts'][key] = {'value': value}
             projected['dialogue'] = state['dialogue']
-            interview, question, followup = dialogue.update_dialogue(projected, {**turn, 'intent': 'intake', 'action': 'continue'}, {})
+            interview, question, followup = dialogue.update_dialogue(projected, {**turn, 'intent': 'intake', 'action': 'continue'}, {}, locale=state['doc'].get('_ui_locale', 'zh'))
             update.update(dialogue=interview, question=question)
             if question:
                 turn['reply'] += '\n\n' + followup

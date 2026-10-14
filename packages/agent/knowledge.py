@@ -129,7 +129,7 @@ def display_result(bundle):
     return {k: v for k, v in bundle.items() if k != 'model_evidence'}
 
 
-def compose_answer(bundle):
+def compose_answer(bundle, locale='zh'):
     reason = bundle['reason_code']
     summaries = {
         'no_match': '本次查询未找到匹配依据，不能据此认定相关规定不存在，也不能形成税务结论。',
@@ -138,29 +138,49 @@ def compose_answer(bundle):
         'retrieval_failed': '资料服务暂时不可用，请稍后重试。',
         'evidence_available': '已找到可用资料。以下为依据摘录及适用条件提示，具体案件仍需最终复核。',
     }
-    answer = {'summary': summaries[reason], 'conditions': ['仅适用于本次查询范围；日期、主体及具体事实仍须核对。'],
+    english_summaries = {
+        'no_match': 'No matching source was found for this query. This does not mean the rule does not exist, and no tax conclusion can be drawn.',
+        'evidence_restricted': 'These materials are not approved for model analysis. Permitted source excerpts appear below for checking; no tax conclusion is generated.',
+        'evidence_insufficient': 'Source coverage is incomplete. The following excerpts can be checked, but missing conditions remain unresolved.',
+        'retrieval_failed': 'The source service is temporarily unavailable. Please try again later.',
+        'evidence_available': 'Relevant sources were found. The excerpts and conditions below still require review against the facts of the case.',
+    }
+    english = locale == 'en'
+    answer = {'summary': (english_summaries if english else summaries)[reason], 'conditions': [
+        'Only within the scope of this query; verify the date, entity and case facts.' if english else
+        '仅适用于本次查询范围；日期、主体及具体事实仍须核对。'],
               'claims': [], 'limitations': bundle['gaps'][:], 'review_status': 'pending_final_review'}
+    if english:
+        gap_prefixes = {
+            '资料法域、主题或适用日期不匹配：': 'Source jurisdiction, topic or effective date mismatch: ',
+            '原文版本不可用或校验失败：': 'Source version unavailable or verification failed: ',
+            '子条款定位校验失败：': 'Subsection locator verification failed: ',
+            '入模文本校验失败：': 'Model excerpt verification failed: ',
+            '读取原文预算已用尽': 'Source-reading budget exhausted',
+        }
+        answer['limitations'] = [next((value + gap[len(key):] for key, value in gap_prefixes.items()
+                                        if gap.startswith(key)), gap) for gap in answer['limitations']]
     context = bundle.get('query_context', {})
     if reason == 'no_match':
-        answer['limitations'].append('未匹配的查询：' + bundle['query'])
+        answer['limitations'].append(('Unmatched query: ' if english else '未匹配的查询：') + bundle['query'])
         if context.get('applicable_date'):
-            answer['limitations'].append('需核对适用期间的依据：' + str(context['applicable_date']))
+            answer['limitations'].append(('Check sources for the applicable period: ' if english else '需核对适用期间的依据：') + str(context['applicable_date']))
         elif context.get('uses_case'):
-            answer['limitations'].append('尚未确认累算日期及其实际/计划状态，不能核实个案适用的规则版本。')
-        answer['limitations'].append('可补充条文/案例编号或调整检索关键词；已知事实无需重新填写。')
+            answer['limitations'].append('The accrual date and actual or planned status are unconfirmed, so the applicable rule version cannot be verified.' if english else '尚未确认累算日期及其实际/计划状态，不能核实个案适用的规则版本。')
+        answer['limitations'].append('Add a section or ruling number, or refine the search terms. Known facts need not be re-entered.' if english else '可补充条文/案例编号或调整检索关键词；已知事实无需重新填写。')
     if bundle['is_synthetic']:
-        answer['summary'] = '【模拟联调资料，不是真实税务依据】' + answer['summary']
-        answer['limitations'].append('模拟资料仅验证流程，不能用于实际税务结论。')
+        answer['summary'] = ('[Synthetic test data, not an official tax source] ' if english else '【模拟联调资料，不是真实税务依据】') + answer['summary']
+        answer['limitations'].append('Synthetic sources only verify the workflow and cannot support a real tax conclusion.' if english else '模拟资料仅验证流程，不能用于实际税务结论。')
     # Extractive first release: mechanically auditable, no invented claims or URLs.
     for evidence in bundle['model_evidence'][:7]:
         if not evidence.get('display_allowed', True):
             continue
         answer['claims'].append({'text': evidence['text'][:500], 'evidence_ids': [evidence['evidence_id']], 'kind': 'excerpt'})
-    lines = [answer['summary'], '\n适用条件：' + '；'.join(answer['conditions'])]
+    lines = [answer['summary'], '\n' + ('Conditions: ' if english else '适用条件：') + ('; ' if english else '；').join(answer['conditions'])]
     for claim in answer['claims']:
-        lines.append('\n依据摘录 [' + claim['evidence_ids'][0] + ']：\n' + claim['text'])
+        lines.append(('\nSource excerpt [' if english else '\n依据摘录 [') + claim['evidence_ids'][0] + (']:\n' if english else ']：\n') + claim['text'])
     if answer['limitations']:
-        lines.append('\n缺口：' + '；'.join(answer['limitations']))
+        lines.append(('\nGaps: ' if english else '\n缺口：') + ('; ' if english else '；').join(answer['limitations']))
     answer['text'] = '\n'.join(lines)
     return answer
 

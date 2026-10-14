@@ -19,6 +19,7 @@ export const en: Record<string, string> = {
   收起案例信息: "Close case details",
   打开案例信息: "Open case details",
   法规资料: "Sources",
+  结构分析: "Structure analysis",
   案例信息: "Case details",
   研究详情: "Research details",
   "专业判断，请由税务顾问复核。":
@@ -97,5 +98,13 @@ export const en: Record<string, string> = {
   "税务局 · 常见问题": "IRD · FAQ",
   "结合案例事实和所属期间阅读相关解答。":
     "Read the answers alongside the case facts and relevant period.",
+  "企业费用扣除 · 第 16、17 条": "Business expense deductions · sections 16 and 17",
+  "核对一般费用扣除条件及不得扣除的项目。": "Check the general deduction test and excluded items.",
+  "利得税费用扣除指引": "Profits tax expense deductions",
+  "税务局 · 指引": "IRD · Guidance",
+  "了解税务局对普通经营费用和排除项目的说明。": "Read IRD guidance on ordinary business expenses and exclusions.",
+  "BIR51 公司报税说明": "BIR51 corporate return notes",
+  "税务局 · 报税说明": "IRD · Return instructions",
+  "核对公司报税时的费用调整和所需资料。": "Check expense adjustments and supporting information for a corporate return.",
   未记录: "Not recorded",
 };

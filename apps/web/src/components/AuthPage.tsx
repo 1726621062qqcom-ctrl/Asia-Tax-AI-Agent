@@ -86,7 +86,7 @@ export default function AuthPage({ configured, initialError, recovery, onLogin, 
       <span className="auth-story-footer">{say("清晰 · 有据 · 从容", "CLARITY · EVIDENCE · CONFIDENCE")}</span>
     </section>
     <section className="auth-main">
-      <button className="language-toggle auth-language" onClick={() => setLocale(en ? "zh" : "en")} aria-label={en ? "切换为中文" : "Switch to English"}><Globe2 size={15} />{en ? "中文" : "EN"}</button>
+      <button className="language-toggle auth-language" onClick={() => setLocale(en ? "zh" : "en")} aria-label={en ? "切换为中文" : "Switch to English"}><Globe2 size={15} />{en ? "EN" : "中文"}</button>
       <div className="auth-form-wrap">
         <div className="auth-mobile-brand"><Brand /></div>
         <div className="auth-form-content" key={`${mode}-${recovery}-${sent}`}>

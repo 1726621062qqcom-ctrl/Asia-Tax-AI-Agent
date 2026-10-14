@@ -100,6 +100,10 @@ def turn_prompt(doc: dict, text: str) -> tuple[str, str]:
             for field in catalog()
         ], ensure_ascii=False, separators=(',', ':'))
     )
+    if doc.get('_ui_locale') == 'en':
+        system += (' The interface language is English. Write every user-visible reply in English, '
+                   'even if the user message or conversation history is in Chinese. Keep JSON keys, '
+                   'fact field names, legal references, and source identifiers unchanged. Do not translate source quotations.')
     return system, json.dumps(context, ensure_ascii=False)
 
 
@@ -279,11 +283,11 @@ class ChatService(DomainCoordinator):
         return public(self.store.save(owner, doc, revision))
 
     def message(self, owner: str, case_id: str, revision: int, request_id: str, text: str, data_approved: bool,
-                entry_hint='auto', reply_to_question_id=None) -> dict:
+                entry_hint='auto', reply_to_question_id=None, locale='zh') -> dict:
         if (reply_to_question_id or '').startswith('li:') or text.startswith('结构答复：'):
             return self.domain_message(owner, case_id, revision, request_id, text, reply_to_question_id)
         doc, duplicate = self.load_message(owner, case_id, revision, request_id, text, data_approved,
-                                           entry_hint, reply_to_question_id)
+                                           entry_hint, reply_to_question_id, locale)
         if duplicate:
             return public(doc)
         if not (doc["data_approved"] or data_approved):
@@ -291,23 +295,23 @@ class ChatService(DomainCoordinator):
         if len(doc["messages"]) >= 200:
             raise WorkflowError("case_limit")
         prepared = self.prepare_turn(owner, doc, request_id, text, entry_hint=entry_hint,
-                                     reply_to_question_id=reply_to_question_id)
-        prepared['payload_hash'] = self.message_hash(text, data_approved, entry_hint, reply_to_question_id)
+                                     reply_to_question_id=reply_to_question_id, locale=locale)
+        prepared['payload_hash'] = self.message_hash(text, data_approved, entry_hint, reply_to_question_id, locale)
         return self.commit_prepared(owner, doc, revision, request_id, text, prepared)
 
     @staticmethod
-    def message_hash(text, approved, entry_hint='auto', reply_to_question_id=None):
+    def message_hash(text, approved, entry_hint='auto', reply_to_question_id=None, locale='zh'):
         from packages.agent.task_state import payload_hash
-        return payload_hash(text, approved, entry_hint, reply_to_question_id)
+        return payload_hash(text, approved, entry_hint, reply_to_question_id, locale)
 
-    def load_message(self, owner, case_id, revision, request_id, text, approved, entry_hint='auto', reply_to_question_id=None):
+    def load_message(self, owner, case_id, revision, request_id, text, approved, entry_hint='auto', reply_to_question_id=None, locale='zh'):
         from packages.agent.task_contracts import options
         options(entry_hint, reply_to_question_id)
         doc, duplicate = self.load(owner, case_id, revision, request_id)
         receipt = doc.get('message_payloads', {}).get(request_id)
         if duplicate and receipt is None and self.orchestration == 'hybrid':
             raise WorkflowError('request_payload_conflict')
-        if duplicate and receipt and receipt != self.message_hash(text, approved, entry_hint, reply_to_question_id):
+        if duplicate and receipt and receipt != self.message_hash(text, approved, entry_hint, reply_to_question_id, locale):
             raise WorkflowError('request_payload_conflict')
         if not duplicate and reply_to_question_id:
             pending = doc.get('dialogue', {}).get('pending')
@@ -315,8 +319,14 @@ class ChatService(DomainCoordinator):
                 raise WorkflowError('question_changed')
         return doc, duplicate
 
-    def prepare_turn(self, owner, doc, request_id, text, turn=None, entry_hint='auto', reply_to_question_id=None):
+    def prepare_turn(self, owner, doc, request_id, text, turn=None, entry_hint='auto', reply_to_question_id=None, locale='zh'):
         from packages.agent.workflow import TurnWorkflow
+        # Locale is request-scoped; never persist it on the case document.
+        doc = {**doc, '_ui_locale': locale}
+        if entry_hint in ('auto', 'reference_lookup') and not reply_to_question_id:
+            from packages.chat import expenses
+            if expenses.should_handle(doc, text):
+                return expenses.prepare(doc, text, locale)
         def route(document, message):
             if self.extractor is not None:
                 patch = self.extractor(document, message)
@@ -358,6 +368,8 @@ class ChatService(DomainCoordinator):
             doc['orchestration'] = prepared['orchestration']
         if 'payload_hash' in prepared:
             doc.setdefault('message_payloads', {})[request_id] = prepared['payload_hash']
+        if 'expense_context' in prepared:
+            doc['expense_context'] = prepared['expense_context']
         if patch:
             doc['state'] = state_for(doc)
         research = prepared['research']
@@ -383,6 +395,12 @@ class ChatService(DomainCoordinator):
         return self.finish(owner, doc, revision, request_id)
 
     def lookup(self, owner, query, kind='all'):
+        from packages.chat import expenses
+        if expenses.should_handle({}, query):
+            result = expenses.search(query, kind=kind)
+            if result['status'] == 'unavailable':
+                raise WorkflowError('knowledge_unavailable')
+            return result
         from packages.agent.contracts import SearchRequest, TrustedContext
         from packages.agent.knowledge import retrieve, display_result
         result = retrieve(self.provider, SearchRequest(request_id=str(uuid4()), trace_id=str(uuid4()),

@@ -9,9 +9,13 @@ HINT_TASK = {'dividend_consultation': 'consultation', 'fact_intake': 'fact_intak
              'reference_lookup': 'reference_lookup'}
 
 
-def payload_hash(text, approved, entry_hint='auto', reply_to_question_id=None):
-    return sha256(json.dumps({'operation': 'messages', 'text': text, 'data_approved': approved,
-        'entry_hint': entry_hint, 'reply_to_question_id': reply_to_question_id}, sort_keys=True).encode()).hexdigest()
+def payload_hash(text, approved, entry_hint='auto', reply_to_question_id=None, locale='zh'):
+    payload = {'operation': 'messages', 'text': text, 'data_approved': approved,
+        'entry_hint': entry_hint, 'reply_to_question_id': reply_to_question_id}
+    # Keep existing Chinese receipt hashes valid when older clients retry.
+    if locale != 'zh':
+        payload['locale'] = locale
+    return sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 
 def project(doc):

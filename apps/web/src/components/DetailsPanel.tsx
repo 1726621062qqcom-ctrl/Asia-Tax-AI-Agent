@@ -6,7 +6,6 @@ import type { FactPatch } from "../api";
 import { isRetryable } from "../api";
 import { BookOpen, CircleHelp, ExternalLink, FileText, X } from "lucide-react";
 import {
-  coverageCutoff,
   sourceInfo,
   type Case,
   type FieldSpec,
@@ -41,7 +40,7 @@ export default function DetailsPanel({
   onDomainUpdate: (next: Case) => void;
   onSelectSource: (id: string) => void;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const title =
     panel === "facts"
       ? t("案例信息")
@@ -60,6 +59,15 @@ export default function DetailsPanel({
             <BookOpen size={18} />
           ) : panel === "facts" ? (
             <FileText size={18} />
+          ) : panel === "structure" ? (
+            <HintButton
+              type="button"
+              className="panel-help-button"
+              aria-label={locale === "en" ? "What structure analysis does" : "结构分析有什么用途"}
+              title={locale === "en"
+                ? "Uses confirmed payment, ownership and date facts to assess the current structure or compare modeled options. Check the sources before relying on a result."
+                : "根据已确认的付款、持股和日期事实，分析现有结构或比较候选方案；使用结果前请核对依据。"}
+            ><CircleHelp size={18} /></HintButton>
           ) : (
             <CircleHelp size={18} />
           )}
@@ -84,7 +92,7 @@ export default function DetailsPanel({
         )}
         {panel === "facts" && (
           <FactEditor
-            key={`${current.id}-${current.revision}`}
+            key={current.id}
             current={current}
             fields={fields}
             busy={busy}
@@ -137,7 +145,7 @@ export default function DetailsPanel({
                   </div>
                   <div>
                     <dt>{t("知识覆盖截止")}</dt>
-                    <dd>{coverageCutoff}</dd>
+                    <dd>{selected.coverageCutoff}</dd>
                   </div>
                   <div>
                     <dt>{t("专业验证状态")}</dt>
@@ -172,16 +180,6 @@ export default function DetailsPanel({
               <summary>{t("专业复核")}</summary>
               <p>
                 {t("规则尚待香港税务专家验证，研究资料不构成正式税务意见。")}
-              </p>
-            </details>
-            <details>
-              <summary>{t("键盘操作")}</summary>
-              <p>
-                Enter · {t("发送消息")}
-                <br />
-                Shift + Enter · {t("换行")}
-                <br />
-                Esc · {t("关闭面板")}
               </p>
             </details>
           </div>

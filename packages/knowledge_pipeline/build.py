@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from pathlib import Path
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
@@ -56,6 +57,8 @@ def _upsert_source(session: Session, entry: dict) -> Source:
     source.structured_data_url = entry.get("structured_data_url")
     source.jurisdiction = entry.get("jurisdiction", "HK")
     source.language = entry.get("language", "en")
+    if "topic_tags" in entry:
+        source.topic_tags = entry["topic_tags"]
     source.manifest_sha256 = entry.get("content_sha256")
     source.content_bytes = entry.get("content_bytes")
     source.content_type = entry.get("content_type")
@@ -68,15 +71,22 @@ def _upsert_source(session: Session, entry: dict) -> Source:
 def _segment_for(entry: dict, content: bytes) -> list[UnitDraft]:
     content_type = (entry.get("content_type") or "").lower()
     if entry.get("structured_file", "") and entry["structured_file"].endswith(".xml"):
-        return segment_cap112(content)
+        return segment_cap112(content, sections=entry.get("sections"))
     if "pdf" in content_type:
         return segment_pdf(content, entry["source_id"])
     return segment_html(content, entry["source_id"])
 
 
-def build_knowledge(session: Session, *, fetch: bool = True) -> BuildSummary:
+def build_knowledge(session: Session, *, fetch: bool = True,
+                    manifest_path: Path | None = None) -> BuildSummary:
     summary = BuildSummary()
-    manifest_data = manifest()
+    if manifest_path is None:
+        manifest_data = manifest()
+        raw_dir = None
+    else:
+        import json
+        manifest_data = json.loads(manifest_path.read_text(encoding="utf-8"))
+        raw_dir = manifest_path.parent / "raw"
     allowed = manifest_data.get("allowed_source_domains", [])
 
     for entry in manifest_data["sources"]:
@@ -95,7 +105,7 @@ def build_knowledge(session: Session, *, fetch: bool = True) -> BuildSummary:
             continue
 
         try:
-            result = fetch_source(entry, allowed)
+            result = fetch_source(entry, allowed, raw_dir=raw_dir)
         except FetchError as exc:
             source.parse_status = "failed"
             report.parse_status = "failed"

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 from packages.knowledge_pipeline.build import build_knowledge
 from packages.persistence.db import session_scope
@@ -15,10 +16,11 @@ from packages.persistence.db import session_scope
 def main(argv: list[str] | None = None) -> int:
     args = argparse.ArgumentParser(description="Fetch, snapshot and segment official sources.")
     args.add_argument("--no-fetch", action="store_true", help="register sources only")
+    args.add_argument("--manifest", type=Path, help="build a specific knowledge package")
     parsed = args.parse_args(argv)
 
     with session_scope() as session:
-        summary = build_knowledge(session, fetch=not parsed.no_fetch)
+        summary = build_knowledge(session, fetch=not parsed.no_fetch, manifest_path=parsed.manifest)
 
     print(f"{'source':<38} {'status':<14} {'units':>6}  notes")
     print("-" * 78)

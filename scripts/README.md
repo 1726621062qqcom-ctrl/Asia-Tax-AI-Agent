@@ -21,5 +21,6 @@
 - `check_combined_live.py`：真实模型和 PostgreSQL 联合验收，也支持互斥的 `--model-only` / `--database-only`；可用 `--model-env-file` 分开配置。运行说明见 [合并 README](../README_MERGED.md)。
 - `evaluate_retrieval.py`、`evaluate_chat.py`：历史 A 侧检索与聊天题集复测，解释见[评测记录](../docs/project/evaluations/README.md)。
 - `evaluate_b_workflow.py`：B 侧多轮业务脚本评测，输入与已知限制见[脚本说明](../evals/b_workflow/README.md)。
+- `evaluate_fsie_user_cases.py`：三个合成香港 FSIE 案例的长问题/分步事实六次真实链路实验；结果与评价见[中英文实验报告](../docs/project/evaluations/README.md)。原始运行记录写入 Git 忽略的 `reports/`。
 
 脚本应支持明确输入、可审计输出和失败状态，不得把密钥或客户数据写入仓库。

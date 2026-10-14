@@ -48,12 +48,12 @@ export async function request<T>(
 }
 export const api = {
   stream: async (doc: Case, text: string, approved: boolean, requestId: string, signal: AbortSignal, delta: (text: string, reset?: boolean) => void,
-                 entryHint: EntryHint = "auto", replyToQuestionId: string | null = null): Promise<Case> => {
+                 entryHint: EntryHint = "auto", replyToQuestionId: string | null = null, locale: "zh" | "en" = "zh"): Promise<Case> => {
     const response = await fetch(`/api/cases/${doc.id}/messages`, {
       method: "POST", credentials: "same-origin", signal: AbortSignal.any([signal, AbortSignal.timeout(100000)]),
       headers: { "Content-Type": "application/json", "Accept": "text/event-stream", "X-AsiaTax-Request": "1" },
       body: JSON.stringify({ text, data_approved: approved, revision: doc.revision, request_id: requestId,
-        entry_hint: entryHint, reply_to_question_id: replyToQuestionId }),
+        entry_hint: entryHint, reply_to_question_id: replyToQuestionId, locale }),
     });
     if (response.status === 401) window.dispatchEvent(new Event("taxora:unauthorized"));
     if (!response.ok) {

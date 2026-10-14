@@ -118,7 +118,7 @@ test("source search, provenance and persisted research replies", async ({
   await english(page);
   await send(page, "Case 68");
   await expect(page.locator(".research-response")).toContainText(
-    "Reference excerpts are displayed with permission",
+    "Relevant sources were found",
   );
   await page.locator(".research-response .knowledge-passage > summary").click();
   await expect(page.locator(".research-response")).toContainText(
@@ -133,9 +133,9 @@ test("source search, provenance and persisted research replies", async ({
   );
   await page.getByRole("button", { name: "切换为中文" }).click();
   await expect(page.locator(".research-response")).toContainText(
-    "仅展示已获许可的参考原文",
+    "以下为来源原文片段，适用性待核对。",
   );
-  await page.getByRole("button", { name: "法规资料", exact: true }).click();
+  await page.getByRole("button", { name: "法规资料库", exact: true }).click();
   await page.getByRole("textbox", { name: "检索法条与案例" }).fill("案例 68");
   await page.getByRole("button", { name: "检索", exact: true }).click();
   await expect(
@@ -187,6 +187,10 @@ test("minimal bilingual home preserves design with a real backend", async ({
     /选择地区|演示|预览|虚构|示例/,
   );
   await expect(page.getByRole("combobox")).toHaveCount(0);
+  await page.getByRole("button", { name: "结构分析" }).click();
+  await expect(page.locator(".details-panel")).not.toContainText(/\b(?:Zijian|Li)\b/);
+  await expect(page.locator(".details-panel")).toContainText("根据本案已确认的交易事实");
+  await page.getByRole("button", { name: "关闭详情" }).click();
   await page.screenshot({
     path: "test-results/live-desktop.png",
     fullPage: true, animations: "disabled",
@@ -195,9 +199,25 @@ test("minimal bilingual home preserves design with a real backend", async ({
   await expect(
     page.getByRole("heading", { name: "Clarity for your tax questions." }),
   ).toBeVisible();
+  await expect(page.locator(".topbar-actions .language-toggle")).toContainText("EN");
+  await page.getByRole("button", { name: "Structure analysis" }).click();
+  await expect(page.getByRole("heading", { name: "Structure analysis" })).toBeVisible();
+  await page.getByRole("button", { name: "Source library", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Legislation & sources" })).toBeVisible();
+  await page.getByRole("button", { name: "Close details" }).click();
+  await page.getByRole("button", { name: "Open case details" }).click();
+  await expect(page.getByRole("heading", { name: "Case details" })).toBeVisible();
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   expect(external).toEqual([]);
+});
+
+test("English chat requests carry the selected language", async ({ page }) => {
+  await english(page);
+  const posted = page.waitForRequest(request => request.method() === "POST" &&
+    /\/api\/cases\/[^/]+\/messages$/.test(request.url()));
+  await send(page, "hello");
+  expect((await posted).postDataJSON().locale).toBe("en");
 });
 
 test("intake, follow-up, explicit confirmation, real rules and refresh recovery", async ({
@@ -206,13 +226,13 @@ test("intake, follow-up, explicit confirmation, real rules and refresh recovery"
   await english(page);
   await send(page, "Synthetic foreign dividend case");
   await expect(
-    page.getByText("这笔收入由个人还是公司收取？", { exact: false }),
+    page.getByText("Please clarify: Recipient type", { exact: false }),
   ).toBeVisible();
   await expect(page.locator(".analysis-result")).toHaveCount(0);
   await send(page, "FOLLOW_UP");
   await expect(page.locator(".message.user")).toHaveCount(2);
   await send(page, "partial summary");
-  await expect(page.locator(".message.assistant").last()).toContainText("不是完整分析");
+  await expect(page.locator(".message.assistant").last()).toContainText("Partial draft requested");
   await page.getByRole("button", { name: "Review case facts" }).click();
   await expect(
     page.getByLabel(
@@ -220,9 +240,11 @@ test("intake, follow-up, explicit confirmation, real rules and refresh recovery"
       { exact: true },
     ),
   ).toHaveValue("yes");
-  await expect(page.getByLabel("Dividend amount", { exact: true })).toHaveValue(
+  await page.getByRole("button", { name: /02 Income/ }).click();
+  await expect(page.getByLabel("What is the dividend amount?", { exact: true })).toHaveValue(
     "100000",
   );
+  await page.getByRole("button", { name: /08 Review/ }).click();
   await page.getByRole("button", { name: "Confirm facts and analyze" }).click();
   await expect(page.getByRole("button", { name: "Close details" })).toHaveCount(
     0,
@@ -247,13 +269,15 @@ test("intake, follow-up, explicit confirmation, real rules and refresh recovery"
   await expect(page.locator(".analysis-result")).toHaveCount(1);
   expect(page.url()).toBe(url);
   await page.getByRole("button", { name: "Review case facts" }).click();
-  await page.getByLabel("Dividend amount", { exact: true }).fill("");
+  await page.getByRole("button", { name: /02 Income/ }).click();
+  await page.getByLabel("What is the dividend amount?", { exact: true }).fill("");
   await page
-    .getByLabel("Dividend amount", { exact: true })
+    .getByLabel("What is the dividend amount?", { exact: true })
     .pressSequentially("200000.50");
-  await expect(page.getByLabel("Dividend amount", { exact: true })).toHaveValue(
+  await expect(page.getByLabel("What is the dividend amount?", { exact: true })).toHaveValue(
     "200000.50",
   );
+  await page.getByRole("button", { name: /08 Review/ }).click();
   await expect(
     page.getByRole("button", { name: "Confirm facts and analyze" }),
   ).toBeDisabled();
@@ -289,17 +313,20 @@ test("conflicts require explicit editing before confirmation", async ({
   await english(page);
   await send(page, "CONFLICT_TEST");
   await expect(
-    page.getByText("本次应采用哪个值？", { exact: false }),
+    page.getByText("Please clarify: Does the recipient carry on business in Hong Kong?", { exact: false }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Review case facts" }).click();
+  await page.getByRole("button", { name: /08 Review/ }).click();
   await expect(
     page.getByRole("button", { name: "Confirm facts and analyze" }),
   ).toBeDisabled();
+  await page.getByRole("button", { name: /01 Recipient/ }).click();
   await page
     .getByLabel("Does the recipient carry on business in Hong Kong?", {
       exact: true,
     })
     .selectOption("yes");
+  await page.getByRole("button", { name: /08 Review/ }).click();
   await page.getByRole("button", { name: "Save facts", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Confirm facts and analyze" }),
@@ -350,13 +377,11 @@ test("IME does not submit and phone dialogs trap focus without overflow", async 
     path: "test-results/live-mobile.png",
     fullPage: true, animations: "disabled",
   });
-  const sources = page.getByRole("button", { name: "法规资料", exact: true });
-  await sources.click();
+  await page.getByRole("button", { name: "打开案例导航" }).click();
+  await page.getByRole("button", { name: "法规资料库", exact: true }).click();
   await expect(page.getByRole("button", { name: "关闭详情" })).toBeFocused();
-  await page.keyboard.press("Shift+Tab");
-  await expect(page.locator(".source-metadata summary")).toBeFocused();
   await page.keyboard.press("Escape");
-  await expect(sources).toBeFocused();
+  await expect(page.locator(".panel-slot")).toHaveCount(0);
   await page.getByRole("button", { name: "Switch to English" }).click();
   expect(
     await page.evaluate(
@@ -369,12 +394,12 @@ test("guided interview asks once, records unknown, and resumes after refresh", a
   await english(page);
   await send(page, "Synthetic foreign dividend case");
   const last = page.locator(".message.assistant").last();
-  await expect(last).toContainText("这笔收入由个人还是公司收取？");
+  await expect(last).toContainText("Please clarify: Recipient type.");
   await expect(last.locator("ul")).toHaveCount(0);
   await send(page, "公司");
-  await expect(last).toContainText("分析哪个地区");
+  await expect(last).toContainText("Please clarify: Jurisdiction to analyze.");
   await send(page, "不知道");
-  await expect(last).toContainText("继续补充其他信息、先看部分整理，还是暂停");
+  await expect(last).toContainText("Would you like to add more information, see a partial draft, or pause?");
   const id = new URL(page.url()).hash.slice(1);
   let doc = await (await page.request.get(`/api/cases/${id}`)).json();
   expect(doc.facts.recipient_type.value).toBe("company");
@@ -382,9 +407,9 @@ test("guided interview asks once, records unknown, and resumes after refresh", a
   expect(doc.dialogue.partial_consent).toBeUndefined();
   await send(page, "暂停");
   await page.reload();
-  await expect(last).toContainText("已暂停并保存");
+  await expect(last).toContainText("Paused and saved.");
   await send(page, "继续补充");
-  await expect(last).toContainText("最想解决股息的哪个问题");
+  await expect(last).toContainText("Please clarify: Consultation goal.");
   doc = await (await page.request.get(`/api/cases/${id}`)).json();
   expect(doc.messages.at(-1).question.field).toBe("consultation_goal");
 });

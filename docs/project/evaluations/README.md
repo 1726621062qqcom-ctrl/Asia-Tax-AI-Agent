@@ -1,5 +1,11 @@
 # 当前测试结果与协作交接
 
+## 最新：香港 FSIE 双输入实验（2026-10-14）
+
+- [六次实验报告（中文）](HK_FSIE_SIX_EXPERIMENT_REPORT.md) · [English report](HK_FSIE_SIX_EXPERIMENT_REPORT.en.md)：三个合成案例各测试长问题与分步事实输入，记录实际输出、失败及评估标准。
+- [案例模板与分步表单](../../product/HK_FSIE_USER_CASE_TEMPLATES.md) · [English templates](../../product/HK_FSIE_USER_CASE_TEMPLATES.en.md)：实验输入及产品交互样例。
+- 复跑入口：[evaluate_fsie_user_cases.py](../../../scripts/evaluate_fsie_user_cases.py)。本机原始 JSON 留在被 Git 忽略的 `reports/`；报告和脚本可供团队复核与重跑。
+
 ## 先看这份
 
 [2026-10-03 简版复测记录](Taxora_复测记录_20261003.xlsx)：一张表，五列，保留20个问题的实际回复和修改建议。长回复用续行保留全文。

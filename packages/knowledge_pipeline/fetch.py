@@ -67,10 +67,11 @@ def _existing_snapshot(source_dir: Path) -> Path | None:
     return files[-1] if files else None
 
 
-def fetch_source(entry: dict, allowed_domains: list[str], *, timeout: float = 300.0) -> FetchResult:
+def fetch_source(entry: dict, allowed_domains: list[str], *, timeout: float = 300.0,
+                 raw_dir: Path | None = None) -> FetchResult:
     source_id = entry["source_id"]
     manifest_sha = entry.get("content_sha256")
-    source_dir = RAW_DIR / source_id
+    source_dir = (raw_dir or RAW_DIR) / source_id
     source_dir.mkdir(parents=True, exist_ok=True)
 
     existing = _existing_snapshot(source_dir)

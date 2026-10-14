@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError, type FactPatch } from "../api";
 import type { Case, FieldSpec, Message, EntryHint } from "../workspace";
+import { useLocale } from "../locale";
 
 export function useWorkspace() {
+  const { locale } = useLocale();
   const [cases, setCases] = useState<Case[]>([]),
     [fields, setFields] = useState<FieldSpec[]>([]);
   const [activeId, setActiveId] = useState(location.hash.slice(1));
@@ -144,7 +146,7 @@ export function useWorkspace() {
         setPartial({ caseId: doc.id, text: "" });
         const next = await api.stream(doc, text, approved, requestId, abort.signal, (chunk, reset) =>
           setPartial(previous => previous?.caseId === doc.id ? { ...previous, text: reset ? "" : previous.text + chunk } : previous),
-          entryHint, text.startsWith("结构答复：") ? doc.domain_workflow?.pending_question_id || null : pending?.id || null);
+          entryHint, text.startsWith("结构答复：") ? doc.domain_workflow?.pending_question_id || null : pending?.id || null, locale);
         update(next);
         setEntrySelections(all => { const copy = { ...all }; delete copy[doc.id]; return copy; });
         setOutbox((all) => all.filter((item) => item.message.id !== localId));

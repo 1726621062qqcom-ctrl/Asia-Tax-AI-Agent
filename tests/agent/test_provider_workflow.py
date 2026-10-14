@@ -134,6 +134,25 @@ def test_graph_routes_and_retrieval_replaces_model_preamble(chat):
     assert 'PRE_RETRIEVAL_UNSAFE' not in context
 
 
+def test_english_locale_guides_chat_and_preserves_source_quotes(chat):
+    doc = chat.store.create('owner')
+    doc['_ui_locale'] = 'en'
+    system, _ = turn_prompt(doc, 'hello')
+    assert 'Write every user-visible reply in English' in system
+    bundle = retrieve(MockKnowledgeProvider('MOCK-01'), request(), CONTEXT)
+    answer = compose_answer(bundle, locale='en')
+    assert 'Conditions:' in answer['text']
+    assert 'Source excerpt [' in answer['text']
+    assert answer['claims'][0]['text'] in answer['text']
+    validate_answer(answer, bundle)
+
+
+def test_message_locale_is_part_of_idempotency_hash():
+    from packages.agent.task_state import payload_hash
+    assert payload_hash('hello', True) != payload_hash('hello', True, locale='en')
+    assert payload_hash('hello', True) == payload_hash('hello', True, locale='zh')
+
+
 def test_chat_does_not_retrieve_and_same_request_is_idempotent(chat):
     chat.turner = lambda *_: {'intent': 'chat', 'facts': {}, 'reply': 'Hello', 'query': ''}
     chat.provider.search_evidence = lambda *_: pytest.fail('must not retrieve')
