@@ -1,42 +1,41 @@
-# 文档导航
+# Documentation Index
 
-本目录保存产品、技术、项目治理、审查和设计记录。规划文档与实现代码分离，以便独立评审范围、规则、风险和验收门槛。
+This directory contains product, technical, project governance, review, and design records. Planning documents are kept separate from implementation code so that scope, rules, risks, and acceptance gates can be reviewed independently.
 
-## 现在从哪里开始
+## Where to start
 
-| 要做的事 | 入口 |
+| Task | Entry point |
 |---|---|
-| 安装并启动当前 `main` | [集成运行说明](../README_MERGED.md) |
-| 准备真实链路检验 | [验收入口](verification/README.md) |
-| 查看上次集成实测和未完成项 | [集成验收记录](implementation/COMBINED_INTEGRATION_ACCEPTANCE.md) |
-| 查看评测输入与历史结果 | [评测导航](../evals/README.md) |
+| Install and run the current `main` | [Integrated setup and run guide](../README_MERGED.md) |
+| Prepare to test the live workflow | [Acceptance testing entry point](verification/README.md) |
+| Review the last integration test and outstanding items | [Integration acceptance record](implementation/COMBINED_INTEGRATION_ACCEPTANCE.md) |
+| View evaluation inputs and historical results | [Evaluation index](../evals/README.md) |
 
-以下是产品和实施背景文档，不应把历史计划或旧评测结果当成本次验收结论。
+The documents below provide product and implementation background. Historical plans or older evaluation results must not be treated as conclusions from the current acceptance round.
 
-| 分类 | 文档 | 作用 |
+| Category | Document | Purpose |
 |---|---|---|
-| 产品 | [PRD](product/PRD.md) | 定义用户、范围、功能、知识治理和验收标准 |
-| 架构 | [技术路线图](architecture/TECHNICAL_ROADMAP.md) | 定义技术边界、数据模型、安全和实施阶段 |
-| 数据 | [数据集与数据来源说明](architecture/DATA_SOURCES_AND_DATASETS.md) | 定义 L0 所需预置数据集、各自来源渠道、依赖关系和 L1 数据缺口 |
-| 实施 | [FSIE 数据提取与校验计划](implementation/FSIE_DATA_EXTRACTION_VALIDATION_PLAN.md) | 定义法源、规则、事实提取、校验、专家审核和回归发布流程 |
-| 项目管理 | [2026 项目计划](project/PROJECT_PLAN_2026.md) | 定义时间、资源、负责人、依赖和降级方案 |
-| 审查 | [批判性审查报告](reviews/2026-08-15-prd-roadmap-project-plan-plain-language-review.md) | 记录问题、批准修改和回归检查结果 |
-| 设计记录 | `superpowers/specs/` | 保存已经形成的设计过程记录 |
+| Product | [PRD](product/PRD.md) | Defines users, scope, features, knowledge governance, and acceptance criteria |
+| Architecture | [Technical roadmap](architecture/TECHNICAL_ROADMAP.md) | Defines technical boundaries, data models, security, and implementation stages |
+| Data | [Datasets and data sources](architecture/DATA_SOURCES_AND_DATASETS.md) | Defines the preloaded datasets needed for L0, their source channels, dependencies, and L1 data gaps |
+| Implementation | [FSIE data extraction and validation plan](implementation/FSIE_DATA_EXTRACTION_VALIDATION_PLAN.md) | Defines legal sources, rules, fact extraction, validation, expert review, and regression release procedures |
+| Project management | [2026 project plan](project/PROJECT_PLAN_2026.md) | Defines timelines, resources, owners, dependencies, and fallback plans |
+| Review | [Critical review report](reviews/2026-08-15-prd-roadmap-project-plan-plain-language-review.md) | Records issues, approved changes, and regression check results |
+| Design records | `superpowers/specs/` | Stores completed design process records |
 
-规划文档不能代替香港或其他地区税务专家的专业鉴证。
+Planning documents do not replace professional validation by tax experts in Hong Kong or other jurisdictions.
 
+## B Agent integration development (2026-10-02)
 
-## B Agent 接入开发（2026-10-02）
-
-- **先读：[B 模块队友交接与后续迭代清单（2026-10-04）](implementation/B_TEAM_HANDOFF.md)**：规则、场景、Prompt、兜底、三个入口、A/C 联调、附件输入和未对齐事项。
-- [自由对话工具执行循环与开源方案选择](implementation/B_TOOL_HARNESS_DESIGN.md)：能力目录、工具前后校验、预算、观察、停止与开关。
-- [三个业务入口与自由对话的统一编排设计及执行记录（2026-10-03）](implementation/B_HYBRID_ORCHESTRATION_PLAN_2026_10_03.md)
-- [混合编排验收规范与工程结果（真实模型/C/PG 待验收）](implementation/B_HYBRID_ORCHESTRATION_ACCEPTANCE_2026_10_03.md)
-- [B 多轮评测集与实际 API 评测程序（62 脚本；在线全链路未通过）](../evals/b_workflow/README.md)
-- [动态追问与对话兜底设计及实现](implementation/B_GUIDED_INTAKE_DESIGN_2026_10_02.md)
-- [GitHub 用户侧字段逐项核查表](implementation/B_USER_FACT_FIELD_AUDIT_2026_10_02.md)
-- [详细开发计划](implementation/B_AGENT_IMPLEMENTATION_PLAN_2026_10_02.md)
-- [本地运行与 A/C 交接](implementation/B_AGENT_LOCAL_RUN_AND_HANDOFF.md)
-- [业务流程设计](architecture/AGENT_BUSINESS_WORKFLOW_V0_1.md)
-- [业务规则设计](architecture/AGENT_BUSINESS_RULES_V0_1.md)
-- [KnowledgeProvider 契约](architecture/KNOWLEDGE_PROVIDER_CONTRACT_V0_1.md)
+- **Read first: [B module team handoff and iteration checklist (2026-10-04)](implementation/B_TEAM_HANDOFF.md)**: rules, scenarios, prompts, fallback behavior, the three entry points, A/C integration, attachment input, and unresolved alignment issues.
+- [Free-form conversation tool execution loop and open-source approach selection](implementation/B_TOOL_HARNESS_DESIGN.md): capability catalog, pre- and post-tool validation, budgets, observations, stopping conditions, and switches.
+- [Unified orchestration design and execution record for the three business entry points and free-form conversation (2026-10-03)](implementation/B_HYBRID_ORCHESTRATION_PLAN_2026_10_03.md)
+- [Hybrid orchestration acceptance specification and engineering results (live model/C/PG acceptance pending)](implementation/B_HYBRID_ORCHESTRATION_ACCEPTANCE_2026_10_03.md)
+- [B multi-turn evaluation dataset and actual API evaluation runner (62 scripts; online end-to-end workflow has not passed)](../evals/b_workflow/README.md)
+- [Dynamic follow-up questions and conversational fallback design and implementation](implementation/B_GUIDED_INTAKE_DESIGN_2026_10_02.md)
+- [Item-by-item audit of user-facing fields on GitHub](implementation/B_USER_FACT_FIELD_AUDIT_2026_10_02.md)
+- [Detailed development plan](implementation/B_AGENT_IMPLEMENTATION_PLAN_2026_10_02.md)
+- [Local operation and A/C handoff](implementation/B_AGENT_LOCAL_RUN_AND_HANDOFF.md)
+- [Business workflow design](architecture/AGENT_BUSINESS_WORKFLOW_V0_1.md)
+- [Business rules design](architecture/AGENT_BUSINESS_RULES_V0_1.md)
+- [KnowledgeProvider contract](architecture/KNOWLEDGE_PROVIDER_CONTRACT_V0_1.md)

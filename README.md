@@ -1,72 +1,71 @@
-# Taxora 税衡
+# Taxora
 
-当前 `main` 包含税务聊天工作台、A/B 联调代码，以及接入指定版本 Li 组件的合并编排、共同事实和数据库接口。安装与运行见 [集成运行说明](README_MERGED.md)；开始检验前先看 [验收入口](docs/verification/README.md)。Li 组件按固定版本安装，C 分支后续提交不会自动进入 `main`。
+The current `main` branch includes the tax chat workspace, A/B integration code, and combined orchestration, shared facts, and database interfaces for the pinned Li component release. See the [integrated setup and run guide](README_MERGED.md) for installation and operation, and start with the [acceptance testing entry point](docs/verification/README.md) before testing. The Li component is installed at a pinned version; later commits on the C branch do not automatically become part of `main`.
 
-邮箱登录与云端用户数据配置见 [账号与认证说明](docs/project/TAXORA_AUTH.md)。
+See the [account and authentication guide](docs/project/TAXORA_AUTH.md) for email sign-in and cloud user data configuration.
 
+This project is an East Asian tax AI platform for corporate tax research and advisor review. Its primary MVP focuses on Hong Kong's foreign-sourced income exemption (FSIE) regime, with an extensible framework for official sources and rules covering mainland China, Japan, and South Korea.
 
-面向企业税务研究与顾问复核场景的东亚税务 AI 平台项目。项目以中国香港境外来源收入豁免征税机制（FSIE）为深度 MVP，并为中国内地、日本和韩国建立可扩展的官方资料与规则框架。
+The repository has passed engineering acceptance for the L0 internal research prototype (see the [L0 acceptance record](docs/project/L0_ACCEPTANCE_RECORD.md)). It does not yet provide formal tax advice or a product for direct client use. Progression to L1 requires validation by Hong Kong tax experts and completion of the security gates.
 
-本仓库已完成 L0 内部研究原型工程验收（见 [L0 验收记录](docs/project/L0_ACCEPTANCE_RECORD.md)），尚不提供正式税务意见，也不是可供客户直接使用的产品；进入 L1 须先通过香港税务专家验证与安全门槛。
+## Current delivery scope
 
-## 当前交付边界
+- **L0 internal research prototype**: the default target for 2026, limited to controlled research and engineering validation.
+- **L1 closed advisor pilot**: requires Hong Kong tax expert validation and completion of security and operational gates.
+- **L2 production capabilities for clients**: outside the default scope for 2026.
 
-- **L0 内部研究原型**：2026 年默认目标，只能用于受控研究和工程验证；
-- **L1 封闭顾问试点**：必须通过香港税务专家验证、安全和运营门槛；
-- **L2 正式客户能力**：不属于 2026 年默认范围。
+Hong Kong is currently the only MVP with in-depth coverage. Under the conservative resource baseline, mainland China, Japan, and South Korea initially receive a `source-catalog baseline`, to be expanded into standard research packages when additional engineering and knowledge operations resources become available.
 
-香港是当前唯一的深度 MVP。中国内地、日本和韩国在保守资源基线下先交付 `source-catalog baseline`，额外工程与知识运营资源到位后再扩展为标准研究包。
+## Core documents
 
-## 核心文档
+- [Product requirements document](docs/product/PRD.md)
+- [Technical roadmap](docs/architecture/TECHNICAL_ROADMAP.md)
+- [2026 project plan](docs/project/PROJECT_PLAN_2026.md)
+- [Critical documentation review](docs/reviews/2026-08-15-prd-roadmap-project-plan-plain-language-review.md)
+- [Documentation index](docs/README.md)
 
-- [产品需求文档](docs/product/PRD.md)
-- [技术路线图](docs/architecture/TECHNICAL_ROADMAP.md)
-- [2026 项目计划](docs/project/PROJECT_PLAN_2026.md)
-- [批判性文档审查报告](docs/reviews/2026-08-15-prd-roadmap-project-plan-plain-language-review.md)
-- [文档导航](docs/README.md)
+## Repository structure
 
-## 仓库结构
-
-| 目录 | 当前用途 |
+| Directory | Current purpose |
 |---|---|
-| `docs/` | 产品、架构、项目计划、集成验收和设计记录 |
-| `apps/` | FastAPI API 与 React 税务聊天前端 |
-| `packages/` | 数据契约、事实提取、知识处理、规则执行、持久化和报告模块 |
-| `knowledge/` | 可公开并允许版本管理的资料清单、标注定义和规则元数据 |
-| `tests/` | 离线单元测试和数据库集成测试 |
-| `evals/` | 评测输入、历史运行结果与说明 |
-| `scripts/` | 启动、知识校验和验收脚本 |
-| `infrastructure/` | 本地 PostgreSQL / pgvector 的 Docker Compose 配置 |
-| `alembic/` | 数据库版本迁移 |
-| `data/` | 本地运行时数据；由 Git 忽略，不是分发内容 |
+| `docs/` | Product, architecture, project planning, integration acceptance, and design records |
+| `apps/` | FastAPI API and React tax chat frontend |
+| `packages/` | Data contracts, fact extraction, knowledge processing, rule execution, persistence, and reporting modules |
+| `knowledge/` | Source catalogs, annotation definitions, and rule metadata approved for public release and version control |
+| `tests/` | Offline unit tests and database integration tests |
+| `evals/` | Evaluation inputs, historical run results, and supporting notes |
+| `scripts/` | Startup, knowledge validation, and acceptance scripts |
+| `infrastructure/` | Docker Compose configuration for local PostgreSQL / pgvector |
+| `alembic/` | Database version migrations |
+| `data/` | Local runtime data; ignored by Git and excluded from distribution |
 
-早期 Web 演示及其案例分析 API 仍在 `demo/hk-web` 分支，没有整体合并；当前 `main` 的聊天工作台是另一套已集成的前端和 API。开发命令见 `Makefile`；其中虚拟环境路径及 Shell 命令按 Linux / WSL 编写。
+The early web demo and its case analysis API remain on the `demo/hk-web` branch and have not been merged in full. The chat workspace on the current `main` branch is a separate, integrated frontend and API. See `Makefile` for development commands; its virtual environment paths and shell commands target Linux / WSL.
 
-[税务聊天工作台](apps/web/README.md)提供中英文界面，并通过 API 连接云端 PostgreSQL；支持案件访谈、事实确认、规则分析和刷新恢复。官方法条及四个裁定案例支持编号和中英文关键词检索。引用保留原文、哈希、抓取日期和内容变化提示。其他开发环境需要配置数据库连接和模型密钥。实现范围与缺口见 [网页研究链路记录](docs/project/LIVE_CHAT_SLICE.md)及[云端研究链路验收](docs/project/CLOUD_KNOWLEDGE_SLICE.md)。
+The [tax chat workspace](apps/web/README.md) provides Chinese and English interfaces and connects to cloud PostgreSQL through the API. It supports case interviews, fact confirmation, rule analysis, and recovery after a page refresh. Official statutory provisions and four ruling cases can be searched by identifier and Chinese or English keywords. Citations retain the original text, hash, capture date, and content change notices. Other development environments need database connections and model keys configured. See the [web research workflow record](docs/project/LIVE_CHAT_SLICE.md) and [cloud research workflow acceptance](docs/project/CLOUD_KNOWLEDGE_SLICE.md) for implementation scope and gaps.
 
 ```sh
 cd apps/web
 npm ci
 npm run build
 cd ../..
-# 先安装 Python 依赖：python -m pip install -e ".[dev]"
+# Install Python dependencies first: python -m pip install -e ".[dev]"
 python scripts/run_chat.py
 ```
 
-打开 <http://127.0.0.1:8000>。需要 Python 3.11+ 和 Node.js 20.19+ 或 22.12+。在根目录 `.env` 配置云端 `FSIE_DATABASE_URL`、模型密钥和 Supabase 邮箱认证；会话默认使用同一云端数据库，无 SQLite 回退。数据库初始化执行 `python -m alembic upgrade head`。前后端目前在开发机器运行，数据库在云端；已支持邮箱账号，公网网站尚未部署。
+Open <http://127.0.0.1:8000>. Python 3.11+ and Node.js 20.19+ or 22.12+ are required. Configure the cloud `FSIE_DATABASE_URL`, model key, and Supabase email authentication in the root `.env`. Sessions use the same cloud database by default, with no SQLite fallback. Initialize the database with `python -m alembic upgrade head`. The frontend and backend currently run on a development machine, while the database runs in the cloud. Email accounts are supported; a public website has not yet been deployed.
 
-资料咨询现在先检索云端官方片段，再生成带出处的解释；片段 ID 和逐字引用通过校验后才保存。未找到依据或引用校验失败会明确提示。多法条查询、有限主题词定位、短片段上下文及真实模型复测见[当前测试与交接](docs/project/evaluations/README.md)。这项引用检查不能替代税务专家对解释与适用性的审核。
+Source inquiries now retrieve official passages from the cloud before generating explanations with citations. Passage IDs and verbatim quotations must pass validation before the response is saved. Missing evidence or citation validation failures are reported explicitly. See [current testing and handoff](docs/project/evaluations/README.md) for queries covering multiple provisions, limited topic keyword matching, context for short passages, and retesting with a live model. This citation check does not replace tax expert review of the explanation and its applicability.
 
-## 知识与数据安全
+## Knowledge and data security
 
-- 首版专业资料应优先使用可验证的官方来源；
-- RAG 资料、确定性规则和案例评测必须分别管理；
-- 不得提交客户案件、个人资料、密钥、`.env` 或受限原始资料；
-- 2026-10-03 用户明确授权：来源清单内公开的香港官方法规、指引和裁定片段可发送给已配置的 DeepSeek 形成解释。该授权不包含真实客户资料和密钥；事实提取测试继续使用合成案情。原先“不向模型发送官方原文”的规定在此范围内更新，其余限制保留；
-- `knowledge/` 只保存获准版本管理的清单、元数据、标注规范和规则定义；
-- 中国内地第一批[跨境股息官方来源目录](knowledge/mainland_china/cross_border_dividends/README.md)已写入云端数据库，覆盖五个研究主题、七条官方来源；目前只有目录元数据，尚无内地法条片段或自动税务结论；
-- 系统输出必须保留来源、规则版本和适用时间，且最终专业判断由合资格人员负责。
+- Prioritize verifiable official sources for the first release of professional materials.
+- Manage RAG materials, deterministic rules, and case evaluations separately.
+- Do not commit client cases, personal information, keys, `.env`, or restricted raw materials.
+- On 2026-10-03, the user explicitly authorized sending public Hong Kong official statutory, guidance, and ruling passages from the source catalog to the configured DeepSeek service to produce explanations. This authorization excludes real client data and keys; fact extraction tests continue to use synthetic cases. The earlier restriction on sending official original text to models is updated within this scope; all other restrictions remain in effect.
+- `knowledge/` stores only catalogs, metadata, annotation specifications, and rule definitions approved for version control.
+- The first mainland China [official source catalog for cross-border dividends](knowledge/mainland_china/cross_border_dividends/README.md) has been loaded into the cloud database, covering five research topics and seven official sources. It currently contains catalog metadata only, with no mainland statutory passages or automated tax conclusions.
+- System outputs must retain sources, rule versions, and applicability dates. Qualified professionals are responsible for final professional judgments.
 
-## 项目背景
+## Project background
 
-本项目最初作为 TUM Project Study 开展，后续目标是在受控验证基础上逐步扩展为东亚税务研究与顾问辅助平台。
+The project began as a TUM Project Study. Its longer-term goal is to expand gradually into an East Asian tax research and advisor support platform through controlled validation.

@@ -1,11 +1,11 @@
-# 评测导航
+# Evaluation Index
 
-这里保存可复测的评测输入与历史运行结果；`tests/` 则用于自动化代码回归。历史分数不能直接代表当前 `main` 的真实链路表现。
+This directory stores reproducible evaluation inputs and historical run results; `tests/` is used for automated code regression. Historical scores do not directly represent the live workflow performance of the current `main`.
 
-| 资料 | 已覆盖 | 使用时注意 |
+| Material | Coverage | Usage notes |
 |---|---|---|
-| [A 侧测试记录](../docs/project/evaluations/README.md) | 20 问检索和聊天复测、结果表 | 使用历史题集与口径；需要在当前版本重新运行，并人工核对引用与答案 |
-| [B 多轮业务评测](b_workflow/README.md) | 62 个合成脚本、135 个步骤 | 工程行为预期不是税务专家金标；历史在线链路没有全部通过 |
-| [集成验收记录](../docs/implementation/COMBINED_INTEGRATION_ACCEPTANCE.md) | 固定版本 Li、PostgreSQL、C HTTP 的工程链路 | 记录上次环境结果；真实模型、正常账号页面及专业正确性仍需复验 |
+| [A-side test records](../docs/project/evaluations/README.md) | Retrieval and chat retesting with 20 questions, plus result spreadsheets | Uses historical questions and criteria; rerun on the current version and manually check citations and answers |
+| [B multi-turn business evaluations](b_workflow/README.md) | 62 synthetic scripts, 135 steps | Expected engineering behavior is not a tax expert gold standard; the historical online workflow did not fully pass |
+| [Integration acceptance record](../docs/implementation/COMBINED_INTEGRATION_ACCEPTANCE.md) | Engineering integration of the pinned Li release, PostgreSQL, and C HTTP | Records results from the previous environment; live models, normal account pages, and professional correctness still require repeat verification |
 
-下一轮检验建议先固定同一批问题、版本和资料快照，再比较旧策略与当前策略；逐题检查回答中的法条、案例和规则是否可回读，分别记录召回、引用准确性、答案正确性和耗时。具体执行边界见[验收入口](../docs/verification/README.md)。
+For the next round, fix the questions, versions, and source snapshots before comparing the old and current strategies. For each question, check whether the statutory provisions, cases, and rules cited in the answer can be retrieved, and record recall, citation accuracy, answer correctness, and timings separately. See the [acceptance testing entry point](../docs/verification/README.md) for the detailed execution order.

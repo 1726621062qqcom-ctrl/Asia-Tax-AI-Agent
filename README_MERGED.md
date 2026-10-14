@@ -1,73 +1,73 @@
-# Taxora 集成运行与联调
+# Taxora Integrated Setup and Integration Testing
 
-这份文档记录当前 `main` 的集成运行方式。目标是让一个案件里的聊天、结构计算、资料检索和研究报告连起来，组员可以按本文安装并复测。Li 组件使用文中指定的发布版本；其后续分支更新需要另行集成。当前交付是内部研究原型，税务口径仍需专业负责人复核。开始检验时可先看[验收入口](docs/verification/README.md)。
+This document describes how to run the current integrated `main`. The goal is to connect chat, structure calculations, source retrieval, and research reports within one case, so team members can install and retest the system using this guide. The Li component uses the release specified here; later updates on its branch require separate integration. The current delivery is an internal research prototype, and tax interpretations still require review by the responsible professional. Start testing with the [acceptance testing entry point](docs/verification/README.md).
 
-## 1. 框架怎么分工
+## 1. Framework responsibilities
 
-- **Zijian 的编排**负责访谈、识别任务、事实修改/确认、暂停恢复、案件保存、用户隔离和报告复核。原有 Hybrid/LangGraph 流程保留。
-- **Li 的编排**包含结构搜索、规则计算、上下界分析、追问和事后请求处理。本次接入真实 `planner.plan` 和固定结构计算；不是只把 Li 当知识检索器。
-- **知识接口**把 Li 的法规/参数资料接到已有 `KnowledgeProvider`。明确选择 `combined` 时，法规走 Li 只读服务，裁定走原 PostgreSQL 资料；每个来源保留原文版本、引用及哈希。
-- **数据库**分工保留：PostgreSQL 保存案件进度；Li SQLite/CSV 是固定发布版本的知识依赖。没有把 244 MB 数据库再提交一次到这个分支。
+- **Zijian's orchestration** handles interviews, task identification, fact revision/confirmation, pause/resume, case saving, user isolation, and report review. The existing Hybrid/LangGraph workflow is retained.
+- **Li's orchestration** includes structure search, rule calculations, lower/upper bound analysis, follow-up questions, and post-payment request handling. This integration uses the actual `planner.plan` and fixed-structure calculations; Li is not used only as a knowledge retriever.
+- **The knowledge interface** connects Li's statutory/parameter materials to the existing `KnowledgeProvider`. When `combined` is explicitly selected, statutory sources use Li's read-only service and rulings use the existing PostgreSQL materials. Each source retains its original-text version, citations, and hash.
+- **Database responsibilities** remain separate: PostgreSQL stores case progress; Li's SQLite/CSV files are knowledge dependencies from the pinned release. The 244 MB database has not been committed again to this branch.
 
 ```mermaid
 flowchart TD
-  U[聊天与结构分析页面] --> B[Zijian 会话编排 / DomainCoordinator]
-  B --> F[唯一事实源 canonical_fact_records]
-  F --> P[旧 FSIE facts 兼容视图]
-  F --> C[Li Case / Answers 投影]
-  P --> G[Zijian FSIE 规则链]
-  C --> L[Li 一次性子进程：规划或固定图计算]
-  L --> Q[事实 / 行动 / 专业判断问题]
+  U[Chat and structure analysis page] --> B[Zijian session orchestration / DomainCoordinator]
+  B --> F[Single source of facts: canonical_fact_records]
+  F --> P[Legacy FSIE facts compatibility view]
+  F --> C[Li Case / Answers projection]
+  P --> G[Zijian FSIE rule chain]
+  C --> L[Li one-shot subprocess: planning or fixed-graph calculation]
+  L --> Q[Fact / action / professional judgment questions]
   Q --> B
-  B --> K[统一 KnowledgeProvider]
-  K --> S[Li 官方资料只读 HTTP 服务 / SQLite]
-  K --> R[原 PostgreSQL 裁定资料]
-  G --> O[同一事实版本的研究稿 / 哈希 / 最终复核]
+  B --> K[Unified KnowledgeProvider]
+  K --> S[Li official sources: read-only HTTP service / SQLite]
+  K --> R[Existing PostgreSQL ruling sources]
+  G --> O[Research draft / hash / final review using the same fact version]
   L --> O
-  B --> DB[PostgreSQL chat_cases：整轮一次提交]
+  B --> DB[PostgreSQL chat_cases: one commit per complete turn]
 ```
 
-**一轮操作的提交人只有 Zijian。** Li 子进程只收到案件快照，没有模型或案件数据库密钥。计算成功后，答案、结果和运行记录一起保存；计算失败不会只保存答案。`owner` 隔离案件，`revision` 拦住旧版本更新，`request_id` 用于重放。相同请求号换内容会被拒绝。
+**Only Zijian's orchestration commits a turn.** The Li subprocess receives only a case snapshot, with no model or case database keys. When calculations succeed, answers, results, and run records are saved together; if calculations fail, answers are not saved on their own. `owner` isolates cases, `revision` blocks updates based on old versions, and `request_id` supports replay. Reusing a request ID with different content is rejected.
 
-## 2. 已实现和当前边界
+## 2. Implemented features and current boundaries
 
-| 功能 | 当前行为 |
+| Feature | Current behavior |
 |---|---|
-| 共同事实模型 | schema `2.0.0`；记录值、地址、来源、单位、状态、修订和确认；旧案按需迁移并保留原 facts 快照 |
-| 两边同步 | 原 facts 与 Li 输入都是共同记录的投影；只有人工确认的字段归属建立绑定，禁止把一个事实复制给多家公司 |
-| 现有结构 `assess_current` | 要求明确 `present`；只计算既有公司/持股，拒绝新增或迁移公司；不会偷偷改成结构设计 |
-| 结构比较 `plan_structure` | 调用 Li planner；保留上游候选、问题种类和排序；目标是候选集内先比较税额上界，不代表现实世界全局最优 |
-| 已缴事项 `review_paid` | 已接固定图/claims 的实验入口，完整业务时效与专业验收未完成；不要作为第一轮验收目标 |
-| 回答与恢复 | 类型校验、事实未知、暂缓、暂停/恢复；过期问题拒绝；刷新能恢复本案件 |
-| 主聊天联动 | 运行结果和下一题写入对话；可在结构面板答题，也可输入 `结构答复：答案`。普通聊天继续原编排 |
-| 专业问题 | `ruling/library` 不开放给普通用户；指定复核者可提交带可回读依据的答复，记录依据哈希。当前裁量只支持有利判断 `yes`，不支持不利裁量自动执行 |
-| 合并研究稿 | 确认当前事实后生成；未完整时须明确同意部分稿；已确认旧字段归属的现有结构附加 Zijian FSIE 规则链；保留两种结果及缺口；映射案件的报告共用证据缓存；普通分析最多 14 次回读，用户明确生成的合并报告限 35 次（FSIE 7、裁定 7、领域 21），检索最多 10 次（最多 5 个请求各含一次重试），全稿共用 45 秒预算，超出部分逐项留缺口 |
-| 原文定位 | FSIE 的 21 个定位按 7 个父条文回读，再验证子段位置和哈希；未定位/失效/受限均留缺口 |
-| 资料用途 | Li 原文目前允许展示、禁止发送给模型；工程可定位不等于已经通过税务专业审核 |
-| 计算币种 | 首期支持明确的 **CNY**；缺币种拒绝，HKD/SGD 返回 `unsupported`，不暗自换汇。集团欧元收入等规则字段仍按其指定单位填写 |
+| Shared fact model | Schema `2.0.0`; records values, addresses, sources, units, statuses, revisions, and confirmations; old cases migrate on demand and retain original facts snapshots |
+| Synchronization | Legacy facts and Li inputs are projections of the shared records; bindings are created only for manually confirmed field ownership, and a single fact must not be copied to multiple companies |
+| Existing structure `assess_current` | Requires explicit `present`; calculates only existing companies/shareholdings and rejects adding or relocating companies; does not silently switch to structure design |
+| Structure comparison `plan_structure` | Calls the Li planner and preserves upstream candidates, question types, and ordering; prioritizes comparing upper tax bounds within the candidate set and does not imply a real-world global optimum |
+| Paid-tax matters `review_paid` | Experimental entry point connected to fixed-graph/claims processing; complete business timing requirements and professional acceptance remain unfinished; do not make this the first acceptance target |
+| Answers and recovery | Type validation, unknown facts, deferral, and pause/resume; outdated questions are rejected, and the case can be restored after refresh |
+| Main chat integration | Run results and the next question are written to the conversation; answer in the structure panel or enter `结构答复：答案` (Chinese command meaning “structure response: answer”). Ordinary chat continues to use the original orchestration |
+| Professional questions | `ruling/library` is unavailable to ordinary users; designated reviewers can submit answers with retrievable evidence, whose hashes are recorded. Current discretion supports only favorable judgments (`yes`), not automatic execution of unfavorable discretionary judgments |
+| Combined research draft | Generated after confirming current facts; incomplete drafts require explicit consent. Existing structures with confirmed legacy field ownership also include Zijian's FSIE rule chain. Both results and gaps are retained. Reports for mapped cases share an evidence cache. Ordinary analysis allows at most 14 evidence retrievals; user-requested combined reports allow 35 (FSIE 7, rulings 7, domain 21). Search is limited to ten attempts (at most five requests, each including one retry). The entire draft shares a 45-second budget; items beyond the budget are recorded individually as gaps |
+| Original-text locations | The 21 FSIE locations are retrieved through seven parent provisions, then child passage positions and hashes are validated; unresolved, invalid, or restricted locations remain gaps |
+| Source usage | Li original text may currently be displayed but must not be sent to the model; technical locatability does not establish professional tax review |
+| Calculation currency | Initial support requires explicit **CNY**; missing currency is rejected, and HKD/SGD returns `unsupported`, with no silent currency conversion. Rule fields such as group revenue in euros still use their specified units |
 
-首期业务表单覆盖直接持股股息；复杂结构可用高级 JSON。其他五种模板及二模板组合有 API 输入支持，但没有声称逐个完成业务验收。向量检索、Li 文档提取器、自动换汇、多用户专家协作界面和公网部署不属于这次已验证交付。
+The initial business form covers dividends from direct shareholdings; advanced JSON supports complex structures. API inputs support the other five templates and two-template combinations, but no claim is made that each has passed business acceptance. Vector retrieval, Li's document extractor, automatic currency conversion, a multi-user expert collaboration interface, and public deployment are outside this verified delivery.
 
-## 3. 文件导航
+## 3. File guide
 
-| 位置 | 看什么 |
+| Location | Contents |
 |---|---|
-| `packages/domain_bridge/state.py` | 唯一事实源、迁移、旧字段绑定、Li 投影 |
-| `packages/domain_bridge/coordinator.py` | 调用、题目过期判断、答案、暂停、专业答复、报告的事务协调 |
-| `packages/domain_bridge/bridge.py`、`worker.py` | 案件校验、固定发布校验、子进程、真实 Li 调用 |
-| `packages/domain_bridge/reporting.py` | 冻结事实/结果/证据的合并研究稿与 Markdown |
-| `apps/knowledge_api/main.py` | Li 的只读 `/search`、`/evidence` 服务 |
-| `packages/agent/providers.py`、`knowledge.py` | 原来源、Li 来源组合路由和父子条文校验 |
-| `apps/api/chat.py` | 已登录用户的案件、结构、报告和复核接口 |
-| `apps/web/src/components/StructurePanel.tsx`、`DomainResult.tsx` | 表单、题目、计算结果、研究稿下载 |
-| `tests/integration/fixtures/holding.synthetic.json` | 可分享的 CNY 合成样例 |
-| `tests/integration/`、`apps/web/tests/structure.spec.ts` | 自动联调回归与浏览器测试 |
-| `scripts/install_li_release.py`、`check_combined_live.py`、`check_postgres_acceptance.py` | 固定依赖安装、真实模型/数据库复测、一次性 PostgreSQL 全套验收 |
-| `docs/implementation/COMBINED_INTEGRATION_ACCEPTANCE.md` | 本次实测结果、局限和后续责任人 |
+| `packages/domain_bridge/state.py` | Single source of facts, migration, legacy field bindings, and Li projections |
+| `packages/domain_bridge/coordinator.py` | Transaction coordination for calls, question expiration, answers, pauses, professional responses, and reports |
+| `packages/domain_bridge/bridge.py`, `worker.py` | Case validation, pinned release validation, subprocesses, and actual Li calls |
+| `packages/domain_bridge/reporting.py` | Combined research drafts and Markdown with frozen facts/results/evidence |
+| `apps/knowledge_api/main.py` | Li's read-only `/search` and `/evidence` services |
+| `packages/agent/providers.py`, `knowledge.py` | Combined routing for original and Li sources, plus parent/child provision validation |
+| `apps/api/chat.py` | Case, structure, report, and review APIs for signed-in users |
+| `apps/web/src/components/StructurePanel.tsx`, `DomainResult.tsx` | Forms, questions, calculation results, and research draft downloads |
+| `tests/integration/fixtures/holding.synthetic.json` | Shareable synthetic CNY example |
+| `tests/integration/`, `apps/web/tests/structure.spec.ts` | Automated integration regression and browser tests |
+| `scripts/install_li_release.py`, `check_combined_live.py`, `check_postgres_acceptance.py` | Pinned dependency installation, live model/database retesting, and complete disposable PostgreSQL acceptance testing |
+| `docs/implementation/COMBINED_INTEGRATION_ACCEPTANCE.md` | Actual results from this round, limitations, and follow-up owners |
 
-## 4. 新组员安装
+## 4. Installation for new team members
 
-需要 Python 3.11+（本次使用 3.12）、Node.js 20.19+ 或 22.12+、Git，以及可连接的 PostgreSQL。Windows 建议 WSL；下面命令以 macOS/Linux 为例。
+Requirements: Python 3.11+ (3.12 was used in this round), Node.js 20.19+ or 22.12+, Git, and an accessible PostgreSQL instance. WSL is recommended on Windows; the commands below target macOS/Linux.
 
 ```sh
 git clone --branch main https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent.git
@@ -81,17 +81,17 @@ npm --prefix apps/web run build
 cp .env.example .env
 ```
 
-安装脚本从 GitHub 下载固定提交 `771e4524961bcc36718db1c9331e7a5f4cda0ce7` 的代码/CSV及真实 LFS SQLite，校验后原子安装到忽略目录 `data/li/releases/<commit>/`。它不跟随 Li 分支最新 HEAD 自动漂移。若本机 Python 缺省 CA，可安装 `truststore` 并用 `python scripts/install_li_release.py --system-trust`，保持 TLS 验证。网络限制环境可使用已取得的完整快照：
+The installer downloads code/CSV files and the actual LFS SQLite database from GitHub at pinned commit `771e4524961bcc36718db1c9331e7a5f4cda0ce7`, validates them, and installs them atomically into the ignored directory `data/li/releases/<commit>/`. It does not automatically follow the latest HEAD of the Li branch. If local Python lacks CA certificates, install `truststore` and use `python scripts/install_li_release.py --system-trust`, keeping TLS verification enabled. In network-restricted environments, use a complete snapshot already obtained:
 
 ```sh
 python scripts/install_li_release.py --from-directory /absolute/path/to/Li-release
 ```
 
-安装内容必须包含 `official/labels/*.csv`，它是规则编译的依赖。不要仅复制 `tax_graph/` 或仅复制数据库。校验失败时不能关闭校验；重新取得同一提交的完整资料。首次联网下载约 244 MB 数据库。
+The installation must include `official/labels/*.csv`, which is required for rule compilation. Do not copy only `tax_graph/` or only the database. Do not disable validation after a failure; obtain complete materials from the same commit again. The initial online download includes a database of approximately 244 MB.
 
-## 5. 配置和启动
+## 5. Configuration and startup
 
-在 `.env` 填写已有环境信息；不要提交或在群里发送密钥：
+Fill in the existing environment details in `.env`; do not commit keys or send them in group chats:
 
 ```dotenv
 FSIE_DATABASE_URL=postgresql+psycopg://USER:PASSWORD@HOST:5432/DB?sslmode=require
@@ -106,37 +106,37 @@ FSIE_AGENT_DYNAMIC_PLANNER=false
 FSIE_AGENT_HARNESS_MODE=rewrite
 FSIE_AGENT_PROVIDER=combined
 FSIE_AGENT_C_URL=http://127.0.0.1:8010
-# JSON 数组；填 Supabase 用户 UUID（不是邮箱、也不是 user: 前缀）。默认无人有权限。
+# JSON array of Supabase user UUIDs (not emails or values prefixed with user:). No one has permission by default.
 FSIE_AGENT_REVIEWER_IDS=[]
 ```
 
-默认用安装目录，无需填写 `FSIE_LI_RELEASE_DIR`；使用外部完整快照时填绝对路径。可选 `FSIE_AGENT_C_TOKEN` 两边共用，知识服务与 B 均读取 `.env`。知识服务只监听环回；迁到远端需 HTTPS、令牌和访问控制。
+The installation directory is used by default, so `FSIE_LI_RELEASE_DIR` need not be set. Provide an absolute path when using an external complete snapshot. The optional `FSIE_AGENT_C_TOKEN` is shared by both sides; the knowledge service and B both read `.env`. The knowledge service listens only on loopback; remote operation requires HTTPS, tokens, and access controls.
 
-用专用测试数据库运行现有迁移与知识装载流程，参见 [云端研究链路](docs/project/CLOUD_KNOWLEDGE_SLICE.md)和 [认证说明](docs/project/TAXORA_AUTH.md)。`chat_cases` 在服务初始化时创建；不要拿新的 URL 当作已有案件迁移工具。原裁定库需要有已经导入的 `legal_units/sources` 等表；空库会显示裁定资料不可用。
+Run the existing migrations and knowledge loading workflow against a dedicated test database; see the [cloud research workflow](docs/project/CLOUD_KNOWLEDGE_SLICE.md) and [authentication guide](docs/project/TAXORA_AUTH.md). `chat_cases` is created during service initialization; changing the URL is not a migration mechanism for existing cases. The original ruling database needs imported tables such as `legal_units/sources`; an empty database reports ruling materials as unavailable.
 
-有本机 Docker 的组员可以先启动仓库自带数据库：
+Team members with local Docker can first start the database included in the repository:
 
 ```sh
 docker compose -f infrastructure/postgres/docker-compose.yml up -d
 python -m alembic upgrade head
 ```
 
-数据库连接必须与这个环境匹配；这条命令不会替你配置云端账号或填充裁定资料。
+The database connection must match this environment. These commands do not configure cloud accounts or populate ruling materials for you.
 
-启动两个终端（都激活虚拟环境并位于仓库根目录）：
+Start two terminals, both at the repository root with the virtual environment activated.
 
-若在一台电脑上直接运行本轮验收过的组合链路，也可以只用一个终端执行 `python -m scripts.run_combined`；它临时启动本机知识服务，并在退出时回收。此入口显式使用 hybrid＋combined，避免遗漏 `.env` 中的相关开关。
+To run the combined workflow accepted in this round directly on one computer, you can instead use a single terminal with `python -m scripts.run_combined`. It starts a temporary local knowledge service and cleans it up on exit. This entry point explicitly uses hybrid + combined to avoid missing the relevant `.env` switches.
 
 ```sh
-# 终端 1
+# Terminal 1
 python -m uvicorn apps.knowledge_api.main:app --host 127.0.0.1 --port 8010
-# 终端 2
+# Terminal 2
 python scripts/run_chat.py
 ```
 
-打开 http://127.0.0.1:8000 并登录。可先访问 http://127.0.0.1:8010/health；返回 `knowledge_ready=true` 表示固定资料已装好。正式入口保留邮箱认证，测试服务的身份替身不用于正常启动。
+Open http://127.0.0.1:8000 and sign in. You can first check http://127.0.0.1:8010/health; `knowledge_ready=true` means the pinned materials are installed. The normal entry point retains email authentication; the test service's identity substitute is not used for normal startup.
 
-## 6. 建议先跑的自动检查
+## 6. Recommended initial automated checks
 
 ```sh
 python -m pytest -q
@@ -149,79 +149,79 @@ FSIE_LI_RELEASE_DIR="$(pwd)/../../data/li/releases/771e4524961bcc36718db1c9331e7
 npm test -- --workers=1
 ```
 
-macOS 已有 Chrome 时，可设 `PLAYWRIGHT_CHANNEL=chrome`。浏览器测试启动临时 SQLite 案件库、确定性模型替身和真实 Li 引擎；不能把它当成真实模型/云端数据库验收。旧 PostgreSQL 集成测试默认跳过，需按其 `FSIE_RUN_INTEGRATION` 开关在专用环境启用。如果没有 Li 发布物，相关真实引擎测试会跳过；交接验收必须检查跳过原因。
+On macOS with Chrome installed, set `PLAYWRIGHT_CHANNEL=chrome` if needed. Browser tests start a temporary SQLite case database, a deterministic model substitute, and the actual Li engine; they do not establish live model/cloud database acceptance. Legacy PostgreSQL integration tests are skipped by default and must be enabled in a dedicated environment using their `FSIE_RUN_INTEGRATION` switch. Without the Li release, related actual-engine tests are skipped; handoff acceptance must inspect skip reasons.
 
-真实 HTTP 知识服务与合并报告的本地复测（不调用模型，案件库为临时 SQLite）：
+Local retesting of the actual HTTP knowledge service and combined report, without model calls and with a temporary SQLite case database:
 
 ```sh
 python scripts/check_combined_local.py
 ```
 
-当前交接先验收数据库与合并链路；按用户 2026-10-11 的安排，真实模型验收暂缓，不作为本轮交接阻塞项：
+The current handoff prioritizes database and combined workflow acceptance. Per the user's 2026-10-11 arrangement, live model acceptance is deferred and is not a blocker for this handoff round:
 
 ```sh
 python scripts/check_combined_live.py --database-only --env-file .env.integration --output data/combined-database-result.json
 ```
 
-数据库未就绪时，可加 `--model-only` 单独测两轮模型与 Li，此时输出明确标识 SQLite，不能算 PostgreSQL 通过。模型未就绪时，可加 `--database-only` 测真实 PostgreSQL、真实 C HTTP、Li 及裁定回读，输出明确标识模型 `not_called`。两种单项模式互斥。配置分开存放时，用 `--model-env-file` 指定另一份本地模型配置，数据库仍从 `--env-file` 读取。
+If the database is not ready, add `--model-only` to test two rounds of model and Li interaction separately. The output explicitly identifies SQLite and cannot count as PostgreSQL acceptance. If the model is not ready, add `--database-only` to test actual PostgreSQL, actual C HTTP, Li, and ruling evidence retrieval; the output explicitly marks the model as `not_called`. These two modes are mutually exclusive. When configurations are stored separately, use `--model-env-file` to specify another local model configuration; the database is still read from `--env-file`.
 
-后续恢复模型验收时，若 macOS Python 缺省 CA 文件，可先安装 `truststore` 并加 `--system-trust` 使用系统已信任证书；始终保留 HTTPS 校验。届时遇到 `401/invalid_api_key`，由配置负责人在本地更新有效密钥。
+When live model acceptance resumes, if macOS Python lacks default CA files, install `truststore` and add `--system-trust` to use certificates already trusted by the system. Always retain HTTPS verification. If `401/invalid_api_key` occurs then, the configuration owner should update the valid key locally.
 
-脚本在指定 PostgreSQL 新建随机测试 schema，测试案件/恢复/隔离/报告，结束清理该 schema；原公共知识表仅读取。运行账号必须能建 schema。输出不包含连接串/密钥，包含法规/裁定覆盖数和状态。**当前 `--database-only` 不调用模型。**后续完整模式会调用配置的模型 API，并记录模型命中字段与人工补录步骤，可能消耗用量；不把人工补录算成模型准确率。
+The script creates a random test schema in the specified PostgreSQL instance, tests cases/recovery/isolation/reports, and cleans up that schema afterward. Existing shared knowledge tables are read-only. The runtime account must be able to create schemas. Outputs exclude connection strings/keys and include statutory/ruling coverage counts and statuses. **The current `--database-only` mode does not call the model.** The future full mode calls the configured model API and records fields populated by the model and manual data entry steps, potentially consuming usage. Manual data entry must not be counted as model accuracy.
 
-数据库完整验收另有一个入口：
+Complete database acceptance has a separate entry point:
 
 ```sh
 python scripts/check_postgres_acceptance.py --env-file .env.integration --system-trust
 ```
 
-先把专用 PostgreSQL 连接写入本地 `.env.integration` 的 `FSIE_DATABASE_URL`。服务器需安装 pgvector，账号需能创建数据库。没有服务器时，可用仓库已有的 `infrastructure/postgres/docker-compose.yml` 启动本地环境。`--system-trust` 仅在安装了 `truststore` 时使用，其余机器可以省略。
+First set `FSIE_DATABASE_URL` in the local `.env.integration` to the dedicated PostgreSQL connection. The server needs pgvector, and the account must be able to create databases. If no server is available, use the existing `infrastructure/postgres/docker-compose.yml` to start a local environment. Use `--system-trust` only when `truststore` is installed; omit it on other machines.
 
-这个脚本新建随机数据库，执行迁移、规则包导入、官方资料构建、`tests/persistence` 和真实 HTTP/Li 合并验收，最后删除自己创建的库；不会迁移或清空连接配置中原有的数据库。资料快照保存在忽略目录，网页与清单的哈希差异会记录下来。模型测试明确跳过，单独补测。输出和脱敏子步骤日志默认在 `data/` 下。
+This script creates a random database, runs migrations, imports the rule package, builds official sources, runs `tests/persistence` and actual HTTP/Li combined acceptance, and finally deletes the database it created. It does not migrate or empty the original database in the connection configuration. Source snapshots are stored in an ignored directory, and hash differences between web pages and manifests are recorded. Model tests are explicitly skipped and must be run separately. Outputs and sanitized substep logs default to `data/`.
 
-2026-10-11 已用 PostgreSQL 17.11 / pgvector 0.8.7 跑通：持久化检查 14 项通过、2 项模型检查跳过；10 份官方资料解析出 697 个单元；真实 HTTP 合并报告取得 21 个法规定位和 7 段裁定。脱敏结果见 [PostgreSQL 验收结果](docs/implementation/COMBINED_POSTGRES_RESULT_2026_10_11.json)。本次还补齐 Alembic 的聊天表元数据与 Source 地区索引声明，验证降级保留聊天数据及 RLS、再升级继续使用同一案件。
+On 2026-10-11, this passed with PostgreSQL 17.11 / pgvector 0.8.7: 14 persistence checks passed and two model checks were skipped; ten official source documents produced 697 parsed units; the actual HTTP combined report obtained 21 statutory locations and seven ruling passages. See the sanitized [PostgreSQL acceptance results](docs/implementation/COMBINED_POSTGRES_RESULT_2026_10_11.json). This round also completed Alembic chat-table metadata and the Source jurisdiction index declaration, verifying that a downgrade preserves chat data and RLS and that an upgrade continues using the same case.
 
-本次联调机器另保留了项目内的隔离数据库运行时及 `.env.integration`，均不上传。本机可用 `data/local-postgres/runtime/bin/pg_ctl -D data/local-postgres/cluster -l data/local-postgres/server.log start` 启动，`data/local-postgres/runtime/bin/pg_ctl -D data/local-postgres/cluster stop` 停止。这份运行时只适用于本机；其他组员按自己的 PostgreSQL 环境配置连接。
+The integration machine also retains an isolated database runtime within the project and `.env.integration`; neither is uploaded. On this machine, start it with `data/local-postgres/runtime/bin/pg_ctl -D data/local-postgres/cluster -l data/local-postgres/server.log start` and stop it with `data/local-postgres/runtime/bin/pg_ctl -D data/local-postgres/cluster stop`. This runtime is machine-specific; other team members should configure connections for their own PostgreSQL environments.
 
-## 7. 手工验收：下一位组员逐项测试
+## 7. Manual acceptance: step-by-step testing for the next team member
 
-只用上述合成样例；每一步记录案件 ID、模式、修订、现象和缺口，不记录密钥。
+Use only the synthetic example above. At each step, record case ID, mode, revision, observed behavior, and gaps, without recording keys.
 
-1. **现有结构**：新建案件 → 结构分析 → 载入合成示例 → 选择“只分析现有结构” → 确认合成资料 → 保存 → 运行。应只有 `OP/ULT` 两家公司、1 个候选；返回税额范围和缺口，而不是新增控股公司。
-2. **结构比较**：另建案件，同样例改成“比较新结构方案”，保存后运行。应进入真实 planner 的候选比较和追问；记录候选数量，不把待补状态当成成功税务方案。
-3. **数值/布尔/日期回答**：按题目提示填写，不把“不知道”输入成 0 或 false。关键金额未知可导致 `blocked`，这是合法结果。明确的 false 必须保留。
-4. **主聊天回答**：已有当前结构问题时输入 `结构答复：1000000` 或 `结构答复：未知`。应保存一次用户消息、同一地址事实和新结果；重复点击同一请求不能重复提交。
-5. **暂缓与暂停**：暂缓一题后应转到其他问题；暂停后不接受领域答案；恢复重新计算并恢复问题。刷新后状态仍存在。
-6. **字段映射**：先在聊天/事实面板记录香港收款、中国内地付款、CNY 金额与日期，再从当前事实生成草稿。核对 OP/ULT/股权边及明确的 `present`；确认绑定后保存。修改聊天金额，应同步到结构事件且旧结果过期；改结构金额，应同步到已绑定的聊天字段。未映射的法律判断不能自动复制。
-7. **旧题/并发**：打开两个页面，一个修改事实，另一个用旧 revision 提交。应返回 409、重新读取；旧题不能覆盖新事实。
-8. **研究稿**：运行后先确认结构事实；尚有缺口时须选“同意部分研究稿”。生成后在主对话查看结构、税额、依据与缺口并下载 Markdown。建立映射的现有结构稿还应显示 FSIE 规则链。修改事实后旧稿应显示过期。
-9. **专业边界**：普通账号不应能回答 ruling/library。配置的复核账号可填写依据引用对象；不能用不存在/不能回读的依据。最终报告仍须专门复核，不因模型计算成功自动批准。
-10. **知识和币种失败**：查 FSIE 条款，核对 21 个定位；停止知识服务后应提示不可用，不能偷偷用其他资料替代。清空币种应拒绝；改 HKD/SGD 应明确不支持，不能输出 CNY 税额。
-11. **失败不提交**：自动测试覆盖 worker 超时/失败；案件 revision 与答案应保持原状。线上手工复测可在专用测试环境临时降低超时，不修改正式配置。
-12. **账号隔离**：另一个账号不能读取该案件；当前专家配置仅支持账号自己的案件，跨账号分派审核尚需另做授权模型。
+1. **Existing structure**: create a case → structure analysis → load the synthetic example → select “Analyze existing structure only” → confirm synthetic data → save → run. There should be only two companies (`OP/ULT`) and one candidate. Results should show a tax range and gaps rather than add a holding company.
+2. **Structure comparison**: create another case with the same example, switch to “Compare new structure options,” save, and run. It should enter the actual planner's candidate comparison and follow-up questions. Record the candidate count; do not treat a needs-input state as a successful tax plan.
+3. **Numeric/boolean/date answers**: follow the question prompts. Do not enter “unknown” as 0 or false. Unknown key amounts may result in `blocked`, which is a valid outcome. Explicit false values must be preserved.
+4. **Main chat answers**: when a current structure question exists, enter `结构答复：1000000` or `结构答复：未知` (Chinese commands meaning “structure response: 1000000” and “structure response: unknown”). One user message, the fact at the same address, and the new result should be saved. Repeated clicks for the same request must not duplicate commits.
+5. **Deferral and pause**: deferring a question should move to other questions. Domain answers are rejected while paused. Resuming recalculates and restores questions. State remains after refresh.
+6. **Field mapping**: first record receipt in Hong Kong, payment from mainland China, a CNY amount, and dates in chat/the fact panel, then generate a draft from current facts. Check OP/ULT/shareholding edges and explicit `present`, confirm bindings, and save. Changing the chat amount should synchronize with the structure event and invalidate old results; changing the structure amount should synchronize with the bound chat field. Unmapped legal judgments must not be copied automatically.
+7. **Old questions/concurrency**: open two pages, change facts in one, and submit an old revision from the other. This should return 409 and require reloading. An old question must not overwrite new facts.
+8. **Research draft**: after running, confirm structure facts first. If gaps remain, select “Consent to a partial research draft.” After generation, inspect the structure, tax amount, evidence, and gaps in the main conversation, and download Markdown. An existing-structure draft with mappings should also show the FSIE rule chain. Fact changes should mark the old draft as stale.
+9. **Professional boundaries**: ordinary accounts should not be able to answer ruling/library questions. Configured reviewer accounts may submit evidence citation objects, but cannot use nonexistent or unretrievable evidence. Final reports still require dedicated review and are not automatically approved after successful model calculations.
+10. **Knowledge and currency failures**: search FSIE provisions and check 21 locations. After stopping the knowledge service, the system should report unavailability rather than silently substitute other sources. Removing currency should be rejected; HKD/SGD should be explicitly unsupported and must not produce a CNY tax amount.
+11. **No commit on failure**: automated tests cover worker timeouts/failures; the case revision and answers should remain unchanged. Manual live retesting may temporarily lower the timeout in a dedicated test environment without changing normal configuration.
+12. **Account isolation**: another account must not be able to read the case. Current expert configuration supports only cases owned by that account; cross-account review assignment requires a separate authorization model.
 
-## 8. 如何判断交接完成、还缺什么
+## 8. Handoff completion criteria and remaining work
 
-本轮工程交接保留：Python/构建/浏览器结果、固定发布哈希、专用 PostgreSQL 与真实 C HTTP/Li 复测结果、至少一个现有结构和一个多轮规划案例。上述首期合并链路已完成。真实模型验收按用户安排暂缓，不要求下一位组员先补密钥；恢复该项时再运行完整 live 脚本。`needs_input`/`blocked` 可以是正确结果，但不能写成“已完成免税结论”。模型替身、合成资料及未实测依赖仍须明确标识。
+Retain the following engineering handoff evidence: Python/build/browser results, pinned release hashes, dedicated PostgreSQL and actual C HTTP/Li retest results, at least one existing-structure case, and one multi-turn planning case. The initial combined workflow described above is complete. Live model acceptance is deferred according to the user's arrangement; the next team member is not required to supply a key first. Run the complete live script when this item resumes. `needs_input`/`blocked` may be correct results, but must not be described as completed exemption conclusions. Model substitutes, synthetic data, and untested dependencies must still be clearly identified.
 
-| 后续事项 | 找谁 | 具体怎么补 |
+| Follow-up item | Owner | Required work |
 |---|---|---|
-| 真实模型与联合验收（暂缓） | 后续恢复时由模型配置负责人 + 运行组员处理 | 当前不需补密钥或调用模型；恢复后先跑 `--model-only`，再用专用 PostgreSQL 跑完整 live 脚本；未计为已通过 |
-| 正常账号页面验收 | 环境负责人 + 运行组员 | 配置 Supabase 邮箱认证，用测试账号按第 7 节走完页面；现有自动浏览器测试使用测试认证 |
-| 税务口径、适用期、专业裁量 | Li 协调知识维护者及税务负责人 | 核对 D14–D31、参数单位、上下界条件、现有图与 planner 的差异，提供有出处的认可/退回记录 |
-| 换汇与 HKD/SGD | 集成侧 + 税务负责人 | 明确汇率来源、日期、阈值单位和税额折算，再补样例与测试；不要只改币种标签 |
-| 复杂模板与已缴请求 | 集成侧 + Li | 逐模板提供真实跑通的合成样例、期限/关闭字段、预期结果及专业复核，再开放业务入口 |
-| 案件专家协作与部署 | 集成侧 / 环境负责人 | 跨账号审核授权、发布配置、日志/备份与操作流程；本次默认环回运行 |
+| Live model and combined acceptance (deferred) | Model configuration owner + running team member when resumed | No key or model call is currently required. On resumption, run `--model-only`, then the complete live script with dedicated PostgreSQL; not counted as passed |
+| Page acceptance with normal accounts | Environment owner + running team member | Configure Supabase email authentication and complete section 7 with test accounts; existing automated browser tests use test authentication |
+| Tax interpretations, applicability periods, and professional discretion | Li coordinates knowledge maintainers and the tax lead | Check D14–D31, parameter units, bound conditions, and differences between fixed graphs and the planner; provide sourced approval/rejection records |
+| Currency conversion and HKD/SGD | Integration team + tax lead | Define exchange rate sources, dates, threshold units, and tax conversion, then add examples and tests; changing currency labels alone is insufficient |
+| Complex templates and paid-tax requests | Integration team + Li | Provide actually working synthetic examples, deadline/closure fields, expected results, and professional review for each template before opening business entry points |
+| Expert case collaboration and deployment | Integration team / environment owner | Cross-account review authorization, release configuration, logs/backups, and operating procedures; this round defaults to loopback operation |
 
-## 9. 常见问题和回退
+## 9. Troubleshooting and rollback
 
-- `domain_unavailable`：安装固定依赖或核对绝对路径；不要把 LFS 指针当 SQLite。
-- `release_hash_mismatch`：源文件/CSV/数据库不配套。下载同一提交重新安装，保留旧包供复现。
-- `domain_execution_failed`：先跑 integration 测试、检查 `official/labels/observed_rules.csv`；API 不返回内部 traceback/密钥。
-- `blocked` 且提示缺 `present`：现有安排未明确。holding 直接持股样例是 `HOLD:null, financing:"EQUITY", payment:false`；复杂案件必须按其真实安排填写。
-- `blocked` 且提示 `unbounded`：关键金额未知，不能计算有限方案；补真实有据金额或保留阻塞研究记录。
-- `knowledge_unavailable`：检查 8010 服务、令牌、发布物；`combined` 的裁定另检查原知识库。
-- `revision_conflict/question_changed`：重新读取当前案件后答当前题，不重用旧题 ID。
-- `review_incomplete`：缺口/证据门槛未满足。当前 Li 资料未经专业核验，完整工程运行也不自动满足正式批准条件。
+- `domain_unavailable`: install the pinned dependency or check the absolute path; do not mistake an LFS pointer for SQLite.
+- `release_hash_mismatch`: source files/CSV/database are incompatible. Download and reinstall the same commit, retaining the old package for reproduction.
+- `domain_execution_failed`: first run integration tests and inspect `official/labels/observed_rules.csv`; the API does not return internal tracebacks/keys.
+- `blocked` with missing `present`: the existing arrangement is not explicit. The holding direct-shareholding example is `HOLD:null, financing:"EQUITY", payment:false`; complex cases must reflect their actual arrangements.
+- `blocked` with `unbounded`: key amounts are unknown, preventing calculation of a bounded option. Supply actual supported amounts or retain a blocked research record.
+- `knowledge_unavailable`: check the port 8010 service, token, and release files; for rulings under `combined`, also check the original knowledge database.
+- `revision_conflict/question_changed`: reload the current case and answer the current question; do not reuse an old question ID.
+- `review_incomplete`: gap/evidence gates are unmet. Current Li materials have not been professionally validated, and a complete engineering run does not automatically satisfy formal approval requirements.
 
-回退时先备份测试/案件数据库，再切回集成前 Git 提交；新 schema 保留迁移前事实快照。回退旧程序不会迁回全部领域记录，不应继续编辑同一个测试案件来验证新流程。需要升 Li 版本时另开变更：重新审查配套资料、更新固定提交与两项哈希并复跑上述矩阵；不要改运行目录冒充旧发布。
+Before rollback, back up the test/case database, then return to the Git commit before integration. The new schema retains pre-migration fact snapshots. Rolling back the old program does not migrate all domain records back; do not keep editing the same test case to validate the new workflow. A Li version upgrade requires a separate change: review matching materials again, update the pinned commit and both hashes, and rerun the matrix above. Do not modify the runtime directory while presenting it as the old release.

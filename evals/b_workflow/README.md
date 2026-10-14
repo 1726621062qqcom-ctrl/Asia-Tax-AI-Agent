@@ -1,77 +1,77 @@
-# B Agent 多轮业务评测
+# B Agent Multi-Turn Business Evaluation
 
-日期：2026-10-03。数据版本 `b-workflow-0.1`。62 个脚本、135 个步骤，15 个脚本组成首轮冒烟子集。所有案情为合成信息；期望值是工程行为标准，尚未成为专家税务金标。
+Date: 2026-10-03. Dataset version: `b-workflow-0.1`. There are 62 scripts and 135 steps, with 15 scripts in the initial smoke subset. All case details are synthetic. Expected values are engineering behavior criteria, not yet expert tax gold standards.
 
-**2026-10-04 更新**：已使用用户授权的免费 OpenRouter 配置完成部分实际模型调用。普通对话/语言切换、部分事实提取/追问成功；完整连续链路多次受模型超时/限流阻断；指定案例范围、混合更正等也有真实行为失败。当前不能报告全链路或 62 脚本在线通过。下方“待凭据”是 2026-10-03 的历史记录；提交后的最新协作入口是 [B_TEAM_HANDOFF](../../docs/implementation/B_TEAM_HANDOFF.md)。
+**2026-10-04 update**: some actual model calls have been completed using the user-authorized free OpenRouter configuration. Ordinary conversation/language switching and some fact extraction/follow-up questions succeeded. Complete consecutive workflows were repeatedly blocked by model timeouts/rate limits; there were also actual behavior failures involving specified case scope, mixed corrections, and other scenarios. The end-to-end workflow and all 62 scripts cannot currently be reported as passing online. The “awaiting credentials” text below is a historical record from 2026-10-03; the latest collaboration entry point after submission is [B_TEAM_HANDOFF](../../docs/implementation/B_TEAM_HANDOFF.md).
 
-新增 `v0.1/model_e2e.json`，包含空白案件全流程及三个诊断场景；使用 `--dataset` 选择。每次调用记录 stage（plan_turn/plan_next 等）、费用、耗时及脱敏故障类别，不保存密钥。全流程预期保持原样，失败不会改成通过。2026-10-04 当前工程验证为 270 项后端、26 项浏览器通过，构建/知识包校验通过；这与在线结果不同。
+Added `v0.1/model_e2e.json`, containing a complete workflow from an empty case and three diagnostic scenarios; select it with `--dataset`. Each call records its stage (such as plan_turn/plan_next), cost, duration, and sanitized failure category, without saving keys. Expectations for the complete workflow remain unchanged; failures are not relabeled as passes. As of 2026-10-04, engineering validation comprises 270 passing backend tests and 26 passing browser tests, plus successful build and knowledge package validation. These results are separate from online results.
 
-## 资料来源
+## Sources
 
-已执行 `git fetch origin` 并检查 main 与 Zhihong-Wu 两个远程分支。来源的精确 commit、路径及 SHA-256 保存于 [cases.json](v0.1/cases.json) 的 sources，构建器要求本地来源与对应 GitHub blob 完全一致。
+`git fetch origin` was run, and the remote main and Zhihong-Wu branches were inspected. Exact source commits, paths, and SHA-256 values are stored in sources in [cases.json](v0.1/cases.json). The builder requires local sources to match the corresponding GitHub blobs exactly.
 
-- main 的 `tests/fsie/candidate_cases.json`：10 个版本化合成候选案例，结构化前置事实与阻断项。
-- main 的 `tests/fsie/natural_language_cases`：6 个既有自然语言案件及 1 个系统指令覆盖攻击。本轮重新定义业务预期，旧 stop_and_escalate/human_review_required 不代表增加中途顾问。
-- Zhihong-Wu 的 `docs/project/evaluations/Taxora_测试记录.xlsx` 与 README：20 问历史记录，本轮抽取相关问题和失败方向，覆盖概念/地区、Case 68 日期、指定法条、参与豁免、案情汇总、无匹配、最新修订及无依据免税确认。没有把旧模型答案用作金标，也没有宣称本轮重跑了旧 20 问全表。
-- B 的现有追问、混合编排和验收矩阵：补充 unknown、deferred、明确更正/真正矛盾、任务切换/恢复、权限、预算、幂等、部分稿、分析与最终复核。
+- main's `tests/fsie/candidate_cases.json`: ten versioned synthetic candidate cases with structured prerequisite facts and blockers.
+- main's `tests/fsie/natural_language_cases`: six existing natural-language cases and one system instruction override attack. Business expectations were redefined for this round; the old stop_and_escalate/human_review_required values do not imply adding an advisor midway through the workflow.
+- Zhihong-Wu's `docs/project/evaluations/Taxora_测试记录.xlsx` and README: historical records for 20 questions. This round extracts relevant questions and failure themes covering concepts/jurisdictions, the Case 68 date, specified provisions, participation exemption, case summaries, no matches, latest amendments, and unsupported confirmation of exemption. Previous model answers were not used as gold standards, and no claim is made that the entire old 20-question sheet was rerun in this round.
+- B's existing follow-up, hybrid orchestration, and acceptance matrices: additional coverage for unknown, deferred, explicit corrections/genuine contradictions, task switching/recovery, permissions, budgets, idempotency, partial drafts, analysis, and final review.
 
-## 脚本内容与覆盖
+## Script contents and coverage
 
-每个脚本包含 ID、合成标记、来源、测试前置事实、Mock 情况、多个操作、每步行为断言。seed_facts 只建立前置状态，不能算模型抽取通过。正式消息经原 FastAPI JSON/SSE API、生产 plan_turn/harness、实际 LangGraph、存储、业务校验执行；仅身份和未就绪的 C 为替身。测试启动器的假模型解析器不参与实际模型评测。
+Each script includes an ID, synthetic-data marker, sources, prerequisite test facts, mock configuration, multiple operations, and behavior assertions for each step. seed_facts establishes prerequisites only and does not count as successful model extraction. Actual messages run through the original FastAPI JSON/SSE API, production plan_turn/harness, actual LangGraph, storage, and business validation. Only identity and the not-yet-ready C component are replaced with test doubles. The test launcher's fake model parser does not participate in actual model evaluation.
 
-| 行为组 | 脚本数 | 重点 |
+| Behavior group | Scripts | Focus |
 |---|---:|---|
-| 三入口 / 闲聊 / 范围 | 10 | 入口是提示、普通聊天不检索、假设不写事实、个人/其他地区不套香港企业流程 |
-| 事实 / 追问目标 / 更正 | 15 | 一次一个问题、未知、暂缺、停止重复问、日期不猜、描述不推断资格、中英文数值、单位更正 |
-| 资料 / 无依据 / 权限 | 8 | 指定编号保留、查询承接、无匹配与故障分开、展示/入模许可、版本异常 |
-| 任务 / 混合消息 | 8 | 暂停恢复、独立查询与冲突隔离、更正+检索失败、多个结果保留、新客户不覆盖 |
-| 分析 / 传输 / 安全 | 11 | 事实确认、部分稿许可失效、唯一最终复核、幂等、问题ID、SSE、刷新与攻击 |
-| 历史自然语言 / 报错题 | 10 | 6 个历史案件和参与豁免、汇总、无依据、时效回归 |
+| Three entry points / casual conversation / scope | 10 | Entry points are prompts; ordinary chat does not retrieve; assumptions are not stored as facts; personal/other-jurisdiction cases do not use the Hong Kong corporate workflow |
+| Facts / follow-up targets / corrections | 15 | One question at a time, unknown, temporarily missing information, stopping repeated questions, no guessed dates or inferred eligibility from descriptions, Chinese/English numbers, and unit corrections |
+| Sources / unsupported answers / permissions | 8 | Preserving specified identifiers, query continuity, distinguishing no matches from failures, display/model-use permissions, and version anomalies |
+| Tasks / mixed messages | 8 | Pause/resume, isolation of independent inquiries and conflicts, corrections + retrieval failures, retaining multiple results, and preventing a new client from overwriting an existing case |
+| Analysis / transport / security | 11 | Fact confirmation, invalidation of partial-draft consent, a single final review, idempotency, question IDs, SSE, refresh, and attacks |
+| Historical natural-language / error questions | 10 | Six historical cases and regression for participation exemption, summaries, unsupported answers, and current applicability |
 
-检查包括返回状态/错误码、回答是否包含所需已知事实和缺口、字段值与禁止推断、实际搜索次数、查询编号/范围、分析产生时机、重复请求外部调用、禁止原文进入模型。显示专用哨兵植入 MOCK-03；Meter 在每一次真实模型请求发出之前检查，不能用最终回答没泄露来替代上下文检查。
+Checks cover return statuses/error codes, whether answers include required known facts and gaps, field values and prohibited inferences, actual search counts, query identifiers/scope, analysis timing, external calls on duplicate requests, and preventing original text from entering the model. A display-only sentinel is embedded in MOCK-03. Meter checks before every actual model request; an absence of leaks in the final answer cannot replace context inspection.
 
-不使用另一个模型自动宣布税务答案正确。上述 62 个脚本覆盖有限原型的行为；未覆盖所有现实税务交易、所有表达变体、真实 C 的召回/覆盖/权限或账号分配。普通聊天的主张过滤仍是保守规则，不能凭少量否定字符串检查宣称无幻觉。
+Another model is not used to automatically declare tax answers correct. These 62 scripts cover the behavior of a limited prototype, not all real tax transactions, expression variants, actual C recall/coverage/permissions, or account assignment. Claim filtering in ordinary conversation still uses conservative rules; a small number of negative string checks cannot establish an absence of hallucinations.
 
-## 免费 API 选择与当前阻断
+## Free API selection and current blockers
 
-已查询官方模型目录，OpenRouter `qwen/qwen3.8-27b:free` 当次 prompt/completion 价格为 0，提供兼容 chat/completions 的接口。参考 [官方模型页](https://openrouter.ai/qwen/qwen3.8-27b:free)、[认证示例](https://openrouter.ai/docs/quickstart)、[免费额度与限流](https://openrouter.ai/docs/api/reference/limits)。免费仍需账户密钥；免费型号、额度、可用性随时间改变，运行前重新核验。
+The official model catalog was queried. At the time, OpenRouter `qwen/qwen3.8-27b:free` had prompt/completion prices of 0 and offered a chat/completions-compatible API. See the [official model page](https://openrouter.ai/qwen/qwen3.8-27b:free), [authentication example](https://openrouter.ai/docs/quickstart), and [free quota and rate limits](https://openrouter.ai/docs/api/reference/limits). Free use still requires an account key. Free models, quotas, and availability change over time and must be rechecked before running.
 
-匿名 Pollinations 探测：`text.pollinations.ai/openai` POST 返回 404；`gen.pollinations.ai/v1/chat/completions` POST 返回 401。仅发送不含案情的 JSON 问候；没有成功推理、没有获取陌生人的密钥，也没有把模型目录 GET 当成冒烟成功。官方新版文档也要求 API Key，见 [认证说明](https://github.com/pollinations/pollinations/blob/main/gen.pollinations.ai/src/docs/apidocs-recipes.md)。
+Anonymous Pollinations probes: POST to `text.pollinations.ai/openai` returned 404; POST to `gen.pollinations.ai/v1/chat/completions` returned 401. Only a JSON greeting without case details was sent. No successful inference occurred, no strangers' keys were obtained, and a GET of the model catalog was not counted as a successful smoke test. The official newer documentation also requires an API key; see the [authentication documentation](https://github.com/pollinations/pollinations/blob/main/gen.pollinations.ai/src/docs/apidocs-recipes.md).
 
-本地 B 与进程没有免费提供商密钥。原工程存在阿里云 Qwen Token Plan 配置；只检查了存在性、主机及模型名，未打印、复制或调用密钥。是否有足够免费/已包含额度尚未核实，必须收到用户授权才使用此备选。
+The local B repository and process have no free-provider key. The original project has Alibaba Cloud Qwen Token Plan configuration; only its presence, host, and model name were checked. The key was not printed, copied, or used. Sufficient free/included quota has not been verified, and this alternative requires user authorization before use.
 
-当前 [完整预检](runs/preflight_full_2026_10_03.json) 是 **62 blocked、0 passed、0 failed、0 次模型调用**，原因 missing_openrouter_key。不是在线通过报告。既有 268 项 Python 工程回归与此 62 个脚本的在线结果须分别报告。
+The current [complete preflight](runs/preflight_full_2026_10_03.json) reports **62 blocked, 0 passed, 0 failed, and 0 model calls**, due to missing_openrouter_key. It is not an online pass report. The existing 268 Python engineering regression tests and the online results of these 62 scripts must be reported separately.
 
-## 运行方式
+## Running the evaluation
 
-所有命令在 B 仓库根目录执行。将自己的免费账户密钥仅配置到 Git 忽略的私有 `.env`，变量 `OPENROUTER_API_KEY`；不要在聊天、代码、命令参数或报告中粘贴密钥。代码不会修改现有 .env，不会更换手动页面模型或生产数据库。
+Run all commands from the B repository root. Configure only your own free account key in a private, Git-ignored `.env`, using `OPENROUTER_API_KEY`. Do not paste keys into chat, code, command arguments, or reports. The code does not modify the existing .env, change the model manually selected on the page, or change the production database.
 
 ```sh
-# 只校验脚本，不进行推理，也不计作案例通过
+# Validate scripts only; no inference, and not counted as case passes
 .venv/bin/python scripts/evaluate_b_workflow.py --validate-only
 
-# 首轮 15 脚本：最多40次模型请求，串行间隔3秒
+# Initial 15 scripts: at most 40 model requests, serial execution with a 3-second interval
 .venv/bin/python scripts/evaluate_b_workflow.py --suite smoke --output evals/b_workflow/runs/smoke.json
 
-# 精选失败脚本复验，保持原数据集预期
+# Retest selected failing scripts, keeping the original dataset expectations
 .venv/bin/python scripts/evaluate_b_workflow.py --select BWF-017,BWF-059 --output evals/b_workflow/runs/recheck.json
 
-# 全集，仍受免费额度和40次请求上限限制；不够时标blocked，不能自动付费
+# Full suite; still limited by free quota and the 40-request cap. Mark blocked if insufficient; do not pay automatically
 .venv/bin/python scripts/evaluate_b_workflow.py --suite full --output evals/b_workflow/runs/full.json
 ```
 
-运行前通过官方目录核实显式非 OpenAI 的 :free 型号及所有公布价格，读取自己账户的免费剩余额度；请求上限取剩余额度和 --max-calls 的较小值。无密钥、价格不为0、预检失败、免费额度耗尽均停止真实调用。默认不切换付费模型、不买额度、不自动降级为 Mock 模型答案；检索依然明确是 Mock。
+Before running, verify an explicitly non-OpenAI :free model and all published prices through the official catalog, and read the remaining free quota for your own account. The request cap is the smaller of the remaining quota and --max-calls. Stop actual calls if the key is missing, prices are nonzero, preflight fails, or free quota is exhausted. By default, do not switch to a paid model, buy credits, or automatically fall back to mock model answers. Retrieval remains explicitly mocked.
 
-用户明确授权原 Qwen 套餐后才可运行：
+The following command may be run only after the user explicitly authorizes the existing Qwen plan:
 
 ```sh
 .venv/bin/python scripts/evaluate_b_workflow.py --provider existing-plan --authorized-existing-plan --env-file ../Asia-Tax-AI-Agent/.env --max-calls 30 --output evals/b_workflow/runs/qwen_plan.json
 ```
 
-此模式读取原私有配置到内存，不写回；不能标成“免费 OpenRouter 结果”。默认 max-calls 40，可手动设为1～200；免费限额不足时保留阻断/未执行项，不以循环新账户/新密钥规避限流。一个完整多轮集通常需要超过40次调用，按免费额度分批执行并保留每次单独报告；不要用子集通过代替全集。
+This mode reads the existing private configuration into memory without writing it back. It must not be labeled as “free OpenRouter results.” The default max-calls is 40, configurable from 1–200. If free quota is insufficient, preserve blocked/not-executed items; do not bypass rate limits by cycling through new accounts/keys. A complete multi-turn suite usually needs more than 40 calls. Run in batches within the free quota and retain a separate report for every run; a passing subset does not establish a passing full suite.
 
-## 结果与收尾
+## Results and completion
 
-每步记录合成输入、期望、实际工作流、事实、已过滤页面消息、工具数和耗时；每次模型调用只记状态、异常类型及 usage，不保存 Authorization 或包含密钥的原错误文本。工作区报告保留 `.json` 完整记录和 `.md` 摘要，case DB 使用临时隔离目录并销毁，个人会话不会写入。
+Each step records synthetic input, expectations, actual workflow, facts, filtered page messages, tool count, and duration. Each model call records only status, exception type, and usage, without saving Authorization or raw error text containing keys. Workspace reports retain complete `.json` records and `.md` summaries. The case DB uses a temporary isolated directory that is destroyed afterward; personal sessions are not written.
 
-发现的工程缺口已补充：金额更正支持万/亿/千位分隔符及明确英文单位；事实汇总独立于部分分析许可，保留原问题与任务、不消费追问次数、不确认事实、不批准报告；首次直接汇总时没有对话状态也能返回。新增工具与边界测试 12 项，完整 Python **268 passed、11 deselected**；受影响的 hybrid 页面组 **6 passed**。真实模型运行仍等待凭据选择，不能据这些工程结果推断所有真实流程成功。
+Identified engineering gaps have been addressed: amount corrections support Chinese units for ten thousand and one hundred million, thousands separators, and explicit English units. Fact summaries are independent of consent for partial analysis, preserve the original question and task, do not consume follow-up attempts, confirm facts, or approve reports, and can respond to a direct initial summary request even without conversation state. Twelve tool and boundary tests were added. The complete Python suite reports **268 passed, 11 deselected**; the affected hybrid page group reports **6 passed**. Live model runs still await credential selection; these engineering results do not establish that all live workflows succeed.

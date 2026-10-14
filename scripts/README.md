@@ -1,26 +1,26 @@
 # Scripts
 
-本目录用于可重复执行的资料处理、索引、验证、迁移和开发辅助脚本。
+This directory contains repeatable scripts for source processing, indexing, validation, migration, and development support.
 
-常用入口按用途分组。具体参数使用 `python scripts/<脚本名> --help` 查看；运行顺序与环境条件见[验收入口](../docs/verification/README.md)。
+Common entry points are grouped by purpose below. Use `python scripts/<script_name> --help` for specific arguments. See the [acceptance testing entry point](../docs/verification/README.md) for execution order and environment requirements.
 
-**启动与固定依赖**
+**Startup and pinned dependencies**
 
-- `run_chat.py`：启动 FastAPI 和构建后的前端。
-- `run_combined.py`：启动构建后的前端、FastAPI 与固定版本知识服务；使用已验收的 hybrid＋combined 路由。
-- `install_li_release.py`：下载并校验集成文档指定的 Li 发布版本，安装在 Git 忽略的本地目录。
+- `run_chat.py`: starts FastAPI and the built frontend.
+- `run_combined.py`: starts the built frontend, FastAPI, and the pinned knowledge service, using the accepted hybrid + combined route.
+- `install_li_release.py`: downloads and validates the Li release specified in the integration guide and installs it in a local directory ignored by Git.
 
-**资料与离线检查**
+**Sources and offline checks**
 
-- `validate_fsie_package.py`：校验香港 FSIE 候选知识包的来源、规则、证据和虚构案例引用完整性。
-- `inspect_ruling_sources.py`：检查四个官方裁定来源的内容保留情况，复用本地快照；运行结果保存在被 Git 忽略的原始资料目录。
+- `validate_fsie_package.py`: validates the integrity of source, rule, evidence, and fictional case references in the Hong Kong FSIE candidate knowledge package.
+- `inspect_ruling_sources.py`: checks content retention for four official ruling sources, reusing local snapshots. Results are stored in the Git-ignored raw source directory.
 
-**联调与评测**
+**Integration and evaluation**
 
-- `check_postgres_acceptance.py`：新建一次性 PostgreSQL 数据库，验证迁移、知识构建、持久化与真实 HTTP/Li 合并链路，结束清理；原配置库不被迁移或清空。
-- `check_combined_live.py`：真实模型和 PostgreSQL 联合验收，也支持互斥的 `--model-only` / `--database-only`；可用 `--model-env-file` 分开配置。运行说明见 [合并 README](../README_MERGED.md)。
-- `evaluate_retrieval.py`、`evaluate_chat.py`：历史 A 侧检索与聊天题集复测，解释见[评测记录](../docs/project/evaluations/README.md)。
-- `evaluate_b_workflow.py`：B 侧多轮业务脚本评测，输入与已知限制见[脚本说明](../evals/b_workflow/README.md)。
-- `evaluate_fsie_user_cases.py`：三个合成香港 FSIE 案例的长问题/分步事实六次真实链路实验；结果与评价见[中英文实验报告](../docs/project/evaluations/README.md)。原始运行记录写入 Git 忽略的 `reports/`。
+- `check_postgres_acceptance.py`: creates a disposable PostgreSQL database, validates migrations, knowledge building, persistence, and the actual HTTP/Li combined workflow, and cleans up afterward. The originally configured database is not migrated or emptied.
+- `check_combined_live.py`: combined live model and PostgreSQL acceptance testing; also supports mutually exclusive `--model-only` / `--database-only` modes. Use `--model-env-file` for separate configuration. See the [merged README](../README_MERGED.md) for run instructions.
+- `evaluate_retrieval.py`, `evaluate_chat.py`: rerun the historical A-side retrieval and chat question sets. See the [evaluation records](../docs/project/evaluations/README.md) for interpretation.
+- `evaluate_b_workflow.py`: evaluates B-side multi-turn business scripts. See the [script guide](../evals/b_workflow/README.md) for inputs and known limitations.
+- `evaluate_fsie_user_cases.py`: six live workflow experiments using detailed questions and step-by-step facts for three synthetic Hong Kong FSIE cases. See the [Chinese and English experiment reports](../docs/project/evaluations/README.md) for results and assessments. Raw run records are written to the Git-ignored `reports/` directory.
 
-脚本应支持明确输入、可审计输出和失败状态，不得把密钥或客户数据写入仓库。
+Scripts should support explicit inputs, auditable outputs, and failure states. They must not write keys or client data to the repository.

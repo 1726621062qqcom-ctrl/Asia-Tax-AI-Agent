@@ -1,21 +1,22 @@
-# Taxora 认证邮件
+# Taxora Authentication Emails
 
-状态：用户已手动配置 Gmail SMTP 和英文模板，并报告实际邮件流程正常；代理未直接读取云端模板核对。后续修改这些文件不会自动更新 Supabase 邮件。
+Status: the user has manually configured Gmail SMTP and the English templates and reported that the actual email workflow works. The agent has not directly inspected the cloud templates to verify them. Later changes to these files will not automatically update Supabase emails.
 
-在项目 Supabase Dashboard 的 Authentication 邮件模板设置中，分别复制整个 HTML 文件到对应模板，并保存标题：
+In the project's Supabase Dashboard, open the Authentication email template settings, copy each entire HTML file into the corresponding template, and save its subject:
 
-| 模板 | 文件 | Subject |
+| Template | File | Subject |
 | --- | --- | --- |
 | Confirm sign up | confirm-signup.html | Taxora — Confirm your email |
 | Reset password | reset-password.html | Taxora — Reset your password |
 
-保留 `{{ .ConfirmationURL }}`，不要替换为本地网址或固定链接。现有前端依赖标准验证回调，未改为 OTP 或 PKCE。
+Keep `{{ .ConfirmationURL }}`; do not replace it with a local URL or fixed link. The existing frontend relies on the standard verification callback and has not been changed to OTP or PKCE.
 
-采用内联样式、表格布局和文字品牌，不依赖外部图片、域名、脚本或网络字体。邮件统一使用英文，不会自动跟随前端语言切换。模板只调整正文与标题；发件人名称在 SMTP Settings 中设为 Taxora。控制台要求先配置自定义 SMTP 才能编辑模板。
+The templates use inline styles, table layouts, and text branding, with no external images, domains, scripts, or web fonts. All emails are in English and do not automatically follow the frontend language selection. The templates change only the body and subject; set the sender name to Taxora in SMTP Settings. The dashboard requires custom SMTP configuration before templates can be edited.
 
-保存前备份现有模板；保存后用自己的测试账号分别验证注册、找回密码、链接失效提示，以及手机邮箱显示。不要在仓库保存真实验证链接。
+Back up existing templates before saving. After saving, use your own test account to verify sign-up, password recovery, expired-link messages, and display in a mobile email client. Do not store real verification links in the repository.
 
-参考 Supabase 官方仓库及文档的变量约定，自行编写 HTML，未复制第三方设计或引入依赖：
+The HTML was written independently using variable conventions from the official Supabase repository and documentation, without copying third-party designs or adding dependencies:
+
 - https://github.com/supabase/auth/blob/master/internal/mailer/templatemailer/templatemailer.go
 - https://supabase.com/docs/guides/auth/auth-email-templates
 - https://supabase.com/docs/guides/local-development/customizing-email-templates

@@ -1,7 +1,7 @@
 # Tests
 
-本目录用于单元测试、集成测试、规则回归测试、RAG 评测和端到端工作流测试。
+This directory contains unit tests, integration tests, rule regression tests, RAG evaluations, and end-to-end workflow tests.
 
-`fsie/candidate_cases.json` 当前只包含虚构候选案例，不是税务金标；所有案例预期都必须停留在研究输出或人工复核状态。
+`fsie/candidate_cases.json` currently contains only fictional candidate cases, not tax gold standards. All expected case outcomes must remain at the research output or human review stage.
 
-测试资料必须记录版本、来源、适用规则时间和预期结果；专家案例与普通工程测试案例应分开管理。
+Test materials must record versions, sources, rule applicability dates, and expected results. Expert cases and ordinary engineering test cases should be managed separately.

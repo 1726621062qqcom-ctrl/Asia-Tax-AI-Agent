@@ -1,7 +1,7 @@
-# 产品文档
+# Product Documentation
 
-- [产品需求文档](PRD.md)：产品目标与整体范围。
-- [香港 FSIE 用户案例与分步输入模板（中文）](HK_FSIE_USER_CASE_TEMPLATES.md)：三个虚构案例，每例同时提供长问题和逐步表单。
-- [HK FSIE user cases and step-by-step forms (English)](HK_FSIE_USER_CASE_TEMPLATES.en.md)：上述模板的英文版。
+- [Product requirements document](PRD.md): product objectives and overall scope.
+- [Hong Kong FSIE user cases and step-by-step input templates (Chinese)](HK_FSIE_USER_CASE_TEMPLATES.md): three fictional cases, each with a detailed question and a step-by-step form.
+- [HK FSIE user cases and step-by-step forms (English)](HK_FSIE_USER_CASE_TEMPLATES.en.md): the English version of the templates above.
 
-对应的六次真实链路实验结果见[评测报告（中文）](../project/evaluations/HK_FSIE_SIX_EXPERIMENT_REPORT.md)与[英文版](../project/evaluations/HK_FSIE_SIX_EXPERIMENT_REPORT.en.md)。案例为合成资料，报告记录工程行为，不代表税务专家验收。
+See the corresponding results from six live workflow experiments in the [evaluation report (Chinese)](../project/evaluations/HK_FSIE_SIX_EXPERIMENT_REPORT.md) and [English version](../project/evaluations/HK_FSIE_SIX_EXPERIMENT_REPORT.en.md). The cases use synthetic data, and the reports record engineering behavior rather than tax expert acceptance.

@@ -1,7 +1,7 @@
 # Infrastructure
 
-本目录保存基础设施与本地环境配置。
+This directory contains infrastructure and local environment configuration.
 
-`postgres/docker-compose.yml` 提供 L0 本地研究使用的 PostgreSQL / pgvector 服务，可通过仓库根目录的 `make db-up` 启动。数据库迁移位于 `alembic/`。
+`postgres/docker-compose.yml` provides PostgreSQL / pgvector services for local L0 research. Start them with `make db-up` from the repository root. Database migrations are in `alembic/`.
 
-此配置用于本地开发；正式部署仍需确定部署地区、租户隔离、身份认证、数据保留和恢复要求。
+This configuration is intended for local development. Production deployment still requires decisions on deployment region, tenant isolation, authentication, data retention, and recovery requirements.
