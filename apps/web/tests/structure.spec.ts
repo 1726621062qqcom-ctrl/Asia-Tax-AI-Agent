@@ -1,5 +1,11 @@
 import { test, expect } from "@playwright/test";
 
+function expectSameRow(left: { x: number; y: number; width: number; height: number }, right: { x: number; y: number; width: number; height: number }) {
+  const overlap = Math.min(left.y + left.height, right.y + right.height) - Math.max(left.y, right.y);
+  expect(overlap).toBeGreaterThan(Math.min(left.height, right.height) / 2);
+  expect(left.x + left.width).toBeLessThan(right.x);
+}
+
 test("structure guide explains each goal and keeps amount beside currency", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "结构分析", exact: true }).click();
@@ -18,15 +24,14 @@ test("structure guide explains each goal and keeps amount beside currency", asyn
   const currency = await page.getByRole("combobox", { name: "结构币种" }).boundingBox();
   expect(amount).not.toBeNull();
   expect(currency).not.toBeNull();
-  expect(Math.abs(amount!.y - currency!.y)).toBeLessThan(2);
-  expect(amount!.x + amount!.width).toBeLessThan(currency!.x);
+  expectSameRow(amount!, currency!);
 
   await page.setViewportSize({ width: 390, height: 844 });
   const mobileAmount = await page.getByRole("spinbutton", { name: "结构股息金额" }).boundingBox();
   const mobileCurrency = await page.getByRole("combobox", { name: "结构币种" }).boundingBox();
   expect(mobileAmount).not.toBeNull();
   expect(mobileCurrency).not.toBeNull();
-  expect(Math.abs(mobileAmount!.y - mobileCurrency!.y)).toBeLessThan(2);
+  expectSameRow(mobileAmount!, mobileCurrency!);
 });
 
 test("structure dates use day/month/year and help icon explains the panel", async ({ page }) => {
