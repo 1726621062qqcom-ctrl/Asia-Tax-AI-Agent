@@ -1,0 +1,85 @@
+[p.1] May 2001 | NASA/TM-2001-210876 | A Practical Tutorial on Modified Condition/
+[p.2] The NASA STI Program Office É in Profile | Since its founding, NASA has been dedicated | to the advancement of aeronautics and space
+[p.3] National Aeronautics and | Space Administration | Langley Research Center
+[p.4] Available from: | NASA Center for AeroSpace Information (CASI) | National Technical Information Service (NTIS)
+[p.5] iii | Table of Contents | 1  BACKGROUND AND PURPOSE.................................................................
+[p.6] iv | 5  ASSESSMENT PROCESS .................................................................... | STEP 1—REVIEW VERIFICATION PLANS..........................................................
+[p.7] Abstract | This tutorial provides a practical approach to assessing modified | condition/decision coverage (MC/DC) for aviation software products
+[p.8] 2 | are encouraged to complete the exercises as they are encountered in the text to obtain max | from the tutorial.
+[p.9] 3 | 2.1  The Verification Process | "No product of human intellect comes out right the first time.  We rewrite sentences, rip
+[p.10] 4 | 2.2  Definition and Role of Coverage | "Our goal, then, should be to provide enough testing to ensure that the probability of
+[p.11] 5 | 2.2.1  Requirements Coverage Analysis | According to software engineering theory, software requirements should contain a finite li
+[p.12] 6 | implementations of the type-of-triangle problem6 in An Investigation of Three Forms of the | Condition Decision Coverage (MCDC) Criterion (ref. 4).
+[p.13] 7 | Note 2: Other papers on structural coverage analysis and the link between DO-178B/ED-12B a | the FAR/JAR’s may be found by using keyword index in Appendix C [of DO-248A].
+[p.14] 8 | Three of the measures in Table 1 are found in objectives for test coverage given in DO-178 | 7 of Annex A9:
+[p.15] 9 | possible outcomes at least once.  In this case, for the decision (A or B) test cases (TF)  | coverage criterion, but do not cause the decision to take on all possible outcomes.  As wi
+[p.16] 10 | There is a distinction between structural coverage analysis and structural testing.  The p | structural coverage analysis is to “determine which code structure was not exercised by th
+[p.17] 11 | Clearly, multiple condition coverage is impractical for systems such as these.  MC/DC atte | provide a practical alternative.  “The modified condition/decision coverage criterion was 
+[p.18] 12 | The analysis necessary to establish that coverage achieved at the object code level is equ | achieving the same level of coverage at the source code is not trivial in the general case
+[p.19] 13 | The next issue involves the scope of “within a decision”.  For example, consider the follo | statements:
+[p.20] 14 | Table 3.  Truth Table Approach to MC/DC | A
+[p.21] 15 | of the source code.  This approach is not intended to be the only method for determining c | with the MC/DC objective, but rather a method to be added to your array of review techniqu
+[p.22] 16 | 3.1.1  and Gate | Minimum testing to achieve MC/DC for an and gate requires the following:
+[p.23] 17 | C | B
+[p.24] 18 | Minimum testing to achieve MC/DC for a logical not requires the following: | (1)  The input is set false with the output observed to be true.
+[p.25] 19 | that the correct relational operator and comparison point are used in the code.  So, while | requires two tests, minimum good requirements-based testing for a comparator requires:
+[p.26] 20 | Minimum testing for the if-then-else statement requires the following: | (1) Inputs that force the execution of the then path (that is, the decision evaluates to t
+[p.27] 21 | while W eight_On_W heels | end Loop
+[p.28] 22 | (2) Inputs to force the immediate exit of the loop when the decision for the exit when eva | true
+[p.29] 23 | common logical operators and decisions with mixed logical operators, involves the followin | (1)  Create a schematic representation of the source code.
+[p.30] 24 | Table 10.  Symbols for Source Code Representation16 | Name
+[p.31] 25 | 3.2.2  Identification of Test Inputs | The next step of the process takes the inputs from the requirements-based test cases and m
+[p.32] 26 | Table 12.  Control Input to an and Gate | Input of Interest
+[p.33] 27 | The judicious selection of a control input for the and gate, or gate, or xor gate opens a  | the input of interest to the output.  This selection can be used repeatedly to allow visib
+[p.34] 28 | To determine which test cases are masked, it is easiest to work backwards through the logi | Consider again the expression in example 1:  A:= (B and C) or D.  Test cases where D is tr
+[p.35] 29 | Table 16.  Comparison of Building Blocks with Valid Tests for Example 1 | Gate
+[p.36] 30 | Step 1:  Show the source code schematically (see Figure 17). | A
+[p.37] 31 | Step 4:  Determine MC/DC.  As shown in Table 18, the test set in Table 17 provides MC/DC f | example.
+[p.38] 32 | This example shows the difference between unique-cause MC/DC and masking MC/DC.  Although | the test suites in both example 2 and example 2A provide MC/DC, only the test suite in exa
+[p.39] 33 | Step 1:  Show the source code schematically (Figure 21). | C
+[p.40] 34 | Table 22.  Comparison of Building Blocks with Valid Tests for Example 3 | Gate
+[p.41] 35 | Exercise 3.3c:  Suppose you are evaluating a design that determines when the airplane is o | the ground with weight on the wheels (WOW).  The WOW requirements state
+[p.42] 36 | If Air_Data_Valid and In_Air then | Gain_1 := TAS * 0.34;
+[p.43] 37 | Step 2:  Map test cases to the source code picture (see Figure 25).  Note that the values  | variables A and E are not included in the test results given in Table 23.  Because there a
+[p.44] 38 | Step 4:  Determine MC/DC by evaluating the valid test cases for each gate against the buil | section 3.1.  Table 25 summarizes the valid test cases for each gate and shows which tests
+[p.45] 39 | Test 2: Fail #1 generator with #2 generator valid and observe Shed_Partial_Load is true an | Shed_Full_Load is false.
+[p.46] 40 | Generator_1_Fail | Generator_2_Fail
+[p.47] 41 | Step 2:  Map test cases to the source code picture (see Figure 31). | Shed_Partial_Load
+[p.48] 42 | Step 5:  Confirm output.  Outputs computed match those provided. | Example 5a is an excellent case of showing that the determination of MC/DC is directly rel
+[p.49] 43 | In Ada, the short-circuit control forms, and then and or else, produce the same results as | operators and and or for Boolean types, except that the left operand is always evaluated f
+[p.50] 44 | Step 2:  Map test cases to the source code picture (see Figure 35). | A
+[p.51] 45 | Table 32.  Minimum Tests for a Four-input and Gate with Short Circuit Logic | Test Case Number
+[p.52] 46 | The test set in Table 35 also provides MC/DC for the source code if z is examined as an in | as a Boolean).
+[p.53] 47 | input_word.  Because the mask is a fixed value that cannot be changed, only two of the thr | defined for an and gate are possible.  Tests that show that the four upper bits of output_
+[p.54] 48 | Consider the source code: | Z:= B and (B xor C);
+[p.55] 49 | Table 38.  Comparison of Building Blocks with Valid Tests for Example 11 | Gate
+[p.56] 50 | To help prevent problems related to automation of coverage analysis, the following section | general overview of how structural coverage analysis tools work and some important factors
+[p.57] 51 | 4.1.2.1  Types of Monitored Statements | Does the tool monitor all of the coverage points?
+[p.58] 52 | This analysis is not typically trivial and should be reviewed by certification authorities | project.
+[p.59] 53 | • | Increased resources, memory and throughput, necessary to support the probes
+[p.60] 54 | correctly in the system context, and this incorrect behavior has nothing to do with the me | effects of the probes.
+[p.61] 55 | 4.2.2  Misunderstanding the MC/DC Objective | As discussed in chapter 2, the rationale for the MC/DC objective is often misunderstood—es
+[p.62] 56 | • | extensive and detailed work being performed late in the project life cycle within a compre
+[p.63] 57 | The steps in Figure 40 complement the guidance in the FAA’s Job Aid “Conducting Software | Reviews Prior to Certification” (ref. 20), providing specific guidance for reviewing data 
+[p.64] 58 | Step 2—Determine need for tool qualification | Applicants may use tools to perform some verification activities, including MC/DC analysis
+[p.65] 59 | • Are limitations of the tool that may affect assessment of coverage clearly documented an | addressed (e.g., the limitations discussed in chapter 4)?
+[p.66] 60 | • Are only test inputs that are unmasked (that is, whose outcomes are directly observable) | or counted for credit for MC/DC?
+[p.67] 61 | Task 6.1—Assess results of requirements-based tests | Because MC/DC is a measure of the adequacy of requirements-based testing, the first logica
+[p.68] 62 | have been covered by tests without achieving MC/DC, dead code, unintended function, or inc | documented de-activated code may be indicated.  Dead code should be removed, and unintende
+[p.69] 63 | 7  References | 1. Advisory Circular #20-115B. U. S. Department of Transportation, Federal Aviation Admini
+[p.70] 64 | 19. Bach, James:  Testing Automation Snake Oil, http://www.satisfice.com/articles/test_aut | Accessed March 2001.
+[p.71] 65 | Appendix A | Solutions to Exercises
+[p.72] 66 | Step 3:  Eliminate masked tests. | C
+[p.73] 67 | Solution 3.3b, Ground Test Exercise | Step 1: Show the source code schematically.
+[p.74] 68 | Step 4: Determine MC/DC.  Note that the testing for the or-gate is incomplete. | Gate
+[p.75] 69 | Step 3:  Eliminate masked tests. | Squat_L
+[p.76] 70 | Step 2:  Map test case to the source code picture. | Gain_1 := TAS * 0.34;
+[p.77] 71 | Step 3:  Eliminate masked tests. | Reset
+[p.78] 72 | Appendix B | Certification Authorities Software Team Position Paper on Masking MC/DC
+[p.79] 73 | of each input to that operator.  Note that the minimum test sets are not exhaustive test s | not detect all possible errors.  For example, a test set that contains the minimum tests f
+[p.80] 74 | Table 1. Unique-Cause Approach to Independence Pairs for Z = (A or B) and (C or D) | Test Case #
+[p.81] 75 | establish coding standards that do not allow decisions with coupled conditions to avoid th | problem with unique-cause MC/DC.
+[p.82] 76 | the test set in Figure 1, except test case 12 has replaced test case 10.  In terms of inde | cases 2 and 12 together form an independence pair for A under the definition of masking.
+[p.83] 77 | Chilenski concluded that his analysis of error sensitivity between unique-cause and maskin | shown that there is any significant difference” (ref. B4).  However, reliance on such a co
+[p.84] 78 | Appendix C | Background on Tutorial Authors
+[p.85] REPORT DOCUMENTATION PAGE | Form Approved | OMB No. 0704-0188

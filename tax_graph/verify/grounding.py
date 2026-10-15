@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""依据核对 — the 测试系统 (测试系统.md) in miniature: every step of the plan the planner produces, traced to its basis.
+"""Grounding check — the test system (测试系统.md) in miniature: every step of the plan the planner produces, traced to its basis.
 
     python -m tax_graph.verify.grounding CASE.json [CASE.json ...] [--answers ANSWERS.json] [--gold]
 
@@ -7,7 +7,7 @@ Steps: each tax item on both ends of the chosen plan, each plan action, judgemen
 question sheet, the same for the candidate the planner would choose so far, and each question. A step's basis: the
 rules that make it; their parameters — in params.csv, in force on the flow's date, the quote found verbatim in the cited
 clause of the current clause layer; the clauses their judgements and evaluators cite and the law they start from
-(口径 D30); the 口径 decisions that read the rule, their anchors found verbatim; and the facts the rules read, by where
+(decision D30); the decisions that read the rule, their anchors found verbatim; and the facts the rules read, by where
 each came from. The totals are re-added from the items and recomputed once. Everything is read from the files, not
 taken from the engine's or the build's own checks. Writes out/<name>.grounding.md and out/verify/grounding_<name>.jsonl
 (one result per line, 测试系统.md §5)."""
@@ -27,6 +27,7 @@ from ..engine import PEM_RULE, RULES, RULES_BY_ID, bounds, flow_name, outside_st
 from ..facts import facts_for
 from ..params import Params
 from ..planner import Answers, _ctx_of, _field_of, _key, plan
+from ..precedent import analyse, load as precedent_cards
 from ..rules.eval import INCLUSIVE_BY_FACT, PROCEDURE_MODULES, SHARED_GROUPS, levy_view, matches, seen_by, valid_on
 from ..rules.model import PROCEDURE, Discretion, Leaf, leaves
 from ..rules.tri import DISCRETION, PLAN, STRUCTURAL
@@ -37,9 +38,9 @@ ROOT = Path(__file__).resolve().parents[2]
 OFF, OUT = ROOT / "official", ROOT / "out"
 EPS = 0.01
 RANK = {"pass": 0, "info": 0, "warn": 1, "fail": 2}
-WORD = {"pass": "通过", "info": "说明", "warn": "警示", "fail": "失败"}
+WORD = {"pass": "pass", "info": "info", "warn": "warn", "fail": "fail"}
 # the clauses a decision without a rule of its own rests on
-GROUP_CLAUSES = {PEM_RULE: ("cn.gsf.2009-82#i2",)}             # 国税发〔2009〕82号 第二条: residence by effective management
+GROUP_CLAUSES = {PEM_RULE: ("cn.gsf.2009-82#i2",)}             # 国税发〔2009〕82号 art. 2: residence by effective management
 
 
 def norm(s):
@@ -62,7 +63,7 @@ def short(s, n=36):
 
 
 class Library:
-    """What the checks read, straight from the files: the current clause layer, the documents, the 口径 decisions,
+    """What the checks read, straight from the files: the current clause layer, the documents, the decisions,
     the rules seen only in official tools."""
 
     def __init__(self):
@@ -80,7 +81,7 @@ class Library:
         return "%s %s" % (d.get("title", doc_id), d.get("doc_no", "")) if d else doc_id
 
     def decisions_for(self, rid):
-        """口径 decisions whose used_in names the rule in a spec file (an id, or a pattern such as cn.vat.law.*)."""
+        """Decisions whose used_in names the rule in a spec file (an id, or a pattern such as cn.vat.law.*)."""
         out = []
         for did, d in self.decisions.items():
             for part in d["used_in"].split(";"):
@@ -103,32 +104,32 @@ class Basis:
     def clause(self, cid, kind):
         cl = self.lib.clauses.get(cid)
         if cl is None:
-            return {"kind": kind, "id": cid, "status": "fail", "note": "不在现行条款层（不存在、已被取代或已废止）"}
+            return {"kind": kind, "id": cid, "status": "fail", "note": "not in the current clause layer (absent, superseded or repealed)"}
         return {"kind": kind, "id": cid, "status": "pass", "note": self.lib.title(cl["doc_id"])}
 
     def param(self, pid, role, on):
         row = self.P.rows.get(pid)
         if row is None:
-            return {"kind": "参数", "id": pid, "status": "fail", "note": "不在 params.csv"}
+            return {"kind": "parameter", "id": pid, "status": "fail", "note": "not in params.csv"}
         cid, q = row.get("cite_id", ""), row.get("quote", "")
         cl = self.lib.clauses.get(cid)
         if cl is None:
-            return {"kind": "参数", "id": pid, "status": "fail", "note": "所引条款 %s 不在现行条款层" % cid}
+            return {"kind": "parameter", "id": pid, "status": "fail", "note": "cited clause %s not in the current clause layer" % cid}
         if q and norm(q) not in norm(cl["text"]):
-            return {"kind": "参数", "id": pid, "status": "fail", "note": "引文在 %s 里找不到" % cid}
+            return {"kind": "parameter", "id": pid, "status": "fail", "note": "quote not found in %s" % cid}
         lo, hi, d = row.get("effective_from") or "", row.get("effective_to") or "", on.isoformat() if on else ""
         if d and ((lo and d < lo) or (hi and d > hi)):
-            return {"kind": "参数", "id": pid, "status": "warn" if role == "uses" else "fail",
-                    "note": "%s 不在其有效期 %s～%s" % (d, lo or "…", hi or "…")}
-        return {"kind": "参数", "id": pid, "status": "pass",
-                "note": "%s = %s %s；%s（%s）「%s」" % (role, row.get("value"), row.get("unit"), cid, self.lib.title(cl["doc_id"]), short(q))}
+            return {"kind": "parameter", "id": pid, "status": "warn" if role == "uses" else "fail",
+                    "note": "%s outside its validity %s–%s" % (d, lo or "…", hi or "…")}
+        return {"kind": "parameter", "id": pid, "status": "pass",
+                "note": "%s = %s %s; %s (%s) \"%s\"" % (role, row.get("value"), row.get("unit"), cid, self.lib.title(cl["doc_id"]), short(q))}
 
     def decision(self, did):
         anchors = self.lib.decisions[did]["anchors"]
         bad = [cid for cid, q in anchors
                if cid not in self.lib.clauses or (q and norm(q) not in norm(self.lib.clauses[cid]["text"]))]
-        return {"kind": "口径", "id": did, "status": "fail" if bad else "pass",
-                "note": "锚点 %d/%d 找到原文%s" % (len(anchors) - len(bad), len(anchors), ("；找不到：" + "、".join(bad)) if bad else "")}
+        return {"kind": "decision", "id": did, "status": "fail" if bad else "pass",
+                "note": "anchors %d/%d found verbatim%s" % (len(anchors) - len(bad), len(anchors), ("; not found: " + ", ".join(bad)) if bad else "")}
 
     def rule(self, r, on):
         key = (r.id, on)
@@ -137,10 +138,10 @@ class Basis:
         parts = []
         lo, hi = r.valid
         if on is not None and ((lo and on < lo) or (hi and on > hi)):
-            parts.append({"kind": "有效期", "id": r.id, "status": "fail", "note": "%s 不在规则有效期 %s～%s" % (on, lo or "…", hi or "…")})
+            parts.append({"kind": "validity", "id": r.id, "status": "fail", "note": "%s outside the rule's validity %s–%s" % (on, lo or "…", hi or "…")})
         if r.value and r.value.startswith("observed:"):
             oid = r.value.split(":", 1)[1]
-            parts.append({"kind": "官方工具观察", "id": oid, "status": "pass" if oid in self.lib.observed else "fail",
+            parts.append({"kind": "official-tool observation", "id": oid, "status": "pass" if oid in self.lib.observed else "fail",
                           "note": "labels/observed_rules.csv"})
         elif r.value:
             parts.append(self.param(r.value, "value", on))
@@ -150,12 +151,12 @@ class Basis:
                     parts.append(self.param(x.param, "threshold", on))
                 elif isinstance(x, Discretion):
                     if not x.cites:
-                        parts.append({"kind": "判断出处", "id": x.key, "status": "warn", "note": "该判断未引条款"})
-                    parts += [self.clause(cid, "判断出处") for cid in x.cites]
+                        parts.append({"kind": "judgement cite", "id": x.key, "status": "warn", "note": "the judgement cites no clause"})
+                    parts += [self.clause(cid, "judgement cite") for cid in x.cites]
         parts += [self.param(pid, "uses", on) for pid in r.uses]
-        parts += [self.clause(cid, "求值器出处") for cid in REG_CITES.get(r.id, ())]
+        parts += [self.clause(cid, "evaluator cite") for cid in REG_CITES.get(r.id, ())]
         if r.before:
-            parts.append(self.clause(r.before[1], "所依法律的施行条款"))
+            parts.append(self.clause(r.before[1], "commencement clause of the law relied on"))
         parts += [self.decision(did) for did in self.lib.decisions_for(r.id)]
         seen, uniq = set(), []
         for p in parts:
@@ -163,7 +164,7 @@ class Basis:
                 seen.add((p["kind"], p["id"]))
                 uniq.append(p)
         if not uniq:
-            uniq.append({"kind": "依据", "id": r.id, "status": "warn", "note": "规则没有参数、条款或口径"})
+            uniq.append({"kind": "grounding", "id": r.id, "status": "warn", "note": "the rule has no parameter, clause or decision"})
         self.memo[key] = (worst(p["status"] for p in uniq), uniq)
         return self.memo[key]
 
@@ -201,21 +202,21 @@ def check_case(name, template, case, event, answers, lib, P, provenance=None):
     basis = Basis(lib, P)
 
     def rec(check_id, subject, status, measured="", expected="", evidence="", msg=""):
-        recs.append({"run_id": run_id, "layer": "依据", "check_id": check_id, "subject": subject, "status": status,
+        recs.append({"run_id": run_id, "layer": "grounding", "check_id": check_id, "subject": subject, "status": status,
                      "measured": measured, "expected": expected, "oracle": "official", "evidence": evidence, "version": ver})
         if status in ("warn", "fail"):
-            issues.append((status, subject, msg or ("%s（应为 %s）" % (measured, expected) if expected else measured)))
+            issues.append((status, subject, msg or ("%s (expected %s)" % (measured, expected) if expected else measured)))
 
     outcome = plan(template, event, case, answers, P)
     if outcome.plan is not None:
-        best, mode = next(e for e in outcome.evaluations if e.cand == outcome.plan["cand"]), "方案"
+        best, mode = next(e for e in outcome.evaluations if e.cand == outcome.plan["cand"]), "plan"
     else:
         open_ = [e for e in outcome.evaluations if not e.excluded]
-        best, mode = (min(open_, key=_key) if open_ else None), "问卷"
-    L = ["# 依据核对：%s" % name, ""]
+        best, mode = (min(open_, key=_key) if open_ else None), "question sheet"
+    L = ["# Grounding check: %s" % name, ""]
     if best is None:
-        rec("G-plan", name, "fail", outcome.note or "没有可评估的候选")
-        L += ["没有可评估的候选：%s" % (outcome.note or "")]
+        rec("G-plan", name, "fail", outcome.note or "no candidate to evaluate")
+        L += ["No candidate to evaluate: %s" % (outcome.note or "")]
         return "\n".join(L) + "\n", recs
     g = best.graph
     members = g.group()
@@ -234,12 +235,12 @@ def check_case(name, template, case, event, answers, lib, P, provenance=None):
         E.cached_evaluate = real
     same = abs(b.hi - best.b.hi) <= EPS and abs(b.lo - best.b.lo) <= EPS
     rec("G-recompute", name, "pass" if same else "fail", "%.2f / %.2f" % (b.hi, b.lo), "%.2f / %.2f" % (best.b.hi, best.b.lo))
-    if mode == "方案":
+    if mode == "plan":
         steps = list(g.unmodelled) + outside_steps(b, g)[0]
-        rec("G-modelled", name, "fail" if steps else "pass", "；".join(str(x) for x in steps) or "无未建模步骤、无库外税项")
+        rec("G-modelled", name, "fail" if steps else "pass", "; ".join(str(x) for x in steps) or "no unmodelled step, no levy outside the library")
     # 2. tax items, both ends; the totals re-added from them
     rules_used, item_rows = {}, []
-    for side, labels, total in (("保证", b.L_hi, b.hi), ("最好", b.L_lo, b.lo)):
+    for side, labels, total in (("guaranteed", b.L_hi, b.hi), ("best", b.L_lo, b.lo)):
         added = 0.0
         for fid, lb in labels.items():
             for it in lb.items:
@@ -256,14 +257,31 @@ def check_case(name, template, case, event, answers, lib, P, provenance=None):
                 for c in rids:
                     rules_used.setdefault(c, set()).add(lb.flow.on)
                 subj = "%s/%s/%s/%s/%s" % (side, fid, it.jur, it.levy, who)
-                rec("G-item", subj, st, "%.2f" % amt, "", "、".join(rids + odd))
-                if side == "保证":
-                    item_rows.append((fid, it.jur, it.levy, who if who in members else who + "（集团外）", "%.2f" % amt,
-                                      "、".join(rids + ["未知引用 " + c for c in odd]), WORD[st]))
+                rec("G-item", subj, st, "%.2f" % amt, "", ", ".join(rids + odd))
+                if side == "guaranteed":
+                    item_rows.append((fid, it.jur, it.levy, who if who in members else who + " (outside the group)", "%.2f" % amt,
+                                      ", ".join(rids + ["unknown cite " + c for c in odd]), WORD[st]))
         ok = abs(added - total) <= EPS
         rec("G-total", "%s/%s" % (name, side), "pass" if ok else "fail", "%.2f" % added, "%.2f" % total)
     # 3. plan actions, judgements, deadlines
     act_rows, judge_rows, dl_rows = [], [], []
+    cards = precedent_cards()
+
+    def precedent_text(r, key, fid):
+        """案例采集.md §5: what the precedents say on this judgement, on the facts the flow was evaluated with."""
+        if r is None:
+            return "—"
+        issue = "%s:%s" % (r.scope.taxing, _field_of(key))
+        if issue not in cards[1]:
+            return "no precedent card"
+        a = analyse(issue, seen.get(fid, {}), *cards)
+        rec("G-precedent", "%s@%s" % (issue, fid), "info", a.forced or ("conflict" if a.conflict else "not forced"), "", a.by)
+        if a.forced:
+            return "forced by precedent %s: %s" % (a.by, "holds" if a.forced == "true" else "does not hold")
+        parts = ["nearest precedent for %s: %s (missing %s%s)" % ("holds" if side == "true" else "does not hold", pid, ", ".join(miss) or "none",
+                                                                  "; in the way " + ", ".join(way) if way else "")
+                 for side, (pid, miss, way) in sorted(a.nearest.items())]
+        return ("precedents conflict; " if a.conflict else "not forced; ") + "; ".join(parts)
 
     def group_basis(grp):
         on = (b.L_hi.get(grp[1]).flow.on if isinstance(grp[1], str) and grp[1] in b.L_hi else event.on)
@@ -272,8 +290,8 @@ def check_case(name, template, case, event, answers, lib, P, provenance=None):
         for r in rs:
             sts.append(basis.rule(r, on)[0])
             rules_used.setdefault(r.id, set()).add(on)
-        sts += [basis.clause(cid, "条款")["status"] for cid in GROUP_CLAUSES.get(grp[0], ())]
-        return worst(sts) if sts else "info", "、".join([r.id for r in rs] + list(GROUP_CLAUSES.get(grp[0], ()))) or "数据（由流本身的规则要求）"
+        sts += [basis.clause(cid, "clause")["status"] for cid in GROUP_CLAUSES.get(grp[0], ())]
+        return worst(sts) if sts else "info", ", ".join([r.id for r in rs] + list(GROUP_CLAUSES.get(grp[0], ()))) or "data (required by the flow's own rules)"
 
     for ak, (grp, n) in sorted(best.plan_keys.items()):
         if (PLAN, ak) not in {(t.source, t.key) for t in best.ticks}:
@@ -293,9 +311,9 @@ def check_case(name, template, case, event, answers, lib, P, provenance=None):
                                        and x.key == _field_of(n.key) for c in x.cites))
             if r is not None and not cites:
                 st = worst([st, "warn"])
-            rec("G-judgement", "%s@%s" % (n.key, grp[1]), st, "", "", "、".join(cites) or why,
-                msg="" if cites or r is None else "判断事项没有引条款")
-            judge_rows.append((n.key, grp[1], "、".join(cites) or "—", why, WORD[st]))
+            rec("G-judgement", "%s@%s" % (n.key, grp[1]), st, "", "", ", ".join(cites) or why,
+                msg="" if cites or r is None else "the judgement item cites no clause")
+            judge_rows.append((n.key, grp[1], ", ".join(cites) or "—", why, WORD[st], precedent_text(r, n.key, grp[1])))
     for fid, lb in b.L_hi.items():
         for rid in dict.fromkeys(lb.applied):
             r = RULES_BY_ID.get(rid)
@@ -306,16 +324,16 @@ def check_case(name, template, case, event, answers, lib, P, provenance=None):
             rec("G-deadline", "%s/%s" % (fid, rid), st, "", "", rid)
             dl_rows.append((fid, rid, WORD[st]))
         for nm, gap in (lb.gaps or {}).items():
-            rec("G-calendar", "%s/%s" % (fid, nm), "warn", "缺 %s %d 年的假期表，期限按名义日期" % gap,
-                msg="期限按名义日期：库里缺 %s %d 年的公众假期表" % gap)
+            rec("G-calendar", "%s/%s" % (fid, nm), "warn", "no holiday calendar for %s %d: deadline at the nominal date" % gap,
+                msg="deadline at the nominal date: the library has no public-holiday calendar for %s %d" % gap)
     # 4. questions of a question sheet
     q_rows = []
     for q in outcome.questions:
         rs = list({r.id: r for x in q.why for r in group_rules((x, None))}.values())
         sts = [basis.rule(r, event.on)[0] for r in rs]
         st = worst(sts) if sts else "info"
-        rec("G-question", q.key, st, q.kind, "", "、".join(x for x in q.why))
-        q_rows.append((q.kind, q.key, "、".join(q.why) or "—", WORD[st]))
+        rec("G-question", q.key, st, q.kind, "", ", ".join(x for x in q.why))
+        q_rows.append((q.kind, q.key, ", ".join(q.why) or "—", WORD[st]))
     # 5. the facts the applied rules read, by where each came from
     stated_n = provenanced = 0
     fact_rows = []
@@ -344,43 +362,43 @@ def check_case(name, template, case, event, answers, lib, P, provenance=None):
             akeys = ({"flow:%s.%s" % (fk, fld), "flow:%s.%s" % (flow_name(f.id), fld)} if on_ == "flow"
                      else {"%s.%s" % (ent.id, fld), "group.%s" % fld} if ent is not None else set())
             if fld in ticked:
-                cls = "方案动作"
+                cls = "plan action"
             elif fld in open_by_flow.get(f.id, ()):
-                cls = "未定（按两端计）"
+                cls = "open (both ends counted)"
             elif akeys & set(answers.data):
-                cls = "答复"
+                cls = "answer"
             elif (on_ == "flow" and fld in case.flows.get(fk, case.flows.get(flow_name(f.id), {}))) or \
                     (ent is not None and ent.id in case.roles and fld in case.roles[ent.id].attrs):
                 stated_n += 1
                 path = ("flows.%s.%s" % (fk, fld)) if on_ == "flow" else "roles.%s.attrs.%s" % (ent.id, fld)
                 if provenance and path in provenance:
                     provenanced += 1
-                    cls = "陈述（有出处）"
+                    cls = "stated (with provenance)"
                 else:
-                    cls = "陈述"
+                    cls = "stated"
             elif (ent is not None and ent.attrs.get("placed_by_plan") and fld in ent.attrs) or (on_ == "flow" and fld in f.attrs):
-                cls = "设计或模板设定"
+                cls = "set by the design or the template"
             elif (on_, fld) in static:
-                cls = "推导（facts.py）"
+                cls = "derived (facts.py)"
             elif (on_, fld) in seen.get(f.id, {}):
-                cls = "推导（引擎）"
+                cls = "derived (engine)"
             elif fld in STRUCTURAL:
-                cls = "结构性缺省（按否）"
+                cls = "structural default (taken as no)"
             else:
-                cls = "未给出（规则判为不影响结果）"
+                cls = "not given (the rules found it does not affect the result)"
             by_cls.setdefault(cls, []).append(fp)
         for cls, fps in sorted(by_cls.items()):
-            rec("G-fact", "%s/%s" % (fid, cls), "info", str(len(fps)), "", "、".join(fps))
+            rec("G-fact", "%s/%s" % (fid, cls), "info", str(len(fps)), "", ", ".join(fps))
         fact_rows.append((fid, by_cls))
     rec("G-provenance", name, "info" if stated_n == 0 or provenanced == stated_n else "warn",
-        "%d/%d" % (provenanced, stated_n), "陈述的事实都附出处（案例采集.md §4.2）",
-        msg="案例陈述的事实 %d 个，附出处的 %d 个（案例文件没有 provenance，见 案例采集.md §4.2）" % (stated_n, provenanced))
+        "%d/%d" % (provenanced, stated_n), "every stated fact carries provenance (案例采集.md §4.2)",
+        msg="%d facts stated by the case, %d with provenance (the case file has no provenance, see 案例采集.md §4.2)" % (stated_n, provenanced))
     # 6. the rules this plan uses, with their basis
     rule_rows = []
     for rid in sorted(rules_used):
         for on in sorted(d for d in rules_used[rid] if d is not None) or [None]:
             st, parts = basis.rule(RULES_BY_ID[rid], on)
-            rec("G-rule", "%s@%s" % (rid, on), st, "", "", "；".join("%s %s" % (p["kind"], p["id"]) for p in parts))
+            rec("G-rule", "%s@%s" % (rid, on), st, "", "", "; ".join("%s %s" % (p["kind"], p["id"]) for p in parts))
             rule_rows.append((rid, on, RULES_BY_ID[rid].grade.name if RULES_BY_ID[rid].grade else "", st, parts))
     secs = time.time() - t0
     for r in recs:
@@ -388,38 +406,38 @@ def check_case(name, template, case, event, answers, lib, P, provenance=None):
     # report
     n_by = {s: sum(1 for r in recs if r["status"] == s) for s in ("pass", "info", "warn", "fail")}
     legal = [r for r in recs if r["check_id"] not in ("G-fact", "G-provenance", "G-calendar")]
-    L += ["运行 %s，版本 %s。%s；核对 %d 项：通过 %d，说明 %d，警示 %d，失败 %d。" % (
-        run_id, ver, "规划器给出了方案" if mode == "方案" else "规划器给出的是问卷（下面核对的是目前最优的候选）",
+    L += ["Run %s, version %s. %s; %d checks: pass %d, info %d, warn %d, fail %d." % (
+        run_id, ver, "The planner produced a plan" if mode == "plan" else "The planner produced a question sheet (the checks below trace the best candidate so far)",
         len(recs), n_by["pass"], n_by["info"], n_by["warn"], n_by["fail"]), ""]
-    L += ["**结论**：%s；%s。" % (
-        "每一步都落到现行条文的原文" if not any(r["status"] == "fail" for r in legal) else "有步骤缺少现行条文依据（见下）",
-        "没有用到案例陈述的事实" if stated_n == 0 else "陈述的事实都附出处" if stated_n == provenanced
-        else "陈述的事实未附出处（%d/%d）" % (provenanced, stated_n)), ""]
-    L += ["候选 %s；保证税额 %.2f，最好情形 %.2f；重算%s。" % (best.cand, b.hi, b.lo, "一致" if same else "不一致"), ""]
+    L += ["**Conclusion**: %s; %s." % (
+        "every step rests on the verbatim text of a current provision" if not any(r["status"] == "fail" for r in legal) else "some steps lack a basis in the current provisions (see below)",
+        "no fact stated by the case was used" if stated_n == 0 else "every stated fact carries provenance" if stated_n == provenanced
+        else "stated facts without provenance (%d/%d)" % (provenanced, stated_n)), ""]
+    L += ["Candidate %s; guaranteed tax %.2f, best case %.2f; recomputation %s." % (best.cand, b.hi, b.lo, "agrees" if same else "differs"), ""]
     if issues:
-        L += ["## 需要处理的", ""] + ["- %s：%s %s" % (WORD[s], subj, short(m, 120)) for s, subj, m in issues] + [""]
-    L += ["## 税项（保证税额一端）", "", "| 流 | 法域 | 税种 | 承担方 | 金额 | 规则 | 依据 |", "|---|---|---|---|---|---|---|"]
+        L += ["## To be dealt with", ""] + ["- %s: %s %s" % (WORD[s], subj, short(m, 120)) for s, subj, m in issues] + [""]
+    L += ["## Tax items (guaranteed-tax end)", "", "| Flow | Jurisdiction | Levy | Borne by | Amount | Rules | Grounding |", "|---|---|---|---|---|---|---|"]
     L += ["| %s |" % " | ".join(row) for row in item_rows] + [""]
     if act_rows:
-        L += ["## 方案动作", "", "| 动作 | 依据所在的规则 | 依据 |", "|---|---|---|"] + ["| %s |" % " | ".join(r) for r in act_rows] + [""]
+        L += ["## Plan actions", "", "| Action | Rules holding the basis | Grounding |", "|---|---|---|"] + ["| %s |" % " | ".join(r) for r in act_rows] + [""]
     if judge_rows:
-        L += ["## 待机关认可的判断", "", "| 事项 | 流 | 判断所引条款 | 规则 | 依据 |", "|---|---|---|---|---|"]
+        L += ["## Judgements awaiting the authority's acceptance", "", "| Item | Flow | Clauses the judgement cites | Rules | Grounding | Precedents (案例采集.md §5) |", "|---|---|---|---|---|---|"]
         L += ["| %s |" % " | ".join(str(x) for x in r) for r in judge_rows] + [""]
     if dl_rows:
-        L += ["## 期限与罚款", "", "| 流 | 规则 | 依据 |", "|---|---|---|"] + ["| %s |" % " | ".join(r) for r in dl_rows] + [""]
+        L += ["## Deadlines and penalties", "", "| Flow | Rule | Grounding |", "|---|---|---|"] + ["| %s |" % " | ".join(r) for r in dl_rows] + [""]
     if q_rows:
-        L += ["## 问卷的每个问题", "", "| 类别 | 问题 | 由哪条规则提出 | 依据 |", "|---|---|---|---|"]
+        L += ["## Each question of the question sheet", "", "| Kind | Question | Raised by which rules | Grounding |", "|---|---|---|---|"]
         L += ["| %s |" % " | ".join(r) for r in q_rows] + [""]
-    L += ["## 规则依据（本方案用到的 %d 条规则）" % len(rules_used), ""]
+    L += ["## Rule grounding (the %d rules this plan uses)" % len(rules_used), ""]
     for rid, on, grade, st, parts in rule_rows:
-        L.append("- **%s**（%s，%s）%s" % (rid, grade, on or "—", WORD[st]))
-        L += ["  - %s %s：%s%s" % (p["kind"], p["id"], p["note"], "" if p["status"] == "pass" else "（%s）" % WORD[p["status"]])
+        L.append("- **%s** (%s, %s) %s" % (rid, grade, on or "—", WORD[st]))
+        L += ["  - %s %s: %s%s" % (p["kind"], p["id"], p["note"], "" if p["status"] == "pass" else " (%s)" % WORD[p["status"]])
               for p in parts]
-    L += ["", "## 事实来源（规则读到的事实，按流）", ""]
+    L += ["", "## Sources of the facts (the facts the rules read, by flow)", ""]
     for fid, by_cls in fact_rows:
-        L.append("- %s：%s" % (fid, "；".join("%s %d（%s）" % (cls, len(v), "、".join(x.split(".", 1)[1] for x in v[:6]) + ("…" if len(v) > 6 else ""))
+        L.append("- %s: %s" % (fid, "; ".join("%s %d (%s)" % (cls, len(v), ", ".join(x.split(".", 1)[1] for x in v[:6]) + ("…" if len(v) > 6 else ""))
                                              for cls, v in sorted(by_cls.items()))))
-    L += ["", "陈述的事实 %d 个，附出处 %d 个。" % (stated_n, provenanced)]
+    L += ["", "%d stated facts, %d with provenance." % (stated_n, provenanced)]
     return "\n".join(L) + "\n", recs
 
 

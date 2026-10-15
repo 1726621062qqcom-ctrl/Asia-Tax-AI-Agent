@@ -1,0 +1,441 @@
+{
+ "model": "qwen3.8-flash",
+ "case": "K4-freetech-2024",
+ "samples": 2,
+ "k": 5,
+ "locate": "retrieval",
+ "patterns": true,
+ "dense": true,
+ "temperature": 0.7,
+ "prompt_version": "2026-10-14c",
+ "rows": [
+  {
+   "path": "roles.ULT.loc",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "Freetech Smart Road Recycling Engineering Investment Limited (英達智能道路再生工程投資有限公司), a company incorporated in Hong Kong with limited liability",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 3,
+    "pattern_values": 2,
+    "passages": 8,
+    "reads": 8,
+    "values": 1,
+    "nulls": 7,
+    "rejects": 0,
+    "agree": 0.125,
+    "quote_len": 139,
+    "figures_in_quote": 0,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "roles.ULT.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": null,
+   "status": "conflict",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [
+    "conflict: HK / OTHER"
+   ],
+   "conflict": [
+    {
+     "value": "HK",
+     "doc": "K4-freetech-2024",
+     "quote": "Freetech Smart Road Recycling Engineering Investment Limited (英達智能道路再生工程投資有限公司), a company incorporated in Hong Kong with limited liability",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "enum",
+     "explicit": true
+    },
+    {
+     "value": "OTHER",
+     "doc": "K4-freetech-2024",
+     "quote": "(incorporated in the Cayman Islands with limited liability)",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "enum",
+     "explicit": true
+    }
+   ],
+   "features": {
+    "pattern_hits": 3,
+    "pattern_values": 2,
+    "passages": 8,
+    "reads": 8,
+    "values": 2,
+    "nulls": 6,
+    "rejects": 0,
+    "agree": 0.125
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "roles.OP.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": null,
+   "status": "conflict",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [
+    "conflict: CN / OTHER"
+   ],
+   "conflict": [
+    {
+     "value": "CN",
+     "doc": "K4-freetech-2024",
+     "quote": "The Target Company is a company established in the\nPRC with limited liability on 1 September 2009 by the Purchaser.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "enum",
+     "explicit": true
+    },
+    {
+     "value": "OTHER",
+     "doc": "K4-freetech-2024",
+     "quote": "(incorporated in the Cayman Islands with limited liability)",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "enum",
+     "explicit": true
+    }
+   ],
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1,
+    "passages": 9,
+    "reads": 9,
+    "values": 7,
+    "nulls": 2,
+    "rejects": 0,
+    "agree": 0.667
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "roles.OP.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": null,
+   "status": "conflict",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [
+    "conflict: CN / OTHER"
+   ],
+   "conflict": [
+    {
+     "value": "CN",
+     "doc": "K4-freetech-2024",
+     "quote": "The Target Company is a company established in the\nPRC with limited liability on 1 September 2009 by the Purchaser.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "enum",
+     "explicit": true
+    },
+    {
+     "value": "OTHER",
+     "doc": "K4-freetech-2024",
+     "quote": "(incorporated in the Cayman Islands with limited liability)",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "enum",
+     "explicit": true
+    }
+   ],
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1,
+    "passages": 9,
+    "reads": 9,
+    "values": 7,
+    "nulls": 2,
+    "rejects": 0,
+    "agree": 0.667
+   },
+   "gold_rank": 1
+  },
+  {
+   "path": "roles.BUYER.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "The Purchaser, a state-owned enterprise, is a company established in the PRC with limited liability.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1,
+    "passages": 9,
+    "reads": 9,
+    "values": 4,
+    "nulls": 5,
+    "rejects": 0,
+    "agree": 0.444,
+    "quote_len": 100,
+    "figures_in_quote": 0,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "roles.BUYER.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "The Purchaser, a state-owned enterprise, is a company established in the PRC with limited liability.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1,
+    "passages": 9,
+    "reads": 9,
+    "values": 3,
+    "nulls": 6,
+    "rejects": 0,
+    "agree": 0.333,
+    "quote_len": 100,
+    "figures_in_quote": 0,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "kind": "disclosed",
+   "gold": 55.0,
+   "value": 55.0,
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "As at the Latest Practicable Date, the Target Company is owned as to 55% by the\nVendor and 45% by the Purchaser.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 2,
+    "passages": 9,
+    "reads": 9,
+    "values": 6,
+    "nulls": 3,
+    "rejects": 0,
+    "agree": 0.667,
+    "quote_len": 112,
+    "figures_in_quote": 2,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 1
+  },
+  {
+   "path": "holds.ULT>OP.since",
+   "kind": "disclosed",
+   "gold": "2015-08-31",
+   "value": "2015-06-30",
+   "status": "wrong",
+   "means": "retrieved",
+   "quote": "On 30 June 2015, Tianjin Expressway Group Company Limited. and Freetech Smart Road Recycling Engineering Investment Limited signed the ‘‘Capital Increase and Share Expansion Agreement of Tianjin Expressway Maintenance Company Limited’’ (《天津市高速公路養護有限公司增資擴股協議書》).",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.2,
+    "quote_len": 261,
+    "figures_in_quote": 2,
+    "score": 0.03175,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "holds.ULT>OP.cost",
+   "kind": "disclosed",
+   "gold": 46800000.0,
+   "value": 46802400.0,
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "wherein Freetech Smart Road Recycling Engineering Investment Limited increased capital to the target company with offshore RMB in the amount of RMB46.8024 million",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 3,
+    "rejects": 1,
+    "agree": 0.2,
+    "quote_len": 162,
+    "figures_in_quote": 2,
+    "score": 0.03227,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "flows.exit.listed_market_trade",
+   "kind": "derived",
+   "gold": false,
+   "value": false,
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "On 22 November 2024 (after trading hours), the Vendor (an indirect non-wholly-owned subsidiary of the Company) and the Purchaser entered into the SPA, pursuant to which the Purchaser has conditionally agreed to acquire and the Vendor has conditionally agreed to sell the Sale Shares at a consideratio",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 2,
+    "nulls": 3,
+    "rejects": 0,
+    "agree": 0.4,
+    "quote_len": 367,
+    "figures_in_quote": 7,
+    "score": 0.03101,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "flows.exit.receipt_kind",
+   "kind": "disclosed",
+   "gold": "REMITTED",
+   "value": "REMITTED",
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "the Purchaser shall procure for such amount to be transferred to an account of the Vendor in Hong Kong",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 2,
+    "nulls": 3,
+    "rejects": 0,
+    "agree": 0.4,
+    "quote_len": 102,
+    "figures_in_quote": 0,
+    "score": 0.03333,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "present.HOLD",
+   "kind": "derived",
+   "gold": "NONE",
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "event.exit",
+   "kind": "disclosed",
+   "gold": 71099000.0,
+   "value": 71099000.0,
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "3(a). The amount represents the cash consideration of RMB71,099,000 (equivalent to HK$76,360,000) for the Disposal which shall be received within one month after the Completion.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 2,
+    "nulls": 3,
+    "rejects": 0,
+    "agree": 0.4,
+    "quote_len": 177,
+    "figures_in_quote": 3,
+    "score": 0.03182,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "event.on",
+   "kind": "derived",
+   "gold": "2024-11-22",
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  }
+ ],
+ "usage": {
+  "calls": 96,
+  "prompt_tokens": 51069,
+  "completion_tokens": 2636,
+  "cache_hit_tokens": 0,
+  "seconds": 284.95014691352844,
+  "retries": 0,
+  "cached": 0
+ },
+ "wall": 86.5,
+ "error": null,
+ "notes": [
+  "holds.ULT>OP.cost: a reading of another passage was refused (quote not found in the document); the accepted reading stands on its verified quote"
+ ]
+}

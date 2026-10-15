@@ -1,0 +1,31 @@
+{
+ "case_id": "K6-example",
+ "kind": "K6",
+ "template": "holding",
+ "subject": "GROUP",
+ "roles": {
+  "OP": {"loc": "CN", "attrs": {"managed_from": "CN", "vat_general_taxpayer": true}},
+  "ULT": {"loc": "SG", "attrs": {"managed_from": "SG", "residence_cert": true}}
+ },
+ "holds": [{"holder": "ULT", "held": "OP", "ratio": 100.0, "since": "2020-01-01", "cost": 3000.0}],
+ "flows": {"up1": {"receipt_kind": "NONE"}},
+ "present": {"HOLD": null},
+ "settled": {},
+ "event": {"dividend": 1000.0, "on": "2026-06-30"},
+ "provenance": {
+  "roles.OP.loc": {"kind": "disclosed", "source": "K6-example", "quote": "Business licence: domicile … (verbatim excerpt)"},
+  "roles.OP.attrs.managed_from": {"kind": "disclosed", "source": "K6-example", "quote": "…"},
+  "roles.OP.attrs.vat_general_taxpayer": {"kind": "disclosed", "source": "K6-example", "quote": "General VAT taxpayer registration …"},
+  "roles.ULT.loc": {"kind": "disclosed", "source": "K6-example", "quote": "…"},
+  "roles.ULT.attrs.managed_from": {"kind": "disclosed", "source": "K6-example", "quote": "…"},
+  "roles.ULT.attrs.residence_cert": {"kind": "disclosed", "source": "K6-example", "quote": "Certificate of Residence for 2026 …"},
+  "holds.ULT>OP.ratio": {"kind": "disclosed", "source": "K6-example", "quote": "Register of members …"},
+  "holds.ULT>OP.since": {"kind": "disclosed", "source": "K6-example", "quote": "…"},
+  "holds.ULT>OP.cost": {"kind": "derived", "source": "K6-example", "formula": "capital contribution 2000 + capital increase 1000"},
+  "flows.up1.receipt_kind": {"kind": "disclosed", "source": "K6-example", "quote": "…"},
+  "present.HOLD": {"kind": "disclosed", "source": "K6-example", "quote": "no intermediate holding company at present"},
+  "event.dividend": {"kind": "disclosed", "source": "K6-example", "quote": "Board resolution: dividend of 1000 …"},
+  "event.on": {"kind": "disclosed", "source": "K6-example", "quote": "…"}
+ },
+ "notes": ["Template: a K6 private case. With kind K3, synthetic provenance is allowed and synthetic_share must be given; K4–K6 allow no synthetic values."]
+}

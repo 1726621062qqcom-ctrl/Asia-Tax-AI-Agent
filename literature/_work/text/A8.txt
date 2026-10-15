@@ -1,0 +1,2306 @@
+=== [p.1] ===
+ARTIFICIAL INTELLIGENCE 
+81 
+A Logic for Default Reasoning 
+R. Reiter 
+Department of Computer Science, University of British 
+Columbia, Vancouver, B.C., Canada 
+Recommended by Patrick J. Hayes 
+ABSTRACT 
+The need to make default assumptions is frequently encountered in reasoning'about incompletely 
+specified worlds. Inferences sanctioned by default are best viewed as beliefs which may well be 
+modified or rejected by subsequent observations. It is this property which leads to the non.monotonJcity 
+of any logic of defaults. 
+In this paper we propose a logic for default reasoning. We then specialize our treatment to a very 
+large class of commonly occurring defaults. For this class we develop a complete proof theory and 
+show how to interface it with a top down resolution theorem prover. Finally, we provide criteria under 
+which the revision of derived beliefs must be effected. 
+The gods did not reveal, from the beginning, 
+All things to us, but in the course of time 
+Through seeking we may learn and know things better. 
+But as for certain truth, no man has known it, 
+Nor shall he know it, neither of the gods 
+Nor yet of all the things of which I speak. 
+For even if by chance he were to utter 
+The final truth, he would himself not know it: 
+For all is but a woven web of guesses. 
+Xenophanes 
+1. Introduction and Motivation 
+Various forms of default reasoning commonly arise in Artificial Intelligence. 
+Such reasoning corresponds to the process of deriving conclusions based upon 
+patterns of inference of the form "in the absence of any information to the 
+contrary, assume...". Reasoning patterns of this kind represent a form of 
+plausible inference and are typically required whenever conclusions must be 
+drawn despite the absence of total knowledge about a world. 
+Artificial Intelligence 13 (1980), 81-132 
+Copyright © 1980 by North-Holland Publishing Company
+=== [p.2] ===
+82 
+X. R~tT~ 
+In order to fix some of these ideas, we begin by surveying a number of instances 
+of default reasoning as they often occur in the Artificial Intelligence literature. 
+Most of the examples are adapted from those in Reiter (1978a). 
+1.1. Some examples of default reasoning 
+1.1.1. Defaults and exceptions 
+A good deal of what we know about a world is 'almost always" true, with a few 
+exceptions. Such facts usually assume the form "Most P's are Q's" or "Most P's 
+have property Q". For example most birds fly except for penguins, ostriches, 
+the Maltese falcon etc. Given a particular bird, we will conclude that it flies unless 
+we happen to know that it satisfies one of these exceptions. How is the fact that 
+most birds fly to be represented ? The natural first order representation explicitly 
+lists the exceptions to flying: 
+(x).BIRD(x) A -aPENGUIN(x) A -aOSTRICH(x) A "'" :2 FLY(x). 
+But with this representation one cannot conc!ude of'a 'general' bird that it can fly. 
+To see why, consider an attempt to prove FLY(tweety) where all we know of 
+tweety is that it is a bird. Then we must establish the subgoal 
+-aPENGUIN(tweety) A -aOSTRICH(tweety) ^ ..- 
+which is impossible given that there is no further information about tweety. 
+We are blocked from concluding that tweety can fly even though intuitively we 
+want to deduce just that. 
+What is required is somehow to allow tweety to fly by default. How is this 
+default to be interpreted ? We take it to mean something like "If x is a bird, then 
+in the absence of any information to the contrary, infer that x can fly". The 
+problem then is to interpret the phrase "in the absence of any information to the 
+contrary". The interpretation we adopt is "It is consistent to assume that x can 
+fly". Thus "If x is a bird and it is consistent to assume that x can fly, then infer 
+that x can fly". We represent this more formally as the following default rule: 
+BIRD(x) • MFLY(x) , 
+(1.1) 
+FLY(x) 
+" 
+Here H is to be read as "it is consistent to assume". The exceptions to flight are 
+then given a standard first order representation. 
+(x).PENGUIN(x) :2 ~FLY(x) 
+(x). OSTRICH(x) :2 ~ FLY(x) 
+etc. 
+Notice that if FLY(tweety) is inferred by default then the assertion FLY(tweety) 
+has the status of a belief; it is subject to change, say by the subsequent discovery 
+t In plain text we use the notation BIRD(x): MFLY(x) I FLY(x).
+=== [p.3] ===
+A LOGIC FOR DEFAULT REASONING 
+83 
+~hat tweety is a penguin. We can then reinterpret the default rule (1.1) as saying 
+"If x is a bird and it is consistent to believe that x can fly then one may believe that 
+x can fly". 
+There still remains a problem of interpretation. For exactly what is meant by 
+the consistency requirement associated with a default ? Consistent with what ? 
+Providing an appropriate formal definition of this consistency requirement is 
+perhaps the thorniest issue in defining a logic for default reasoning, and we defer 
+this question to Section 2. For the time being a good intuitive interpretation is to 
+view this consistency requirement with respect to all of the first order facts about 
+the world, together with all of the other beliefs sanctioned by all of the other 
+default rules in force. 
+Notice that we have provided a representation for the 'fuzzy' quantifier 'most' or 
+'almost all' in terms of defaults, without appealing to frequency distributions or 
+fuzzy logics. 
+Notice also that the dual 'fuzzy' quantifier 'few' has a dual representation as a 
+default. For example "Few Americans are socialists" has the representation 
+AMERICAN(x) : M -aSOCIALIST(x) 
+-a SOCIALIST(x) 
+1.1.2. Frames, knowledge representation languages and defaults 
+Default reasoning plays a prominent role in the influential frames proposal of 
+Minsky (1975). See also Hayes (1977). At least two knowledge representation 
+languages, FRL (Roberts and Goldstein (1977)), and KRL (Bobrow and Winograd 
+(1977)) have been designed as attempts, in part, to computationaUy represent some 
+of Minsky's proposals. Not surprisingly, both FRL and KRL provide for default 
+assignments. For example, in KRL the unit for a person in an airline travel system 
+has the form: 
+[Person UNIT Basic 
+(hometown {(a City) Palo Alto; DEFAULT}> 
+!]. 
+This declaration can be regarded as an instruction to the KRL interpreter to 
+proceed as follows: 
+Whenever x is a person, then in the absence of any information to the contrary 
+assume hometown(x) = Palo Alto. 
+In view of the previous discussion, this can be represented by the following 
+default rule: 
+PERSON(x) : M hometown(x) = Palo Alto 
+hometown(x) = Palo Alto
+=== [p.4] ===
+84 
+R. REITER 
+1.1.3. The closed world assumption 
+Deductive question-answering systems often implicitly appeal to a particular form 
+of default reasoning in the process of answering queries. As an illustration of the 
+default involved, consider a data base representing an airline flight schedule, 
+and the query "'Does Air Canada flight 113 connect Vancouver with New York?" 
+A deductive question-answering system will typically treat the data base together 
+with some general knowledge about the flight domain as a set of premises from 
+which it will attempt to prove CONNECT(ACI 13,Van,NY). If this proof succeeds, 
+then the system responds "yes". The interesting case is when this proof fails, for 
+then such a system will typically respond "no", i.e. it will conclude -nCONNECT 
+(ACll3,Van,NY). Failure to find a proof has sanctioned an inference. Now 
+CONNECT(ACII3,Van,NY) is not provable iff -aCONNECT(ACll3,Van,NY) 
+is consistent with the data base so that the derivation of -a CONNECT(AC113, 
+Van,NY) by failing t9 prove CONNECT(ACll3,Van,NY) is justified by the 
+following closed world default rule: 
+: H -aCONNECT(x,y,z) 
+-a CONNECT(x,y,z) 
+" 
+In general, if R is an n-ary relation, then the following is a closed world default 
+for R: 
+: t4 "aR(xl,..., 
+x,) 
+"a R(x l , . . ., x,) 
+" 
+If this default is in force for all relations R of some domain, then reasoning is 
+being done under the closed world assumption (Reiter (19781))). In effect, the dosed 
+world assumption says that for any relation R, and any individuals xl,..., xn one 
+can assume -'1R(xl,..., xn) whenever it is consistent to do so. 
+Reasoning about a wolld t~nder the dosed world assumption considerably 
+simplifies the representation of that world. In effect, only positive information 
+about the world need be explicitly represented in the data base. Negative informa- 
+tion is not so represented, but is inferred by default. Since in general the amount of 
+negative knowledge about a world vastly exceeds the positive things known about 
+it, there is a considerable computational and representational advantage to 
+reasoning under the closed world assumption. For example, in the airline data 
+base we would not have to represent the facts that AC113 does not connect London 
+and Bombay, or Toronto and Boston, or New York and Paris, etc. 
+There are a number of other settings in Artificial Intelligence where the closed 
+world assumption is made. Reiter (1978a) discusses two of these in some detail, 
+specifically blocks world problem-solving, and reasoning about taxonomies (IS-A 
+hierarchies).
+=== [p.5] ===
+A LOGIC FOR DEFAULT REASONING 
+85 
+1.1.4. The frame default 
+The frame problem (Raphael (1971)) arises in the representation of dynamic 
+worlds. The problem stems from the need to represent those aspects of the world 
+which remain invariant under certain state changes. For example, moving a parti- 
+cular object or switching on a light will not change the colours of any objects in 
+the world. In a first order representation of such worlds, it is necessary to explicitly 
+represent all of the invariants under all state changes. These are referred to as the 
+frame axioms for the world being modelled. Thus, to represent the fact that 
+painting an object does not alter the locations of objects would require, in the 
+situational calculus of McCarthy and Hayes (1969) a frame axiom something like 
+(x y z s c)LOCATION(x,y,s) ~ LOCATION(x,y,paint(z,c,s)), 
+where s is a state variable, x and z are objects, c is a colour, and y is some location. 
+The problem is that in general a vast number of such axioms will be required, 
+e.g. object locations also remain invariant when lights are switched on, when it 
+thunders, when someone speaks, etc. so +,here is a major difficulty in even articulat- 
+ing a deductively adequate set of frame axioms for a given world. 
+A solution to the frame problem is a representation of the world coupled with 
+appropriate rules of inference such that the frame axioms are neither explicitly 
+represented nor explicitly used in reasoning about the world. We will focus on a 
+proposed solution in Sandewall (1972). A related approach is described in Hayes 
+(1973). Sandewall proposes a modal operator, UNLESS, which takes a first order 
+formula as argument. The intended interpretation of UNLESS(W) is "W can not 
+be proved" or in terms of consistency, "-1 W is consistent." Sandewall proposes a 
+single 'frame inference rule' which, in our notation for defaults, can be paraphrased 
+as a default schema: For all relations R which take a state variable as an argument, 
+and for all state transition functions f 
+R(x,s) : MR(x,f(x,s)) 
+R(x,f(x,s)) 
+" 
+Intuitively this default schema formalizes the so-called 'sTrips assumption' 
+(Waldinger (1975)): Every action (state change) is assumed to leave every relation 
+unaffected unless it is possible to deduce otherwise. 
+1.2. The non monotonic character of default reasoning 
+A fundamental feature of first order logic is that it is monotonic, i.e. if A and B 
+are sets of first order formulae and A I- w then A u B i- w. What was valid in 
+the presence of information A remains valid when new information B is discovered. 
+In contrast, any logic which presumes to formalize default reasoning must be non- 
+monotonic. To see why consider a simple theory consisting of the single default 
+: MA]B. Thus B may be believed. If subsequently -1A is discovered to hold (say 
+through some observation) we then have the new theory : MA[B, -1A in which B
+=== [p.6] ===
+86 
+R. R~'ER 
+cannot be believed. One extremely interesting approach to the formalization of a 
+non-monotonic logic of beliefs is described in McDermott and Doyle (1978). 
+This last example also demonstrates the need for some kind of mechanism for 
+revis;,ng beliefs in the presence of new information. What this amounts to is the 
+need to record, with each derived belief, the default assumptions made in deriving 
+tha~. belief. Should subsequent observations invalidates the default assumptions 
+supporting some belief, then it must be removed from the data base. The Truth 
+Maintenance System of Doyle (1978) is an heuristic implementations of just such 
+a system for belief revision. 
+1.3. Defaults and incomplete lmowledge 
+Consider the following natural pair of defaults which should be capable of peaceful 
+co-existence: 
+"Assume a person's hometown is that of his/her spouse." 
+SPOUSE(x,y) ^ hometown(y) - z: M hometown(x) -- z 
+hometown(x) - z 
+"Assume a person's hometown is where his/her employer is located." 
+EMPLOYER(x,y) ^ location(y) = z: M hometown(x) - z 
+hometown(x) - z 
+Suppose Mary's spouse lives in Toronto while her employer is located in Vancouver. 
+By the first default, Mary's hometown is Toronto, and by the second it is Vancouver. 
+To believe both is inconsistent since hometown is a function. If first we derive 
+Toronto, we are then blocked from deriving Vancouver. On the other hand if we 
+first derive Vancouver then the derivation of Toronto is blocked. We can derive 
+one or the other, but not both simultaneously. From the point of view of con- 
+ventional logical systems this is a perplexing~ seemingly incoherent situation. 
+From our intuitive perspective that default assumptions lead to beliefs, the example 
+makes perfect sense; one can choose to oelieve that Mary's hometown is Toronto 
+or that it is Vancouver, but not both. 2 It would seem that defaults can sanction 
+different sets of beliefs about a world. 
+Now a point of view that begins to make formal sense of this example is the 
+following: 
+Imagine a first order formalization of what it is we know about any reasonably 
+complex world. Since we cannot know everything about that world--there will 
+be gaps in our knowledge--this first order theory will be incomplete. Nevertheless, 
+there will arise situations in which it is necessary to act, to draw some inferences, 
+2 There is another possibility, which is to believe the proposition hometown(Maw) = Toronto 
+v hometown(Maw) -- Vancouver. In terms of the theory which we develop in the remainder of 
+this paper, this possibility amounts to refusing to choose between the Toronto extension and the 
+Vancouver extension. See the following disc;~sion.
+=== [p.7] ===
+A LOGIC FOR DEFAULT REASONING 
+87 
+despite the incompleteness of the knowledge base. That role of a default is to fill 
+in some of the gaps in the knowledge base, i.e. to further complete the underlying 
+incomplete first order theory, so as to permit the inferences necessary to act. 
+Defaults therefore function somewhat like meta-rules; they are instructions about 
+how to create an extension of this incomplete theory. Those formulae sanctioned 
+by the defaults and which extend the theory can then be viewed as beliefs about 
+the world. Now in general there are many different ways of extending an incomplete 
+theory, which suggests that the default rules may be nondeterministic. Different 
+applications of the defaults yield different extensions and hence different sets of 
+beliefs about the world. 
+As an example of this point of view, consider the closed world assumption. 
+This fully completes the underlying first order theory. Thus, the theory p v q 
+under the closed world defaults : H-apI-ap and : M"aql-aq has two different 
+complete extensions, {p,~q} and {rap, q}. In the first we choose to believe -aq 
+by invoking the second default, whence we are forced to believe p. In the second 
+we choose to believe -ap by invoking the first default. 
+It is this point of view--that defaults are rules for extending an underlying 
+incomplete first order theory--which is adopted in this paper, and which motivates 
+the subsequent development. The rest of this paper is devoted to articulating a 
+logic for default reasoning. We see a two-fold task for such a logic: 
+(1) To provide a formal definition of the extensions to an underlying first order 
+theory induced by a set of defaults. 
+(2) To provide a proof theory in the form of a procedure which, given a formula 
+w, determines whether w can be believed, i.e., whether there is an extension induced 
+by the defaults which contains w. 
+In this paper we propose a definition for the first task. The second will turn out 
+to be intractable for default theories in general. However, by focusing upon a 
+special class of defaults called normal defaults, we can provide a proof theory. 
+Fortunately the class of normal defaults embraces a broad spectrum of naturally 
+occurring defaults, for instance all of the examples of this section. In addition to 
+providing a proof theory for normal defaults, we obtain the pessimistL result that 
+in general the beliefs of a theory are not recursively enumerable. Finally, we 
+determine conditions under which it is necessary to revise a set of derived beliefs 
+when confronted with some new observations about a world. 
+2. Default Theories and their Extensions 
+In this section we provide a precise notion of a default theory, and then proceed to 
+formally define the concept of an extension for such a theory. In view of the 
+discussion of Section 1.3 these extensions are meant to formally specify the set of 
+beliefs induced by a set of defaults, as a way of further completing some underlying 
+incomplete collection of facts about a world.
+=== [p.8] ===
+88 
+R. REITER 
+2.1. Formal preliminaries 
+We shall be dealing with a first order language LA consisting of the usual well 
+formed formulae (w~) over an alphabet A of variables, function and predicate 
+letters, logical constants, and suitable punctuation signs. 0-ary function letters 
+will sometimes be called constant letters. More specifically, L~ is the set of first 
+order wffs which can be formed using an alphabet A consisting of countably 
+many variables x,y,z, xl,yl,z,..., countably many function letters a,b,c,f,,g,h,..., 
+countably many predicate letters P,Q,R,..., the usual punctuation signs, and 
+the standard logical constants ~ (not), ^ (and), v (or), = (implies) and quantifiers 
+(x) (for all x), (Ex) (there exists an x). As the alphabet A will usually remain fixed 
+throughout this paper, we will generally write L instead of L~ for the first order 
+language. 
+As usual, a wff is said to be closed iff it contains no free variables. For any set 
+of closed wffs S, and any closed wff w, $ I- w means that w is first order provable 
+from premises S. For any set of closed wffs S _c L, define ThL(S) = {w I w ~ L, 
+w is closed, and S !- w}. 
+A default is any expression of the form 
+w(x) 
+where u(x),//:(x),...,//m(x),w(x) are wffs whose free variables are among those of 
+x = x l,..., xn. u(x) is called the prerequisite of the default, and w(x) is its 
+consequent. A default is closed iff none of u,/~l,..., Pm,W contains a free variable. 
+None of the defaults of Section 1 is closed. An (artificial) example of a closed 
+default is 
+(x)(P(x) v Q(x)):H(Ey)(z)R(y,z) A P(y),M(Ey)Q(y) 
+(x)(Ey)R(x,y) ^ P(x) 
+A default theory is a pair (D, W) where D is a set of defaults and W a set of closed 
+wffs. Notice that D and/or W need not be finite; they will be at most countably 
+infinite however, in view of the countability of L. A default theory (D, W) is closed 
+iff every default of D is closed. 
+2.2. The extensions of a closed default theory 
+We begin by defining the concept of an extension for closed default theories only. 
+Later, in S~tion 7, we shall suitably generalize this notion for arbitrary theories. 
+The intuitive idea which must be captured is that of a set of defaults D inducing 
+an extension of some underlying incomplete set of first order wffs W. In view of 
+the discussion in Section 1.3 we cannot expect this extension to be unique. Any 
+such extension will be interpreted as an acceptable set of beliefs that one may hold 
+about the incompletely specified world W. There are three properties which can 
+reasonably be expected of such an extension E:
+=== [p.9] ===
+A LOGIC FOR ' DEFAULT REASONING 
+89 
+(I) It should contain W; W _ E. 
+(2) It should be deductively closed; ThL(E) = E. 
+(3) Suppose (u: FI/~I,..., H/3Jw) is a default. If u e E and "aPl,..., "IPm ~ E 
+(so that each of/~i, • •.,/~m is consistent with E) then w e E. Thus, if • is believed, 
+and if each of/~1, • •., Pm can be consistently believed, then w is believed. 
+This motivates the following definition: 
+Definition I. Let A = (D, IV) be a closed default theory, so that every default of D 
+has the form (u: Flpl,..., Hpm[W) where u,/~1,...,/~m,W are all closed wffs of L. 
+For any set of closed wffs S __. L let r(s) be the smallest set satisfying the following 
+three properties: 
+DI. W=_ r(s) 
+D2. ThL(F($))= F(S) 
+D3. If (u: FI/~I,..., M/$m]W ) e D and ~ e r(s), and -a/~x,..., -I/~m ¢ S then 
+w.'e r(s). 
+A set of closed wffs E ~ L is an extension for A ill r(E) = E, i.e. iff E is a fixed 
+point of the operator r. 
+The next theorem provides a more intuitive characterization of extensions. 
+Theorem 2.1. Let E ~_ L be a set of closed wffs, and let A --- (D,W) be a closed 
+default theory. Define 
+Eo = W 
+and for i >~ 0 
+{ 
+Et+l = ThL(E() u 
+w 
+W 
+~:ol 1 
+where u e Et and "7/~1,..., "1/~m ¢ 
+• 
+Then E is an extension for A iff 
+oo 
+E= 
+uEt. 
+i=O 
+Proof. We begin by observing that ~'-o Ei enjoys the following properties: 
+oo 
+DI'. 
+W _~ u E~ 
+l-0 
+D2'. 
+(=o) =o 
+ThL 
+E 
+: 
+E~ 
+! 
+i 
+D3'. 
+If oc: MPl,..., M~= e D 
+and 
+0c e u E~ and 
+W 
+i=0 
+then w ¢ u Et. 
+i=0 
+3 Note the occurrence of E in the definition of E~+t.
+=== [p.10] ===
+90 
+R. REITER 
+Hence, by the minimality of F(E), we have 
+r(E) ~ 
+,., E,. 
+(~.~) 
+iffiO 
+(=~) We inductively prove E~ _~ E for all i >I 0, whence U?'ffio E~ ~_ E. Clearly, 
+since E = V(E), Eo ~- E. Assume El ~-- E and consider w e E~+~. If w ¢ ThL(Ei), 
+then since Ei_ E we have weT he(E)= E. Otherwise there is a default 
+(u: M/~,..., M/~m[w) ~ D, where u ~ El and -l/h,..., -~/~, ¢ E. Then since 
+Ei ~ E, u ¢ E -- F(E). Hence u, ¢ F(E) by D3 of Definition 1 and since I'(E) = E, 
+we have w ~ E. 
+Thus U~'=o E~ ~ E. By (2.1) and the fact that E = F(E) we have E = [.)Tffio Ei. 
+(~) We inductively prove E~ ___ F(E) for all i i> 0, whence E = L)~'ffio E~ ~_ F(E). 
+By invoking (2.1) we will then have E = F(E) whence E is an extension for A. 
+Clearly Eo ~- F(E), so assume El ~- F(E) and consider w ¢ E~+I. If w ¢ ThL(Ei), 
+then since El ~ F(E) we have w ¢ ThL(F(E)) = F(E). Otherwise there is a default 
+(~: M/~1,..., M[$m[W) ~ D where u ¢Ei and -a/It,..., -l/~m ~ E. Then since 
+Ei ~ F(E), o~ ¢ F(E). Hence w ~ F(E) by D3 of Definition I. Hence Ei+1 ~- F(E). 
+Example 2.1. 
+D = Y :MA 
+( A ' 
+W = {B ::, -~A ^ ~C} 
+This has two extensions given by 
+Ex = Th(W u {A, C}) 
+E2 = Th(W u {B}). 
+Ex.'unple 2.2. 
+{:MC :MD :ME 
+D = 
+T.T,  
+W = 0. 
+This is example (26) of McDermott and Doyle (1978) which is a variant of an 
+example in Sandewall (1972). This theory has one extension given by 
+E = Th({-7 D,-~F}) 
+Example 2.3. 
+This is example (27) of McDermott and Doyle (1978). This theory has two 
+extensions: 
+E~ -- Th({-1C}) 
+E2 -- Th({~D}).
+=== [p.11] ===
+A LOGIC FOR DEFAULT REASONING 
+91 
+Example 2.4. 
+D={~, 
+B'MC D^A'ME 
+C 
+' 
+E 
+' 
+W= {B, C = D v A,A A C = -3E} 
+This has three extensions: 
+E~ = Th(Wu {A,C}) 
+E 2 = Th(W u {A,E}) 
+Example 2.5. 
+= fA'._ M(Ex)P(x), • MA : M "aA} 
+D 
+[ 
+(Ex)P(x) 
+A' 
+C ^ E:M mA, M(D v A)~. 
+F 
+W=0 
+Ea = Th(W u {C, E, F}). 
+This has two extensions: 
+~'1 = Th({-aA}) 
+E2 = Th({A, (Ex)P(x)}). 
+What is interesting about this example is that in the second extension, the existence 
+of some individual is believed, while this belief is not held in the first extension. 
+Different extensions for the same default theory can support different ontoloyies. 
+Defaults leading to an ontological commitment of some kind are quite common 
+For example, "Most American adults have a car". 
+AMERICAN(x) A ADULT(x):M(Ey)CAR(y) A OWNS(x,y) 
+(Ey)CAR(y) A OWNS(x,y) 
+Unfortunately, there are default theories with no extensions. 
+Example 2.6. 
+D=(nAj 
+W=O 
+This theory has no extension. 
+It is easy to see that in general default theories are non-monotonic. By this we 
+mean that if A = (D,W) is a default theory with an extension E, D' is a set of 
+defaults and W' is a set of first order wffs then A' = (D u D', W u W')may have 
+no extension E' such that E _ E'. 
+We shall say that a ~losed default theory has an inconsistent extension iff one 
+of its extensions is the set of all dosed wffs of L. As immediate corollaries of 
+Theorem 2.1 we have: 
+Corollary 2.2. A closed default theory (D, W) has an inconsistent extension iff W is 
+inconsistent. 
+Corollary 2.3. If a closed default theory has an inconsistent extension then this is 
+its only extension.
+=== [p.12] ===
+92 
+R. 
+A closed default theory is consistent iff it has a consistent extension. By Corollary 
+2.2 if (D,W) is consistent then W is consistent. 
+Theorem 2.4 (Minimality of Extensions). If E and F are extensions for a closed 
+default theory (D,W) and if E ~ F, then E = F. 
+Proof. By Theorem 2.1, E = UY-oE~, F = UY-oF~. We inductively prove 
+Fi c:ir 
+_~E~ for all i t> 0, whence F c E whence E -- F. 
+Trivially .Fo ~ Eo. Assume Fi ~-- E~ and consider w ¢ Ft+t. If w ¢ Th~.(F~) then, 
+since Fi _'E~, w ~ ThL(E~) _ E~+x. Otherwise there is a default (u : Pi#~,..., Pip,)] 
+w) ¢ D where • ¢ Fi and ~ pl,..., -1/~m ~ F. Since F~ ~ E~ and E _ F we have 
+~ E~-and ~/~x, • •., "l/~m ~ E. Hence w ¢ E~+I. 
+Definition 2. Suppose A = (D, B0 is a closed default theory and E is an extension 
+for A. The set of generating defaults for E with respect to A is defined to be 
+GD(E,A) = {~:lvl/~t'~ "'' m~meDlo~¢E and 
+-~/~,...,-I~E}. 
+If D is any set of defaults (not necessarily closed) then 
+CONSEQUENTS(D) -- {w(x) [ ~(x): M'l(x)'" " "' M'm(X) D} 
+W(X) 
+~ 
+9 
+i.e., it is the set of consequents of the defaults of D. 
+The next theorem justifies the terminoMgy of 'generating default'. 
+Theorem 2.5. Suppose E is an extension for a closed default theory A -- (D, W). Then 
+E = ThL(W u CONSEQUENTS(GD(E, A))) 
+Proof. Using Theorem 2.1 we inductively prove that El ~- RHS for all i >I 0, 
+whence E = O Y=o Ei -~ RHS. Trivially Eo G RHS. Assume E~ c_ RHS and let 
+0 e E~+t. If 0 ~ Th~(E~) then since Th~(E~) G RHS, 0 ¢ RHS. Otherwise 0 is w where 
+(~ : M[~, . . ., Mflm[w) c D, ~ ¢ E~ and ~flt, . . ., ~= ¢ E. Since o~ ¢ E~, ~ ¢ E. 
+Hence (~" M/~,..., M/~=]w) ~ GD(E,A) so that 
+0 ¢ CONSEQUENTS(GD(E,A)) c_ RHS. 
+Next we prove RHS ~_ E. It is clearly sufficient to prove 
+W u CONSEQUENTS(GD(E,A)) __ E since The(E) = E. 
+Obviously W _c E so it is sufficient to prove CONSEQUENTS(GD(E,A)) c_ E. 
+If w ¢ CONSEQUENTS(GD(E,A)) then there is a default (u : M/~,..., M/$~[w) ¢ D 
+such that u ¢ E and -~/~1,..., ~/~, ~ E. Since, by Theorem 2.1, E = L)Y=0 E~ 
+then • ¢ E~ for some i which means w ¢ E~+~ c_ E. 
+We shaft later require the following result: 
+Theorem 2.6. Suppose that E is an extension for a closed default theory (D, W), 
+and that B c_ E. Then E is also ~ extension for (D,W u B).
+=== [p.13] ===
+A LOGIC FOR DEFAULT REASONING 
+93 
+Proof. By Theorem 2.1, E = dT=o Ei. Let Fo = W u B and for i >t 0 
+f 
+Fi+l = Thr(Fi) U w 
+"' 
+e D, 
+W 
+e F~ and "nil..,..., -'lflm ~ Eto 
+where 
+We prove that d?o=o Fi = E whence E will be an extension for (D,W u B). An 
+easy inductive proof establishes that E~ ~ F~ for all i >f 0 so that E ~_ [.J?°=o Fv 
+To prove d~'-o F~ ~ E we inductively prove that for each i I> 0 there is a k >1 0 
+such that F~ ~ E k. Now B c: E = dTO=o E~ so B =_ E k for some k. Since W ~ Ej 
+for all j t> 0, Fo = W w B ~ Ek. The inductive step is straightforward. 
+There are a number of close parallels between default logic and the non- 
+monotonic logic of McDermott and Doyle (1978). The necessary translation from 
+our logic to theirs is to map a default ~(x): i~1fll(x),..., Mflm(X)]W(X) into the 
+modalized formula 
+^ 
+^ ... ^ M/ m(X) 
+W(X). 
+(2.2) 
+Default theories thus map into a special class of non-monotonic theories, namely 
+those non-monotonic theories whose moralized formulae all have the form (2.2). 
+The approach of McDermott and Doyle is therefore far more general than ours, 
+since they admit arbitrary modalized formulae into their theory. However, "hen 
+relativized to formulae of the form (2.2) non-monotonic logic has many similarities 
+with default logic. The e~tensions of a default theory obviously correspond to the 
+fixed points of a non-monotonic theory. Both admit theories with no extensions 
+and fixed points respectively. Corollaries 2.2 and 2.3, and Theorem 2.4 have their 
+anologues in non-monotonic logic. 
+A major distinction between the two approaches arises from the different 
+ways that extensions and non-monotonic fixed points are defined. While both are 
+defined to be fixed points of certain operators, these operators differ significantly. 
+As a result there are default theories whose extensions differ from the fixea points 
+of the corresponding non-monotonic theories, even when the modalized dements 
+of the latter are ignored. As an example, consider the default theory A = ({.4 : MB] 
+B, C: MDID}, {A v C}). This has the unique extension Th({A v C}). The 
+corresponding non-monotonic theory is {A ^ t'lB ~ B, C ^ MD ~ D, A v C} 
+and this has a unique fixed point which contains B v D. In some instances there 
+are default theories which have an extension while the corresponding non- 
+monotonic theory has no fixed point. An exar~lple is given following the proof of 
+Theorem 3.1 below. 
+There are also some significant differences in emphasis between our two 
+approaches. We avoid modal logic or any modal concepts entirely and work only 
+within a first order framework. For us defaults function as meta-rules whose role 
+it is to further complete an underlying incomplete first order theory whereas for
+=== [p.14] ===
+94 
+R. REITER 
+McDermott and Doyle defaults are formulae of a modal logic. In addition they 
+introduce the notion of the theorems of a non-monotonic theory as the intersection 
+of all of the fixed points of that theory and they proceed to give a proof theory 
+for the sentential case. While we could analogously define the theorems of a default 
+theory as the intersection of its extensions, we choose not to pursue this point of 
+view. Instead our position is that the purpose of default reasoning is to determine 
+one consistent set of beliefs about a world, i.e. one extension, and to reason within 
+this extension until such time as the evidence at hand forces a revision of those 
+beliefs, in which case a switch to a new extension may be called for. This seems 
+also to be the point of view of the Truth Maintenance System of Doyle (1978). 
+Accordingly, the proof theory developed in the next few sections, is not for theorem- 
+hood but for 'believability'. By this we mean a proof theory which, given a wit r, 
+determines whether or not there is an extension containing/~, rather than determin- 
+ing whether fl is in all extensions. 
+In general the relationship between default and non-monotonic logics appears 
+to be complex. A few results relating the two will be contained in a forthcoming 
+paper (Reiter (1980)). 
+In an attempt to formalize the ideas in Sandewall (1972), Kramosil postulated a 
+logic which admits deduction rules with 'negative premises' (Kramosil (1975)). 
+In their intended interpretation these deduction rules correspond in a straight- 
+forward way to our closed defaults. Unfortunately, Kramosil's notion of theorem- 
+hood for his logic fails to capture a suitable intuitive interpretation of a default 
+rule with the result that he is lead to the conclusion that either the default rules are 
+irrelevant, or the resulting theory is meaningless. 
+3. Normal Default Theories 
+The fact that some default theories have no extension is not very encouraging for 
+a general theory of default reasoning. In view of this, it is natural to seek out 
+restricted default theories for which extensions can be proved to exist. Fortunately, 
+a very large and natural class of such default theories immediately presents itself. 
+To emphasize the common pattern which defines this class we review the examples 
+of Section 1. 
+The Closed World Default: 
+: M-]R(xI,..., 
+xn) 
+~R(x~,..., x,) 
+for each n-ary relation R of the data base. 
+Exceptions: 
+BIRD(x): MFLY(x) 
+FLY(x)
+=== [p.15] ===
+A LOGIC FOR DEFAULT REASONING 
+95 
+The Frame Default Schema: 
+R(x,s) : MR(x,f(x,s)) 
+R(x,f(x,s)) 
+for each relation R and state transition function f. 
+KRL's Palo Alto Default: 
+PERSON(x): Mhometown(x) = Palo Alto 
+hometown(x) = Palo Alto 
+The Hometown Example: 
+SPOUSE(x,y) A hometown(y)= z: Mhometown(x) = z 
+hometown(x) = z 
+EMPLOYER(x,y) A location(y,z) : Mhometown(x) = z 
+hometown(x) = z 
+All of these examples share a common pattern; they all have the form 
+~(x): Mw(x)]w(x). In fact I know of no naturally occurring default which cannot 
+be represented in this form. Accordingly, we propose to focus attention on such 
+defaults. A normal default is one which has the above form for wffs ~(x), w(x) ~ L. 
+Notice that, although in each of the examples the wff w(x) is a literal, we are 
+adopting a more general point of view in which w(x) is any wff, possibly involving 
+quantifiers, whose free variables are among x. Similarly, ~(x) is arbitrary. A default 
+theory (D,W) is normal iff every default of D is normal. 
+The rest of this section deals with properties of closed normal default theories, 
+i.e. theories all of whose defaults have the form ~'Mw/w for closed wffs ~ and w. 
+Although this seems not to be a very interesting class, (None of the examples of 
+Section 1 is dosed.) the results which are derived for it will all generalize in Section 
+7. 
+3.1. Closed normal default theories 
+In this section we derive a variety of results about closed normal default theories 
+which will provide some insight into their structure. The most important such 
+result is the following: 
+Theorem 3.1. Every closed normal default theory has an extension. 
+Proof. Let A = (D, W) be a closed normal default theory. If W is inconsistent then 
+by Corollary 2.2, A has an (inconsistent) extension. Hence assume W is consistent. 
+We construct an extension for A as follows: Let Eo = W. For i i> 0 let T~ be a 
+maximal set of closed wffs such that 
+(1) E~ u T~ is consistent, and 
+(2) If u ~ Ti then for some (~ : Mw]w) ~ D, u is w, where ~ e El.
+=== [p.16] ===
+96 
+~ 
+R.r.ErrEg 
+Define E~+I = ThL(E~) u Tl and E = U~'=o E~. We prove E is an extension for A 
+by proving that 
+Tj = 
+w ~ 
+cD, where0[¢Eiand-aw~E 
+w 
+and invoking Theorem 2.1. 
+Clearly T~ ~_ RHS. Assume T~ # RHS so there is a wff u ~ RHS-T~. By the 
+maximality of T~ we must have that E~ u T~ u {u} is inconsistent, i.e. ThL(E~) u 
+T, u {u} is inconsistent, i.e. Ei+l u {u} is inconsistent, and, since E~+~_ E, 
+E u {u} is inconsistent. Since clearly ThL(E) = E we must have -au ¢ E which 
+contradicts the fact that u ¢ RHS. 
+For the benefit of those familiar with the non-monotonic logic of McDermott 
+and Doyle (1978) it is worth pointing out that ~Paeorem 3.1 does not hold for their 
+logic in the sense that there are 'normal non-monotonic theories' with no fixed 
+point. The simplest counterexample I know of is the following: 
+• ,. Mw, 
+Mw2 
+"w2 
+: Nw3 }o 
+W t =D 0[ 2 
+W 2 ::30~ 3 
+W 3 =:3 011 
+~W 
+J 
+wt = -aw2 
+w2 = -aw3 
+w3 = -awl 
+This closed normal default theory has the unique extension Th(W). The correspond- 
+ing non-monotonic logic would represent the defaults by 
+~t A MWt ~ Wl 
+0C 2 A MW2 ~ W2 
+0[3 A IWlw3 ~ W3 
+and these together with W define a non-monotonic theory with no fixed point. 
+Theorem 3.2. (Semi-monotonicity). Suppose D and D' are sets of closed normal 
+defaults with D' ~_ D. Let E' be an extension for the closed normal default theory 
+A' = (D', W) and let A = (D, W). Then A has an extension E such that 
+(1) E' __ E and 
+(2) GD(E',A') G GD(E,A). 
+Proof. If W is inconsistent then by Corollaries 2.2 and 2.3 E' is inconsistent and 
+we can take E = E'. In this case the theorem trivially holds. Hence, assume W is 
+consistent, whence E' is consistent. 
+By Corollary 2.2, (D,E') has a consistent extension E. Trivially, E' _c E so if 
+we prove that E is an extension for A then the first half of the theorem will be 
+established. 
+Towa~'ds that end, define Fo = W and for i >f 0 
+{ 
+F~+I = ThL(F~) U w  :Mw 
+W 
+¢ D, where 0[ e F~ and "-1 w ~ E}
+=== [p.17] ===
+A LOGIC FOR DEFAULT REASONING 
+97 
+We shall prove that E = UT°=o Ft in which case by Theorem 2.1 E will be an 
+extension for A. First, however, we prove that E' ~ U?°=o Ft. Since E' is an extension 
+for (D',B0, then by Theorem 2.1, E' = 0~°=o E' where E~ = W and for i i> 0 
+E~+ ~ = ThL(E~) LI w ~ 
+~ D', where ~ ¢ E~ and -aw ~ E' . 
+w 
+We inductively prove that E[ ~ Ft for all i >1 0. Trivially, E~ ~ Fo. Assume 
+E" ~_ Ft and consider w ~ E'+t. If w e ThL(E[) then, since E[ ~_ F~, w,~. ThL(Fi) 
+Fi+t. Otherwise, for some (~" Mwlw) ~ D', o~ ~ E" and -aw 6 E'. Since D' __= D 
+and E" __ Ft then ~ ~ Ft and (~" Plwlw) ~ D. We prove -aw e E whence w ~ Fi+~. 
+For if -1 w e E, then since w e El+ ~ _ E' _~ E, E would be inconsistent, a contra- 
+diction. 
+Hence E' G U~°=o Fv We now prove E = U?°_o Fi. Since E is an extension for 
+(D,E') then by Theorem 2.1, E = (3~'=o El, where Eo = E' and for i ~> 0 
+E~+ ~ = Th,.(E3 O w ~ 
+s D, where e ~ E~ and "nw ~ E 
+• 
+If 
+We first inductively prove that for all i I> 0 Et -~ (37'-o Ft, whence E = U?°=o E~ 
+~7°--.o Fv We have already proved that Eo = E' G UT°_o F~. Assume E a G ~°_o F~ 
+and consider w ¢ Ej+I. If we ThL(E~) then since U?°_o Ft is dosed under Thz, 
+w e U?°-o/7/. Otherwise, for some (a: Mwlw) ~ D, ¢z ~ Ej and -aw 6 E. Hence 
+¢ UT°=o Ft so that ~ ¢ Fi for some i. Since -aw 6 E, w e Ft+l c U?o_o Fv 
+Hence E _~ UT°_o Ft. The opposite inclusion, (37°-o F~ _~ E has a simple induc- 
+tive proof based upon F~ ~_ Et for all i i> 0. 
+There remains to prove GD(E',A') =_. GD(E,A). To that end, suppose (a : Mwlw) 
+e GD(E',A'). Then (~ : Mw]w) ¢ D', cz ¢ E' and -lw 6 E'. Since D' _ D and 
+E' _ E, (~: Mwlw) e D and ~ e E. It remains only to prove that -1 w 6 E. Now by 
+Theorem 2.5, 
+E' --" ThL(W u CONSEQUENTS(GD(E',A'))). 
+Hence w ~ E'. Since E' ~_ E and since E is consistent, --1 w ~ E. 
+Theorem 3.2 is a surprising and fortuitous result, one which of course is not true 
+for arbitrary default theories. As we shall see in Section 4, it makes possible a 
+proof theory which is local with respect to the defaults entering into the proof. 
+To see what is meant by this, consider the usual first order proof theory. If A is 
+some set of first order axioms, and if we determine a proof of some wff T using 
+only a subset A' of A then we know that T is a tt.eorem of the first order theory A. 
+This of course is nothing else but a restatement of the monotonicity property of 
+first order logic. It is precisely this property which admits a local proof theory 
+for first order logic, local in the sense that one need not necessarily compute on all 
+of the axioms in A to determine a proof of T. 
+Now default theories (D,W) in general are non-monotonic in both D and W, 
+i.e. by augmenting either D or W we can so change the extensions of (D, W) that
+=== [p.18] ===
+98 
+R. REITEIg 
+none of these is a subset of any extension of the augmented theory. This means 
+that any proof procedure for general default theories must necessarily compute on 
+all of the defaults of D and all of the wffs of Wmno locality is possible. Indeed, 
+the sentential non-monotonic proof theory of McDermott and Doyle (1978) has 
+precisely this global characteristic; every axiom must be taken into account before 
+an attempted proof can succeed. 
+What Theorem 3.2 tells us is that for closed normal default theories there is a 
+proof procedure which is local with respect to the defaults so that proofs can be 
+constructed which ignore some of the defaults. Indeed, the proof procedure of 
+Section 4 and its refinement in Section 5 have just this property. In view of the 
+large number of defaults which are likely to be in force in the representation of any 
+interesting domain of knowledge this is a very real computational advantage. 
+Of course this kind of locality cannot be expected with respect to W for otherwise 
+closed normal default theories would be monotonic. And in fact the proof theory 
+of Section 4 requires a satisfiability test involving all of W, which is precisely the 
+kind of global property on W one would expect. 
+The following theorem tells us that one can attempt to simultaneously hold 
+beliefs in two distinct extensions only at the risk of inconsistency. 
+Theorem 3.3 (Orthogonality of Extensions). If a closed normal default theory 
+( D, W) has distinct extensions E and F then E u F is inconsistent. 
+Proof. By Theorem 2.1, E = U~=o E~ and F = U~=o Fi where Eo = W and for 
+i>~0 
+{i ,"w 
+} 
+Ei+ t = ThL(Ei) U w ~ 
+¢ D, where u e E~ and -~w ~ E 
+t¢ 
+Similarly for the Ft. 
+Since E and F are distinct, there is a least integer i such that E~+x ~ F~+~ in 
+which case E~ = F~. Hence for some (~: Hw]w) ~ D it is the case that u ¢ E~ = F~, 
+-lw ~ E and w ¢ E~+~ but w ¢ F~+~. But if u ¢ F~ and w ~ F~+x then -lw e F. Hence 
+w e E and -1 w e F so E u F is inconsistent. 
+Corollary 3A. Suppose A = (D,W) is a closed normal default theory such that 
+W • CONSEQUENTS(D) is consistent. Then A has a unique extension. 
+Proof. Suppose on the contrary that A has two distinct extensions El and E2. 
+By Theorem 2.5, 
+E~ = ThAW u CONSEQUENTS(GD(E~,A))) for i = 1,2. 
+By Theorem 3.3, Ex u E2 is inconsistent. Now 
+E~ ~_ ThAW u CONSEQUENTS(D)) 
+for i = 1,2 
+since GD(E~,A) ~_ D. Hence 
+Et u E2 ~ ThL(W u CONSEQUENTS(D))
+=== [p.19] ===
+A LOGIC FOR DEFAULT REASONING 
+99 
+But W u CONSEQUENTS(D) is consistent, by hypothesis, and this contradicts 
+the inconsistency of E~ u E2. 
+Theorem 3.5. Suppose A = (D,W) is a closed normal default theory, and that 
+D' ~ D. Suppose further that E~ and E~ are distinct extensions of (D',W). Then A 
+has distinct extensions E1 and E2 such that E~ ~_ E1 and E~ ~_ E2. 
+Remark. This theorem has the interesting interpretation that the addition of new 
+closed normal defaults to a closed normal default theory (D',W) can never lead 
+to a default theory (D,W) with fewer extensions than the original. The number of 
+extensions of a closed normal default theory is monotone non-decreasing under the 
+addition of closed normal defaults. 
+Proof. By Theorem 3.2 there are extensions E1 and E2 for A such that El ~- Ex 
+and E~ ~_ E2. Suppose that El = E2. Then El u E~ _ El. But by Theorem 3.3, 
+E~ u E~ is inconsistent. Hence El is inconsistent so by Corollary. 2.2 W is 
+inconsistent. But this contradicts the fact that (D', W) has distinct extensions El 
+and E2, by Corollary 2.3. 
+4. Proof Theory: Closed Normal Default Theories 
+In this section we provide a proof theory for closed normal default theories. By a 
+proof theory here we mean a method for answering the question "Given fl, can fl 
+be believed 7". We interpret this as the following formal task: 
+Given a closed normal default theory A and a closed wff fl ~ L, determine 
+whether A has an extension E such that fl¢ E. 
+Having devised such a proof theory we shall discover that no procedure exists 
+which, for every A and fl such that fl is a legitimate belief with respect to A, will 
+determine a proof of fl, i.e. in general beliefs are not recursively enumerable. 
+4.1. Default proofs 
+We shall require the following notation: If D is a finite set of closed normal 
+defaults, define PREREQUISITES(D) = A ~ where the conjunction is taken over 
+all wits • such that (a : Mw/w) ~ D. Thus PREREQUISITES(D) is the conjunction 
+of all of the prerequisites of the defaults of D. 
+Definition 3. Let A = (D,W) be a closed normal default theory, and/~ e L a closed 
+wff. A finite sequence Do,..., Dk of finite subsets of D is a default proof of/3 with 
+respect to A iff 
+P1. 
+W u CONSEQUENTS(Do) F 
+P2. 
+For 1 ~< i~< k 
+W u CONSEQUENTS(D~) k PREREQUISITES(D~_I). 
+P3. 
+Dk = 0 
+k 
+P4. 
+W u U COHSEQUENTS(Dj) is satisfiable.
+=== [p.20] ===
+100 
+R. Sm~ 
+Example 4.1. A = (D, W) has defaults 
+E v F:H(A A F) 
+A:MB 
+61 = 
+A A F 
+6z = 
+B 
+A ^ E:MC 
+:M'aE 
+63= 
+64= 
+C 
+-aE 
+W= {C~ D, A A B~E, Ev D,D~F} 
+Then {63}, {61,6z}, {61}, { } is a default proof of D with respect to A. So is 
+{64}, { }. Notice that {6z,64}, {61,62}, { } is not a default proof of D A ~E, 
+for, while it satisfies conditions P1-P3, it fails to satisfy P4. 
+The notion of a default proof does not actually provide a proof procedure in 
+the conventional sense of that term. For it gives no method for determining the 
+D~, not does it specify a first order proof procedure for verifying P1 or P2. Nor 
+for that matter does it specify how to verify condition P4. In fact most readers 
+will have already balked at P4 given that the first order satisfiable wffs are not 
+recursively enumerable. The best way to view this definition is as a bare bones set 
+of conditions on a sequence of default sets Do,..., Dk. As we shall see, whenever 
+these conditions are satisfied the wff # can be believed. Conversely, as we shall 
+also see, whenever # can be believed then some sequence of defaults will satisfy 
+these conditions. Once this completeness result has been establisb.-.d, we will 
+proceed to fill in some of the obvious computational gaps in this computationally 
+spare notion of a default proof. 
+Accordingly, we now proceed to prove the completeness of default proofs for 
+dosed normal default theories. 
+Lemma 4.1. Suppose (D,W) is a closed normal default theory with (~ : My[v) e D. 
+If W F ~ and W u {v} is consistent, then any extension for the default theory 
+(D, W u {v}) is also an extension for (D,W). 
+Proof. Suppose (D,W u {v}) has an extension E. By Theorem 2.1, E = U~°ffio E~, 
+where Eo = W u {v} and for i t> 0 
+{  :Mw 
+E} 
+E~+ 1 = Th,(Ei) U 
+w 
+~ 
+~ D, where ~ ~ Ei and -a w 
+W 
+Define Fo = W and for i >I 0 
+{ 
+~:Mw 
+E} 
+Fi+ 1 = ThL(Fi) U w ~ 
+~ D, where ~ e Ft and -aw ~ 
+. 
+W 
+We prove E = 0~°:o Fi whence by Theorem 2.1 E is an extension for (D,W). 
+Clearly, F~ _ E~ for all i >i 0, so that Ur:o Fi ~_ [.)~°:0 Ei = E. We inductively 
+prove that for all i, Et ~- Fi+2 whence Ur:o Eg _~ Ur:o Ft.
+=== [p.21] ===
+A LOGIC FOR DEFAULT REASONING 
+101 
+To prove Eo--F2 it is obviously sufficient to prove v e F2. Since W k fl, 
+//e Thr.(Fo) c F1. Since W u {v} is consistent, and since E is an extension for 
+(D, W u {v}), then by Corollary 2.2, E is consistent. Since v e E, --aV ~ E. Hence 
+fieF1, -a v q~ E so v e F2. 
+For the inductive step, assume E~ __q Fi+2 and consider w e Ei+t. If w e Thr~(E~) 
+then w eThL(Fi+2)_ Fi+a. Otherwise for some (c~: t4w/w)e D, ~xeEf and 
+"1 w ~ E so that ~ e ~+2 and "-1 w ¢ E whence w ~ Fi+a. 
+Corollary 4.2. Suppose (D,W) is a closed normal default theory, and that 
+D' ~_ D such that W u CONSEQUENTS(D') is consistent and such that W k 
+PREREQUISITES(D'). Then any extension for the default theory (D, Wu 
+CONSEQUENTS(D')) is also an extension for (D, W). 
+The next theorem provides one half of the completeness result we seek for default 
+proofs. 
+Theorem 4.3. Let A = (D, W) be a closed normal default theory, and let [3 ~ L be a 
+closed wff. If fl has a default proof Do,..., Dk with respect to A, then A has an 
+extension E such that fl e E. 
+Proof. Consider the closed normal default theory A' = (Uf=o D~,W). We prove 
+that A' has an extension E' such that fle E'. Since U~=o D~ ~_ D, then by semi- 
+monotonicity (Theorem 3.2) we will be assured that A has an extension E such 
+that E' ~_ E, from which the theorem will then follow. 
+Now by property P2 of default proofs W w CONSEQUENTS(Dk) V PRE- 
+REQUISITES(Dk_1) and since D R --" O, W [" PREREQUISITES(DR_l). Also, 
+from property P4 of default proofs it follows that W u CONSEQUENTS(Dk_I) 
+is consistent. Hence by Corollary 4.2, any extension for A~ = (Uk=o DI, W u 
+CONSEQUENTS(Dk_t)) is also an extension for A', and since A't is a closed 
+normal default theory it has such an extension, by Fheorem 3.1. 
+Again by property P2 of default proofs W u CONSEQUENTS(Dk_I)I- 
+PREREQUISITES(Dk_2) and by property P4 W u CONSEQUENTS(.gk_I) u 
+CONSEQUENTS(Dk_2) is consistent so again by Corollary 4.2: 
+,) 
+A~ = 
+Di, W O CONSEQUENTS(Dk_t) O CONSEQUENTS(Dk_2 
+i 
+has an extension which is also an extension for A~ and hence which is also an 
+extension for A'. 
+We can continue in this way, finally arriving at a default theory 
+A~, = 
+Da W U u CONSEQUENTS(D~_ 
+, 
+1--0 
+i--1 
+which has an extension E' which is also an extension for A'. Since clearly W w 
+CONSEQUENTS(Do) _~ E' and 
+since 
+W w CONSEQUENTS(Do) k fl, then 
+/~ E'.
+=== [p.22] ===
+102 
+R. REIT 
+Suppose that p has a default proof Pp = Do,..., Dk. Then the default support 
+of this proof is defined to be DS(Pp) = ~t_. o D~. The default support of a proof 
+is simply the set of all default rules which are invoked in that proof. Notice that 
+condition P4 in the definition of a default proof Pp is the same as the requirement 
+that W u CONSEQUENTS(DS(Pp)) be satisfiable. 
+Lemma 4.4. Suppose that A = (D, W) is a closed normal default theory, and that 
+[3', [3" e L are closed wffs. Then [3' ^ [3" has a default proof with respect to A, iff [3' 
+and [3" have default proofs Pp, and Pp. respectively with respect to A, such that 
+W u CONSEQUENTS(DS(Pp.) u DS(Pp,.)) is satisfiable. 
+Proof (=~). Suppose P is a default proof of/l' A /l" with respect to A. Then trivially 
+P is also a default proof of/~' and of/~" and the result immediately follows. 
+(~). Assume Pp. = D[,..., 
+Dm and PB" = D~,..., 
+D~' and suppose n >I m, 
+Then dearly 
+P = D[ U D~,..., D~, U D~,, D~,+,,..., D~,' 
+is a default proof of ~' A ~" with respect to A. 
+Corollary 4.5. Suppose that A -- (D, W) is a closed normal default theory, and that 
+01, . . ., 0, have default proofs Po,,. -.,Po. respectively with respect to A. Suppose 
+further that W u CONSEQUENTS (~f-i DS(Pe,)) is satisfiable. Then 0~ ^ ... 
+^ O, has a default proofP with respect to A, such that DS(P) - ~[-t DS(P0,). 
+Proof. Notice that, in the proof of the ~ half of Lemma 4.4, the default proof P 
+of/l' A p" has the property that DS(P)= DS(Pp,)u DS(Pp,,). The corollary 
+easily follows from this. 
+Lemma 4.6. Suppose ~ has a default proof P~ with respect to a closed normal default 
+theory A = (D,W). Suppose further that the wff ~ = p is valid. Then P~ is also a 
+default proof of p with respect to A. 
+Proof. Suppose P~ = Do,..., Dk. Then W u CONSEQUENTS(Do) !- ~. Since 
+=/I is valid, I-u =//so trivially W u CONSEQUENTS(Do)I-u = p. Hence 
+by modus ponens, W u CONSEQUENTS(Do) I-/l so that P~ is also a default 
+proof of p. 
+The next theorem provides the remaining half of the completeness result for 
+default proofs. 
+Theorem 4.7. Suppose that E is an extension for a consistent closed normal default 
+theory A = (D, W), and that [$ e E. Then/$ has a default proof with respect to A. 
+Proof. By Theorem 2.1, E = ~°__ o Ei, where Eo = W and for i i> 0. 
+{I 
+} 
+E/+ t = ThL(E~) U w 
+e D, where ~ ¢ E~ and -aw ~ E . 
+W
+=== [p.23] ===
+A LOGIC FOR DEFAULT REASONING 
+103 
+Since fl ~ E, fl e E~ for some i. We shall inductively prove the following result, for 
+all i ~> O: 
+If 0 e E~, then there is a default proof Po of 0 with respect to A such that 
+DS(Po) ~_ GD(E,A). 
+The case i = 0 is trivial; if 0 e Eo then since W is consistent (Corollary 2.2), 
+Ps = 0 is a definite proof of 0 with DS(Ps) = 0. 
+Now assume the induction hypothesis for all wffs of E/and consider 0 e E/+~. 
+Case 1.0 e Th~.(E i) 
+Then there exist finitely many wffs 0~,..., 0,~ E~ such that {0~,..., 0,} I-0. 
+By the induction hypothesis, each 0j has a default proof Poj such that DS(Poj) ~_ 
+GD(E,A). Hence ~_ ~ DS(Poj) ~ GD(E,A). By Theorem 2.5 
+E = ThL(W u CONSEQUENTS(GD(E, A))) 
+and since E is consistent so is W u CONSEQUENTS(GD(E,A)). Hence, so is 
+W U CONSEQUENTS(~.= DS(Poj)) 
+so by Corollary 4.5, 0x ^ • • • ^ 0, has a default proof P such that 
+r 
+DS(P) - u DS(Pej) ~- GD(E, A). 
+(4.1) 
+J=l 
+Since {0~, ..., 0,} l- 0, 0~ ^ ... ^ 0, = 0 is valid. Hence by Lemma 4.6 P is also 
+a default proof of 0, and by (4.0 DS(P) ~_ GD(E,A). 
+Case 2. 0 is w where (~ : Hw/w) e D, o~ e E~ and "-i w ~ E. 
+By the induction hypothesis, • has a default proofP~ = Do,..., Dkand DS(P,) _~ 
+GD(E,A). Consider the sequence P~- {o~:t4w]w}, Do,..., Dk. This clearly 
+satisfies conditions PI-P3 of the definition of a default proof of w. Now (~ : Flw/w) 
+e GD(E,A), and since DS(Pffi)_ GD(E,A), then DS(Pw)~ GD(E,A). Moreover, 
+by the same argument as in Case I, we have that W u CONSEQUENTS(DS(Pw)) 
+is consistent. Hence Pw satisfies property P4 so that P~ is a default proof of w. 
+By combining Theorems 4.3 and 4.7 we obtain the following completeness 
+result: 
+Theorem 4.8. Let fl¢ L be a closed wff. A consistent closed normal default theory A 
+has an extension E such that fl¢ E iff fl has a default proof with respect to A. 
+While this completeness result is gratifying we still have no computationally 
+reasonable way of deriving default proofs. We shall defer this question to Section 5. 
+In the interim we show that in a very real sense, default proofs cannot always be 
+derived, even when they exist.
+=== [p.24] ===
+104 
+R. REITER 
+4.2. The extension membership problem 
+It is known that there is no decision procedure for the vafidity problem of first 
+order logic (Church (1936)). What this amounts to is that there is no algorithm 
+which, when presented with a closed first order wig, will determine whether or not 
+~hat wff is valid. The validity problem is, however, semidecidable, i.e. there is a 
+procedure (namely first order proof theory) which will confirm the validity of a 
+closed wig (by finding a proof for it) if that wff is valid, but which fails to terminate 
+on some non-valid wffs. Another way of expressing this state of affairs is by saying 
+that the closed valid wffs are recursively enumerable, but that there is no recursive 
+enumeration of the closed non-valid wffs. From this it follow~; that the set of 
+closed satisfiable wffs is not recursively enumerable. 
+Now the definition of a default proof appeals, in condition P4, to a test for the 
+satisfiability of some set of first order wffs. In view of the facl ~. that the closed 
+satisfiable first order wffs are not recursively enumerable, this suggests that there 
+may not be a recursive enumeration of the set of beliefs of an arbitrary closed 
+normal default theory, i.e. that the extension membership problem is not even 
+semi-decidable. By the extension membership problem we mean th~ following: 
+Given a closed default theory A and a closed wffp ~ L, is tTaere an extension 
+for A which contains fl? 
+We now confirm this intuition that the extension membership prbblem for closed 
+normal default theories is not semi-decidable, or what amounts to the same thing, 
+that the union of the extensions of an arbitrary closed normal default theory is not 
+recursively enumerable. 
+Given a default theory A, let B(A) = u E where the union is taken over all 
+extensions E of A. Let wl, w2,..., be a recursive enumeration of the closed wits of 
+L. For i = 1, 2,..., let At be the closed normal default theory ({: Hwdw~}, 0) so 
+that As has the single default rule : Hwi/w~, and no first order axioms. Then clearly 
+As has a unique extension Ei. Es and therefore B(A~) is empty if w~ is unsatisfiable, 
+and is ThL({w~} ) if w~ is satisfiable. Hence ~F-1 E~ = ~?°_ 1 B(A~) is the set of 
+closed satisfiable wffs of L. 
+We shall argue that there is no recursive enumeration of B(A) for arbitrary 
+closed normal default theories A. For if there were, then there is a recursive 
+function f(A,i), defined on closed normal default theories A and nonnegative 
+integers i, such that range(f(A,-))= B(A). In particular, range(f(Aj,.))= B(Aj). 
+Then it is known (see e.g. Rogers 1967)) that there is a recursive function g(i) 
+defined on the nonnegative integers i such that range(g)= UT=I B(Aj), i.e. 
+UTffi i B(Aj), the set of closed satisfiable wffs of L, is recursively enumerable, a 
+contradiction. 
+Theorem 4.9. The extension membership problem for closed normal default theories 
+is not semi-decidable.
+=== [p.25] ===
+A LOGIC FOR DEFAULT REASONING 
+105 
+This result assures us that the appeal to satisfiability in condition P4 of the 
+definition of a default proof is not merely an accidental feature of our particular 
+brand of proof theory. Rather, any proof theory whatever for closed normal 
+default theories must somehow appeal to some inherently non-semi-decidable 
+process. This extremely pessimistic result forces the conclusion that any computa- 
+tional treatment of defaults must necessarily have an heuristic component and will, 
+on occasion, lead to mistaken beliefs. Given the faulty nature of human common 
+sense reasoning, this is perhaps the best one could hope for in any event. 
+Of course there are decidable subcases of the extension membership problem. 
+It is not difficult to see from the definition of a default proof that provided 
+W U ~ 
+cD 
+U w ~ e D  
+W 
+10 
+belongs to a decision class for first order provability then the extension membership 
+problem will be decidable. In particular then, this problem is decidable for the 
+sentential case, i.e. when each ~ and w and each formula of W is a sentential wff. 
+It is also decidable in the monadic case, i.e. when each of these is a formula of the 
+monadic predicate calculus. 
+It is also of some interest to contrast Theorem 4.9 with the corresponding result 
+for first order theories. It is well known that the set of theorems of any first order 
+theory is recursively enumerable. If the elements of the extensions of a default 
+theory are viewed as the 'theorems' of that theory, then Theorem 4.9 tells us that 
+the 'theorems' of an arbitrary default theory are not recursively enumerable. 
+This then provides another major distinction between default logic and first order 
+logic, in addition to that of the non-monotonicity of default logic. 
+5. Top Down Default Proofs: Interface with a Resolution Theorem 
+Prover 
+The definition of a default proof naturally admits both top down and bottom up 
+search procedures. The top down approach can be loosely described as follows: 
+given/~, determine a subset Do of the defaults such that W u CONSEQUENTS 
+(Do) F #. For i I> 1, if D~_I has been determined, then determine a subset D~ of 
+the defaults such that 
+W u CONSEQUENTS(D~) i- PREREQUISITES(D~_I). 
+k-1 
+If, for some k, W I- PREREQUISITES(Dk_I) and if W Vi=o CONSEQUENTS 
+(D~) is satisfiable, then a proof of/1 has been found. 
+The bottom up approach is as follows: given ~, determine whether W I-/~. If so, 
+and if W is satisfiable return success. Otherwise, determine a subset Do of the 
+defaults such that W I-PREREQUISITES(Do). If W u CONSEQUENTS(Do) 
+I- p and if W u CONSEQUENTS(Do) is satisfiable, return success. Otherwise, 
+for i >i 1, assuming that D~_I has been determined, determine a subset D~ of the
+=== [p.26] ===
+106 
+R. REITER 
+i-1 
+defaults such that W u Uj=o CONSEQUENTS(Dj) F PREREQUISITES(De). 
+If W u U~=o CONSEQUENTS(Dj) I- p and if W u U}=o CONSEQUEHTS(Dj) 
+is satisfiable, return success. 4 
+The bottom up search procedure does not appear to be computationally very 
+promising. We shall focus instead on the top down approach. At first blush this 
+does not look too promising either. How, for exampb, are we to determine a Do 
+such that W o COHSEQUENTS(Do)I- p? Are we to simply randomly select 
+subsets Do of D and try each in turn ? The solution ties with the appropriate choice 
+of a first order proof procedure. For if a top down theorem prover is used, then the 
+goal wff//can help to select out a suitable subset Do of D. 
+Ro 
+Co 
+, 
+,- 
+R2 
+R# 
+FIG. 1. A linear resolution proof. 
+Linear resolution (Loveland (1970), Luckham (1970)) provides just such a top 
+down theorem prover. A linear resolution proof of ~ from some set of clauses S 
+has the form of Fig. 1, where 
+(1) The top clause, Ro, is a clause of =lp. 
+(2) For 1 ~< i ~< n, R~ is a resolvent of Rt-x and C~_x. 
+(3) For 0 g i ~< n- 1, Ce ¢ S or C~ is a clause of -lp or Cz is Rj for some j < i. 
+(4) Rn - r-l, the empty clause. 
+Linear resolution is known to be complete. It is also a suitable generalization of 
+conventional incomplete back-chaining (subgoaling) proof procedures which 
+reason backward from a goal p until a suitable set of premises is reached. 
+Now the idea is to use linear resolution to allow the goal wff p to help select out 
+a suitable subset Do of D. To do this requires an appropriate representation of 
+a closed normal default theory (D, IV). Specifically, assume with no loss of generality 
+that W is a set of clauses. In addition we shall require a special clausal form of 
+the consequents of each default of D. If 6 -- (~: HwJw) e D, suppose C1,..., Cr 
+4 This bottom up approach is not immediately apparent from the definition of a default proof. 
+It can be shown to follow from that definition. We omit the details.
+=== [p.27] ===
+A LOGIC FOR DEFAULT REASONING 
+107 
+are all of the clauses of w. Then for 1 ~< i ~< r the ordered pair (C~,{6}) is called a 
+consequent clause of the default 6. In effect, a consequent clause of 6 will function 
+as an ordinary clause of w indexed by the name of the default giving rise to that 
+clause. 
+Example 5.1. Consider a closed normal default theory A = (D, IV) with defaults 
+: MA 
+(Ex)(Ey)B(x, y): MC 
+61 = 
+62 = 
+A 
+C 
+D v A: ME 
+C ^ E: M(Ex)(y)F(x, y) ^ G(x) 
+63 = 
+64 = 
+E 
+(Ex)(y)F(x, y) ^ G(x) 
+Suppose the clausal form of W is 
+C1 = B(x,f(x)) 
+C2 = ~C v D v A 
+C3 = ~C v ~E v -~A. 
+The consequent clauses are: 
+(A,{6x}) 
+(F(a,y),{64}), (G(a),{6~}); 
+a is a Skolem constant introduced in forming the clausal form of the consequent 
+of 64. 
+If A = (D,W) is a closed normal default theory, where W is a set of (ordinary) 
+clauses, define 
+CLAUSES(A) = 
+{(C,{6}) 1 6 e D and (C,{6}) is a consequent clause of 6} 
+u {(c,(}) I c 
+w}. 
+In general, we shall refer to an ordered pair (C,D) where C is a clause and D a 
+set of defaults as an indexed clause; C will be said to be indexed by D. Thus the 
+elements of CLAUSES(A) are all indexed clauses, where each clause is indexed by 
+the default which gave rise to it. In what follows, we shall usually not distinguish 
+between (C,{ 
+}) i.e. a clause C indexed by the empty set of defauRs, and C itself. 
+Now we propose to invoke linear resolution as the first order theorem proving 
+component of a default theorem prover. The representation of A to be used by 
+the linear resolution theorem prover will be CLAUSES(A), i.e. ~ set of indexed 
+clauses. Hence the notion of a resolvent of two indexed clauses must be defined. 
+If (C1,DI) and (C2,Dz) are indexed clauses, and if R is a usual resolvent of C1 and 
+C2, then (R, DI u D2) is a resolvent of the indexed clauses (C1,DI) and (C2,D2). 
+Then a linear resolution proof of a wff//from some set $ of indexed clauses is the 
+same as that using ordinary (non-indexed clauses) except that all of the clauses in 
+the proof are indexed, i.e. it has the form of Fig. 1, where 
+(1) The top clause, Ro, is a clause of -1 p. 
+(2) For 1 ~< i g n, R(_I and C(_~ are indexed clauses and R( is a resolvent of 
+these indexed clauses.
+=== [p.28] ===
+108 
+R. RErrEg 
+(3) For 0 ~< i ~< n- 1, C~ e S or C~ is a clause of -1 fl or C~ is Rj for some j < i. 
+(4) Rn = (F'I,D) for some set of defaults D. 
+We shall say that such a linear resolution proof of fl returns D. 
+Now recaU the original problem: Given fl and a closed normal default theory 
+A = (D,W) how are we to determine a Do such that W u CONSEQUENTS(Do) 
+l- fl? Suppose we can determine a linear resolution proof of ,q from the set of 
+indexed clauses CLAUSES(A), and that this proof returns Do. Then it is im- 
+mediately apparent that W u CONSEQUENTS(Do) I-/L 
+Now having determined Do, there will in general be the problem of determining 
+Dx such that W u CONSEQUENTS(D,) I- PREREQUISITES(Do). Again, we 
+can proceed in a top down fashion by determining a linear resolution proof of 
+PREREQUISITES(Do) from CLAUSES(A) and this proof will return the required 
+D1. And so on. 
+These considerations motivate the following definition: 
+Definition 4. A top down default proof of fl with respect to a dosed normal default 
+theory A = (D, W) is a sequence of linear resolution proofs Lo,..., Lk such that 
+(1) Lo it a linear resolution proof of p from CLAUSES(A). 
+(2) For 0 ~< i <~ k, Li returns Di. 
+(3) For 1 <~ i ~< k, L~ is a linear resolution proof of PREREQUISITES(Di_,) 
+from CLAUSES (A). 
+(4) Dk = 0. 
+(5) W u U~-o CONSEQUENTS(DI) is satisfiable. 
+Example 5.2. This is the closed normal default theory of Example 4.1, which has 
+two extensions given by 
+Ex = Th(W u {A A F, B, C}) 
+= Th(Wu {A ^ F, -iE}), 
+both of which contain D. Figure 2(a) gives a top down default proof of D as an 
+element of Ez, and Fig. 2(b) is a proof of D as an element of Ex. 
+Example 5.3. This is the default theory of Example 5.1. It has three extensions: 
+E, = Th(W u {A,C}), 
+E2 = Th(W u {A,E}), 
+E3 = Th(Wu {C,E,(Ex)(y)F(x,y) ^ G(x)}). 
+Clearly, (Ex)G(x)e Ea. Figure 3(a) represents a top down default proof of 
+(Ex)G(x). This does indeed represent a default proof since 62, 5a and 6a are all of 
+the defaults which enter into the proof and W u CONSEQUENTS({62,6a,64}) 
+= W u {C,E,(Ex)(y)F(x,y) ^ G(x)} is satisfiable.
+=== [p.29] ===
+A LOGIC FOR DEFAULT REASONING 
+109 
+(a) 
+~D 
+EvD 
+E 
+(TE, {~,,}) 
+L...J / 
+(D, {~,,}) 
+D 
+a 
+~D 
+-7C v D 
+~c 
+(c, {:,h }) 
+(D, {,h}) 
+-hA v ~E 
+~A v ~Bv 
+E 
+" 
+~A 
+v ~B 
+(B, {62}) 
+(-~A, 
+(A, {~}) 
+(D, {5~, ~}) 
+"3A v -3E b 
+E v D 
+"7A v D 
+~Dv 
+F 
+-1A v F 
+-aA v -aF 
+"TA 
+(A, {5,}) 
+(D, {,~, }) 
+~E 
+EvD 
+L/ 
+D 
+~DvF 
+F 
+-11;" 
+. 
+D 
+FIG. 2. 
+a Since the prerequisite of 84 is T, the identically true clause, its negation is D, which completes 
+the proof. 
+bThis is one of the clauses of the negation of PREREQUISITES ({81, 8z}) -- A A (E V F). 
+¢ This is the other clause of the negation of PREREQUISITES ({81, 8z }).
+=== [p.30] ===
+II0 
+R. REITER 
+(a) 
+(r~, {6,}) 
+(b) 
+-~c v -~E 
+..(E, {~}) 
+("1C, {63} ) 
+~. (C, {62} ) 
+(O, {6~, 63}) 
+~B(x,y) v mDa 
+"aC v D v A 
+"IB(x, y) v "-ICv A 
+~'lB(x, y) V "-IA b 
+~B(x, y) v ~
+~
+(
+c
+,
+ 
+{a2}) 
+(-1 B(x, y) v -
+a
+~
+ 
+B(x, f(x)) 
+(r~, {,5~}) 
+(~A, {,~,}) 
+(,t, {,~,}) 
+(n, {~,, ~,}) 
+-1B(x, y) 
+rq 
+B(x,f(x)) 
+FIG. 3. 
+a This is one of the clauses of the negation of PREREQUISITES({82, 83 }) -- (Ex)(Ey)B(x, y) A 
+(or ,4). 
+b This is the other clause of the negation of PREREQUISITES({82, 8s }). 
+Notice that no extension contains A ^ (Ex)G(x). To see how an attempted top 
+down default proof of this wff gets blocked, consider Fig. 3(b), which is the initial 
+linear refutation of -1A v -1G(x). Sin~ PREREQUISITES({61,64})- C ^ E 
+we would next construct a linear refutation of -1C v -1E. We have already done 
+this in Fig. 3(a). The refutation there derives ([2],{62,63}) as its terminal node. 
+There is no need to proceed further since W u CONSEQUENTS({61,64,6z,63}) 
+is unsatisfiable, so the attempted top dowa default proof of A ^ (Ex)G(x) fails. 
+It is not difficult to show, using the completeness of linear resolution for first 
+order logic, that ~ has a default prc~f iff there is a top down default proof of p.
+=== [p.31] ===
+A LOGIC FOR DEFAULT REASONING 
+111 
+This result, when coupled with the completeness of default proofs (Theorem 4.8) 
+yields the following- 
+Theorem 5ol (Completeness of Top Down Default Proofs). Let A = (D,W) be a 
+consistent closed normal default theory and let fl~ L be a closed wff. Then A has an 
+extension containing fl iff there is a top down default proof of fl with respect to A. 
+This result is of some computational importance. Top down default proofs 
+provide a coherent method for determining the necessary defaults to invoke in 
+establishing a wff ft. Moreover, at each stage the current goal (i.e. fl or PRE- 
+REQUISITES(D~_I)) provides guidance in a top down fashion in the selection of 
+the defaults ne~ssary for establishing that goal. Another important feature of 
+top down default proofs is that they can be implemented in such a way as to 
+favour 'defitult free' proofs of r, i.e. the linear proof Lo can seek first to establish 
+fl using W alone, only introducing consequent clauses when this fails. Such wffs r, 
+free of default assumptions, have a much firmer status than those which rest 
+upon one or more default assumptions. For example they have a monotonic 
+character in the sense that they need never be retracted under the addition of new 
+first order facts about the world. And they need never take part in the process of 
+belief revision which is required whenever inconsistencies arise. (See Section 6 for 
+a discussion of this issue).) Finally, top down default proofs may invoke any of a 
+variety of complete linear resolution strategies, among which some quite restrictive 
+methods are known e.g. C-ordered linear resolution (Reiter (1971)) and SL 
+resolution (Kowalski and Kuehner (1971)). 
+It is of some interest to reflect upon the nature of top down default proofs in 
+view of the discussion following the proof of Theorem 3.2. For one can see quite 
+dearly how it is that the top down linear resolution proofs L~ select out a subset of 
+all of the defaults. Any default not selected out in this way is irrelevant to the 
+proof and need not be further considered. This is precisely the property of locality 
+with respect to the defaults referred to in that discussion. We also pointed out there 
+that no such locality principle can be expected with respect to W. This expectation 
+is realized in the final defining property of top down default proofs, namely that 
+W u ~=o CONSEQUENTS(Di) be satisfiable, for satisfiability is dearly a 
+global property. 
+6. Closed Normal Default Theories and the Revision of Beliefs 
+The point of view of this section is that the role of a default reasoning program is 
+to successively derive new beliefs in response to some task at hand. Now an 
+extension specifies one coherent view of an incompletely specified world; moreover 
+many such coherent views are possible, one for each extension of the default 
+theory. We are free to choose any one of these extensions as our current view of 
+the world; the particular choice made will usually be conditioned by some overall 
+objective, e.g. some task to be performed, some decision to be made, etc.
+=== [p.32] ===
+112 
+R. REITER 
+From this perspective, the default reasoner cannot entertain just any set of 
+derived beliefs; they must all belong to some common extension. This requirement 
+gives rise to a variety of problems: 
+(1) How can one determine when a set of derived beliefs is a subset of some 
+extension 7 
+(2) Suppose given a set B of derived beliefs all of which belong to some common 
+extension of (D, W). Now imagine updating W with some new facts (observations, 
+perhaps) about the world. How can one determine whether B is a subset of some 
+extension of this new default theory? That is can we continue to entertain our 
+previously held beliefs in the presence of new information about the world ? 
+(3) This is the same as (2), except that D is updated rather than W. Can we 
+continue to entertain our previously held beliefs in the presence of new defaults ? 
+It is the purpose of this section to provide answers to these questions. 
+6.1. Derived beliefs: maintaining a common extension 
+We envisage a default reasoning program as functioning in the following way" 
+Initially, some closed normal default theory Ao = (D,W) is specified. The 
+default reasoner then determines some default proof Ppo with respect to Ao. 
+Now that #o has been derived, it should be made available as a premise for future 
+derivations, i.e. the 'current default theory' becomes AI - (D,W u {#o}). If now 
+a default proof Pp, is determined with respect to Ax then both derived beliefs Po 
+and #x should be available as premises for future derivations so that the 'current 
+default theory' becomes A2 = (D,W u {Po,#x}). And so on. In effect, we want to 
+view derived beliefs as lemmas to be subsequently used in the derivation of new 
+beliefs. What is required is that the default reasoner, by proceeding in this way, 
+will be generating 'an approximation' to some extension for the original default 
+theory Ao, i.e. the set of derived beliefs {#o,//1,...,} must be a subset of some 
+extension for Ao. The following example demonstrates that this requirement is not 
+always fulfilled: 
+Example 6.1. 
+) 
+a0 : 
+{A = B} . 
+A 
+' 
+-aA 
+J' 
+Then #o = B is a derived belief of Ao. Also Pl = -aA is a derived belief of 
+At =(I "MA B:M'~A~, 
+) 
+A 
+' 
+I 
+{.4 = B, B} , 
+yet #1 is not in any extension for the original default theory Ao. 
+Some care must therefore be exercised in using derived beliefs as lemmas. The 
+following theorem provides a sufficient condition for the proper use of derived 
+beliefs as lemmas in the derivation of new beliefs.
+=== [p.33] ===
+A LOGIC FOR DEFAULT REASONING 
+113 
+Theorem 6.1. Let Ao = (D,W) be a closed normal default theory. In general, 
+suppose As has been determined and that PPt is a default proof of/3~ with respect to 
+A v Let Al+ 1 = (D,W u {/~o, • •.,/~}). For any n >I O, if 
+It 
+W O u CONSEQUENTS(DS(Pa,) ) is consistent 
+(6.1) 
+i-0 
+then Ao has an extension Eo such that {/~o,...,/~,} -~ Eo. 
+Preof. Let 
+A~)---(j--~)0 
+DS(PaJ)' W) 
+and 
+A~-/(~ 
+DS(Ppj), W u {Po,..., Pi-1}] \ 
+for l 
+n. 
+kJ -o 
+/ 
+We first inductively prove that for 0 ~< i ~< n 
+W U {/~o,...,/~-1} U u CONSEQUENTS(DS(Ppj)) is consistent. 
+j=O 
+The case i = 0 is simply the hypothesis (6.1). Assume the result for i and consider 
+n 
+W U {/~o,...,/~} U u CONSEQUENTS(DS(Paj)) 
+(6.2) 
+1=0 
+Now PPi is a default proof of/~j with respect to Av Hence 
+W u {to,..., fit-t} u CONSEQUENTS(DS(Pa,)) k fit. 
+Thus, the consistency of (6.2) reduces to that of the induction hypothesis. 
+This result coupled with Corollary 3.4 assures us that for 0 ~< i ~< n A[ has a 
+unique extension El. Since Pat is a default proof of fl~ with respect to Aj it is also a 
+default proof of fl~ with respect to A~ and since Ef is the unique extension for A~, 
+fl~e E~. Hence to e E6, so by Theorem 2.6 E~ is an extension for A~. Since Ai 
+has a unique extension El then E6 = E~. Since fl~ ~ E~ we can apply Theorem 2.6 
+again to conclude that El is an extension for A6 and again by uniqueness El = E~. 
+We can continue in this way to obtain E6 = E~ =...= 
+E~ and since, for 
+0 <~ i ~< n, fli ~ E" we have {to,..., fin} ~- E6. 
+Finally, since U~=o DS(Ppj)G D, then by Theorem 3.2, Ao = (D,W) has an 
+extension Eo such that E6 ~- Eo. 
+This last theorem provides a mechanism by which a default reasoning program 
+can be assured that all of its current beliefs have a common extension: Let B be 
+the current set of derived beliefs. For each/~ ~ B let Pa be the default proof of/J. 
+Pa may invoke other ~'s of B as lemmas. Then the members of B all share a 
+common extension if W u Ua~e DS(Pp) is consistent. 
+The question arises "How does the default reasoner proceed in the event its 
+derived beliefs B do not satisfy this consistency property?" This raises some quite
+=== [p.34] ===
+114 
+R . ~  
+complex issues which we do not address in this paper. However, the basic flavour 
+of the required approach is clear. To restore the consistency property, the system 
+must initiate a process of belief recision as follows: 
+(1) Attempt to rederive some minimal subset of the derived beliefs B in order 
+that the resulting new set of default proofs has the consistency property. 
+(2) Failing this, reject some minimal subset of B. 
+This process of belief revision is one of the tasks performed by the Truth 
+Maintenance System of Doyle (1978). 
+6.2. Derived beliefs and the assimilation of new information 
+Section 1.2 noted the need for belief revision in the event that a belief depends 
+upon some default assumptions which are subsequently violated by new first order 
+facts about a world. Our purpose now is to make this idea precise, and to formulate 
+a condition under which belief revision will not be necessary. 
+Theorem 6.2. Let Ao = (D,W) be a closed normal default theory, andlet {j0o, • •., ~n} 
+be a set of derived beliefs determined as in the statement of Theorem 6.1. Suppose 
+further that F ~_ L is a set of closed wffs. If 
+n 
+W u F u U CONSEQUENTS(DS(Pp,)) is consistent 
+(6.3) 
+i=0 
+then (D,W u F) has an extension E such that {/~o, • •.,/~n} G E. 
+Proof. Let 
+= (D, Wu 
+and 
+A" = (D,W u F u {Po,...,/~H}) 
+for ! ~< i ~< n. 
+Now Pp, is a default proof of p~ with respect to A~. By the consistency property 
+(6.3), W. u F u CONSEQUENTS03~(Pp,)) is consistent so that Pp, is also a 
+default proof of Pi with respect to A[. Hence, ~ ~y Theorem 6.1, A'o = (D,W u F) 
+has an extension E such t, liOt {~o,..., P~} - I. 
+Theorem 6.2 provides a mechanism with which a default reasoning program can 
+be assured that all of its current beliefs {/~o,...,/~} with respect to a theory 
+(D,W) have a common extension in the theory (D,W uF)obtained by updating W 
+with some new facts F about the world. Again, the problem of belief revision 
+arises whenever the consistency property (6.3) fails to hold. 
+6.3. Derived beliefs and the ass|inflation of new defaults 
+We consider here the problem of updating a closed normal default theory with 
+new defaults, and how this may influence our confidence in some set of previously 
+derived beliefs.
+=== [p.35] ===
+A LOGIC FOR DEFAULT REASONING 
+115 
+Theorem 6.3. Let Ao = (D,W) be a closed normal default theory, and let {flo, • •., ft,} 
+be a set of derived beliefs determined as in the statement of Theorem 6.1. Suppose 
+further that D' is a set of closed normal defaults. If (D, W) has an extension E such 
+that {flo,..., fin} ~ E then (D u D',W) has an extension E' such that {flo,..., fin} 
+E'. 
+Proof. The proof is a simple consequence of semi-monotonicity (Theorem 3.2). 
+Theorem 6.3 provides the only truly comforting result vis ~ vis belief revision. 
+It guarantees that provided the derived beliefs ~o,..., ~, have a common extension 
+in (D,W)then they will continue to have a common extension in (D u D',W). 
+Updating a closed normal default theory with new defaults cannot affect old 
+beliefs. 
+7. Arbitrary Default Theories 
+The technical results of the previous sections have been derived for closed default 
+theories, i.e. theories all of whose defaults have the form ~-M/~t,..., M~mlw, 
+where a,/L,..., Pm,W are all closed first order wffs. In view of the examples of 
+Section 1, none of which is a closed default, the genuinely interesting cases involve 
+open defaults. An open default has the form u(x)'M~l(x),...,MPm(X)]W(X) 
+where at least one of a(x),/~l(x),..., [3m(X),W(X) contains free variables in x. The 
+purpose of this section is to generalize our earlier results on closed default theories 
+to the case of open defaults. We do this by first defining the notion of an extension 
+for default theories with open defaults. Then we focus upon normal default 
+theories and generalize the proof theory of Section 5 for this case. Finally, the 
+results of Section 6 on belief revision are suitably generalized. 
+7.1. The extensions for arbitrary default theories 
+The first task at hand is to suitably generalize the concept of an extension from 
+closed default theories to arbitrary theories. Intuitively, we want to interpret the 
+open default ~(x)" Mpt(x),..., MSm(X)/W(X) as saying something like: "For all 
+individuals xt,..., x,, if ~(x) is believed and each of ~l(x),..., ~m(X) can be 
+consistently believed, then one is permitted to believe w(x)." The initial problem 
+then is to specify exactly what are the individuals of a default theory. 
+To begin with a default theory is defined over the language LA whose alphabet 
+is A. If F ~_ .4 is the set of all function letters of A (including the 0-ary function 
+letters, or constant letters) then any term constructable using the function letters 
+of F should count as an individual of the default theory, so that the free variables 
+of an open default should at least be seen as ranging over these terms. This seems 
+fine with respect to these explicitly nameable individuals. However, there will 
+generally be implicitly defined individuals which are introduced via existential 
+quantifiers. For example, the theory 
+i 
+• Me(x) 
+(Ex)Q(x) 
+"aP(a) 
+e(x)
+=== [p.36] ===
+116 
+R . ~  
+has an explicitly named individual a, together with an implicitly defined individual 
+which satisfies Q. Intuitively one would expect of this implicitly defined individual 
+that it satisfy P in the extension for this theory. In order to accommodate this 
+intuition, we introduce a new constant letter 0~ distinct from any element of F to 
+denote this implicitly defined individual and replace (Ex)Q(x) by Q(0c). This 
+immediately yields P(u) in the extension whence (E ~. Q(x) ^ P(x) is in the 
+extension. 5 
+What the previous discussion amounts to is the suggestion that each wff of W 
+be replaced by its Skolemized form. If E is the set of Skolem functions so intro- 
+duced, then we would like to view the individuals constructable from the elements 
+of F u E as the individuals of the default theory, and the free variables of an open 
+default as ranging over these individuals. 
+While this feels closer to the truth, there still remains the problem of implicitly 
+defined individuals which may be introduced by default. For example, in the 
+theory 
+: H(Ex)P(x) 
+: HQ(x) 
+Q(x) 
+there is an implicitly defined individual which is introduced by the first default, 
+and which satisfies P. One would expect, by the second default, that this individual 
+will also satisfy Q, i.e. one would expect (Ex).P(x) ^ Q(x) to be in the extension. 
+As before, we introduce a new constant letter • to denote this individual, and 
+represent the first default by its Skolemized form : HP(~)[P(,). This immediately 
+yields P(~) in the extension and then, by the second default, Q(~) is in the extension, 
+and hence so is (Ex).P(x) ^ Q(x). 
+In general then, if~E is the set of Skolem functions introduced by Skolemizing IV 
+as well as all of the defaults, then we shall view the individuals constructable 
+from the elements of F u Y~ as the individuals of the default theory, and the free 
+variables of an open default as ranging over these individuals. We proceed to 
+make these ideas precise. 
+Let w be a closed wfl" of Ls. With no loss in generality assume w is in prenex 
+form. Then the Skolemizedform of w is obtained as follows (Robinson (1965)): 
+replace each existentially quantified variable y of w by ¢(xl, • •., xn) where (xl),..., 
+(x,) are all of the universal quantifiers preceding (Ey) in the prefix of w. ¢ must be 
+a new function letter distinct from any in the alphabet A and distinct from any 
+other such function letters previously introduced. Do this for all existentially 
+quantified variables of 14,, and then "zlete all of w's quantifiers. The result is a 
+quantifier free formula. The new func'ion letters ¢ so introduced are called 
+Skolem functions. 
+5 It would appear from the definition of a fixed point in McDermott and Doyle (1978) that 
+(Ex). Q(x) ^ P(x) is not in the fixed point of this theory, which suggests some fundamental 
+differences between default logic and their non-monotonic logic.
+=== [p.37] ===
+A LOGIC FOR DEFAULT REASONING 
+117 
+We also require the notion of the Skolemizedform of a default 
+• (x): M#,(x),..., M#m(X) 
+w(x) 
+This is obtained by replacing the wit w(x) by the Skolemized form of (X)W(X). 
+For example the Skolemized form of 
+(Ey)(z)P(x,y,z) : M(Ey)Q(x,y) 
+(E y)(z)(Ew)R (x,y,z, w) 
+is 
+(E y)(z)P(x,y,z) " M(E y) Q(x,y) 
+R(x,f(x),z,g(x,z)) 
+' 
+wherefand g are Skolem functions. Notice that the 'top half' of a default remains 
+unchanged in converting it to its Skolemized form. 
+A default theory (D, W) is in Skolemizedform iff all of the defaults of D, and all 
+of the wffs of W are in Skolemized form. 
+Let G be a set of function letters. Then H(G) is the smallest set of terms such that 
+a ¢ H(G) for all constant letters a ~ G, and if tl,..., tne H(G) and g ~ G is an 
+n-ary function letter then g(tl, • •., tn) ¢ H(G). H(G) is simply the set of all terms 
+constructable using the function letters of G. 
+Suppose A = (D,W) is a Skolemized default theory (not necessarily normal). 
+Suppose further that l~ is the set of Skolem functions of A, and that F is the set 
+of function letters of the alphabet A. Define 
+CLOSED-DEFAULTS(A) 
+= {6(g) J 6(x) e D and g is a tuple of ground terms of H(F u Y~) } 
+Thus CLOSED-DEFAULTS(A) is the set of all ground instances over H(F U Y.) 
+of the defaults of D. Notice that each such ground instance of a default is a closed 
+default. The extensions for a general (not necessarily closed) default theory can 
+now be defined as follows" 
+Dennltion 5. E is an extension for A = (D, W) iff E is an extension for the closed 
+default theory CLOSED(A) = (CLOSED-DEFAULTS(A),W). 
+There are several points worth noting about this definition" 
+(1) The set CLOSED-DEFAULTS(A) will in general be countably infinite so 
+that CLOSED(A) is a closed default theory with countably infinitely many defaults. 
+Since the entire preceding development for closed default theories (Sections 2-6) 
+makes no finiteness assumption about the number of defaults, these results apply 
+equally to CLOSED(A). In particular then, the definition of an extension for A as 
+being that for CLOSED(A) makes sense. 
+(2) Initially we began with an unskolemized default theory defined over a first 
+order language La whose alphabet A contains a set of function letters F. In Skolem- 
+izing this theory, we introduced a new set of function letters ~, the Skolem functions
+=== [p.38] ===
+118 
+R. REITER 
+of the theory, and CLOSED(A) is a dosed default theory over the first order 
+language LAv z. Thus the extensions for A consist of closed wffs of the extended 
+language L~ ~ z, not of the original language L~. 
+(3) In view of the observation in (2), the notion of an extension for a general 
+default theory A is not quite a generalization of this notion for closed default 
+theories. For if A is closed to begin with, then its extensions will be subsets of 
+LAv z whereas in the definition of an extension for closed theories given in Section 2 
+these extensions are subsets of LA. This is not a substantive issue, however• We can 
+easily modify the definition of extension given in Section 2 so that these are subsets 
+of LAv z rather than of La, without affecting the subsequent theory. The effect of 
+this modification is merely to admit into extensions certain wffs containing Skolem 
+terms of the original closed default theory. 
+7.2. Normal default theories: proof theory 
+Before defining a proof procedure for general normal default theories we shall 
+modify the top down default proofs for closed normal theories of Section 5 to a 
+form that is more appropriate for generalization to the case of open normal 
+defaults. The principal change is that we shall require the notion of a linear 
+resolution proof of an arbitrary wff where this wff is indexed by some set of 
+defaults. 
+Definition 6. A linear resolution proof of([3,D~) from some set S of indexed clauses 
+has the form of Fig. 4, where 
+(1) The top indexed clause (Ro,D~) is such that Ro is a clause of -ap. 
+(2) For 1 ~< i ~< n, (R~,D~) is a resolvent of the indexed clauses (Rt_I,D~_I) and 
+(Ci-x,Dt-0. 
+FIG. 4. 
+(Ro, D~) 
+(Co, Do) 
+(R2, D~) 
+(Rn-I, D~-l) 
+(C.-I, D._I) 
+(R.,
+=== [p.39] ===
+A LOGIC FOR DEFAULT REASONING 
+119 
+(3) For 0 < i ~< n- 1, (Ci, D~) ~ S or C~ is a clause of -lfl and Di = D[, or 
+(Ci,Di) is (Rj,Dj) for some j < i. 
+(4) Rn=U1. 
+As before, we say that such a proof returns D,. The clauses (Ci, D3 are called the 
+side clauses of the proof. For 1 <~ i ~< n, the clauses (Ri, D;) are called centre 
+clauses. 
+Suppose L is a linear resolution proof from CLAUSES(A). If (C,{fi})~ 
+CLAUSES(A) is a side clause of L, then the default 6 is said to have been introduced 
+into L. 
+Definition 7. A top down default proof of fl with respect to a closed normal default 
+theory A = (D,W) is a sequence of linear resolution proofs Lo,..., Lk such that 
+(1) Lo is a linear resolution proof of (fl,{ 
+}) from CLAUSES(A), 
+(2) For 0 ~ i ~< k, Li returns Di, 
+(3) For 1 ~< i ~< k, let Do-t) be the set of defaults introduced into L~_I. Then 
+Li is a linear resolution proof of (PREREQUISITES(Dti-1)), Di-1) from 
+CLAUSES(A). 
+(4) The set of defaults introduced into Lk is empty. 
+(5) W u CONSEQUENTS(Dk) is satisfiable. 
+Example 7.1. In Example 5.2, Fig. 2(b) represented a top down default proof of D. 
+Fig. 5 is the corresponding proof under the current modified notion of a top 
+down default proof. 
+Example 7.1 should make it clear that there is no essential difference between 
+the present notion of a top down default proof and that of Section 5. The only 
+distinction is that in the current notion, each subproof L~ carries along with it all 
+of the defaults introduced into the subproofs Lo,...,L~_t, so that the final 
+subproof Lk returns Dk, the set of all of the defaults introduced into all of the 
+subproofs. For closed default theories this modified notion is of no consequence. 
+In fact the earlier notion of Section 5 was rather more transparent. However, for 
+the purpose of generalizing a proof theory to the case of open normal defaults, the 
+modified version of top down default proofs is just what is needed. We now proceed 
+with this generalization. 
+Let A = (D,W) be a normal default theory, assumed Skolemized. With no loss 
+in generality, assume W is a set of clauses. If 6(x)= (~(x):Mw(x)[w(x))~ D, 
+suppose Ct(x),..., C,(x) are all of the clauses of w(x). Then for 1 ~< i <~ r the 
+ordered pair (C~(x),{6(x)}) is called a consequent clause of the default 6(x). Define 
+CLAUSES(A) = {(C(x),{6(x)})[ 6(x)~ D and (C(x),{6(x)}) is a 
+consequent clause of 6(x)} u {(C,{ 
+}) I C e W}
+=== [p.40] ===
+120 
+n. ma'r~ 
+(-,D, { }) ~(-~c v D, { 
+L.-~-'-" 
+(--,c;{ }) 
+~(c, 
+{(h}) 
+L- 
+(Q, {~}) 
+}) 
+(~A v T~E, {63})~('nA v ~B v ~, { 
+L
+~
+ 
+(-1,4 v ~
+~
+ 
+(g {(~2}) 
+I . . . . . - - - ' - - -  
+(~A, {~:,,~_~}) _......(A, {~, }) 
+(D, {,~,, ~;, ,h}) 
+}) 
+(-~A v - ~ E , ~ ( E  
+v D, { }) 
+(-~A v D, {,h, ~:, ~}) .I('~D v i~, { }) 
+(-1,4 v F, {a,, ,h, a~}) 
+(-~A v ~F, {~,, a:, a3}) 
+(-~A, { ~ , ~ A ,  
+{,~,}) 
+(r-l, {~,, ~i2, 63}) 
+(-~E, { a , ~ ( E  
+v D, { 
+}) 
+t-------'- 
+(D, {~,, ~, ~}) 
+.(-~D .v F, { }) 
+(F, {ai, a:, a,}) 
+(-~F, {a,, a2, a3}) 
+([11, {,h, a~, 63}) 
+Fro. 5.
+=== [p.41] ===
+A LOGIC FOR DEFAULT REASONING 
+121 
+As before, an ordered pair (C,D) where C is a clause and D a set of defaults is 
+called an indexed clause. If (C1,D1) and (C2,D2) are indexed clauses, define their 
+resolvent as follows: 
+Let (C~,D'x) and (C(~,D'2) be obtained by uniform renamings 6 of the variables 
+occurring in (CI,D~) and (C2,D2) respectively such that (C~,D'I) has no variable it-. 
+common with (C(~,D'2). Suppose R is an ordinary resolvent of C~ and C~ under 
+most general unifier (mgu) ~. Then (R,(D~ u D'2)¢) is a resolvent of the indexed 
+clauses (C1,D0 and (C2,D2). 
+With this notion of the resolvent of two indexed clauses the definition of a 
+linear resolution proof of (fl, D~) from a set S of indexed clauses is the same as 
+before. The only difference is that here the defaults taking part in the proof have 
+free variables and these will become instantiated during the course of the proof. 
+Consider a linear resolution proof of the form of Fig. 4. Assume that (R~,D~) 
+and (Ci, Dl) are variable disjoint, and that their resolvent (Rt+I,D'+I) is formed 
+under mgu¢, so that D~+x = (D~ u D~)¢. If 6(t)~ D~ for some terms t, then 
+60) cr ~ D'+I. This occurrence of 6(t)~ in D~+ x is said to be a descendant of the 
+occurrence of 6(0 in D'. Similarly, if 6(t) ¢ Di, then again 6(t)cr ~ D'+~ and this 
+occurrence of 6(t)¢ in D'+ 1 is a descendant of the occurrence of 6(t) in D/. Finally, 
+for i < j < k, if an occurrence of 6(t) in D~ is a descendant of an occurrence of 
+6(s) in D} which in turn is a descendant of an occurrence of 6(r) in D' or in D~, 
+then 6(0 is a descendant of the occurrence of 6(r) in D' or D i. 
+The descendants of an occurrence of a default in the tree of Fig. 4 are simply 
+the successive instances of that default created under successive resolution 
+operations. If a default occurs at node (Ct, Dl), then it will have descendants at 
+each successor node (R~+I,D~+I),..., (Rn,R~). Likewise if a default occurs at node 
+(R ,DD. 
+We are now almost in a position to propose the necessary generalization to open 
+defaults of the top down default proofs for closed normal default theories. The 
+following notion comes very close to what is needed. 
+Definition 8. Let A = (D, W) be a normal default theory, assumed Skolemized, and 
+suppose ~ is the set of Skolem functions of A. A sequence of linear resolution 
+proofs Lo,. •., Lk is an admissible proof sequence for/~ with respect to A ifl" 
+(1) Lo is a linear resolution proof of ~,{ 
+}) from CLAUSES(A). 
+(2) For 0 ~< i ~< k, L~ returns D~. 
+(3) For 1 ~< i ~< k, let D ¢i- 1~ be the set of those defaults in D~_I which are 
+descendants of the defaults introduced into L~_I. Then Li is a linear resolution 
+proof of (PREREQUISITES(DO- 1)),Dr_l) from CLAUSES(A). 
+(4) The set of defaults introduced into Lk is empty. 
+e By a uniform renaming of the variables of (C, D) we mean that if x is renamed as y, then 
+every occurrence of x in C as well as in D is replaced by y.
+=== [p.42] ===
+122 
+R. R~-TF.R 
+(5) There is a ground substitution y over H(F u ~) such that DkY has the following 
+two properties: 
+(i) Each default instance occurring in Dry is a ground instance over H(F u ~), 
+i.e. if 6(g) ~ D~, then each component gi of the tuple of ground terms g is an 
+element of H(F u ~).7 
+(ii) W u CONSEQUENTS(D~y) is satisfiable. 
+We call the set of ground defaults Dr? the default support of the admissible 
+proof sequence. Notice that by footnote 7 the default support is a subset of 
+CLOSED-DEFAULTS(A). 
+Example 7.2. Consider the normal default theory A with defaults 
+P(x): M(Ey)Q(x, y) ^ R(x, y) 
+61(X ) = 
+(Ey)Q(x, y) ^ R(x, y) 
+or, in Skolemized form, 
+~x(x) = e(x): M(Ey)Q(x, y) ^ R(x, y). 
+Q(x, f (x)) A R(x, f (x)) 
+Q(x, y): H(z)s(x, y, z) 
+~2~x, y) = 
+(z)S(x, y, z) 
+or, in Skolemized form, 
+~2(x, y) = Q(x, y): M(z)S(x, y, z). 
+S(x, y, z) 
+,h(x, y) 
+R(x, y): HV(x) 
+= 
+U(x) 
+; 
+W = {P(a)}. 
+Fig. 6(a) is an admissible proof sequence for (Ex)(Ey)(z).S(x,y,z) ^ U(x). The 
+negation of this is (x)(y)(Ez). -1 $(x,y,z) v "1 U(x) which, after introducing a Skolem 
+function g for the existentially quantified z, leads to the clause -1S(x,y,g(x,y)) v 
+-1U(x). This is the top clause of Fig. 6(a). For this example ? is the empty substitu- 
+tion so the default support for this proof sequence is {ts(a,f(a)), 6z(a,f(a)), 6~(a)}. 
+Let us extend the notion of a descendant to admissible proof sequences 
+Lo,..., L~. For 1 ~< i ~ k an occurrence of a default in the top clause of Lt is a 
+descendant of its occurrence in the bottom clause of L~_~. And for h ~< i ~ j if an 
+occurrence of 6(t) in L i is a descendant of an occurrence of 6(s) in L~ which in turn 
+is a descendant of an occurrence of 6(r) in L~, then 6(t) is a descendent of the 
+occurrence of 6(r) in L~. 
+If one imagines the successive trees Lo,..., Lk placed vertically, each beneath 
+its predecessor, as in Fig. 6(a) then the descendants of a default occurrence are 
+simply its successive instances in all of the left hand nodes below the node in which 
+7 Notice that by this property 8(g) is a closed normal default, and that 8(g)~ CLOSED- 
+DEFAULTS(A).
+=== [p.43] ===
+A LOGIC FOR DEFAULT REASONING 
+123 
+(a) 
+(-~S(x,y,o(x,y)) v ~V(x), { })~(VCx), 
+{a,(x,y)}) 
+(-~S(x, y, o(x, y)), {,~,(x, z)}) 
+~(-~S(x, 
+y, z), {,~=(x, y)}) 
+(rq, {,S,(x, z), ,s~(x, y)}) 
+('aR(x, z) v "i Q(x, y), {63(x, z), 62(x, y)}~..... (Q(x,f(x)), {61(x)}) 
+: 
+L..- 
+(mR(x, z), {63(x, z), 62(x,f(x)), 6~(x)}) ~ 
+(R(x,f(x)), {6~(x)}) 
+if-l, {63(x,f(x)), 62(x,f(x)), 6,(x)}) 
+('aP(x), {6s(x,f(x)), 62(x,f(x)), 6~(P(a), 
+{ 
+(i-q, {63(a,f(a)), ~52(a,f(a)), 6~(a)}) 
+}) 
+(b) 
+('aS(x, y, g(x, y)) v "-1U(x), { }) 
+~ 
+(U(a), {cS3(a,f(a))}) 
+(-aS(a, y,g(a, y)), {63(a,f(a))}) 
+~ 
+(-aS(a,f(a),z), {82(a,f(a))}) 
+(i-I, {~s(a,f(a)), ~2(a, f(a))}) 
+('aR(a,f(a)) v "i Q ( a , f ( a ) ) ~  
+(Q(a, f(a)), {~l(a)}) 
+(~R(a,f(a)), {63(a,f(a)), ~2(a,f(a)), 6~(a)}) 
+~ 
+(R(a,f(a)), {61(a)}) 
+(l'q, {~s(a,f(a)), 62(a,f(a)), di~(a)}) 
+(~P(a), {53(a,f(a)), ~2(a,f(a)), 8,(a)}) 
+~ 
+(P(a), { 
+(l"l, {~(a,f(a)), 62(a,f(a)), 6~(a)}) 
+}) 
+]FIG, 6.
+=== [p.44] ===
+124 
+R. RErr~ 
+it occurs. It follows that if Lo,..., Lk is an admissible proof sequence then every 
+default occurrence has a descendant in (I-I,Dt,), the bottom clause of Lk. Suppose 
+6(0 is a default occurrence whose descendant in Dk is 6(s). Then 6(s)y e Dk~/, the 
+default support of the admissible proof sequence. We call 6(s)y the terminal 
+descendant of the default occurrence ,~(t). By the nature of y (see footnote 7 
+associated with the Definition 8) this terminal descendant is a ground instance of 
+6(t) and is an element of CLOSED-DEFAULTS(A). 
+Example 7.2 (continued). Suppose, in the admissible proof sequence for 
+(Ex)(Ey)(z)S(x,y,z) ^ U(x) of Fig. 6(a) we do the following to each indexed clause 
+(C,D): if ~ ~ D, instantiate the variables of ~ so that it becomes identical with its 
+terminal descendant, and instantiate the corresponding variables of C in the same 
+way. The resuR is Fig. 6(b), which is a top down default proof of (Ex)(Ey)(z)S(x,y,z) 
+^ U(x) with respect to CLOSED(A), i.e. (Ex)(Ey)(z)S(x,y,z) ^ U(x) is in sortie 
+extension for CLOSED(A) and hence by definition is in an extension for A. 
+This example indicates the basic intuition behind the notion of an admissible 
+proof sequence. Unfortunately, this notion does not quite give us what we want. 
+Example 7.3. A has one default 
+e(x) v Q(x): HR(x) 
+~(x) = 
+R(x) 
+W = {P(a) v e(b)} 
+Fig. 7(a) is an admissible proof sequence for (Ey)R(y). But the only extension for 
+this theory is Th(W) and this does not contain (Ey)R(y). Notice however that if 
+we replace each default occurrence of Fig. 7(a) by its terminal descendant, as we 
+did for Example 7.2, we obtain Fig. 7(b) which is not a top down de:Oault proof of 
+(Ey)R(y) with respect to CLOSED(A). The basic reason for this is that the terminal 
+descendant of the occurrence of ~(x) in the clause (-1P(x),{~(x)}) in Fig. 7(a) is 
+~(a), and this is different than ~(b), the termin~! descendant of ~(x) in ('-1Q(x), 
+{~(x)}) despite the fact that "aP(x) and --1Q(x) are both of the clauses of -aPRE- 
+REQUISITES({6(x)}). 
+To obtain a proof theory for open defaults it is necessary to restrict the class of 
+admissible proof sequences in order to exclude situations like that of Example 7.3. 
+Definition 9. An admissible proof sequence Lo,..., Lk for I1 with respect to a 
+normal default theory A is a top down default proof of ~ with respect to A iff: 
+(1) Suppose, for 1 ~< i ~< k, that L~ has top clause (C,D~_I) and a side clause 
+(C',Di_I) where C and C' are both clauses of the negation of PREREQUISITES 
+(D¢i-1)). Then the terminal descendants of the defaults of D~_~ in the top clause are 
+identical with the terminal descendants of the defaults of D~_x in the side clause. 
+(2) Suppose, for 0 ~< i ~< k, that (C,D) is a centre clause of L~ which also occurs 
+as a side clause of Li. Then the terminal descendants of the defaults of D in the 
+centre clause are identical with the terminal descendants of the defaults of D in 
+the side clause.
+=== [p.45] ===
+A LOGIC FOR DEFAULT REASONING 
+125 
+Theorem 7.1. Let A = (D,W) be a normal default theory, and let fl ~ La u x be a 
+closed wff where Y~ is the set of Skolem functions of A. If there is a top down default 
+proof of fl with respect to A, then A has an extension which contains ft. 
+Proof. Suppose Lo,..., Lk is a top down default proof of fl with respect to A. 
+Our plan is to construct a top down default proof L~,..., L~ of fl with respect to 
+CLOSEU(A). The theorem will then follow by the completeness of top down 
+default proofs for closed normal theories, and the definition of an extension of 
+Section 7.1. 
+(a) 
+{ 
+(R(x), 
+I 
+(rq, {6(x)}) 
+(b) 
+(-leO,'), { })I-- (R(a), ,S(a)}) 
+(rq, 
+(-aP(x),~(P(a) 
+v Q(b), { 
+(Q(b), ~ 
+('a Q(x), {6(x)]-) a 
+(r-q, {,S(a), ,S(b)}) 
+}) 
+(~P(a),{6(a)})~(P(a) v Q(b), { }) 
+(Q(b),~ 
+(-7 Q(b), {6(b)}) 
+(f"l, {6(a), 6(b)}) 
+FiG. 7. 
+-'1 Q(x) is the other clause of the negation of PREREQUISITES({8(x) }). 
+To begin, notice that the defaults in any occurrence of an indexed clause in 
+Lo,..., Lk are functioning as 'answer literals' (Green (1969)). The purpose served 
+by the introduction of a default 6(x) into a proof is to record the fact that 6(x) is 
+required in the proof, as well as to provide a history of the instances assumed by 
+the free variables x during the course of the proof. 
+Now consider any linear resolution proofL~ in the sequence Lo,. •., Lk. For any 
+occurrence of an indexed clause (C,D) in L~, let ~ be that substitution such that 
+for each default 6(0 ~ D, 6(t), is the terminal descendant of this occurrence of 6(t). 
+Define (C,D)a to be the g-instance of this occurrence of (C,D) in Li. (Thus to 
+obtain the g-instance of (C,D), instantiate the free variables of each default of D 
+such that it becomes identical with its terminal descendant, and instantiate the 
+corresponding variables of C in the same way.) Now replace each indexed clause 
+of L~ by its g-instance. The result is a tree L~. For example Fig. 6(b) is obtained from 
+Fig. 6(a) by replacing each indexed clause by its g-instance. 
+We first show that L~ is in fact a linear resolution proof, i.e. that successive 
+clauses in the tree L~ are indexed resolvents of their immediate predecessors. 
+Now Li returns a set of defaults D~ which is the 'answer clause' of the deduction Lv 
+Moreover, the set of terminal descendants of the defaults of D~ is an instance of D~,
+=== [p.46] ===
+126 
+R. RErrER 
+i.e. this set is an instance of the 'answer clause' of L~. It then follows from the results 
+in Luckham and Nilsson (1971 ) that "he tree L~ represents a linear resolution proof. 
+To prove that L'o,..., L't is a top down default proof of/l with respect to 
+CLOSED(A) it is necessary to prove: 
+(1) L~ is a linear resolution proof of ~,{ 
+}) from CLAUSES(CLOSED(A)). 
+(2) For 0 ~< i ~< k- 1, if D ¢i)' is the set of defaults introduced into L" and if L[ 
+returns D~ then L~+ 1 is a linear resolution proof of (PREREQUISITES(D(J}~),D'i) 
+from CLAUSES(CLOSED(A)). 
+(3) The set of defaults introduced into L;, is empty. 
+(4) If L~, returns D;, then W u CONSEQUENTS(D;,) is satisfiable. 
+Property (3) follows immediately from the corresponding property for Lk. 
+To prove (4) notice that by the construction of L~,..., L~, it is the case that D~, is 
+precisely .the default support of the admissible proof sequence Lo,..., Lk so by 
+the definition of an admissible proof sequence, W u CONSEQUENTS(D~) is 
+satisfiable. 
+We now prove (1). We begin by proving that L~ is a linear resolution proof of 
+(~,{ 
+}) from CLAUSES(CLOSED(A)). We know that L~ is a linear resolution 
+proof of (p,{ 
+}) from CLAUSES(A) and L~ is obtained from Lo by replacing 
+each indexed clause by its g-instance. If, for some clause Cp of ~/1 (Cp,{ 
+}) is a 
+top or side clause of Lo, then it is its own g-instance and (Cp,{ }) is the corres- 
+ponding top or side clause of L~. Similarly, if (C,{ 
+}) ¢ CLAUSES(A) (so that 
+C ~ W) is a side clause of Lo then it is a side clause of L~ and (C, { }) ¢ CLAUSES 
+(CLOSED(A)). Suppose (C(x),{6(x)})¢ CLAUSES(A) (so that C(x) is a clause of 
+the consequent of 6(x)) is a side clause of Lo. Then if 6(g) is the terminal descendant 
+of this occurrence of 6(x), then (C(g),{6(g)}) is the g-instance of (C(x),{6(x)}) and 
+this is the corresponding side clause of L~; clearly (C(g)~{6(g)})¢CLAUSES 
+(CLOSED(A)). Finally, suppose (C,D) is a side clause of Lo which is also a centre 
+clause of Lo. Then in L~ the corresponding side clause is (C,D)cr, the g-instance of 
+the occurrence of (C,D) as a side clause of Lo. Also, in L~ the corresponding 
+centre clause is (C,D)~', the g-instance of the occurrence of (C,D) as a centre 
+clause of Lo. But by condition (2) of Definition g, ¢r = ¢' so that in L~ the side 
+clause (C,D)cr is also a centre clause. This completes the proof of (1). 
+It remains to prove (2), i.e. that L~+~ is a linear resolution proof of (PRE- 
+REQUISITES(DO~'),D~) from CLAUSES(CLOSED(A)). We already know that 
+L;+ 1 is a linear resolution proof. Hence it is sufficient to prove: 
+(a) Whenever (C(x),{ 
+})~CLAUSES(A) is a side clause of Ls+t then its 
+g-instance, which is identical to itself, is in CLAUSES(CLOSED(A)). This is 
+immediate. 
+(b) Whenever (C(x),{6(x)})~ CLAUSES(A) is a side clause of L~+x then it~ 
+0-instance (C(g),{6(g)}) is in CLAUSES(CLOSED(A)). This is immediate.
+=== [p.47] ===
+A LOGIC FOR DEFAULT REASONING 
+127 
+(c) Whenever (C,D) is a side clause of L~+x which is also a centre clause of Li+z 
+then the g-instance of its occurrence as a side clause in L~+I is identical to the g- 
+instance of its occurrence as a centre clause in LH. The proof of this is the same 
+as for Lo. 
+(d) Whenever (C, Di) occurs in L~+I, either as the top clause or as a side clause, 
+where C is a clause of ~PREREQUISITES(D(O), then its g-instance (Ca, Dia) is 
+such that Ca is a clause of -~PREREQUISITES(D~O') and D~a = D~. 
+To prove (d) we distinguish two cases: 
+Case 1. (C,D~) is the top clause of L~+~. 
+Now D~a is the set of terminal descendants of the default occurrences in (C, Di), 
+the top clause of L~+~. But these are the same as the terminal descendants of the 
+default occurrences in (I-I,D~), the bottom clause of Li. Since L; returns D;, this 
+latter clause has g-instance (VI,D~). Hence D~a = D~. Moreover, Dcoa is the set 
+of terminal descendants of the defaults introduced into Li and by the construction 
+of L~, this is the same as the set of defaults introduced into L~, i.e. D~0cr = D~o'. 
+Hence 
+PREREQUISITES(D(O)a = PREREQUISITES(D0)a)= PREREQUISITES(D(~}'). 
+Since C is a clause of mPREREQUISITES(D(0), Ca is a clause of ~PRE- 
+REQUISITES(D")'). 
+Case 2. (C, Di) is a side clause of Li+l. 
+Then if (B,D~) is the top clause of L~+I, and (Ba',Dia') its g-instance, then by 
+condition (1) of Definition g o = a' so that D~a = D~a'. By Case 1, D~a' = D'~ 
+so D~a = D'~. By the same argument as in Case 1 Ca is a clause of -TPRE- 
+REQUISITES(D(O'). 
+We shall say, as we did for closed theories, that a default theory is consistent iff 
+it has a consistent extension. 
+Theorem 7.2. Let A = (D,W) be a consistent normal default theory. If A has an 
+extension which contains [3 then there is a top down default proof of fl with respect 
+to A. 
+Proof. We shall merely sketch a proof. Since A has an extension E containing/3 
+then E is an extension for the closed normal default theory CLOSED(A)= 
+(CLOSED-DEFAULTS(A),W). CLOSED(A) is consistent since A is. Then by the 
+completeness of top down default proofs for closed normal default theories 
+(Theorem 5.1), there is a top down default proof L~,..., L~, of/~ with respect to 
+CLOSED(A). By using standard lifting techniques from resolution theory 
+(Robinson 0965)) we can lift this proof L~,..., L~ to a top down default proof 
+Lo,..., Lk of/] with respect to A. Essentially this is ~one by first lifting L~ to Lo 
+by replacing, in L~, each clause (C(g),{~(g)}) e CLAUSES(CLOSED(A)) by its
+=== [p.48] ===
+128 
+R. R~nm~ 
+uninstantiated general clause (C(x),{6(x)})¢ CLAUSES(A) and using thi3 general 
+clause to form the resulting resolvent. In the case of a side clause of L~ which is 
+also a centre clause, this centre clause will already have been lifted and it is this 
+rifted clause which replaces the side clause. In general then, assume L~,..., L~ 
+have been rifted to Lo,..., Lz respectively. Assume L~ and Lz return D" and Di 
+respectively, and that DOt and D¢o are the defaults introduced into L" and L~ 
+respectively. Now to lift L~+I to L~+I first lift its top clause (C',D'). C' is a clause of 
+~PREREQUISITES(DtO'). Now D' is an instance of D~ so that (C',D') is an 
+instance of a clause (C,D~) where C is a clause of ~PREREQUISITES(DtO). 
+Replace (C',D~) in L~+x by (C, Di). Similarly, if (C',D') is a side clause of L~+l 
+replace it by (C,D~). To lift the remaining side clauses of L~+x proceed as for L~. 
+The resulting lifted proofs Lo,..., Lk have the following properties: 
+(1) Lo is a linear resolution proof of (fl,{ 
+}) from CLAUSES(A). 
+(2) For 1 ~< i ~< k, L~ is a linear resolution proof of 
+(PREREQUISITES(D0-1)),Di_x) from CLAUSES(A). 
+(3) The set of defaults introduced into/-,k is empty. 
+Moreover, since L~,..., L[, is a top down default proof of fl with respect to 
+CLOSED(A), Di, --- CLOSED-DEFAULTS(A). Since D~, is a ground instance of 
+Dk there is a ground substitution y over H(F u Y,), where I; is the set of Skolem 
+functions of A, such that D~, = Dk~. Finally, since W u CONSEQUENTS(D~,) is 
+satisfiable, so is W w CONSEQUENTS(DkT). We have proved that Lo,..., Lk 
+is an admissible proof sequence for fl with respect to A. 
+To see that Lo,..., Lk is a top down default proof of t, notice that if (C',D') is 
+a clause of L' which was lifted to a clause (C,D) of Ll, then the terminal descendants 
+of the defaults of D are precisely the defaults of D'. From this the result follows. 
+The combination of Theorems 7.1 and 7.2 yields the following: 
+Theorem 7.3 (Completeness of top down default proofs). Let A be a consistent 
+normal.default theory and Y, the set of Skolem functions of A. Suppose fl ~ LA ~ z is a 
+closed wff. Then A has an extension containing fl iff fl has a top down default proof 
+with respect to A. 
+7.3. Open defaults: other generalizations 
+In view of the definition of an extension for default theories with open defaults, 
+all of the results of Section 3 continue to hold for normal default theories in 
+general. In particular then, any such theory always has an extension, its extensions 
+are orthogonal, it will be semi-monotonic, and the addition of new normal defaults 
+cannot decrease the number of its extensions. 
+To generalize the results of Section 6 on belief revision requires only defining. 
+for a top down default proof Pp of t, DS(Pp) to be the default support of Pp, i.e, 
+with reference to Definition 8 in Section 7.2, DS(Pp) is defined to be D~,. In the
+=== [p.49] ===
+A LOGIC FOR DEFAULT REASONING 
+129 
+case of closed normal default theories DS(P#) is the set of all of the defaults which 
+enter into the proof Pp. In the case of normal default theories in general, the 
+defaults entering into the proof P# become instantiated during the course of the 
+proof. DS(P#) is the set of all of the final instances of these defaults or, in the 
+unlikely event that these final instances still contain variables, DS(P#) is obtained 
+from these final instances by suitably substituting ground terms of H(F w Z) for 
+these variables in such a way that W w CONSEQUENTS(DS(P#)) is satisfiable. 
+With this notion of DS(P#) all of the results on belief revision of Section 6 continue 
+to hold for normal default theories in general. 
+8 Discussion and Further Problems 
+Many interesting problems related to default logic remain to be explored. The 
+most obvious formal omission in the previous sections is a model theory; the 
+concept of an extension is defined proof theoretically. What one would like is a 
+model theoretic characterization of the extensions of a default theory (D,W) in 
+the following sense: 
+We want some way of viewing the defaults of D as restricting the models of W 
+such that any resulting restricted set of models of W satisfies all and only the 
+wits of an extension for (D,W); and conversely, any extension for (D,W) will be 
+the set of wffs satisfied by some such restricted set of models of W. 
+An interesting proposal which involves non-monotonic reasoning is the method 
+of circumscription described in McCarthy (1977). Briefly circumscription is a 
+formalization of the notion of reasoning within the minimal models of some set 
+of first order axioms. There appears to be some relationship between circum- 
+scription and default logic. What can be proved is that the minimal models for a 
+sentential set of wits coincide with the models of the extensions induced on these 
+wffs by the closed world assumption. This result suggests some deeper relationship 
+between dosed world default theories and the method of circumscription although 
+I have been unable to discover just what this might be. 
+We have elsewhere (Reiter (1978a)) discussed some relationship between defaults 
+and the 'negation' operator of Artificial Intelligence programming languages like 
+I'ROLOG (Roussel (1975), Kowalski (1979)) and PLANr~R (Hewitt (i972)). As 
+implemented in these languages, NOT((wff)) succeeds iff (wff) is not provable. 
+It turns out that there are a number of difficulties with this notion of a procedural 
+negation (Clark (1978)), not the least of which is specifying just what 'not provable' 
+means in this setting. Accordingly, it might be of some interest to view the proof 
+theory of Section 7 for normal default theories as a possible basis for defining the 
+semantics of negation in such languages. 
+A major computational problem stems from the ubiquitous satisfiability tests 
+required in the proof theory as well as in the conditions for belief revision. These 
+all have the form of a satisfiability requirement on W u CONSEQUENTS(D') 
+for some set of defaults D' _%_= D. While no algorithm exists for this, a variety of
+=== [p.50] ===
+130 
+p.. Rm'rER 
+heuristics are possible. One such heuristic would be to begin with the wffs of 
+CONSEQUENTS(D') and use these as a basis for successive 'forward chaining' 
+or bottom up deductions into W, in order to derive new consequence: of these. 
+If, after some time bound or forward chaining level bound has been exceedzd, no 
+contradiction has been derived then one might assume satisfiability of ~e original 
+set of wffs. While this appears to be the most general such heuristic it is also apt 
+to be the most computationaUy expensive. Clever schemes should be possible. 
+One such might involve extensive indexing of the_wffs of W, perhaps along the 
+fines of Kowalski (1974). AccessibilRy finks in this index scheme could in some 
+instances provide rapid tests for the satisfiability of W with respect to CON- 
+SEQUENTS(D'). The whole question of heuristics for testing satisfiability appears 
+to be totally unexplored. 
+An important pragmatic problem is the specification of techniques for choosing 
+between two or more competing extensions. In the hometown example of Section 
+1.3 we were faced with choosing between extensions, one in which Mary's home- 
+town is Toronto because her spouse lives there, the other in which her hometown 
+is Vancouver because her employer is located there. 
+One general heuristic would be to rank order conflicting defaults of this kind in 
+order of their intuitive plausibility, selecting the highest priority default t~-st in 
+attempting a proof for some wff. Only during a process of belief revision ~ould 
+lower priority defaults be invoked. While some such static priority scheme might 
+well be useful in certain settings, it seems not to work for the example of Mary's 
+hometown. There appears to me to be no a priori reason for preferring Toronto 
+over Vancouver, or vice versa here. Instead, what seems to be required is some 
+dynamic scheme for rationalizing the apparent discrepancy. For example, having 
+discovered that Mary's hometown might be both Vancouver and Toronto a 
+default reasoning program should seek ways of resolving the conflict by searching 
+out suitable detailed information about Mary. Is she separated from her spouse ? 
+If so, opt for her employer's location. Is she some sort of area representative for 
+her employer? Is that area near Toronto ? If so, choose her spouse's hometown. 
+This view of extension selection as a process of rationalizing discrepancies has the 
+nice property of avoiding the introduction of fine details, such as the possibility 
+of Mary being an area representative, into the default reasoning process itself. 
+Such details are taken into consideration only if the default reasoner discovers 
+a discrepancy in its derivation of a belief. One can imagine a similar need for 
+rationalization whenever belief revision is called for. 
+Only one same reason is shared by all of us: 
+we wish to create worlds as real as, 
+but other than the world that is. 
+John Fowles, The French Lieutenant's Woman
+=== [p.51] ===
+A LOGIC FOR DEFAULT REASONING 
+131 
+ACKNOWLEDGEMENTS 
+Keith Clark and Bob Kowalski patiently entertained the many incarnations of my ideas on default 
+reasoning, and o~en asked the right question at the right time. Alan Bundy and David Warren 
+provided valuable insights into the relationship between default proofs and PROLOG. Susan 
+Frykberg through her speculative metaphysics prevented the enterprise from taking itself too 
+seriously. 
+I am indebted to the University of British Columbia for granting me the sabbatical leave during 
+which much of this work was done, and to Imperial College, London, and Bob Kowalski in 
+particular, for making available to me the facilities of the Department of Computing and Controls 
+This paper was written and typed with the financial support of the National Research Council of 
+Canada under grant A7642. 
+REFERENCES 
+Bobrow, D. G. and Winograd, T., An overview of KRL-O, a knowledge representation language, 
+Cognitive Science 1 (1) (January 1977). 
+Church, A., An unsolvable problem of number theory, Amer. J. Math. 58 (1936) 345-363. 
+Clark, K., Negation as failure, in: H. Gallaire and J. Minker (Eds.), Logic and Data Base. 
+(Plenum Press, New York, 1978) 293-322. 
+Doyle, J., Truth Maintenance Systems for Problem Solving, MIT Artificial Intelligence Laboratory, 
+Report AI-TR-419 (January 1978). 
+Green, C., Application of theorem proving to problem solving, Proc. First IJCAI (1969) 219-239. 
+Hayes, P. J., The frame problem and related problems in artificial intelligence, in: A. Elithorn 
+and D. Jones (Eds.), Artificial and Human Thinking (Jossey-Bass, San Francisco, 1973) 45-49. 
+Hayes, P. J., The Logic of Frames, Technical Report, Dept. of Computer Science, Univ. of Essex 
+(November 1977). 
+Hewitt, C., Description and Theoretical Analysis (Using Schemata) of PLANNER: A Language 
+for Proving Theorems and Manipulating Models in a Robot, A.I. Memo No. 251, MIT Project 
+MAC, Cambridge, MA (April 1972). 
+Kowalski, R. A., A Proof procedure using connection graphs, J. ACM 22 (October 1974) 572-595. 
+Kowalski, R. A., Logic for Problem Solving (North-Holland Elsevier, New York, 1979). 
+Kowalski, R. A. and Kuehner, D., Linear resolution with selection fum:tion, Artificial Intelligence 
+2 (1971) 221-260. 
+Kramosil, I., A note on deduction rules with negative premises, Proc. Fourth IJCAI (1975) 53-56. 
+Loveland, D. W., A linear format for resolution, Proc. IRIA Symp. Automatic Demonstration, 
+Versailles, France, 1968 (Springer-Verlag, New York, 1970) 147-162. 
+Luckham, D., Refinements in resolution theory, Proc. IRIA Syrup. Automatic Demonstration, 
+Versailles, Frahce, 1968 (Springer-Verlag, New York, 1970) 163-190. 
+Luckham, D. and Nilsson, N. J., Extracting information from resolution proof trees, Artificial 
+Intelligence 2 (1971) 27-54. 
+McCarthy, J., Epistemological problems of Artificial Intelligence, Proc. Fifth IJCAI (1977) 
+1038-1044. 
+McCarthy, J. and Hayes, P. J., Some philosophical problems from the standpoint of artificial 
+intelligence, in: B. Meltzer and D. Michie (Eds.), Machine Intelligence 4 (Edinburgh University 
+Press, Edinburgh, 1969) 463-502. 
+McDermott, D. and Doyle, J., Non-monotonic Logic I, MIT AI Memo 486 (August 1978). 
+Minsky, M., A framework for representing knowledge, in: P. Winston (Ed.), The Psychology of 
+Computer Vision (McGraw-Hill, New York, 1975). 
+Raphael, B., The frame problem in problem-solving systems, in: N. V. Findler and B. Meltzer 
+(Eds.), Artificial Intelligence and Heuristic Programming (Edinburgh University Press, 
+Edinburgh, 1971).
+=== [p.52] ===
+132 
+R. r,~ 
+Reiter, R., Two results on ordering for resolution with merging and linear format, J.ACM 18 
+(4) (1971) 630-646. 
+Reiter, R., On reasoning by default, Prec. Second Syrup. on Theoretical Issues in NaturaI Language 
+Processing, Urban,a, Illinois, July 25-27, 1978a 
+Reiter, R., On closed world data bases, in: H. GaiUaire and J. Minker .,rEds.), Logic and Data 
+Bases (Plenum Press, New York, 1978b) 55-76. 
+Reiter, R., Some results on default logics, Technical Report, Dept. of Computer Science, Univ. of 
+British Columbia. Forthcoming. 
+Roberts, R. B. and Goldstein, I., The FRL Manual, A.I. Memo No. 409, MIT, Cambridge, MA, 
+1977. 
+Robinson, J. A., A machine oriented logic based on the resolution principle, J.ACM 12 (1965) 
+25-41. 
+Rogers, H., Theory of Recursive Functions and Effective Computability (McGraw-Hill, New York, 
+1967). 
+Roussel, P., PROLOG, Manuel de Reference et d'Utilisation, Group d'Intelligence Artificielle, 
+U.E.R. de Marseiile, France, 1975. 
+Sandewall, E., An approach to the frame problem and its implementation, in: B. Meltzer and 
+D. Michie (Eds.), Machine Inteih'gence 7 (Edinburgh University Press, Edinburgh, 1972) 
+195-204. 
+Waldinger, R., Achieving Several Goals Simultaneously, Artificial Intelligence Center Technical 
+Note 107, Stanford Research Institute, Menlo Park, CA, 1975. 
+Received 22 August 1979

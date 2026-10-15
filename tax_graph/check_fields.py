@@ -13,9 +13,9 @@ from pathlib import Path
 
 from .cases import BASE_A, CASE_A, EVENT_A
 from .scenarios import HOLDING
-from .fields import fields, missing_fields, required_fields
+from .fields import DERIVED, fields, missing_fields, required_fields
 
-DOC = Path(__file__).resolve().parent / "信息收集.md"
+DOC = Path(__file__).resolve().parents[1] / "信息收集.md"
 
 
 def doc_fields():
@@ -41,17 +41,9 @@ def main():
     read = fields()
     read_names = {k.split(".", 1)[1] for k in read}
     documented = doc_fields()
-    derived = {"payee_in_source_jur", "income", "date_of_payment", "consideration", "indirect_cn_target", "bo_via_100pct_owner",
-               "payee_is_related", "payee_is_government", "payee_is_financial_institution", "claim_is_for_prior_year",
-               "onpay_ratio_12m", "hk_resident_or_pe", "is_mne_member", "is_relevant_group_entity",
-               "service_performed_in_source", "service_performed_in_residence", "hk_tp_small_entity",
-               "cfc_tax_burden_ratio", "cfc_profit_total", "cfc_whitelisted", "cfc_share_control", "p2_etr", "p2_additional", "payee_resident_in_cn",
-               "reorg_step", "reorg_control_ratio", "reorg_acquired_ratio", "reorg_same_residence", "reorg_buyer_resident_in_cn",
-               "associated_ratio", "cn_cost_basis", "reorg_special_applied", "reorg_horizon_years",
-               "shares_cancelled", "asset_disposed_within_2y", "unwind_step", "amount_unknown", "p2_iir",
-               "ip_parties_100pct_held", "ip_parties_100pct_sisters", "cn_party", "seller_had_sg_creation_deductions",
-               "ip_horizon_years", "ip_transfer_step", "ip_transfer_mode"}   # facts.py / engine derive these
-    inputs = {"cert_years", "circumstances_changed_on", "accrued_on", "actual",                   # consumed by facts.py / ex_post /
+    derived = DERIVED
+    inputs = {"cert_years", "circumstances_changed_on", "accrued_on", "actual", "parties_related",
+              "delivered_to", "routed_via_trader", "shipped_from",                                         # decision D43               # consumed by facts.py / ex_post /
               "service_location", "accumulated_profits_share", "reduced_capital_ratio", "after_tax_profit",
               "wht_borne_by_payer", "cit_rate", "revenue", "total_assets", "employees",
               "incorporated_in", "managed_from", "senior_management_in_cn", "financial_hr_decisions_in_cn", "records_in_cn",
@@ -60,7 +52,12 @@ def main():
               "p2_negative_tax_election", "p2_carry_back_topup", "p2_qualified_cbcr", "p2_tcsh_history", "p2_cbcr_revenue",
               "p2_cbcr_pbt", "p2_cbcr_simplified_taxes", "p2_dm_avg_revenue_eur", "p2_dm_avg_income_eur", "p2_tcsh_elected",
               "p2_dm_elected", "p2_eur_rate", "p2_eur_rate_2027", "wound_up_by_plan", "unwind_step",
-              "ip_book_value", "ip_book_amortization"}   # engine / facts.py inputs, not a rule's Leaf
+              "ip_book_value", "ip_book_amortization",
+              "branch_profit_<j>", "branch_period_end_<j>", "branch_receipt_<j>", "branch_taxed_<j>",
+              "lease_start", "lease_term_months", "annual_value",
+              "taxable_income_other", "loss_brought_forward", "cn_loss_type", "cn_foreign_loss_offset",          # decision D51
+              "cn_branch_actual_loss", "hk_loss_change_dominant_purpose", "sg_loss_shareholders_same",
+              "sg_loss_continuity_waived", "sg_loss_same_trade", "sg_group_relief_elected"}   # engine / facts.py / losses inputs, not a rule's Leaf
     only_rules = sorted(read_names - documented - derived)
     only_doc = sorted(documented - read_names - inputs)
     out.write("fields read by rules: %d   named in 信息收集.md: %d   derived by facts.py: %d\n" % (len(read_names), len(documented), len(derived)))

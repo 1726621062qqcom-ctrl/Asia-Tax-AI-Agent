@@ -1,0 +1,451 @@
+# Mutation report
+
+killed 356 of 435 mutants on 131 cases (3790 s)
+
+| operator | killed | total |
+|---|---|---|
+| DROP | 174 | 187 |
+| NEG | 113 | 147 |
+| PRED | 41 | 64 |
+| SHIFT | 28 | 37 |
+
+## survivors (no case of the sample notices them)
+
+- NEG sg.nocharge.ip_purchase
+- NEG sg.ip.revenue
+- NEG sg.gain.capital
+- NEG sg.deduct.interest
+- NEG sg.deduct.royalty
+- NEG sg.deduct.service_fee
+- NEG sg.tp.deduction_cap
+- NEG sg.tp.surcharge
+- NEG cn.deduct.service
+- NEG cn.tp.adjustment_interest
+- NEG cn.domestic.dividend_exempt
+- NEG cn.ftc.dividend
+- NEG cn-hk.div.cap_other@cn
+- NEG cn-hk.roy.cap@cn
+- NEG cn-sg.div.cap_other@cn
+- NEG cn-sg.int.cap_other@cn
+- NEG cn-sg.roy.cap@cn
+- NEG cn.tp.deduction_cap
+- NEG cn.deduct.royalty
+- NEG hk.nocharge.outbound
+- NEG hk.nocharge.service_offshore
+- NEG hk.royalty.deemed_profit_associate
+- NEG cn-hk.roy.cap@hk
+- NEG hk.deduct.interest
+- NEG hk.deduct.service_fee
+- NEG hk.tp.deduction_cap
+- NEG hk.fsie.ip_nexus
+- NEG hk.fsie.substance.dividend
+- NEG hk.nocharge.ip_purchase
+- NEG hk.ip.onshore
+- NEG hk.domestic.charge
+- NEG hk.domestic.dividend
+- NEG hk.nocharge.service_offshore_resident
+- NEG hk.gain.capital
+- DROP sg.nocharge.ip_purchase
+- DROP sg.nocharge.dividend
+- DROP sg.s10l.not_in_force
+- DROP cn.liquidation.split
+- DROP cn.capital_reduction.split
+- DROP cn.domestic.dividend_exempt
+- DROP cn.ftc.dividend
+- DROP cn.indirect.listed_safe_harbour
+- DROP hk.nocharge.outbound
+- DROP hk.nocharge.service_offshore
+- DROP hk.nocharge.ip_purchase
+- DROP hk.domestic.dividend
+- DROP hk.nocharge.service_offshore_resident
+- PRED sg.p2.mtt group_revenue_eur ge->gt
+- PRED sg.gain.s13w ratio ge->gt
+- PRED cn-hk.pe.no_pe@cn service_days_12m le->lt
+- PRED cn-sg.pe.no_pe@cn service_days_12m le->lt
+- PRED cn.cfc.charge cfc_tax_burden_ratio lt->le
+- PRED cn.cfc.charge cfc_profit_total ge->gt
+- PRED cn.ftc.dividend direct_ratio lt->le
+- PRED cn-hk.div.cap_qualified@cn onpay_ratio_12m lt->le
+- PRED cn-hk.div.cap_other@cn onpay_ratio_12m lt->le
+- PRED cn-hk.int.cap@cn onpay_ratio_12m lt->le
+- PRED cn-hk.roy.cap@cn onpay_ratio_12m lt->le
+- PRED cn-hk.roy.cap_aircraft_ship_lease@cn onpay_ratio_12m lt->le
+- PRED cn-sg.div.cap_qualified@cn onpay_ratio_12m lt->le
+- PRED cn-sg.div.cap_other@cn onpay_ratio_12m lt->le
+- PRED cn-sg.int.cap_bank@cn onpay_ratio_12m lt->le
+- PRED cn-sg.int.cap_other@cn onpay_ratio_12m lt->le
+- PRED cn-sg.roy.cap@cn onpay_ratio_12m lt->le
+- PRED cn-sg.roy.equipment_base@cn onpay_ratio_12m lt->le
+- PRED cn.indirect.charge cn_asset_ratio ge->gt
+- PRED cn.indirect.charge cn_income_ratio ge->gt
+- PRED cn.reorg.special_resident reorg_acquired_ratio ge->gt
+- PRED cn.deduct.interest related_party_debt_equity_ratio le->lt
+- PRED hk.p2.iir group_revenue_eur ge->gt
+- SHIFT cn.bo.onpay_ratio
+- SHIFT cn.cfc.exempt_profit_max
+- SHIFT cn.cfc.low_tax_ratio
+- SHIFT cn.domestic.dividend_listed_months
+- SHIFT cn.ftc.indirect_ratio_min
+- SHIFT cn.indirect.asset_or_income_ratio
+- SHIFT cn.thincap.ratio_other
+- SHIFT sg.s13w.holding_months_min
+- SHIFT sg.s13w.ratio_min
+
+## killed: where
+
+- NEG sg.wht.interest — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- NEG sg.wht.royalty — ip_OPSG-ULHK_full_open_y1_prior_year_claim
+- NEG sg.wht.equipment_rent — ip_OPSG-ULCN_full_open_y1_lease
+- NEG sg.wht.fixed_place — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- NEG sg.wht.service_fee — services_OPSG-ULHK_full_open_y1_tp_adjusted
+- NEG cn-sg.pe.no_pe@sg — inbound_services_SECN-CLSG_full_open_y1__thr_cn-sg-pe-service_days_above
+- NEG sg.stamp.buyer — holding-ip_OPCN-ULSG_full_open_y1
+- NEG sg.gst.reverse_charge — inbound_services_SECN-CLSG_full_open_y1_partial_gst
+- NEG sg.p2.topup — holding-ip_OPCN-ULSG_full_open_y1
+- NEG sg.p2.mtt — ip_OPHK-ULSG_full_open_y1_vat_decided
+- NEG sg.domestic.charge — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- NEG sg.service.charge — services_OPSG-ULHK_full_open_y1_tp_adjusted
+- NEG sg.ip.wda — holding-ip_OPCN-ULSG_full_open_y1
+- NEG sg.gain.charge — holding-ip_OPCN-ULSG_full_open_y1
+- NEG sg.gain.s13w — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- NEG sg.tp.documentation — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- NEG cn-sg.int.cap_bank@sg — financing_OPSG-ULCN_full_closed_y1
+- NEG cn-sg.int.government_exempt@sg — financing_OPSG-ULCN_full_open_y1_government
+- NEG cn-sg.roy.equipment_base@sg — ip_OPSG-ULCN_full_open_y1_lease
+- NEG cn-sg.ppt@sg — inbound_services_SECN-CLSG_full_open_y1__thr_cn-sg-pe-service_days_at
+- NEG sg.dtr.cor — financing_OPSG-ULCN_full_closed_y1
+- NEG sg.dtr.cor_prior_years — ip_OPSG-ULHK_full_open_y1_prior_year_claim
+- NEG sg.onshore.charge — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- NEG sg.fsie.charge — holding-ip_OPCN-ULSG_full_open_y1
+- NEG sg.fsie.exempt — holding_OPCN-ULHK-HOSG_full_open_y1__thr_sg-fsie-headline_rate_min_above
+- NEG sg.s10l.gain — holding-ip_OPCN-ULSG_full_open_y1
+- NEG sg.s10l.not_in_force — holding-ip_OPCN-ULSG_full_open_y1
+- NEG sg.fsie.gain.base — holding-ip_OPCN-ULSG_full_open_y1
+- NEG sg.ftc.pooling — financing_OPHK-ULCN_full_open_y1_bank__thr_sg-ftc-pooling_headline_rate_min_below
+- NEG cn.wht.statutory — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.wht.reduced — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.service.charge — inbound_services_SESG-CLCN_full_closed_y1
+- NEG cn.wht.service_as_royalty — services_OPCN-ULHK_full_open_y1_tp_adjusted
+- NEG cn-hk.pe.no_pe@cn — inbound_services_SEHK-CLCN_full_closed_y1
+- NEG cn-sg.pe.no_pe@cn — inbound_services_SESG-CLCN_full_closed_y1
+- NEG cn.tp.local_file — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.vat.law.service — services_OPCN-ULSG_full_closed_y1
+- NEG cn.vat.law.royalty — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.vat.law.lease — ip_OPCN-ULHK_full_open_y1_aircraft
+- NEG cn.vat.law.input_credit — ip_OPHK-ULSG_full_open_y1_vat_decided
+- NEG cn.vat.law.interest — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.vat.law.interest_received — financing_OPCN-ULHK_full_open_y1_government
+- NEG cn.wht.vat_exclusive — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.vat.law.ip — ip_OPHK-ULSG_full_open_y1_vat_decided
+- NEG cn.vat.law.ip_sale — ip_OPCN-ULHK_full_open_y1_vat_decided
+- NEG cn.resident.ip.tech — ip_OPCN-ULHK_full_open_y1_vat_decided
+- NEG cn.ip.wht — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn-hk.gain.other@cn — ip-services_OPHK-ULCN_full_open_y1
+- NEG cn-sg.gain.other@cn — ip_OPSG-ULHK_full_open_y1_prior_year_claim
+- NEG cn.stamp.ip.seller — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.stamp.ip.buyer — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.reorg.asset_transfer — ip_OPCN-ULHK_full_open_y1_book_transfer
+- NEG cn.cfc.charge — repatriation_OPHK-ULCN_sparse_open_y1
+- NEG cn.stamp.seller — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.stamp.buyer — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.domestic.charge — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.domestic.dividend_listed — repatriation_OPHK-ULCN_sparse_open_y1
+- NEG cn.resident.charge — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- NEG cn.ftc.dividend_indirect — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- NEG cn.reinvest.deferral — holding_OPCN-ULHK_full_open_y1_reinvest
+- NEG cn.reinvest.credit — holding_OPCN-ULHK_full_open_y1_reinvest
+- NEG cn.gaar — holding_OPCN-ULHK_full_open_y1_reinvest__thr_cn-reinvest-credit_min_holding_months_above
+- NEG cn-hk.div.cap_qualified@cn — holding_OPCN-ULSG-HOHK_full_open_y1__thr_hk-onshore_gain-holding_months_min_above
+- NEG cn-hk.int.cap@cn — holding_OPCN-ULHK-HOSG_full_open_y1__thr_cn-div-holding_months_min_above
+- NEG cn-hk.int.government_exempt@cn — financing_OPCN-ULHK_full_open_y1_government
+- NEG cn-hk.roy.cap_aircraft_ship_lease@cn — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn-hk.ppt@cn — holding_OPCN-ULHK-HOSG_full_open_y1__thr_cn-div-holding_months_min_above
+- NEG cn-sg.div.cap_qualified@cn — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn-sg.int.cap_bank@cn — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn-sg.int.government_exempt@cn — financing_OPCN-ULHK_full_open_y1_government
+- NEG cn-sg.roy.equipment_base@cn — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn-sg.ppt@cn — holding_OPCN-ULHK-HOSG_full_open_y1__thr_cn-div-holding_months_min_above
+- NEG cn.gain.base — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn-hk.gain.residence_only@cn — holding_OPCN-ULHK_full_open_y1_minority
+- NEG cn-hk.gain.listed@cn — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- NEG cn-sg.gain.residence_only@cn — holding_OPCN-ULSG_full_open_y1_minority
+- NEG cn.indirect.charge — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.indirect.gain.base — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.indirect.listed_safe_harbour — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.reorg.special — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.reorg.special_inbound — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.reorg.special_resident — repatriation_OPHK-ULCN_sparse_open_y1
+- NEG cn.reorg.treaty_dividend_denied — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.indirect.reorg — holding_OPCN-ULHK_full_open_y1_reorg
+- NEG cn.deduct.interest — holding-ip_OPCN-ULSG_full_open_y1
+- NEG cn.review — services_OPCN-ULSG_full_closed_y1
+- NEG cn-hk.map — services_OPCN-ULSG_full_closed_y1
+- NEG cn-sg.map — inbound_services_SESG-CLCN_full_closed_y1
+- NEG hk.service.charge — ip-services_OPHK-ULCN_full_open_y1
+- NEG cn-hk.pe.no_pe@hk — inbound_services_SECN-CLHK_full_open_y1__thr_cn-hk-pe-service_days_above
+- NEG hk.royalty.deemed — ip-services_OPHK-ULCN_full_open_y1
+- NEG cn-hk.ppt@hk — inbound_services_SECN-CLHK_full_open_y1__thr_cn-hk-pe-service_days_at
+- NEG hk.stamp.seller — holding-ip_OPCN-ULSG_full_open_y1
+- NEG hk.stamp.buyer — holding-ip_OPCN-ULSG_full_open_y1
+- NEG hk.deduct.royalty — ip-services_OPHK-ULCN_full_open_y1
+- NEG hk.tp.local_file — inbound_services_SESG-CLHK_full_closed_y1
+- NEG hk.onshore.charge — financing_OPHK-ULCN_sparse_open_y1
+- NEG hk.fsie.charge — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- NEG hk.fsie.gain.base — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- NEG hk.fsie.substance.interest — financing_OPHK-ULCN_sparse_open_y1
+- NEG hk.fsie.substance.share_transfer — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- NEG hk.fsie.participation.dividend — holding_OPCN-ULHK-HOSG_full_open_y1__thr_hk-fsie-participation_months_min_above
+- NEG hk.fsie.participation.share_transfer — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- NEG hk.fsie.intragroup_relief — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- NEG hk.ip.fsie — ip-services_OPHK-ULCN_full_open_y1
+- NEG hk.ftc.dta — holding-ip_OPCN-ULSG_full_open_y1
+- NEG hk.ftc.unilateral — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- NEG hk.domestic.royalty_deemed — ip-services_OPHK-ULCN_full_open_y1
+- NEG hk.service.charge_resident — ip-services_OPHK-ULCN_full_open_y1
+- NEG hk.service.base_resident — inbound_services_SEHK-CLCN_full_closed_y1
+- NEG hk.p2.topup — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- NEG hk.p2.iir — ip_OPSG-ULHK_full_open_y1_prior_year_claim
+- NEG hk.onshore_gain.certainty — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- DROP sg.wht.interest — compiler: sg.wht.fixed_place: overrides unknown rule sg.wht.interest
+- DROP sg.wht.royalty — compiler: sg.wht.equipment_rent: overrides unknown rule sg.wht.royalty
+- DROP sg.wht.equipment_rent — compiler: sg.wht.fixed_place: overrides unknown rule sg.wht.equipment_rent
+- DROP sg.wht.fixed_place — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- DROP sg.wht.service_fee — compiler: sg.wht.fixed_place: overrides unknown rule sg.wht.service_fee
+- DROP cn-sg.pe.no_pe@sg — compiler: sg.wht.fixed_place: overrides unknown rule cn-sg.pe.no_pe@sg
+- DROP sg.stamp.buyer — holding-ip_OPCN-ULSG_full_open_y1
+- DROP sg.gst.reverse_charge — holding-ip_OPCN-ULSG_full_open_y1
+- DROP sg.p2.topup — compiler: sg.p2.mtt: overrides unknown rule sg.p2.topup
+- DROP sg.p2.mtt — ip_OPHK-ULSG_full_open_y1_vat_decided
+- DROP sg.p2.base — compiler: SG evaluator registered for no rule: sg.p2.base
+- DROP sg.domestic.charge — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- DROP sg.service.charge — ip-services_OPHK-ULCN_full_open_y1
+- DROP sg.service.base — compiler: SG evaluator registered for no rule: sg.service.base
+- DROP sg.ip.wda — holding-ip_OPCN-ULSG_full_open_y1
+- DROP sg.ip.wda.horizon — compiler: SG evaluator registered for no rule: sg.ip.wda.horizon
+- DROP sg.ip.recapture — compiler: sg.ip.revenue: overrides unknown rule sg.ip.recapture
+- DROP sg.ip.revenue — compiler: SG evaluator registered for no rule: sg.ip.revenue
+- DROP sg.gain.charge — holding-ip_OPCN-ULSG_full_open_y1
+- DROP sg.gain.base — compiler: SG evaluator registered for no rule: sg.gain.base
+- DROP sg.gain.capital — holding-ip_OPCN-ULSG_full_open_y1
+- DROP sg.gain.s13w — holding-ip_OPCN-ULSG_full_open_y1
+- DROP sg.deduct.interest — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- DROP sg.deduct.royalty — ip_OPSG-ULHK_full_open_y1_prior_year_claim
+- DROP sg.deduct.service_fee — services_OPSG-ULHK_full_open_y1_tp_adjusted
+- DROP sg.tp.deduction_cap — compiler: SG evaluator registered for no rule: sg.tp.deduction_cap
+- DROP sg.tp.documentation — compiler: SG evaluator registered for no rule: sg.tp.documentation
+- DROP sg.tp.surcharge — compiler: SG evaluator registered for no rule: sg.tp.surcharge
+- DROP cn-sg.int.cap_bank@sg — compiler: sg.wht.fixed_place: overrides unknown rule cn-sg.int.cap_bank@sg
+- DROP cn-sg.int.cap_other@sg — compiler: sg.wht.fixed_place: overrides unknown rule cn-sg.int.cap_other@sg
+- DROP cn-sg.int.government_exempt@sg — compiler: sg.wht.fixed_place: overrides unknown rule cn-sg.int.government_exempt@sg
+- DROP cn-sg.roy.cap@sg — compiler: sg.wht.fixed_place: overrides unknown rule cn-sg.roy.cap@sg
+- DROP cn-sg.roy.equipment_base@sg — compiler: sg.wht.fixed_place: overrides unknown rule cn-sg.roy.equipment_base@sg
+- DROP cn-sg.ppt@sg — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- DROP sg.wht.due — compiler: SG evaluator registered for no rule: 15th day of the second month following payment
+- DROP sg.wht.due_practice — compiler: SG evaluator registered for no rule: observed:sg.wht.due_date_saturday_rolls
+- DROP sg.wht.penalty — compiler: SG evaluator registered for no rule: sg.wht.penalty
+- DROP sg.dtr.cor — compiler: sg.wht.fixed_place: overrides unknown rule sg.dtr.cor
+- DROP sg.dtr.cor_prior_years — compiler: sg.wht.fixed_place: overrides unknown rule sg.dtr.cor_prior_years
+- DROP sg.onshore.charge — holding-ip_OPCN-ULSG_full_open_y1
+- DROP sg.fsie.charge — compiler: sg.service.charge: overrides unknown rule sg.fsie.charge
+- DROP sg.fsie.exempt — holding-ip_OPCN-ULSG_full_open_y1
+- DROP sg.s10l.gain — holding-ip_OPCN-ULSG_full_open_y1
+- DROP sg.fsie.gain.base — compiler: SG evaluator registered for no rule: sg.fsie.gain.base
+- DROP sg.ftc.dta — holding-ip_OPCN-ULSG_full_open_y1
+- DROP sg.ftc.unilateral — holding-ip_OPCN-ULSG_full_open_y1
+- DROP sg.objection — compiler: SG evaluator registered for no rule: sg.objection
+- DROP sg.objection.source — compiler: SG evaluator registered for no rule: sg.objection.source
+- DROP sg.ftc.pooling — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.wht.statutory — compiler: cn.wht.reduced: overrides unknown rule cn.wht.statutory
+- DROP cn.wht.reduced — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.service.charge — compiler: cn.wht.service_as_royalty: overrides unknown rule cn.service.charge
+- DROP cn.wht.service_as_royalty — inbound_services_SESG-CLCN_full_closed_y1
+- DROP cn.service.deemed_profit — compiler: cn.wht.service_as_royalty: overrides unknown rule cn.service.deemed_profit
+- DROP cn.deduct.service — services_OPCN-ULSG_full_closed_y1
+- DROP cn-hk.pe.no_pe@cn — compiler: cn.wht.service_as_royalty: overrides unknown rule cn-hk.pe.no_pe@cn
+- DROP cn-sg.pe.no_pe@cn — compiler: cn.wht.service_as_royalty: overrides unknown rule cn-sg.pe.no_pe@cn
+- DROP cn.tp.local_file — compiler: CN evaluator registered for no rule: cn.tp.local_file
+- DROP cn.tp.adjustment_interest — compiler: CN evaluator registered for no rule: cn.tp.adjustment_interest
+- DROP cn.vat.law.service — services_OPCN-ULSG_full_closed_y1
+- DROP cn.vat.law.royalty — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.vat.law.lease — ip_OPCN-ULHK_full_open_y1_aircraft
+- DROP cn.vat.law.input_credit — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.vat.law.interest — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.vat.law.interest_received — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.wht.vat_exclusive — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.resident.vat_exclusive — financing_OPHK-ULCN_sparse_open_y1
+- DROP cn.vat.law.ip — ip-services_OPHK-ULCN_full_open_y1
+- DROP cn.vat.law.ip_sale — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.resident.ip.charge — compiler: CN evaluator registered for no rule: cn.resident.ip.charge
+- DROP cn.resident.ip.tech — compiler: CN evaluator registered for no rule: cn.resident.ip.tech
+- DROP cn.ip.wht — compiler: CN evaluator registered for no rule: cn.ip.wht
+- DROP cn-hk.gain.other@cn — compiler: cn-hk.ppt@cn: overrides unknown rule cn-hk.gain.other@cn
+- DROP cn-sg.gain.other@cn — compiler: cn-sg.ppt@cn: overrides unknown rule cn-sg.gain.other@cn
+- DROP cn.ip.amortization — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.ip.amortization.horizon — compiler: CN evaluator registered for no rule: cn.ip.amortization.horizon
+- DROP cn.stamp.ip.seller — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.stamp.ip.buyer — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.reorg.asset_transfer — ip_OPCN-ULHK_full_open_y1_book_transfer
+- DROP cn.reorg.asset_transfer.basis — compiler: CN evaluator registered for no rule: cn.reorg.asset_transfer.basis
+- DROP cn.cfc.charge — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- DROP cn.stamp.seller — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.stamp.buyer — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.domestic.charge — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.domestic.dividend_listed — repatriation_OPHK-ULCN_sparse_open_y1
+- DROP cn.resident.charge — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- DROP cn.resident.gain.charge — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.resident.gain.base — compiler: cn.reorg.special_resident: overrides unknown rule cn.resident.gain.base
+- DROP cn.ftc.direct — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- DROP cn.ftc.carryforward — holding_OPHK-ULCN_full_open_y1_carryforward
+- DROP cn.ftc.dividend_indirect — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- DROP cn.reinvest.deferral — compiler: cn.gaar: overrides unknown rule cn.reinvest.deferral
+- DROP cn.reinvest.credit — compiler: cn.gaar: overrides unknown rule cn.reinvest.credit
+- DROP cn.gaar — compiler: anti-abuse parameter not referenced by any rule: cn.gaar
+- DROP cn-hk.div.cap_qualified@cn — compiler: cn-hk.ppt@cn: overrides unknown rule cn-hk.div.cap_qualified@cn
+- DROP cn-hk.div.cap_other@cn — compiler: cn-hk.ppt@cn: overrides unknown rule cn-hk.div.cap_other@cn
+- DROP cn-hk.int.cap@cn — compiler: cn-hk.ppt@cn: overrides unknown rule cn-hk.int.cap@cn
+- DROP cn-hk.int.government_exempt@cn — compiler: cn-hk.ppt@cn: overrides unknown rule cn-hk.int.government_exempt@cn
+- DROP cn-hk.roy.cap@cn — compiler: cn-hk.ppt@cn: overrides unknown rule cn-hk.roy.cap@cn
+- DROP cn-hk.roy.cap_aircraft_ship_lease@cn — compiler: cn-hk.ppt@cn: overrides unknown rule cn-hk.roy.cap_aircraft_ship_lease@cn
+- DROP cn-hk.ppt@cn — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn-sg.div.cap_qualified@cn — compiler: cn-sg.ppt@cn: overrides unknown rule cn-sg.div.cap_qualified@cn
+- DROP cn-sg.div.cap_other@cn — compiler: cn-sg.ppt@cn: overrides unknown rule cn-sg.div.cap_other@cn
+- DROP cn-sg.int.cap_bank@cn — compiler: cn-sg.ppt@cn: overrides unknown rule cn-sg.int.cap_bank@cn
+- DROP cn-sg.int.cap_other@cn — compiler: cn-sg.ppt@cn: overrides unknown rule cn-sg.int.cap_other@cn
+- DROP cn-sg.int.government_exempt@cn — compiler: cn-sg.ppt@cn: overrides unknown rule cn-sg.int.government_exempt@cn
+- DROP cn-sg.roy.cap@cn — compiler: cn-sg.ppt@cn: overrides unknown rule cn-sg.roy.cap@cn
+- DROP cn-sg.roy.equipment_base@cn — compiler: cn-sg.ppt@cn: overrides unknown rule cn-sg.roy.equipment_base@cn
+- DROP cn-sg.ppt@cn — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.gain.base — compiler: CN evaluator registered for no rule: cn.gain.base
+- DROP cn-hk.gain.residence_only@cn — compiler: cn-hk.ppt@cn: overrides unknown rule cn-hk.gain.residence_only@cn
+- DROP cn-hk.gain.listed@cn — compiler: cn-hk.ppt@cn: overrides unknown rule cn-hk.gain.listed@cn
+- DROP cn-sg.gain.residence_only@cn — compiler: cn-sg.ppt@cn: overrides unknown rule cn-sg.gain.residence_only@cn
+- DROP cn.indirect.charge — compiler: anti-abuse parameter not referenced by any rule: cn.indirect.value_ratio
+- DROP cn.indirect.gain.base — compiler: CN evaluator registered for no rule: cn.indirect.gain.base
+- DROP cn.reorg.special — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.reorg.special_inbound — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.reorg.special_resident — compiler: CN evaluator registered for no rule: cn.reorg.special_resident
+- DROP cn.reorg.treaty_dividend_denied — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.indirect.reorg — holding_OPCN-ULHK_full_open_y1_reorg
+- DROP cn.deduct.interest — compiler: anti-abuse parameter not referenced by any rule: cn.thincap.disallow
+- DROP cn.deduct.interest.benchmark — compiler: CN evaluator registered for no rule: cn.deduct.interest.benchmark
+- DROP cn.tp.deduction_cap — compiler: CN evaluator registered for no rule: cn.tp.deduction_cap
+- DROP cn.deduct.royalty — holding-ip_OPCN-ULSG_full_open_y1
+- DROP cn.wht.remit — compiler: CN evaluator registered for no rule: actual payment or date payable
+- DROP cn.wht.late_surcharge — compiler: CN evaluator registered for no rule: cn.wht.late_surcharge
+- DROP cn.refund — compiler: CN evaluator registered for no rule: cn.refund
+- DROP cn.review — compiler: CN evaluator registered for no rule: cn.review
+- DROP cn-hk.map — compiler: CN evaluator registered for no rule: cn-hk.map
+- DROP cn-sg.map — compiler: CN evaluator registered for no rule: cn-sg.map
+- DROP hk.service.charge — ip-services_OPHK-ULCN_full_open_y1
+- DROP hk.service.base — compiler: HK evaluator registered for no rule: hk.service.base
+- DROP cn-hk.pe.no_pe@hk — compiler: cn-hk.ppt@hk: overrides unknown rule cn-hk.pe.no_pe@hk
+- DROP hk.royalty.deemed — ip-services_OPHK-ULCN_full_open_y1
+- DROP hk.royalty.deemed_profit — compiler: hk.royalty.deemed_profit_associate: overrides unknown rule hk.royalty.deemed_profit
+- DROP hk.royalty.deemed_profit_associate — compiler: hk.domestic.charge: overrides unknown rule hk.royalty.deemed_profit_associate
+- DROP cn-hk.roy.cap@hk — compiler: cn-hk.ppt@hk: overrides unknown rule cn-hk.roy.cap@hk
+- DROP cn-hk.ppt@hk — ip-services_OPHK-ULCN_full_open_y1
+- DROP hk.stamp.seller — holding-ip_OPCN-ULSG_full_open_y1
+- DROP hk.stamp.buyer — holding-ip_OPCN-ULSG_full_open_y1
+- DROP hk.deduct.interest — financing_OPHK-ULCN_sparse_open_y1
+- DROP hk.deduct.service_fee — ip-services_OPHK-ULCN_full_open_y1
+- DROP hk.deduct.royalty — ip-services_OPHK-ULCN_full_open_y1
+- DROP hk.tp.deduction_cap — compiler: HK evaluator registered for no rule: hk.tp.deduction_cap
+- DROP hk.tp.local_file — compiler: HK evaluator registered for no rule: hk.tp.local_file
+- DROP hk.onshore.charge — holding-ip_OPCN-ULSG_full_open_y1
+- DROP hk.fsie.charge — compiler: hk.onshore.charge: overrides unknown rule hk.fsie.charge
+- DROP hk.fsie.gain.base — compiler: HK evaluator registered for no rule: hk.fsie.gain.base
+- DROP hk.fsie.ip_nexus — compiler: hk.onshore.charge: overrides unknown rule hk.fsie.ip_nexus
+- DROP hk.fsie.substance.dividend — holding-ip_OPCN-ULSG_full_open_y1
+- DROP hk.fsie.substance.interest — compiler: hk.onshore.charge: overrides unknown rule hk.fsie.substance.interest
+- DROP hk.fsie.substance.share_transfer — holding-ip_OPCN-ULSG_full_open_y1
+- DROP hk.fsie.participation.dividend — holding-ip_OPCN-ULSG_full_open_y1
+- DROP hk.fsie.participation.share_transfer — holding-ip_OPCN-ULSG_full_open_y1
+- DROP hk.fsie.intragroup_relief — holding_OPCN-ULHK_full_open_y1_reinvest
+- DROP hk.ip.recapture — compiler: hk.ip.fsie: overrides unknown rule hk.ip.recapture
+- DROP hk.ip.fsie — compiler: hk.ip.onshore: overrides unknown rule hk.ip.fsie
+- DROP hk.ip.onshore — compiler: HK evaluator registered for no rule: hk.ip.onshore
+- DROP hk.ftc.dta — holding-ip_OPCN-ULSG_full_open_y1
+- DROP hk.ftc.unilateral — holding_OPSG-ULHK-HOCN_sparse_open_y1
+- DROP hk.domestic.charge — ip-services_OPHK-ULCN_full_open_y1
+- DROP hk.domestic.royalty_deemed — compiler: hk.domestic.charge: overrides unknown rule hk.domestic.royalty_deemed
+- DROP hk.service.charge_resident — inbound_services_SEHK-CLCN_full_closed_y1
+- DROP hk.service.base_resident — compiler: HK evaluator registered for no rule: hk.service.base_resident
+- DROP hk.p2.topup — compiler: hk.p2.iir: overrides unknown rule hk.p2.topup
+- DROP hk.p2.iir — ip_OPSG-ULHK_full_open_y1_prior_year_claim
+- DROP hk.p2.base — compiler: HK evaluator registered for no rule: hk.p2.base
+- DROP hk.objection — compiler: HK evaluator registered for no rule: hk.objection
+- DROP hk.objection.source — compiler: HK evaluator registered for no rule: hk.objection.source
+- DROP hk.appeal — compiler: HK evaluator registered for no rule: hk.appeal
+- DROP hk.gain.charge — holding-ip_OPCN-ULSG_full_open_y1
+- DROP hk.gain.base — compiler: HK evaluator registered for no rule: hk.gain.base
+- DROP hk.gain.capital — holding-ip_OPCN-ULSG_full_open_y1
+- DROP hk.onshore_gain.certainty — holding-ip_OPCN-ULSG_full_open_y1
+- PRED cn-sg.pe.no_pe@sg service_days_12m le->lt — inbound_services_SECN-CLSG_full_open_y1__thr_cn-sg-pe-service_days_at
+- PRED sg.stamp.buyer associated_ratio ge->gt — holding_OPCN-ULHK-HOSG_full_open_y1__thr_sg-stamp-associated_capital_min_at
+- PRED sg.p2.topup group_revenue_eur ge->gt — financing_OPCN-ULSG_full_open_y1__thr_sg-p2-revenue_threshold_at
+- PRED sg.gain.s13w holding_months ge->gt — holding-ip_OPCN-ULSG_full_open_y1
+- PRED sg.tp.documentation gross_revenue gt->ge — holding_OPSG-ULCN-HOHK_full_open_y1__thr_sg-tp-documentation_revenue_min_at
+- PRED sg.fsie.exempt foreign_headline_rate ge->gt — holding_OPCN-ULHK-HOSG_full_open_y1__thr_hk-fsie-reference_rate_at
+- PRED sg.ftc.pooling foreign_headline_rate ge->gt — financing_OPHK-ULCN_full_open_y1_bank__thr_sg-ftc-pooling_headline_rate_min_at
+- PRED cn.tp.local_file related_party_volume gt->ge — holding_OPCN-ULHK-HOSG_full_open_y1__thr_cn-tp-local_file_other_threshold_at
+- PRED cn.domestic.dividend_listed holding_months lt->le — repatriation_OPHK-ULCN_sparse_open_y1
+- PRED cn.ftc.dividend_indirect direct_ratio ge->gt — repatriation_OPHK-ULCN_sparse_open_y1
+- PRED cn.reinvest.credit planned_holding_months ge->gt — holding_OPCN-ULHK_full_open_y1_reinvest
+- PRED cn-hk.div.cap_qualified@cn direct_ratio ge->gt — holding_OPCN-ULHK_full_open_y1_minority
+- PRED cn-hk.div.cap_qualified@cn holding_months ge->gt — holding-ip_OPCN-ULSG_full_open_y1
+- PRED cn-sg.div.cap_qualified@cn direct_ratio ge->gt — holding_OPCN-ULHK_full_open_y1_minority
+- PRED cn-sg.div.cap_qualified@cn holding_months ge->gt — holding-ip_OPCN-ULSG_full_open_y1
+- PRED cn-hk.gain.residence_only@cn immovable_ratio le->lt — holding_OPCN-ULHK_full_open_y1_minority__thr_cn-hk-gain-immovable_ratio_over_at
+- PRED cn-hk.gain.residence_only@cn max_ratio_12m lt->le — holding_OPCN-ULHK-HOSG_full_open_y1__thr_cn-hk-div-ratio_min_at
+- PRED cn-sg.gain.residence_only@cn immovable_ratio le->lt — holding_OPCN-ULHK_full_open_y1_minority__thr_cn-hk-gain-immovable_ratio_over_at
+- PRED cn-sg.gain.residence_only@cn max_ratio_12m lt->le — holding_OPCN-ULHK-HOSG_full_open_y1__thr_cn-hk-div-ratio_min_at
+- PRED cn.indirect.charge cn_value_ratio ge->gt — holding_OPCN-ULHK-HOSG_full_open_y1__thr_cn-indirect-value_ratio_at
+- PRED cn.reorg.special reorg_control_ratio ge->gt — holding-ip_OPCN-ULSG_full_open_y1
+- PRED cn.reorg.special reorg_acquired_ratio ge->gt — holding_OPCN-ULHK_full_open_y1__thr_cn-reorg-acquired_ratio_min_at
+- PRED cn.reorg.special reorg_equity_payment_share ge->gt — holding-ip_OPCN-ULSG_full_open_y1
+- PRED cn.reorg.special_inbound reorg_control_ratio ge->gt — holding-ip_OPCN-ULSG_full_open_y1
+- PRED cn.reorg.special_inbound reorg_acquired_ratio ge->gt — holding_OPCN-ULHK_full_open_y1__thr_cn-reorg-acquired_ratio_min_at
+- PRED cn.reorg.special_inbound reorg_equity_payment_share ge->gt — holding-ip_OPCN-ULSG_full_open_y1
+- PRED cn.reorg.special_resident reorg_control_ratio ge->gt — repatriation_OPHK-ULCN_sparse_open_y1
+- PRED cn.reorg.special_resident reorg_equity_payment_share ge->gt — repatriation_OPHK-ULCN_sparse_open_y1
+- PRED cn.indirect.reorg intragroup_reorg_ratio ge->gt — holding_OPCN-ULHK_full_open_y1_reorg__thr_cn-indirect-reorg_ratio_at
+- PRED cn-hk.pe.no_pe@hk service_days_12m le->lt — inbound_services_SECN-CLHK_full_open_y1__thr_cn-hk-pe-service_days_at
+- PRED hk.stamp.seller associated_ratio ge->gt — holding_OPCN-ULHK-HOSG_full_open_y1__thr_hk-stamp-associated_ratio_at
+- PRED hk.stamp.buyer associated_ratio ge->gt — holding_OPCN-ULHK-HOSG_full_open_y1__thr_hk-stamp-associated_ratio_at
+- PRED hk.fsie.participation.dividend ratio ge->gt — holding_OPCN-ULHK-HOSG_full_open_y1__thr_hk-fsie-participation_ratio_min_above
+- PRED hk.fsie.participation.dividend holding_months ge->gt — holding-ip_OPCN-ULSG_full_open_y1
+- PRED hk.fsie.participation.dividend foreign_headline_rate ge->gt — holding_OPCN-ULHK-HOSG_full_open_y1__thr_hk-fsie-reference_rate_at
+- PRED hk.fsie.participation.share_transfer ratio ge->gt — holding_OPCN-ULHK-HOSG_full_open_y1__thr_hk-fsie-participation_ratio_min_above
+- PRED hk.fsie.participation.share_transfer holding_months ge->gt — holding-ip_OPCN-ULSG_full_open_y1
+- PRED hk.fsie.participation.share_transfer foreign_headline_rate ge->gt — holding_OPCN-ULHK-HOSG_full_open_y1__thr_hk-fsie-reference_rate_at
+- PRED hk.p2.topup group_revenue_eur ge->gt — financing_OPCN-ULHK_full_open_y1__thr_p2-revenue_threshold_at
+- PRED hk.onshore_gain.certainty ratio ge->gt — holding_OPCN-ULSG-HOHK_full_open_y1__thr_hk-onshore_gain-ratio_min_at
+- PRED hk.onshore_gain.certainty holding_months ge->gt — holding-ip_OPCN-ULSG_full_open_y1
+- SHIFT cn-hk.div.ratio_min — holding_OPCN-ULHK-HOSG_full_open_y1__thr_cn-hk-div-ratio_min_at
+- SHIFT cn-hk.gain.immovable_ratio_over — holding_OPCN-ULHK_full_open_y1_minority__thr_cn-hk-gain-immovable_ratio_over_above
+- SHIFT cn-hk.gain.share_ratio_min — holding_OPCN-ULHK_full_open_y1_minority__thr_cn-hk-gain-share_ratio_min_at
+- SHIFT cn-hk.pe.service_days — inbound_services_SECN-CLHK_full_open_y1__thr_cn-hk-pe-service_days_above
+- SHIFT cn-sg.div.ratio_min — holding_OPCN-ULHK-HOSG_full_open_y1__thr_cn-sg-div-ratio_min_at
+- SHIFT cn-sg.gain.immovable_ratio_over — holding_OPCN-ULSG_full_open_y1_minority__thr_cn-sg-gain-immovable_ratio_over_above
+- SHIFT cn-sg.gain.share_ratio_min — holding_OPCN-ULSG_full_open_y1_minority__thr_cn-sg-gain-share_ratio_min_at
+- SHIFT cn-sg.pe.service_days — inbound_services_SECN-CLSG_full_open_y1__thr_cn-sg-pe-service_days_above
+- SHIFT cn.div.holding_months_min — holding_OPCN-ULHK-HOSG_full_open_y1__thr_cn-div-holding_months_min_at
+- SHIFT cn.indirect.reorg_ratio — holding_OPCN-ULHK_full_open_y1_reorg__thr_cn-indirect-reorg_ratio_at
+- SHIFT cn.indirect.value_ratio — holding_OPCN-ULHK-HOSG_full_open_y1__thr_cn-indirect-value_ratio_at
+- SHIFT cn.reinvest.credit_min_holding_months — holding_OPCN-ULHK_full_open_y1_reinvest__thr_cn-reinvest-credit_min_holding_months_at
+- SHIFT cn.reorg.acquired_ratio_min — holding_OPCN-ULHK_full_open_y1__thr_cn-reorg-acquired_ratio_min_at
+- SHIFT cn.reorg.control_ratio — holding_OPCN-ULHK_full_open_y1__thr_cn-reorg-control_ratio_at
+- SHIFT cn.reorg.equity_payment_min — holding_OPCN-ULHK_full_open_y1__thr_cn-reorg-equity_payment_min_at
+- SHIFT cn.tp.local_file_other_threshold — holding_OPCN-ULHK-HOSG_full_open_y1__thr_cn-tp-local_file_other_threshold_above
+- SHIFT hk.fsie.participation_months_min — holding_OPCN-ULHK-HOSG_full_open_y1__thr_hk-fsie-participation_months_min_at
+- SHIFT hk.fsie.participation_ratio_min — holding_OPCN-ULHK-HOSG_full_open_y1__thr_hk-fsie-participation_ratio_min_at
+- SHIFT hk.fsie.reference_rate — holding_OPCN-ULHK-HOSG_full_open_y1__thr_hk-fsie-reference_rate_at
+- SHIFT hk.onshore_gain.holding_months_min — holding_OPCN-ULSG-HOHK_full_open_y1__thr_hk-onshore_gain-holding_months_min_at
+- SHIFT hk.onshore_gain.ratio_min — holding_OPCN-ULSG-HOHK_full_open_y1__thr_hk-onshore_gain-ratio_min_at
+- SHIFT hk.stamp.associated_ratio — holding_OPCN-ULHK-HOSG_full_open_y1__thr_hk-stamp-associated_ratio_at
+- SHIFT p2.revenue_threshold — financing_OPCN-ULHK_full_open_y1__thr_p2-revenue_threshold_at
+- SHIFT sg.fsie.headline_rate_min — holding_OPCN-ULHK-HOSG_full_open_y1__thr_sg-fsie-headline_rate_min_at
+- SHIFT sg.ftc.pooling_headline_rate_min — financing_OPHK-ULCN_full_open_y1_bank__thr_sg-ftc-pooling_headline_rate_min_at
+- SHIFT sg.p2.revenue_threshold — financing_OPCN-ULSG_full_open_y1__thr_sg-p2-revenue_threshold_at
+- SHIFT sg.stamp.associated_capital_min — holding_OPCN-ULHK-HOSG_full_open_y1__thr_sg-stamp-associated_capital_min_at
+- SHIFT sg.tp.documentation_revenue_min — holding_OPSG-ULCN-HOHK_full_open_y1__thr_sg-tp-documentation_revenue_min_above

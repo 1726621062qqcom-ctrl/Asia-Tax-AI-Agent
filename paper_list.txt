@@ -1,0 +1,466 @@
+paper_list.txt
+跨境税务图项目：待收集文献清单
+整理日期：2026-10-04
+
+标记说明
+  ★    优先读，会直接影响设计
+  [V]  本次已联网核对题目与出处
+  [M]  凭记忆列出，题目、年份、编号收集时请再核对
+  作者待查  只核对到题目和编号，作者未确认
+  用途  对应设计中的哪个函数、常量或文档
+
+
+============================================================
+A. 法律即代码，税法形式化
+   对应：Rule、min(domestic, cap)、一般规则加例外、构建期专家评审
+============================================================
+
+[A1] ★ [V] Merigoux, Chataing, Protzenko. Catala: A Programming Language for the Law.
+     PACMPL 5 (ICFP), 2021. arXiv:2103.03198. DOI 10.1145/3473582
+     用途：带优先级的缺省逻辑；法律专家对着条文审代码的方法
+
+[A2]   [M] Merigoux, Monat, Protzenko. A Modern Compiler for the French Tax Code.
+     Compiler Construction (CC), 2021. arXiv:2011.07966
+     用途：真实税法引擎的形式语义与验证
+
+[A3]   [V] Huttner, Merigoux. Catala: Moving Towards the Future of Legal Expert Systems.
+     Artificial Intelligence and Law, 2022. DOI 10.1007/s10506-022-09328-5
+     用途：律师与程序员结对开发流程，对应构建期评审
+
+[A4] ★ [M] Lawsky. A Logic for Statutes.
+     Florida Tax Review 21, 2017
+     用途：论证税法结构是缺省逻辑
+
+[A5]   [M] Lawsky. Formalizing the Code.
+     Tax Law Review 70, 2017
+
+[A6]   [V] Lawsky. Coding the Code: Catala and Computationally Accessible Tax Law.
+     SMU Law Review 75(3), 2022. SSRN 4291177
+
+[A7]   [M] Sergot, Sadri, Kowalski, Kriwaczek, Hammond, Cory. The British Nationality Act as a Logic Program.
+     Communications of the ACM 29(5), 1986
+     用途：经典起点，相关工作必引
+
+[A8]   [M] Reiter. A Logic for Default Reasoning.
+     Artificial Intelligence 13, 1980
+     用途：A1、A4 的理论基础
+
+[A9]   [V] Programming Languages and Law: A Research Agenda.
+     ACM CSLAW 2022. DOI 10.1145/3511265.3550447. 作者我记得是 Grimmelmann，待核对
+
+[A10]  [V] Lorenzo, Pietromatera, Holzenberger. Translating Tax Law to Code with LLMs: A Benchmark and Evaluation Framework.
+     NLLP Workshop 2025. https://aclanthology.org/2025.nllp-1.4/
+     用途：构建期用 LLM 起草 RULES 的可行性与评测方法
+
+[A11]  [V] Janatian, Westermann, Tan, Savelka, Benyekhlef. From Text to Structure: Using Large Language Models to Support the Development of Legal Expert Systems.
+     JURIX 2023. arXiv:2311.04911
+     用途：同上
+
+
+============================================================
+B. 国际税收的网络分析
+   对应：图模型、枢纽角色、路径上的税负复合、ex_ante 的基准数
+============================================================
+
+[B1] ★ [V] van 't Riet, Lejour. Optimal tax routing: network analysis of FDI diversion.
+     International Tax and Public Finance 25, 2018. DOI 10.1007/s10797-018-9491-6
+     用途：把协定网络建成图，用最短路径算最低税负汇回路线
+
+[B2] ★ [V] Hong. Tax treaties and foreign direct investment: a network approach.
+     International Tax and Public Finance 25(5), 1277-1320, 2018
+     用途：直接路线与间接路线的税负最小化
+
+[B3]   [V] Park, Lee, Yang. Navigating optimal treaty-shopping routes using a multiplex network model.
+     PLoS ONE 16(8): e0256764, 2021. 注意该文另有一篇更正
+     用途：股息、利息、特许权使用费分层的多重网络，对应 Income 分类型
+
+[B4]   [V] Nakamoto, Ikeda. Identification of Conduit Countries and Community Structures in the Withholding Tax Networks.
+     arXiv:1806.00799, 2018
+     用途：按预提税率建加权有向图，识别导管国
+
+[B5]   [M] Garcia-Bernardo, Fichtner, Takes, Heemskerk. Uncovering Offshore Financial Centers: Conduits and Sinks in the Global Corporate Ownership Network.
+     Scientific Reports 7, 2017
+     用途：香港、新加坡作为导管的实证依据
+
+[B6]   [V] Petkova, Stasio, Zagler. On the relevance of double tax treaties.
+     International Tax and Public Finance 27, 2020. DOI 10.1007/s10797-019-09570-9
+
+[B7]   [V] Petkova. Withholding tax rates on dividends: symmetries versus asymmetries or single- versus multi-rated double tax treaties.
+     International Tax and Public Finance 28(4), 890-940, 2021
+     用途：持股门槛导致的多档税率，对应 dividend_relief 字段组
+
+[B8]   [V] van 't Riet, Lejour. Developing Countries, Tax Treaty Shopping and the Global Minimum Tax.
+     Public Finance Review, 2025. DOI 10.1177/10911421251334849
+     用途：最新进展；支柱二对路线的影响，第一版不做但需说明
+
+[B9]   [M] Weyzig. Tax treaty shopping: structural determinants of FDI routed through the Netherlands.
+     International Tax and Public Finance 20(6), 910-937, 2013
+
+[B10]  [M] Mintz, Weichenrieder. The Indirect Side of Direct Investment: Multinational Company Finance and Taxation.
+     MIT Press, 2010
+
+[B11]  [M] Torslov, Wier, Zucman. The Missing Profits of Nations.
+     Review of Economic Studies 90(3), 2023
+
+[B12]  [M] Beer, de Mooij, Liu. International Corporate Tax Avoidance: A Review of the Channels, Magnitudes, and Blind Spots.
+     Journal of Economic Surveys 34(3), 2020
+     用途：综述，写背景用
+
+[B13]  [M] Damgaard, Elkjaer, Johannesen. What Is Real and What Is Not in the Global FDI Network?
+     IMF Working Paper 19/274, 2019
+
+[B14]  [V] Conduit countries and treaty shopping. 收于 Research Handbook on the Economics of Tax Havens 第 12 章.
+     Edward Elgar. 作者待查
+
+
+============================================================
+C. LLM 的法条推理
+   对应：LLM 只做 extract 与 narrate、计算交给程序这个分工
+============================================================
+
+[C1] ★ [M] Holzenberger, Blair-Stanek, Van Durme. A Dataset for Statutory Reasoning in Tax Law Entailment and Question Answering.
+     NLLP Workshop at KDD, 2020. arXiv:2005.05257
+     用途：SARA 数据集，法条推理的标准基准
+
+[C2]   [V] Holzenberger, Van Durme. Factoring Statutory Reasoning as Language Understanding Challenges.
+     ACL 2021. arXiv:2105.07903
+
+[C3]   [M] Blair-Stanek, Holzenberger, Van Durme. Can GPT-3 Perform Statutory Reasoning?
+     ICAIL 2023. arXiv:2302.06100
+
+[C4]   [V] Connecting Symbolic Statutory Reasoning with Legal Information Extraction.
+     NLLP Workshop 2023. https://aclanthology.org/2023.nllp-1.12/ 作者我记得是 Holzenberger, Van Durme，待核对
+     用途：抽取与符号推理的衔接，对应 extract 之后进 engine
+
+[C5] ★ [V] Jurayj, Holzenberger, Van Durme. Language Models and Logic Programs for Trustworthy Tax Reasoning.
+     AAAI 2026, vol. 40, pp. 38688-38698. arXiv:2508.21051
+     用途：LLM 加符号求解器算税的最新结果，与本项目分工最接近
+
+[C6]   [V] Bock, Molisee, Ozer, Shah. TaxCalcBench: Evaluating Frontier Models on the Tax Calculation Task.
+     arXiv:2507.16126, 2025
+     用途：前沿模型直接算税的准确率很低，支持“循环内无 LLM”
+
+[C7]   [V] Kordjamshidi, Aslan, Seshadri, Barrett, Santus. Reasoners or Translators? Contamination-aware Evaluation and Neuro-Symbolic Robustness in Tax Law.
+     arXiv:2605.16052, 2026
+
+[C8]   [V] Wang, Wong-Toropainen, Amrollahi, Bai, Bansal, Garg, Gilpin. Know Your Limits: On the Faithfulness of LLMs as Solvers and Autoformalizers in Legal Reasoning.
+     arXiv:2606.16118, 2026
+
+[C9]   [V] Sadowski, Chudziak. Solving versus Verifying: Catching Contradictions in Tax Reasoning Systems.
+     ICTAI 2026. arXiv:2609.05928
+     用途：输入矛盾的检测，对应文档间冲突降为 U(MISSING)
+
+[C10]  [V] Yadamsuren, Platt, Diaz. LLM-Assisted Formalization Enables Deterministic Detection of Statutory Inconsistency in the Internal Revenue Code.
+     arXiv:2511.11954, 2025
+     用途：对应整合表中的冲突即缺陷
+
+[C11]  [M] Guha 等. LegalBench: A Collaboratively Built Benchmark for Measuring Legal Reasoning in Large Language Models.
+     NeurIPS 2023 Datasets and Benchmarks. arXiv:2308.11462
+
+[C12]  [M] Nay 等. Large Language Models as Tax Attorneys: A Case Study in Legal Capabilities Emergence.
+     arXiv:2306.07075, 2023
+
+[C13]  [M] Pan, Albalak, Wang, Wang. Logic-LM: Empowering Large Language Models with Symbolic Solvers for Faithful Logical Reasoning.
+     Findings of EMNLP 2023. arXiv:2305.12295
+
+[C14]  [M] Olausson 等. LINC: A Neurosymbolic Approach for Logical Reasoning by Combining Language Models with First-Order Logic Provers.
+     EMNLP 2023. arXiv:2310.15164
+
+[C15]  [M] Hendrycks, Burns, Chen, Ball. CUAD: An Expert-Annotated NLP Dataset for Legal Contract Review.
+     NeurIPS 2021 Datasets and Benchmarks. arXiv:2103.06268
+     用途：合同条款抽取，对应 extract
+
+[C16]  [V] Performance of LLMs on VITA test: potential for AI-assisted tax returns for low income taxpayers.
+     Artificial Intelligence and Law, 2025. DOI 10.1007/s10506-025-09465-7. 作者待查
+
+[C17]  [V] AI-Driven Statutory Reasoning via Software Engineering Methods.
+     MIT Computational Law Report. https://law.mit.edu/pub/aidrivenstatutoryreasoning 作者待查
+
+
+============================================================
+D. 自动化税务筹划搜索
+   对应：ex_ante 的 candidates 与取最小；最近的直接竞品
+============================================================
+
+[D1] ★ [V] Blair-Stanek, Holzenberger, Van Durme. Shelter Check: Proactively Finding Tax Minimization Strategies via AI.
+     Tax Notes Federal, 2022-12-12. SSRN 4327110. HAL hal-04462115
+     用途：目标与 ex_ante 几乎相同，必须说明差异
+
+[D2] ★ [V] Blair-Stanek, Holzenberger, Van Durme. Can LLMs Identify Tax Abuse?
+     arXiv:2508.20097, 2025；AAAI 2026
+     用途：D1 的后续；让 LLM 解读、补全、生成筹划方案
+
+[D3]   [V] ChatGPT Generates a Novel Tax Strategy.
+     Tax Notes, 2025-11-13. 作者待查
+
+[D4]   [M] Hemberg, Rosen, Warner, Wijesinghe, O'Reilly. Detecting tax evasion: a co-evolutionary approach.
+     Artificial Intelligence and Law 24, 2016
+     用途：用搜索生成避税方案的早期工作
+
+[D5]   [M] McCarty. Reflections on TAXMAN: An Experiment in Artificial Intelligence and Legal Reasoning.
+     Harvard Law Review 90(5), 1977
+     用途：经典起点
+
+
+============================================================
+E. 不完全信息下的推理
+   对应：Tri、AND/OR 短路、(lo, hi) 区间、needs、U(DISCRETION)
+============================================================
+
+[E1]   [M] Kleene. Introduction to Metamathematics.
+     North-Holland, 1952
+     用途：强三值逻辑的出处
+
+[E2] ★ [M] Libkin. Incomplete Data: What Went Wrong, and How to Fix It.
+     PODS 2014
+     用途：确定答案与可能答案，对应 hi 与 lo
+
+[E3]   [M] Libkin. SQL's Three-Valued Logic and Certain Answers.
+     ACM TODS 41(1), 2016
+
+[E4]   [M] Arias, Carro, Salazar, Marple, Gupta. Constraint Answer Set Programming without Grounding.
+     Theory and Practice of Logic Programming 18(3-4), 2018
+     用途：s(CASP)，目标导向求值并给出理由树，对应引用链
+
+[E5] ★ [V] Arias, Moreno-Rebato, Rodriguez-Garcia, Ossowski. Modeling Administrative Discretion Using Goal-Directed Answer Set Programming.
+     CAEPIA 2021, LNCS. DOI 10.1007/978-3-030-85713-4_25
+     用途：把裁量建成可推理的对象，直接对应 U(DISCRETION)
+
+[E6]   [V] Arias 等. Automated legal reasoning with discretion to act using s(LAW).
+     Artificial Intelligence and Law, 2023. DOI 10.1007/s10506-023-09376-5. arXiv:2401.14511
+     用途：E5 的期刊扩展版
+
+[E7]   [M] Morris. Constraint answer set programming as a tool to improve legislative drafting: a rules as code experiment.
+     ICAIL 2021
+     用途：未知事实下的假设性推理，对应 needs 的生成
+
+[E8]   [M] Kowalski, Datoo. Logical English meets legal English for swaps and derivatives.
+     Artificial Intelligence and Law 30, 2022
+
+[E9]   [M] Cousot, Cousot. Abstract Interpretation: A Unified Lattice Model for Static Analysis of Programs by Construction or Approximation of Fixpoints.
+     POPL 1977
+     用途：区间抽象的理论出处，对应 bounds 的单调性要求
+
+[E10]  [V] L4-Docassemble. SMU Centre for Computational Law 的工具与说明文章，不是论文.
+     https://medium.com/computational-law-diary/introducing-l4-docassemble-69ce4b1fb1e7
+     用途：从规则自动生成问询，对应 required_fields
+
+
+============================================================
+F. 税务软件测试
+   对应：check_metamorphic、check_invariants、check_roundtrip、GOLD 回归
+============================================================
+
+[F1] ★ [M] Tizpaz-Niari, Monjezi, Wagner, Darian, Reed, Trivedi. Metamorphic Testing and Debugging of Tax Preparation Software.
+     ICSE-SEIS 2023. arXiv:2205.04998
+     用途：税务软件的蜕变关系设计方法
+
+[F2]   [V] On the Potential and Limitations of Few-Shot In-Context Learning to Generate Metamorphic Specifications for Tax Preparation Software.
+     NLLP Workshop 2023. arXiv:2311.11979. 作者含 Tizpaz-Niari，其余待查
+
+[F3]   [V] An LLM Agentic Approach for Legal-Critical Software: A Case Study for Tax Prep Software.
+     ICSE 2026. arXiv:2509.13471. 作者含 Tizpaz-Niari，其余待查
+     用途：高阶蜕变关系；多智能体把税法译成代码，可与本项目“去 Agent 化”的选择对照
+
+[F4]   [V] Technical Challenges in Maintaining Tax Prep Software with Large Language Models.
+     arXiv:2504.18693, 2025. 作者待查
+     用途：规则版本更新的维护问题，对应 on_rule_update
+
+[F5]   [V] CUTECat: Concolic Execution for Computational Law.
+     arXiv:2410.18212, 2024. 作者待查
+     用途：为 Catala 程序自动生成测试用例，对应 GOLD 的扩充
+
+[F6]   [M] Segura, Fraser, Sanchez, Ruiz-Cortes. A Survey on Metamorphic Testing.
+     IEEE Transactions on Software Engineering 42(9), 2016
+
+[F7]   [M] Chen, Kuo, Liu, Poon, Towey, Tse, Zhou. Metamorphic Testing: A Review of Challenges and Opportunities.
+     ACM Computing Surveys 51(1), 2018
+
+[F8]   [M] Barr, Harman, McMinn, Shahbaz, Yoo. The Oracle Problem in Software Testing: A Survey.
+     IEEE Transactions on Software Engineering 41(5), 2015
+     用途：没有标准答案时如何测试，对应构建期专家金标准
+
+[F9]   [M] Claessen, Hughes. QuickCheck: A Lightweight Tool for Random Testing of Haskell Programs.
+     ICFP 2000
+     用途：性质测试，对应 check_invariants
+
+
+============================================================
+G. 政策与官方来源
+   不算顶刊顶会，但相关工作与规则库都要用
+============================================================
+
+[G1]   [M] OECD. Preventing the Granting of Treaty Benefits in Inappropriate Circumstances, Action 6: 2015 Final Report.
+     用途：协定滥用与主要目的测试 PPT
+
+[G2]   [M] OECD. Multilateral Convention to Implement Tax Treaty Related Measures to Prevent BEPS (MLI), 2016.
+
+[G3]   [M] OECD. TRACE Implementation Package (Treaty Relief and Compliance Enhancement), 2013.
+     用途：预提税减免要主动申请这个问题的国际方案，ex_post 的动机
+
+[G4]   [V] Council Directive (EU) 2025/50 of 10 December 2024 on faster and safer relief of excess withholding taxes (FASTER).
+     Official Journal, 2025-01-10. https://eur-lex.europa.eu/eli/dir/2025/50/oj/eng
+     用途：同上，欧盟层面
+
+[G5]   [M] Mohun, Roberts. Cracking the Code: Rulemaking for Humans and Machines.
+     OECD Working Papers on Public Governance No. 42, 2020
+     用途：法律即代码的政策综述
+
+
+============================================================
+H. 一手法规，建 RULES 时用，不是文献
+============================================================
+
+[H1]   [M] 内地和香港特别行政区关于对所得避免双重征税和防止偷漏税的安排，及历次议定书
+[H2]   [M] 中华人民共和国政府和新加坡共和国政府关于对所得避免双重征税和防止偷漏税的协定，及议定书
+[H3]   [M] 国家税务总局公告 2018 年第 9 号，关于税收协定中“受益所有人”有关问题
+[H4]   [M] 国家税务总局公告 2015 年第 7 号，关于非居民企业间接转让财产企业所得税若干问题
+[H5]   [M] 国家税务总局公告 2019 年第 35 号，非居民纳税人享受协定待遇管理办法
+[H6]   [M] 香港税务局：外地收入豁免征税机制 FSIE 的指引与释义
+[H7]   [M] 新加坡税务局 IRAS：境外来源收入免税，以及境外资产处置收益条款的电子税务指南
+[H8]   [V] 香港税务局：全面性避免双重课税协定一览 https://www.ird.gov.hk/eng/tax/dta_inc.htm
+       香港与新加坡的协定页 https://www.ird.gov.hk/eng/tax/dta_singapore.htm
+
+
+收集建议
+  第一批，八篇：A1 A4 B1 B2 C1 C5 D1 D2
+  第二批，五篇：E2 E5 F1 C6 B3
+  其余按写作需要再取。
+  arXiv 编号可直接在 arxiv.org/abs/ 后拼接；SSRN 编号在 papers.ssrn.com 搜索。
+
+
+============================================================
+I. 官方库的改造：法条检索、标识与版本、交叉引用、溯源与核对（2026-10-08，笔记在 literature/notes/）
+   对应：official/tools/graph.py、search.py、eval_search.py；综合见 literature/notes/I_综合.md
+============================================================
+
+[I1]   [V] Thakur et al. BEIR: A Heterogeneous Benchmark for Zero-shot Evaluation of Information Retrieval Models.
+     NeurIPS 2021 Datasets and Benchmarks；文件：literature/I1_Thakur2021_BEIR.pdf（published）
+[I2]   [V] Cormack, Clarke, Büttcher. Reciprocal Rank Fusion Outperforms Condorcet and Individual Rank Learning Methods.
+     SIGIR 2009；文件：literature/I2_Cormack2009_RRF_author.pdf（author）
+[I3]   [V] Santhanam et al. ColBERTv2: Effective and Efficient Retrieval via Lightweight Late Interaction.
+     NAACL 2022；文件：literature/I3_Santhanam2022_ColBERTv2.pdf（published）
+[I4]   [V] Chen et al. M3-Embedding: Multi-Linguality, Multi-Functionality, Multi-Granularity Text Embeddings.
+     Findings of ACL 2024；文件：literature/I4_Chen2024_BGEM3.pdf（published）
+[I5]   [V] Chen et al. Dense X Retrieval: What Retrieval Granularity Should We Use?.
+     EMNLP 2024；文件：literature/I5_Chen2024_DenseX.pdf（published）
+[I6]   [V] Louis, Spanakis. A Statutory Article Retrieval Dataset in French.
+     ACL 2022；文件：literature/I6_Louis2022_BSARD.pdf（published）
+[I7]   [V] Louis, van Dijck, Spanakis. Finding the Law: Enhancing Statutory Article Retrieval via Graph Neural Networks.
+     EACL 2023；文件：literature/I7_Louis2023_GDSR.pdf（published）
+[I8]   [V] Louis, van Dijck, Spanakis. Interpretable Long-Form Legal Question Answering with Retrieval-Augmented LLMs.
+     AAAI 2024；文件：literature/I8_Louis2024_LongFormLegalQA.pdf（published）
+[I9]   [V] Su et al. STARD: A Chinese Statute Retrieval Dataset Derived from Real-life Queries by Non-professionals.
+     Findings of EMNLP 2024；文件：literature/I9_Su2024_STARD.pdf（published）
+[I10]   [V] Lewis et al. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks.
+     NeurIPS 2020；文件：literature/I10_Lewis2020_RAG.pdf（published）
+[I11]   [V] Edge et al. From Local to Global: A Graph RAG Approach to Query-Focused Summarization.
+     arXiv 2404.16130v2 (no peer-reviewed version found)；文件：literature/I11_Edge2024_GraphRAG_preprint.pdf（preprint）
+[I12]   [V] Gutiérrez et al. HippoRAG: Neurobiologically Inspired Long-Term Memory for Large Language Models.
+     NeurIPS 2024 (arXiv 2405.14831v3 used; openreview returned 403)；文件：literature/I12_Gutierrez2024_HippoRAG_preprint.pdf（preprint）
+[I13]   [V] Han et al. RAG vs. GraphRAG: A Systematic Evaluation and Key Insights.
+     KDD 2026；文件：literature/I13_Han2026_RAGvsGraphRAG_preprint.pdf（preprint）
+[I14]   [V] Magesh et al. Hallucination-Free? Assessing the Reliability of Leading AI Legal Research Tools.
+     Journal of Empirical Legal Studies 2025；文件：literature/I14_Magesh2025_HallucinationFree.pdf（published）
+[I15]   [V] Sannier et al. An Automated Framework for Detection and Resolution of Cross References in Legal Texts.
+     Requirements Engineering 22 (2017)；文件：literature/I15_Sannier2017_CrossReferences_author.pdf（author）
+[I16]   [V] Green, Karvounarakis, Tannen. Provenance Semirings.
+     PODS 2007；文件：literature/I16_Green2007_ProvenanceSemirings_author.pdf（author）
+[I17]   [V] OASIS. Akoma Ntoso Version 1.0 Part 1: XML Vocabulary.
+     OASIS Standard, LegalDocML Akoma Ntoso v1.0 Part 1；文件：literature/I17_OASIS2018_AkomaNtoso.pdf（published）
+[I18]   [V] Council of the EU. Conclusions inviting the introduction of the European Legislation Identifier (ELI).
+     Council conclusions, OJ C 325, 26.10.2012；文件：未取到（-）
+[I19]   [V] de Martim. An Ontology-Driven Graph RAG for Legal Norms: A Structural, Temporal, and Deterministic Approach.
+     FAIA (IOS Press) 2025 / arXiv 2505.00039；文件：literature/I19_deMartim2025_SATGraphRAG_preprint.pdf（preprint）
+[I20]   [V] Temporal Misgrounding in Legal RAG: A Versioned-Corpus Benchmark for French Tax Law.
+     arXiv 2608.09393；文件：literature/I20_Anon2026_TemporalMisgrounding_preprint.pdf（preprint）
+[I21]   [V] Gao et al. Enabling Large Language Models to Generate Text with Citations.
+     EMNLP 2023；文件：literature/I21_Gao2023_ALCE.pdf（published）
+[I22]   [V] Joren et al. Sufficient Context: A New Lens on Retrieval Augmented Generation Systems.
+     ICLR 2025；文件：literature/I22_Joren2025_SufficientContext_preprint.pdf（preprint）
+
+============================================================
+J. 引擎的三类问题：增量计算、知识编译与判定图、全局优化、区间决策、测试充分性、数据质量、可归属性（2026-10-08）
+   对应：优化方案.md
+============================================================
+
+[J1]   [V] Mokhov, Mitchell, Peyton Jones. Build Systems à la Carte: Theory and Practice.
+     Journal of Functional Programming 30 (2020)；文件：literature/J1_Mokhov2020_BuildSystemsALaCarte.pdf（published）
+[J2]   [V] Budiu et al. DBSP: Automatic Incremental View Maintenance for Rich Query Languages.
+     PVLDB 16(7) 2023；文件：literature/J2_Budiu2023_DBSP.pdf（published）
+[J3]   [V] Darwiche, Marquis. A Knowledge Compilation Map.
+     JAIR 17 (2002)；文件：literature/J3_Darwiche2002_KnowledgeCompilationMap_preprint.pdf（preprint）
+[J4]   [V] Sanner, McAllester. Affine Algebraic Decision Diagrams (AADDs) and their Application to Structured Probabilistic Inference.
+     IJCAI 2005；文件：literature/J4_Sanner2005_AADD.pdf（published）
+[J5]   [V] Bjørner, Phan, Fleckenstein. νZ – An Optimizing SMT Solver.
+     TACAS 2015；文件：literature/J5_Bjorner2015_nuZ.pdf（published）
+[J6]   [V] Troffaes. Decision Making under Uncertainty Using Imprecise Probabilities.
+     Int. J. Approximate Reasoning 45 (2007)；文件：literature/J6_Troffaes2007_ImpreciseDecision_author.pdf（author）
+[J7]   [V] MacIver, Donaldson. Test-Case Reduction via Test-Case Generation: Insights from the Hypothesis Reducer.
+     ECOOP 2020；文件：literature/J7_MacIver2020_HypothesisReducer.pdf（published）
+[J8]   [V] Kuhn, Kacker, Lei. Practical Combinatorial Testing (NIST SP 800-142).
+     NIST SP 800-142 (2010), Practical Combinatorial Testing (replaces IEEE TSE 2004, not obtainable)；文件：literature/J8_Kuhn2010_NISTSP800-142_CombinatorialTesting.pdf（published）
+[J9]   [V] Inozemtseva, Holmes. Coverage Is Not Strongly Correlated with Test Suite Effectiveness.
+     ICSE 2014 (author copy)；文件：literature/J9_Inozemtseva2014_Coverage_author.pdf（author）
+[J10]   [V] Schelter et al. Automating Large-Scale Data Quality Verification.
+     PVLDB 11(12) 2018；文件：literature/J10_Schelter2018_DataQuality.pdf（published）
+[J11]   [V] Rashkin et al. Measuring Attribution in Natural Language Generation Models.
+     Computational Linguistics 49(4) 2023；文件：literature/J11_Rashkin2023_AIS.pdf（published）
+[J12]   [V] Goldstein et al. Property-Based Testing in Practice.
+     ICSE 2024 (author copy)；文件：literature/J12_Goldstein2024_PBTInPractice_author.pdf（author）
+[J13]   [V] Castro, Cire, Beck. Decision Diagrams for Discrete Optimization: A Survey of Recent Advances.
+     INFORMS Journal on Computing 34(4) 2022 (arXiv 2201.11536 used)；文件：literature/J13_Castro2022_DecisionDiagramsSurvey_preprint.pdf（preprint）
+
+============================================================
+L. 测试系统：测试预言与差分测试、可证明算法与证书、SMT、变异与覆盖充分性、不稳定测试与回归选择、搜索式测试、保证论证、税法代码化近作（2026-10-14，笔记在 literature/notes/）
+   对应：测试系统.md §0–§7；综合见 literature/notes/L_综合.md
+   测试系统.md §9 已在库的条目不重复收录：Barr 2015 = F8，Chen 2018 = F7，Segura 2016 = F6，Tizpaz-Niari 2023 = F1，
+   Claessen & Hughes 2000 = F9，Merigoux 2021 Catala = A1，Merigoux 2021 French tax compiler = A2，Lawsky 2017 = A4，
+   Bjørner 2015 νZ = J5，Troffaes 2007 = J6，Kuhn 2004 → J8（NIST SP 800-142 替代），Inozemtseva & Holmes 2014 = J9，Blair-Stanek 2023 = C3
+   取得方式记在 _work/round_index.json；网络档案副本 = Internet Archive 保存的作者机构页或出版商存档页原件
+============================================================
+
+[L1]   [V] McKeeman. Differential Testing for Software.
+     Digital Technical Journal 10(1), 100–107 (1998)；文件：literature/L1_McKeeman1998_DifferentialTesting.pdf（published，出版商存档页的网络档案副本）
+[L2]   [V] McConnell, Mehlhorn, Näher, Schweitzer. Certifying Algorithms.
+     Computer Science Review 5(2), 119–161 (2011)；文件：literature/L2_McConnell2011_CertifyingAlgorithms_author.pdf（author）
+[L3]   [V] Cheung, Gleixner, Steffy. Verifying Integer Programming Results.
+     IPCO 2017, LNCS 10328, 148–160 (arXiv 1611.08832v2 = ZIB Report 16-58 used)；文件：literature/L3_Cheung2017_VerifyingIPResults_preprint.pdf（preprint）
+[L4]   [V] de Moura, Bjørner. Z3: An Efficient SMT Solver.
+     TACAS 2008, LNCS 4963, 337–340；文件：literature/L4_deMoura2008_Z3.pdf（published）
+[L5]   [V] Jia, Harman. An Analysis and Survey of the Development of Mutation Testing.
+     IEEE TSE 37(5), 649–678 (2011)；文件：literature/L5_Jia2011_MutationTestingSurvey_author.pdf（author）
+[L6]   [V] Papadakis, Kintis, Zhang, Jia, Le Traon, Harman. Mutation Testing Advances: An Analysis and Survey.
+     Advances in Computers 112, 275–378 (2019)；文件：literature/L6_Papadakis2019_MutationTestingAdvances_author.pdf（author）
+[L7]   [V] Hayhurst, Veerhusen, Chilenski, Rierson. A Practical Tutorial on Modified Condition/Decision Coverage.
+     NASA/TM-2001-210876 (2001)；替代 Chilenski & Miller 1994, Software Engineering Journal 9(5), 193–200（IET 付费墙，OpenAlex closed）；文件：literature/L7_Hayhurst2001_MCDCTutorial.pdf（published）
+[L8]   [V] Kuhn, Wallace, Gallo. Software Fault Interactions and Implications for Software Testing.
+     IEEE TSE 30(6), 418–421 (2004)；文件：未取到（IEEE 付费墙，NIST 页面无副本）；以 J8 代替
+[L9]   [V] Luo, Hariri, Eloussi, Marinov. An Empirical Analysis of Flaky Tests.
+     FSE 2014, 643–653；文件：literature/L9_Luo2014_FlakyTests_author.pdf（author）
+[L10]  [V] Zhang, Jalali, Wuttke, Muşlu, Lam, Ernst, Notkin. Empirically Revisiting the Test Independence Assumption.
+     ISSTA 2014, 385–396；文件：literature/L10_Zhang2014_TestIndependence_author.pdf（author）
+[L11]  [V] Lam, Oei, Shi, Marinov, Xie. iDFlakies: A Framework for Detecting and Partially Classifying Flaky Tests.
+     ICST 2019, 312–322；文件：literature/L11_Lam2019_iDFlakies_author.pdf（author）
+[L12]  [V] Zeller, Hildebrandt. Simplifying and Isolating Failure-Inducing Input.
+     IEEE TSE 28(2), 183–200 (2002)；文件：literature/L12_Zeller2002_DeltaDebugging_author.pdf（author，作者机构页的网络档案副本；该主机从本机连不上）
+[L13]  [V] Gligoric, Eloussi, Marinov. Practical Regression Test Selection with Dynamic File Dependencies.
+     ISSTA 2015, 211–222；文件：literature/L13_Gligoric2015_Ekstazi_author.pdf（author）
+[L14]  [V] McMinn. Search-Based Software Test Data Generation: A Survey.
+     Software Testing, Verification and Reliability 14(2), 105–156 (2004)；文件：literature/L14_McMinn2004_SBSTSurvey_author.pdf（author，作者主页的网络档案副本，文件自注为 preprint of the published article）
+[L15]  [V] Savage. The Theory of Statistical Decision.
+     Journal of the American Statistical Association 46(253), 55–67 (1951)；文件：未取到（Taylor & Francis 403、JSTOR 需登录）；区间决策准则以 J6 为依据
+[L16]  [V] Kelly, Weaver. The Goal Structuring Notation – A Safety Argument Notation.
+     DSN 2004 Workshop on Assurance Cases；文件：literature/L16_Kelly2004_GSN_author.pdf（author，作者机构页的网络档案副本）
+[L17]  [V] Bloomfield, Rushby. Assurance 2.0: A Manifesto.
+     arXiv 2004.10474v3 (2021)；文件：literature/L17_Bloomfield2020_Assurance2_preprint.pdf（preprint）
+[L18]  [V] Han, Takashima, Wei, Li, Genesereth. Law and Order: Tax Law Autoformalization.
+     arXiv 2610.02792v1 (2026-10-02)；文件：literature/L18_Han2026_TaxLawAutoformalization_preprint.pdf（preprint）
+[L19]  [V] Tizpaz-Niari, Darian, Trivedi. Metamorphic Debugging for Accountable Software.
+     ProLaLa 2024 extended abstract (arXiv 2409.16140v2)；文件：literature/L19_TizpazNiari2024_MetamorphicDebugging_preprint.pdf（preprint）
+[L20]  [V] Zheng, Zhou, Xu, Ren, Chen. Bidirectional Empowerment of Metamorphic Testing and Large Language Models: A Systematic Survey.
+     arXiv 2605.13898v1 (2026-05-12)；文件：literature/L20_Zheng2026_MTandLLMsSurvey_preprint.pdf（preprint）
+[L21]  [V] Heydari, Leowald. Closing the Loop: Formally Verified Law as a Reward Signal for Self-Improving Legal AI.
+     arXiv 2606.23913v1 (2026-06-22)；文件：literature/L21_Heydari2026_VerifiedLawReward_preprint.pdf（preprint）
+[L22]  [V] Lawsky. Tax Law and Flexible Formalizations.
+     University of Chicago Law Review Online (2024-11-18)；文件：literature/L22_Lawsky2024_FlexibleFormalizations.pdf（published）

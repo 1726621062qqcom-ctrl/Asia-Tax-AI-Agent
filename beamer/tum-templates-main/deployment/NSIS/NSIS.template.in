@@ -1,0 +1,279 @@
+; CPack install script designed for a nmake build
+
+; Unicode is recommended, Ansi is deprecated
+Unicode true
+
+; You must define these values
+!define VERSION "@CPACK_PACKAGE_VERSION@.0"
+!define INST_DIR "@CPACK_TEMPORARY_DIRECTORY@"
+
+; Configure package name and version information
+Name "@CPACK_NSIS_PACKAGE_NAME@"
+VIProductVersion "${VERSION}"
+VIAddVersionKey "ProductName" "@CPACK_NSIS_PACKAGE_NAME@"
+VIAddVersionKey "ProductVersion" "${VERSION}"
+VIAddVersionKey "LegalCopyright" "(C) @CPACK_PACKAGE_VENDOR@"
+
+; Installer Filname
+OutFile "@CPACK_TOPLEVEL_DIRECTORY@/@CPACK_OUTPUT_FILE_NAME@"
+
+; Default installation directory is empty
+; it will be set by the function SET_INSTDIR
+InstallDir ""
+
+
+; ----------------------------------------------------------------------------
+; Declaration of global variables and definition of message strings
+; ----------------------------------------------------------------------------
+
+!define LATEX_FOUND_TEXLIVE "We found a TeX Live installation on your system."
+!define LATEX_FOUND_MIKTEX "We found a MiKTeX installation on your system."
+
+!define LATEX_NOTFOUND "We could not find TeX Live or MiKTeX on your system!"
+!define LATEX_ADD_TO_PATH "Make sure to add the TeX Live or MiKTeX \
+                           binary directory to your PATH."
+
+!define INITEXMF_CMD "initexmf --update-fndb --verbose"
+
+Var LATEX_DIST
+Var LATEX_INSTDIR
+Var LATEX_FOUND_MESSAGE
+Var FULL_INSTDIR
+
+
+; ----------------------------------------------------------------------------
+; Load and configure NSIS plugins
+; ----------------------------------------------------------------------------
+
+; Configuration of MultiUser plugin
+!define MULTIUSER_EXECUTIONLEVEL highest
+!define MULTIUSER_MUI
+!define MULTIUSER_INSTALLMODE_COMMANDLINE
+
+; Project plugin directory (needed for ExecDos)
+!addplugindir "@CPACK_NSIS_PLUGINDIR@"
+
+; Include Plugins
+!include "MUI2.nsh"
+!include "MultiUser.nsh"
+!include "LogicLib.nsh"
+!include "StrFunc.nsh"
+
+; Declare used StrFunc functions
+${StrRep}
+
+
+; ----------------------------------------------------------------------------
+; NSIS Modern UI settings
+; ----------------------------------------------------------------------------
+
+!define MUI_ABORTWARNING
+!define MUI_FINISHPAGE_NOAUTOCLOSE
+
+; Add CPack code for icon and picture on welcome and finish page
+@CPACK_NSIS_INSTALLER_MUI_ICON_CODE@
+@CPACK_NSIS_INSTALLER_MUI_WELCOMEFINISH_CODE@
+
+
+; ----------------------------------------------------------------------------
+; GUI Installer Pages
+; ----------------------------------------------------------------------------
+
+; Welcome page
+@CPACK_NSIS_INSTALLER_WELCOME_TITLE_CODE@
+@CPACK_NSIS_INSTALLER_WELCOME_TITLE_3LINES_CODE@
+!insertmacro MUI_PAGE_WELCOME
+
+; License page showing the LPPL License file
+!insertmacro MUI_PAGE_LICENSE "@CPACK_RESOURCE_FILE_LICENSE@"
+
+; Page to select AllUsers or CurrentUser installation
+; When leaving the page we search for the LaTeX distribution and
+; set the corresponding installation directory.
+; If no LaTeX distribution is found, the installer aborts.
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE SET_INSTDIR
+!insertmacro MULTIUSER_PAGE_INSTALLMODE
+
+; Page running the installer sections and showing the status
+!insertmacro MUI_PAGE_INSTFILES
+
+; Final page showing a success message to the user
+@CPACK_NSIS_INSTALLER_FINISH_TITLE_CODE@
+@CPACK_NSIS_INSTALLER_FINISH_TITLE_3LINES_CODE@
+!define MUI_FINISHPAGE_TEXT "$LATEX_FOUND_MESSAGE$\n$\n Files were \
+                             successfully copied to '$FULL_INSTDIR'.$\n$\n \
+                             The TUM LaTeX classes and packages are ready to \
+                             use."
+!define MUI_FINISHPAGE_LINK "Check our GitLab repository for more \
+                             information!"
+!define MUI_FINISHPAGE_LINK_LOCATION "@CPACK_PACKAGE_HOMEPAGE_URL@"
+!insertmacro MUI_PAGE_FINISH
+
+; Language of the installer (must be placed after the pages)
+!insertmacro MUI_LANGUAGE "English"
+
+
+; ----------------------------------------------------------------------------
+; Installer Sections
+; ----------------------------------------------------------------------------
+
+; Section to copy the .sty and .cls files to $INSTDIR
+Section "-core"
+  DetailPrint "Copy TUM LaTeX class and package files."
+
+  ${StrRep} $FULL_INSTDIR "$INSTDIR\@CPACK_PACKAGE_INSTALLDIR@" "/" "\"
+  SetOutPath "$FULL_INSTDIR"
+
+  @CPACK_NSIS_EXTRA_PREINSTALL_COMMANDS@
+  @CPACK_NSIS_FULL_INSTALL@
+  @CPACK_NSIS_EXTRA_INSTALL_COMMANDS@
+SectionEnd
+
+; Section to update the LaTeX file name database
+Section "-update fndb"
+  DetailPrint "Update LaTeX file name database."
+
+  ${If} $LATEX_DIST = 1
+    ; TeX Live found
+    ${If} $MultiUser.InstallMode == "AllUsers"
+      ; Update fndb for installation in TEXMFLOCAL
+      DetailPrint "Execute: mktexlsr"
+      ExecDos::Exec '"cmd.exe" /C mktexlsr' "" ""
+      Pop $0
+    ${Else}
+      ; No update needed for installation in TEXMFHOME
+      DetailPrint "Skipped for TeX Live CurentUser installation."
+    ${EndIf}
+  ${ElseIf} $LATEX_DIST = 2
+    ; MiKTeX found
+    ${If} $MultiUser.InstallMode == "AllUsers"
+      ; Update fndb for installation in TEXMFSYSCONFIG
+      DetailPrint "Execute: ${INITEXMF_CMD} --admin"
+      ExecDos::Exec '"cmd.exe" /C ${INITEXMF_CMD} --admin' "" ""
+      Pop $0
+    ${Else}
+      ; Update fndb for installation in TEXMFCONFIG
+      DetailPrint "Execute: ${INITEXMF_CMD}"
+      ExecDos::Exec '"cmd.exe" /C ${INITEXMF_CMD}' "" ""
+      Pop $0
+    ${EndIf}
+  ${EndIf}
+SectionEnd
+
+
+; ----------------------------------------------------------------------------
+; Macro to find the TeX variable 'var-name' and set the LATEX_INSTDIR
+; ----------------------------------------------------------------------------
+
+!macro SET_LATEX_INSTDIR var-name
+  Push "ExecDos::End" ; Add marker to stack
+  ExecDos::exec /TOSTACK '"cmd.exe" /C kpsewhich -var-value ${var-name}' "" ""
+  Pop $0 ; return value
+  ${Do}  ; loop through stack until "ExecDos::End" is found
+    Pop $1
+    ${StrStr} $2 $1 "kpsewhich:"
+    ${StrStr} $3 $1 "initexmf:"
+    ${If} $1 == "ExecDos::End"
+      ${ExitDo}
+    ${ElseIf} $1 == ""
+      ; Ignore empty strings
+    ${ElseIf} $2 != ""
+    ${OrIf} $3 != ""
+      ; Ignore error messages and warings from kpsewhich
+      ; Such errors occur when kpsewhich is executed with admin privileges
+      ; or when MiKTeX wasn't updated yet.
+    ${Else}
+      ; Replace Slash with Backslash and write path to $LATEX_INSTDIR
+      ${StrRep} $LATEX_INSTDIR $1 "/" "\"
+    ${EndIf}
+  ${Loop}
+
+  ${If} $LATEX_INSTDIR == ""
+    ; LATEX_INSTDIR not found -- ABORT INSTALLATION!
+    ${IfNot} ${Silent}
+      MessageBox MB_ICONSTOP "Something went wrong when searching for the \
+                              LaTeX installation directory with kpsewhich. \
+                              $\n$\n I couldn't find '${var-name}'."
+    ${EndIf}
+    Quit
+  ${EndIf}
+!macroend
+
+
+; ----------------------------------------------------------------------------
+; Funktion to find the appropriate installation directory
+; ----------------------------------------------------------------------------
+
+Function FIND_LATEX_INSTDIR
+  ${If} $LATEX_DIST = 1
+    ; TeX Live found
+    StrCpy $LATEX_FOUND_MESSAGE "${LATEX_FOUND_TEXLIVE}"
+    ${If} $MultiUser.InstallMode == "AllUsers"
+      !insertmacro SET_LATEX_INSTDIR "TEXMFLOCAL"
+    ${Else}
+      !insertmacro SET_LATEX_INSTDIR "TEXMFHOME"
+    ${EndIf}
+  ${ElseIf} $LATEX_DIST = 2
+    ; MiKTeX found
+    StrCpy $LATEX_FOUND_MESSAGE "${LATEX_FOUND_MIKTEX}"
+    ${If} $MultiUser.InstallMode == "AllUsers"
+      !insertmacro SET_LATEX_INSTDIR "TEXMFSYSCONFIG"
+    ${Else}
+      !insertmacro SET_LATEX_INSTDIR "TEXMFCONFIG"
+    ${EndIf}
+  ${EndIf}
+FunctionEnd
+
+
+; ----------------------------------------------------------------------------
+; Funktion to find the LaTeX distribution (TeX Live '1' or MiKTeX '2')
+; ----------------------------------------------------------------------------
+
+Function FIND_LATEX_DISTRIBUTION
+  ExecDos::Exec '"cmd.exe" /C tlmgr --version' "" ""
+  Pop $0 ; return value
+  ${If} $0 = 0
+    ; TeX Live found
+    StrCpy $LATEX_DIST 1
+  ${Else}
+    ExecDos::Exec '"cmd.exe" /C mpm --version' "" ""
+    Pop $0 ; return value
+    ${If} $0 = 0
+      ; MiKTeX found
+      StrCpy $LATEX_DIST 2
+    ${Else}
+      ; No TeX installation found -- ABORT INSTALLATION!
+      ${IfNot} ${Silent}
+        MessageBox MB_ICONSTOP "${LATEX_NOTFOUND}$\n$\n${LATEX_ADD_TO_PATH}"
+      ${EndIf}
+      Quit
+    ${EndIf}
+  ${EndIf}
+FunctionEnd
+
+
+; ----------------------------------------------------------------------------
+; Funktion to set the install directory
+; ----------------------------------------------------------------------------
+
+Function SET_INSTDIR
+  Call FIND_LATEX_DISTRIBUTION
+  Call FIND_LATEX_INSTDIR
+  StrCpy $INSTDIR $LATEX_INSTDIR
+FunctionEnd
+
+
+; ----------------------------------------------------------------------------
+; Init function (The installer starts here)
+; ----------------------------------------------------------------------------
+
+Function .onInit
+  ; Necessary init for MultiUser support
+  !insertmacro MULTIUSER_INIT
+
+  ; Silent installers don't execute the page code
+  ; Find LaTeX distribution and set INSTDIR here
+  ${If} ${Silent}
+    Call SET_INSTDIR
+  ${EndIf}
+FunctionEnd

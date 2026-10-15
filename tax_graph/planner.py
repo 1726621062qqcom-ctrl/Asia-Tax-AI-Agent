@@ -37,13 +37,13 @@ from .rules.model import Discretion, Leaf, Not, And, Or, leaves
 from .rules.tri import DATA, DISCRETION, MISSING, PLAN, Need
 from .scenarios import NEW, same_settled
 
-STEP_TEXT = {"ip_transfer": "IP 由 %s 转给 %s",       # 口径 D19: steps whose tax no rule computes
-             # 口径 D30: a levy a group company bears on a flow dated before the law the library starts from
-             "before_law": "流 %s（%s）早于%s施行（%s），此前的规定不在库内（库只留现行规定），其%s未计算"}
+STEP_TEXT = {"ip_transfer": "IP transferred from %s to %s",       # decision D19: steps whose tax no rule computes
+             # decision D30: a levy a group company bears on a flow dated before the law the library starts from
+             "before_law": "flow %s (%s) predates the commencement of %s (%s); the earlier rules are not in the library (it keeps only the rules in force), so its %s is not computed"}
 
 
 def _step_text(step):
-    return STEP_TEXT.get(step[0], step[0] + "：%s → %s") % tuple(step[1:])
+    return STEP_TEXT.get(step[0], step[0] + ": %s → %s") % tuple(step[1:])
 
 EPS = 0.005
 CONTENTION_MAX = 12
@@ -53,7 +53,7 @@ ISO = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 def _load_gloss():
-    with open(str(GLOSS_FILE), encoding="utf-8") as f:
+    with open(str(GLOSS_FILE), encoding="utf-8-sig") as f:       # the dictionary may carry a BOM
         return {r["field"]: r for r in csv.DictReader(f)}
 
 
@@ -67,21 +67,21 @@ def _load_forms():
 
 
 GLOSS, FORMS = _load_gloss(), _load_forms()
-JUR_NAME = {"cn": "内地", "hk": "香港", "sg": "新加坡"}
+JUR_NAME = {"cn": "the Mainland", "hk": "Hong Kong", "sg": "Singapore"}
 
 
 def _gloss(f):
-    """A field's gloss row; <name>_hk / _sg (a jurisdiction's own group fact, 口径 D17) reads <name>'s, the place named."""
+    """A field's gloss row; <name>_hk / _sg (a jurisdiction's own group fact, decision D17) reads <name>'s, the place named."""
     if f in GLOSS:
         return GLOSS[f]
     head, _, j = f.rpartition("_")
     if j in JUR_NAME and head in GLOSS:
         g = dict(GLOSS[head])
-        g["gloss"] = "%s：%s" % (JUR_NAME[j], g.get("gloss", head))
+        g["gloss"] = "%s: %s" % (JUR_NAME[j], g.get("gloss", head))
         return g
     if j.isdigit() and head in GLOSS:                       # a year's own figure (p2_eur_rate_2027)
         g = dict(GLOSS[head])
-        g["gloss"] = "%s 财年：%s" % (j, g.get("gloss", head))
+        g["gloss"] = "FY %s: %s" % (j, g.get("gloss", head))
         return g
     return {}
 
@@ -226,7 +226,7 @@ def _region_of_group(grp, graph):
     r = RULES_BY_ID.get(grp[0])
     if r is not None:
         return rule_region(r)
-    if grp[0] in SHARED_GROUPS:                         # a decision several rules share (口径 D23)
+    if grp[0] in SHARED_GROUPS:                         # a decision several rules share (decision D23)
         return frozenset({SHARED_GROUPS[grp[0]]})
     if grp[0] == PEM_RULE:
         e = graph.entities.get(grp[1])
@@ -238,7 +238,7 @@ def _region_of_group(grp, graph):
         if grp[0] == "data.cfc_profit":
             e = graph.entities.get(grp[1])
             return frozenset({"CN"} | ({e.loc} if e is not None and e.loc else set()))
-        if grp[1] in JURISDICTIONS:                     # a jurisdiction's own fact or action (Pillar Two, 口径 D14)
+        if grp[1] in JURISDICTIONS:                     # a jurisdiction's own fact or action (Pillar Two, decision D14)
             return frozenset({grp[1]})
         e = graph.entities.get(grp[1])
         if e is not None and e.loc:
@@ -371,7 +371,7 @@ def evaluate(template, event, case, a, answers, P, g0=None):
         ev = Evaluation(a, g, b, ticks, plan_keys, blocking)
         ev.prereq, ev.joint = {}, kinds
         if all(answers.answered(k) for k in blocking):
-            ev.excluded = "无法精确计算：%d 个相互影响的未决项在答复后仍开放（%s）" % (len(blocking), "，".join(sorted(blocking)[:6]))
+            ev.excluded = "cannot be computed exactly: %d interacting open items remain open after the answers (%s)" % (len(blocking), ", ".join(sorted(blocking)[:6]))
         return ev
     blocking, prereq = {}, {}
     for grp, ns in b.groups.items():
@@ -384,11 +384,11 @@ def evaluate(template, event, case, a, answers, P, g0=None):
     unknown = [k for k in blocking if answers.data.get(k) == "unknown"]
     if unknown:
         ev.excluded = "unbounded without %s (answered unknown)" % ", ".join(sorted(unknown))
-    steps = outside_steps(b, g)[0]                          # 口径 D30: a group-borne levy the library cannot compute there
+    steps = outside_steps(b, g)[0]                          # decision D30: a group-borne levy the library cannot compute there
     if steps:
         g.unmodelled = tuple(g.unmodelled) + tuple(x for x in steps if x not in g.unmodelled)
-    if g.unmodelled:                                        # 口径 D19: the step's tax is not computed: no plan
-        ev.excluded = "需要的步骤本程序尚未建模（%s），其税额未知" % "；".join(_step_text(x) for x in g.unmodelled)
+    if g.unmodelled:                                        # decision D19: the step's tax is not computed: no plan
+        ev.excluded = "a step the structure needs is not modelled by this program (%s); its tax is unknown" % "; ".join(_step_text(x) for x in g.unmodelled)
     return ev
 
 
@@ -445,11 +445,11 @@ def _joint_pairs(ev, case, event, P, answers):
     return found
 
 
-# the amounts of the steps a structure itself needs (口径 D18, D19): asked by name, never filled
-STEP_AMOUNT = {"reorg": ("重组步骤的对价：ULT 把所持 OP 股权转给新控股公司的价格（按转让日市场价值）", "金额", "评估报告或股权转让协议"),
-               "unwind": ("现有 HOLD 所持 OP 股权在转出日的市场价值（撤销或迁出 HOLD 时按此转给 ULT 或新公司）", "金额", "评估报告"),
-               "wind": ("现有 HOLD 清算时分配给股东 ULT 的全部剩余财产（含 OP 股权或其转让价款，扣除税费与负债后）", "金额", "清算方案与资产负债表"),
-               "iptx": ("IP 转让价：现在持有 IP 的公司把 IP 所有权转给新持有人的价格（按转让日市场价值）", "金额", "评估报告或 IP 转让协议")}
+# the amounts of the steps a structure itself needs (decision D18, D19): asked by name, never filled
+STEP_AMOUNT = {"reorg": ("consideration for the reorganisation step: the price at which ULT transfers its OP shares to the new holding company (market value on the transfer date)", "amount", "valuation report or share transfer agreement"),
+               "unwind": ("market value, on the transfer-out date, of the OP shares the existing HOLD holds (transferred at this value to ULT or the new company when HOLD is dissolved or migrated)", "amount", "valuation report"),
+               "wind": ("all residual assets distributed to the shareholder ULT on the liquidation of the existing HOLD (including the OP shares or their sale proceeds, after taxes and liabilities)", "amount", "liquidation plan and balance sheet"),
+               "iptx": ("IP transfer price: the price at which the company now holding the IP transfers its ownership to the new holder (market value on the transfer date)", "amount", "valuation report or IP transfer agreement")}
 
 
 def _question_for(key, kind, region, why, impact=None, extra="", with_=None):
@@ -461,17 +461,17 @@ def _question_for(key, kind, region, why, impact=None, extra="", with_=None):
         gl = {"gloss": g_, "value": v_, "source_hint": h_}
     target = key.split(":")[0] if key.startswith(("flow:", "hold:", "calendar:")) else key.split(".")[0]
     if kind == "action":
-        prompt = "能否做到：%s（%s）" % (gl.get("gloss", f), extra or key)
+        prompt = "Can this be done: %s (%s)" % (gl.get("gloss", f), extra or key)
     elif kind == "ruling":
-        prompt = "是否已取得税务机关对以下事项的书面裁定或确认：%s（%s）" % (gl.get("gloss", f), key)
+        prompt = "Has a written ruling or confirmation from the tax authority been obtained on: %s (%s)" % (gl.get("gloss", f), key)
     elif kind == "library":
         prompt = extra
     else:
-        prompt = "请提供：%s（%s）" % (gl.get("gloss", f), key)
+        prompt = "Please provide: %s (%s)" % (gl.get("gloss", f), key)
     if with_:
-        prompt += "——须与 `%s` 同时成立才有影响" % with_
-    return Question(key, kind, region, prompt, gl.get("value", ""), gl.get("source_hint", ""), sorted(why), impact,
-                    FORMS.get(f, [])[:3])
+        prompt += " — matters only together with `%s`" % with_
+    forms = [x for x in FORMS.get(f, []) if not region or x.split(".", 1)[0].upper() in region]   # the region's own forms
+    return Question(key, kind, region, prompt, gl.get("value", ""), gl.get("source_hint", ""), sorted(why), impact, forms[:3])
 
 
 def _published(gap, today):
@@ -494,7 +494,7 @@ def plan(template, event, case, answers=None, P=None, today=None) -> Outcome:
         if ev is not None:
             evals.append(ev)
     if not evals:
-        return Outcome([], None, [], "没有候选结构能保留已缴税的那几笔流。")
+        return Outcome([], None, [], "No candidate structure keeps the flows whose tax has been settled.")
     plannable = [e for e in evals if not e.blocking and not e.excluded]
     best = min(plannable, key=_key) if plannable else None
     contention = sorted([e for e in evals if not e.excluded and (best is None or e is best or e.b.lo < best.b.hi - EPS)],
@@ -553,26 +553,26 @@ def plan(template, event, case, answers=None, P=None, today=None) -> Outcome:
                     k = "calendar:%s:%d" % gap
                     if _published(gap, today) and not answers.answered(k):
                         add(_question_for(k, "library", frozenset({gap[0]}), [name_], None,
-                                          "库里缺 %s %d 年的公众假期表（官方已公布），期限顺延需要它：请提供官方公布的假期清单" % gap))
+                                          "The library lacks the %s public holiday table for %d (officially published); the deadline extension needs it: please provide the officially published holiday list" % gap))
     questions = sorted(qs.values(), key=lambda q: (order_key(q.region), ["blocking", "joint", "data", "action", "ruling", "library"].index(q.kind),
                                                    -(q.impact or 0), q.key))
     if questions:
         return Outcome(questions, None, evals)
     if best is None:
         why = "; ".join(sorted({e.excluded for e in evals if e.excluded})) or "every candidate needs data that leaves a tax unbounded"
-        return Outcome([], None, evals, "无法给出方案：" + why)
+        return Outcome([], None, evals, "No plan can be given: " + why)
     return Outcome([], build_plan(best, evals, case, event, answers, P, today), evals)
 
 
-ENUM_TEXT = {"REMITTED": "汇入", "DEBT_SETTLED": "用于清偿本地业务债务", "MOVABLE_PROPERTY": "购买动产带入",
-             "PATENT": "专利", "KNOW_HOW": "专有技术", "SOFTWARE_COPYRIGHT": "软件著作权", "IC_LAYOUT": "集成电路布图设计",
-             "PLANT_VARIETY": "植物新品种", "BIOMEDICINE_VARIETY": "生物医药新品种", "capital_increase": "增资",
-             "new_entity": "新设企业", "unrelated_acquisition": "收购非关联方股权"}
+ENUM_TEXT = {"REMITTED": "remitted in", "DEBT_SETTLED": "applied to settle debts of the local business", "MOVABLE_PROPERTY": "brought in as movable property purchased",
+             "PATENT": "patent", "KNOW_HOW": "know-how", "SOFTWARE_COPYRIGHT": "software copyright", "IC_LAYOUT": "integrated circuit layout design",
+             "PLANT_VARIETY": "new plant variety", "BIOMEDICINE_VARIETY": "new biomedical variety", "capital_increase": "capital increase",
+             "new_entity": "newly established enterprise", "unrelated_acquisition": "acquisition of equity from an unrelated party"}
 
 
 def _action_text(ak, grp, P, value=True):
-    """'flow:up1.holding_months:ge' on rule X -> 'flow:up1 持股月数 ≥ 12 月' with the threshold the rule reads; with
-    value False the action is the opposite side ('< 12 月'; a yes/no field: 否)."""
+    """'flow:up1.holding_months:ge' on rule X -> 'flow:up1 holding months ≥ 12 months' with the threshold the rule reads; with
+    value False the action is the opposite side ('< 12 months'; a yes/no field: no)."""
     f = _field_of(ak)
     pred = _pred_of(ak)
     if not value and pred in OPPOSITE:
@@ -586,7 +586,7 @@ def _action_text(ak, grp, P, value=True):
                     v = P[x.param]
                     unit = P.rows[x.param].get("unit", "")
                     if pred == "is_in":                       # an enumerated field: the side the plan takes, in words
-                        thr = "：%s %s" % ("属于" if value else "不属于", "、".join(ENUM_TEXT.get(e, e) for e in str(v).split(";")))
+                        thr = ": %s %s" % ("one of" if value else "not one of", ", ".join(ENUM_TEXT.get(e, e) for e in str(v).split(";")))
                     else:
                         thr = " %s %s%s" % ({"ge": "≥", "gt": ">", "le": "≤", "lt": "<"}.get(pred, pred),
                                             ("%g" % v) if isinstance(v, float) else v, unit)
@@ -595,9 +595,9 @@ def _action_text(ak, grp, P, value=True):
                 break
     target = ak.rsplit(".", 1)[0] if ak.startswith("flow:") else ak.split(".")[0]
     if f == "managed_from":
-        return "%s · 实际管理机构（董事会与高管的经营决策地）设在%s" % (target, "内地以外" if value else "内地")
+        return "%s · place of effective management (where the board and senior management take the business decisions) %s" % (target, "outside the Mainland" if value else "in the Mainland")
     if pred in ("is_true", "is_false"):
-        thr = "：%s" % ("是" if pred == "is_true" else "否")
+        thr = ": %s" % ("yes" if pred == "is_true" else "no")
     return "%s · %s%s" % (target, _gloss(f).get("gloss", f), thr)
 
 
@@ -612,27 +612,27 @@ def build_plan(best, evals, case, event, answers, P, today):
     structure = {"entities": [], "holds": [], "flows": []}
     for e in g.entities.values():
         if e.id not in g.group():
-            status = "集团外（由方案选定所在地）" if e.attrs.get("placed_by_plan") else "集团外"
-        elif e.attrs.get("wound_up_by_plan"):               # 口径 D19: the client's company leaves the chain
-            status = "转出所持股权后清算注销"
+            status = "outside the group (location chosen by the plan)" if e.attrs.get("placed_by_plan") else "outside the group"
+        elif e.attrs.get("wound_up_by_plan"):               # decision D19: the client's company leaves the chain
+            status = "transfers its shares out, then liquidated and deregistered"
             took = next((f for f in g.flows if f.id == "unwind"), None)
             if took is not None:
                 bucket(frozenset({e.loc})).get("actions").append(
-                    ("%s（%s）把所持 %s 股权按市值转给 %s，随后清算注销、剩余财产分配给股东：两步的税已计入（流 unwind、wind）"
-                     % (e.id, e.loc, took.target, took.payer), "设计", None))
+                    ("%s (%s) transfers its %s shares at market value to %s, then is liquidated and deregistered with the residual assets distributed to its shareholder: both steps' taxes are counted (flows unwind, wind)"
+                     % (e.id, e.loc, took.target, took.payer), "designed", None))
         else:
-            status = "新设" if e.attrs.get("created_by_plan") else ("迁移或重新安排" if e.attrs.get("placed_by_plan") else "现有")
+            status = "new" if e.attrs.get("created_by_plan") else ("migrated or rearranged" if e.attrs.get("placed_by_plan") else "existing")
             base = e.id[:-len(NEW)] if e.id.endswith(NEW) else None
             if base and base in case.roles and base not in g.entities:
-                status = "新设（承接现有 %s 的这项业务；现有 %s 不再为 OP 提供）" % (base, base)
+                status = "new (takes over this business from the existing %s; the existing %s no longer provides it to OP)" % (base, base)
         structure["entities"].append((e.id, e.loc, status))
     for h in g.holds:
-        how = "方案设计（全资新设）" if h.designed else ("案例陈述" if (h.holder, h.held) in case.holds else "承接原持股")
+        how = "designed by the plan (wholly owned, new)" if h.designed else ("stated by the case" if (h.holder, h.held) in case.holds else "takes over the original holding")
         structure["holds"].append((h.holder, h.held, h.ratio, how))
         if h.designed:
             bucket(frozenset({g.entities[h.held].loc})).get("actions").append(
-                ("设立 %s（%s），由 %s 持股 %g%%；%s 只有本方案列出的各笔流" % (h.held, g.entities[h.held].loc, h.holder, h.ratio, h.held),
-                 "设计", None))
+                ("Establish %s (%s), with %s holding %g%%; %s has only the flows this plan lists" % (h.held, g.entities[h.held].loc, h.holder, h.ratio, h.held),
+                 "designed", None))
     for f in g.flows:
         structure["flows"].append((f.id, f.income, f.payer, f.payee, f.amount, f.on.isoformat() if f.on else ""))
     # actions the plan relies on (only those that change the guaranteed tax)
@@ -643,7 +643,7 @@ def build_plan(best, evals, case, event, answers, P, today):
         hi = _with_tick(best, Need(PLAN, ak), not v, case, event, P)
         if hi <= b.hi + EPS:
             continue
-        status = "已确认" if answers.actions.get(ak) == "yes" else "待确认"
+        status = "confirmed" if answers.actions.get(ak) == "yes" else "to be confirmed"
         bucket(_region_of_group(grp, g))["actions"].append((_action_text(ak, grp, P, v), status, round(hi - b.hi, 2)))
     # taxes, guaranteed and best case; items borne outside the group are shown but not counted
     members = g.group()
@@ -663,8 +663,8 @@ def build_plan(best, evals, case, event, answers, P, today):
             gap = (lb.gaps or {}).get(name_)
             note = ""
             if gap:
-                note = ("该年假期表官方尚未公布，按名义日期；公布后可能顺延" if not _published(gap, today)
-                        else "该年假期表缺失（已向人索取）")
+                note = ("that year's holiday table is not yet officially published; nominal date, may be extended once published" if not _published(gap, today)
+                        else "that year's holiday table is missing (requested from a person)")
             bucket(frozenset({jur}) if jur else frozenset())["deadlines"].append((fid, name_, d.isoformat() if d else "", note))
     # judgements the plan still depends on: what the authority would have to accept, and what it is worth
     seen = set()
@@ -682,7 +682,7 @@ def build_plan(best, evals, case, event, answers, P, today):
             bucket(_region_of_group(grp, g))["conditions"].append((key, gl, grp[0], upside))
     present = next((e for e in evals if all(e.cand.get(k) == v for k, v in case.present.items())), None) if case.present else None
     others = sorted([e for e in evals if e is not best and not e.blocking and not e.excluded], key=_key)
-    unmodelled = sorted([(e.cand, "；".join(_step_text(x) for x in e.graph.unmodelled), e.b.hi, e.b.lo)
+    unmodelled = sorted([(e.cand, "; ".join(_step_text(x) for x in e.graph.unmodelled), e.b.hi, e.b.lo)
                          for e in evals if e.graph.unmodelled and not e.blocking and e.b.hi < b.hi - EPS], key=lambda x: x[2])
     ties = [e for e in others if e.b.hi <= b.hi + EPS]               # the same guaranteed tax: equal under the criterion
     runner = [e for e in others if e.b.hi > b.hi + EPS][:1]
@@ -695,17 +695,22 @@ def build_plan(best, evals, case, event, answers, P, today):
         cl, archived = _claims(b, case.settled, event.as_at, g)
         claims_ = [(c.flow, c.jur, c.actual, c.lo, c.hi, c.confirmed, c.potential, c.shortfall,
                     {k: (v.isoformat() if hasattr(v, "isoformat") else v) for k, v in c.deadlines.items()}, [r[0] for r in c.routes])
-                   for c in cl] + [(f_, j_, None, None, None, None, None, None, {}, ["已结"]) for f_, j_ in archived]
-    return {"cand": best.cand, "guaranteed": b.hi, "best": b.lo, "structure": structure,
+                   for c in cl] + [(f_, j_, None, None, None, None, None, None, {}, ["closed"]) for f_, j_ in archived]
+    result = {"cand": best.cand, "guaranteed": b.hi, "best": b.lo, "structure": structure,
             "regions": dict(sorted(regions.items(), key=lambda kv: order_key(kv[0]))), "totals": totals,
             "present": (present.cand, present.b.hi, present.b.lo) if present else None,
             "runner_up": (runner[0].cand, runner[0].b.hi, runner[0].b.lo) if runner else None,
             "ties": [(e.cand, e.b.hi, e.b.lo) for e in ties],
             "data_used": data_used, "claims": claims_, "unmodelled": unmodelled,
-            "notes": (["新设公司（若有）按方案设计视为只有所列各笔流；改为有其他业务时须重新运行。"]
+            "notes": (["A newly established company (if any) is taken, by the plan's design, to have only the flows listed; rerun if it is to have other business."]
                       if any(e.attrs.get("created_by_plan") for e in g.entities.values()) else [])
-            + ["流 %s（%s）早于%s施行（%s）：其%s由集团外的 %s 承担，库内没有此前的规定，未计算，不影响集团税额（口径 D30）。"
+            + ["Flow %s (%s) predates the commencement of %s (%s): its %s is borne by %s outside the group; the library has no earlier rules, so it is not computed and does not affect the group's tax (decision D30)."
                % (x[1], x[2], x[3], x[4], x[5], x[6]) for x in outside_steps(b, g)[1]]}
+    from .execution import build_execution, context_from_graph
+    context = context_from_graph(case, event, g)
+    context["template"] = "recorded" if case.transactions else "planning"
+    result["execution"] = build_execution(result, context, len([e for e in evals if not e.blocking and not e.excluded and not e.graph.unmodelled]))
+    return result
 
 
 # ---------------------------------------------------------------- rendering
@@ -713,10 +718,10 @@ def render(template, event, outcome, case_name=""):
     L = []
     w = L.append
     if outcome.questions:
-        w("# 问题单：%s（模板 %s）" % (case_name, template.name))
+        w("# Question sheet: %s (template %s)" % (case_name, template.name))
         w("")
-        w("方案尚不能给出：下列数据或确认会改变所选方案或其保证税额。只需答这些；答不上请填 unknown（按最不利处理，不会补值）。")
-        w("答复写进 `<案例名>.answers.json`：data（数值或 {\"value\", \"source\"}）、actions（yes / no / unknown）、rulings（yes / no / unknown）、library。")
+        w("No plan can be given yet: the data or confirmations below would change the chosen plan or its guaranteed tax. Answer only these; where you cannot, enter unknown (taken at its worst, never filled in).")
+        w("Write the answers into `<case>.answers.json`: data (a value or {\"value\", \"source\"}), actions (yes / no / unknown), rulings (yes / no / unknown), library.")
         cur = None
         for q in outcome.questions:
             if q.region != cur:
@@ -724,44 +729,48 @@ def render(template, event, outcome, case_name=""):
                 w("")
                 w("## %s" % region_name(q.region))
                 w("")
-                w("| 类型 | 地址 | 问题 | 取值 | 常见出处 | 影响 |")
+                w("| Kind | Address | Question | Value | Usual source | Impact |")
                 w("|---|---|---|---|---|---|")
-            kind = {"blocking": "必答（缺则税额无界）", "joint": "必答（相互影响的未决项太多，缺则无法精确计算）", "data": "数据",
-                    "action": "动作可行性", "ruling": "裁定", "library": "资料"}[q.kind]
-            imp = "可使保证税额下降 %.2f" % q.impact if q.impact else ({"blocking": "无界", "joint": "无法精确计算"}.get(q.kind, "—"))
-            hint = q.source_hint + ("；表单：" + "；".join(q.forms) if q.forms else "")
+            kind = {"blocking": "required (tax unbounded without it)", "joint": "required (too many interacting open items; cannot be computed exactly without it)", "data": "data",
+                    "action": "action feasibility", "ruling": "ruling", "library": "library"}[q.kind]
+            imp = "may lower the guaranteed tax by %.2f" % q.impact if q.impact else ({"blocking": "unbounded", "joint": "cannot be computed exactly"}.get(q.kind, "—"))
+            hint = q.source_hint + ("; forms: " + "; ".join(q.forms) if q.forms else "")
             w("| %s | `%s` | %s | %s | %s | %s |" % (kind, q.key, q.prompt, q.value, hint, imp))
         w("")
-        w("候选结构 %d 个；其中需要上面必答数据才能计算的 %d 个。" % (len(outcome.evaluations), sum(1 for e in outcome.evaluations if e.blocking)))
+        w("%d candidate structures; %d of them need the required data above before they can be computed." % (len(outcome.evaluations), sum(1 for e in outcome.evaluations if e.blocking)))
         return "\n".join(L) + "\n"
     if outcome.plan is None:
-        w("# 无法给出方案：%s" % case_name)
+        w("# No plan: %s" % case_name)
         w("")
         w(outcome.note)
         return "\n".join(L) + "\n"
     p = outcome.plan
-    w("# 方案：%s（模板 %s）" % (case_name, template.name))
+    w("# Plan: %s (template %s)" % (case_name, template.name))
     w("")
-    w("**结构**：%s" % ("，".join("%s=%s" % kv for kv in p["cand"].items()) or "唯一结构"))
+    w("**Structure**: %s" % (", ".join("%s=%s" % kv for kv in p["cand"].items()) or "the only structure"))
     w("")
-    w("**保证税额**（所有裁量项按不利、未知数据按不利）：%.2f；**最好情形**（裁量项全部有利）：%.2f。" % (p["guaranteed"], p["best"]))
+    w("**Guaranteed tax** (every discretion item unfavourable, unknown data unfavourable): %.2f; **best case** (every discretion item favourable): %.2f." % (p["guaranteed"], p["best"]))
     if p["present"]:
         w("")
-        w("**现状**：保证 %.2f / 最好 %.2f。" % (p["present"][1], p["present"][2]))
+        w("**Present structure**: guaranteed %.2f / best %.2f." % (p["present"][1], p["present"][2]))
     if p.get("ties"):
-        w("**保证税额相同的其他结构**（按最好情形、再按待定裁量项少、再按公司少取了本方案；能改变它们先后的只有不影响保证税额的数据，不再询问）：%s。" % (
-            "；".join("%s（最好 %.2f）" % (c, lo) for c, hi, lo in p["ties"])))
+        w("**Other structures with the same guaranteed tax** (this plan was chosen by best case, then fewer pending discretion items, then fewer companies; only data that do not affect the guaranteed tax could reorder them, and they are not asked): %s." % (
+            "; ".join("%s (best %.2f)" % (c, lo) for c, hi, lo in p["ties"])))
     if p["runner_up"]:
-        w("**次优**：%s，保证 %.2f / 最好 %.2f。" % (p["runner_up"][0], p["runner_up"][1], p["runner_up"][2]))
+        w("**Runner-up**: %s, guaranteed %.2f / best %.2f." % (p["runner_up"][0], p["runner_up"][1], p["runner_up"][2]))
     if p.get("unmodelled"):
         w("")
-        w("**未作为方案的结构**（需要的步骤本程序尚未建模，下列数字不含该步骤的税；该步骤的税低于差额时才可能更优）：%s。" % "；".join(
-            "%s：%s，不含该步骤时保证 %.2f / 最好 %.2f，比本方案低 %.2f" % (c, why, hi, lo, p["guaranteed"] - hi)
+        w("**Structures not taken as the plan** (they need a step this program has not modelled; the figures below exclude that step's tax; they could be better only if that step's tax is below the difference): %s." % "; ".join(
+            "%s: %s, guaranteed %.2f / best %.2f without that step, %.2f below this plan" % (c, why, hi, lo, p["guaranteed"] - hi)
             for c, why, hi, lo in p["unmodelled"]))
+    if p.get("execution"):
+        from .execution import render_execution
+        w("")
+        w(render_execution(p["execution"]))
     w("")
-    w("## 分区汇总")
+    w("## Summary by region")
     w("")
-    w("| 区 | 保证税额 | 最好情形 | 动作 | 期限 | 待机关认可的条件 |")
+    w("| Region | Guaranteed tax | Best case | Actions | Deadlines | Conditions pending the authority's acceptance |")
     w("|---|---|---|---|---|---|")
     for rg, d in p["regions"].items():
         tg, tb = p["totals"].get(rg, (0, 0))
@@ -771,49 +780,49 @@ def render(template, event, outcome, case_name=""):
         w("## %s" % region_name(rg))
         if d["actions"]:
             w("")
-            w("要做的事：")
+            w("Actions:")
             for text, status, worth in d["actions"]:
-                w("- %s（%s%s）" % (text, status, "；不做则保证税额上升 %.2f" % worth if worth else ""))
+                w("- %s (%s%s)" % (text, status, "; the guaranteed tax rises by %.2f if not done" % worth if worth else ""))
         if d["guaranteed"]:
             w("")
-            w("税项（保证口径）：")
+            w("Tax items (guaranteed):")
             for fid, jur, levy, who, amt, cites, mine in d["guaranteed"]:
-                w("- %s · %s · %s · %s 承担%s · %.2f · %s" % (fid, jur, levy, who, "" if mine else "（集团外，不计入）", amt, ", ".join(cites)))
+                w("- %s · %s · %s · borne by %s%s · %.2f · %s" % (fid, jur, levy, who, "" if mine else " (outside the group, not counted)", amt, ", ".join(cites)))
         if d["deadlines"]:
             w("")
-            w("期限：")
+            w("Deadlines:")
             for fid, name_, dd, note in d["deadlines"]:
-                w("- %s · %s · %s%s" % (fid, name_, dd, "（%s）" % note if note else ""))
+                w("- %s · %s · %s%s" % (fid, name_, dd, " (%s)" % note if note else ""))
         if d["conditions"]:
             w("")
-            w("仍取决于税务机关认可的条件：")
+            w("Conditions still depending on the tax authority's acceptance:")
             for key, gl, rule, upside in d["conditions"]:
-                w("- %s（%s，规则 %s）%s" % (gl, key, rule, "：若认可，税额最多下降 %.2f" % upside if upside else ""))
+                w("- %s (%s, rule %s)%s" % (gl, key, rule, ": if accepted, the tax falls by up to %.2f" % upside if upside else ""))
     if p.get("claims"):
         w("")
-        w("## 已缴税款：可追回与补税风险")
+        w("## Settled tax: recoverable and shortfall risk")
         for fl, jur, actual, lo, hi, conf, pot, short, clocks, routes in p["claims"]:
             if actual is None:
-                w("- %s / %s：已结（时钟全部过期或声明），无主张" % (fl, jur))
+                w("- %s / %s: closed (every clock has run out, or declared); no claim" % (fl, jur))
                 continue
-            w("- %s / %s：实缴 %.2f；规则口径 [%.2f, %.2f]；确定可追回 %.2f，最多可追回 %.2f；补税风险 [%.2f, %.2f]；时钟 %s；路线 %s" % (
+            w("- %s / %s: paid %.2f; per the rules [%.2f, %.2f]; confirmed recoverable %.2f, at most recoverable %.2f; shortfall risk [%.2f, %.2f]; clocks %s; routes %s" % (
                 fl, jur, actual, lo, hi, conf, pot, short[0], short[1], clocks, " → ".join(routes)))
     w("")
-    w("## 结构明细")
+    w("## Structure details")
     for e in p["structure"]["entities"]:
-        w("- 公司 %s · %s · %s" % e)
+        w("- company %s · %s · %s" % e)
     for h in p["structure"]["holds"]:
-        w("- 持股 %s → %s · %g%% · %s" % h)
+        w("- holding %s → %s · %g%% · %s" % h)
     for f in p["structure"]["flows"]:
-        w("- 流 %s · %s · %s → %s · %.2f · %s" % f)
+        w("- flow %s · %s · %s → %s · %.2f · %s" % f)
     if p["data_used"]:
         w("")
-        w("## 所用答复")
+        w("## Answers used")
         for k, v, src in p["data_used"]:
-            w("- %s = %s%s" % (k, v, "（%s）" % src if src else ""))
+            w("- %s = %s%s" % (k, v, " (%s)" % src if src else ""))
     if p["notes"]:
         w("")
-        w("## 方案的设计前提")
+        w("## Design premises of the plan")
         for n in p["notes"]:
             w("- " + n)
     return "\n".join(L) + "\n"

@@ -1,0 +1,201 @@
+# File: .latexindent.yaml Copyright (C) 2022 The LaTeX4EI Team
+#
+# configuration file for automatic LaTeX code formatting
+# file compatible with latexindent 3.16
+
+# ----------------------------------------------------------------------------
+# .:: 5.1 Backup and log file preferences
+# ----------------------------------------------------------------------------
+backupExtension: .bak
+onlyOneBackUp: 1
+logFilePreferences:
+  showEveryYamlRead: 1
+  showAmalgamatedSettings: 1
+
+# ----------------------------------------------------------------------------
+# .:: 5.2 Verbatim code blocks
+# ----------------------------------------------------------------------------
+verbatimEnvironments:
+  verbatim: 1
+  lstlisting: 1
+  listing: 1
+  minted: 1
+verbatimCommands:
+  verb: 1
+  lstinline: 1
+  mintinline: 1
+# special comment block to avoid indentation
+# use '% \begin{noindent}' and '% \end{noindent}' in latex files
+noIndentBlock:
+  noindent: 1
+
+# ----------------------------------------------------------------------------
+# .:: 5.3 filecontents and preamble
+# ----------------------------------------------------------------------------
+indentPreamble: 1
+preambleCommandsBeforeEnvironments: 1
+
+# ----------------------------------------------------------------------------
+# .:: 5.4 Indentation and horizontal space
+# ----------------------------------------------------------------------------
+defaultIndent: '  '
+removeTrailingWhitespace:
+  beforeProcessing: 1
+  afterProcessing: 1
+
+# ----------------------------------------------------------------------------
+# .:: 5.5 Aligning at delimiters
+# ----------------------------------------------------------------------------
+lookForAlignDelims:
+  tabular:
+    multiColumnGrouping: 1
+    alignRowsWithoutMaxDelims: 1
+    alignFinalDoubleBackSlash: 1
+  tabularx:
+    multiColumnGrouping: 1
+    alignRowsWithoutMaxDelims: 1
+    alignFinalDoubleBackSlash: 1
+  tabulary:
+    multiColumnGrouping: 1
+    alignRowsWithoutMaxDelims: 1
+    alignFinalDoubleBackSlash: 1
+  array:
+    multiColumnGrouping: 1
+    alignRowsWithoutMaxDelims: 1
+    alignFinalDoubleBackSlash: 1
+  matrix:
+    multiColumnGrouping: 1
+    alignRowsWithoutMaxDelims: 1
+    alignFinalDoubleBackSlash: 1
+  pmatrix:
+    multiColumnGrouping: 1
+    alignRowsWithoutMaxDelims: 1
+    alignFinalDoubleBackSlash: 1
+  bmatrix:
+    multiColumnGrouping: 1
+    alignRowsWithoutMaxDelims: 1
+    alignFinalDoubleBackSlash: 1
+  Bmatrix:
+    multiColumnGrouping: 1
+    alignRowsWithoutMaxDelims: 1
+    alignFinalDoubleBackSlash: 1
+  vmatrix:
+    multiColumnGrouping: 1
+    alignRowsWithoutMaxDelims: 1
+    alignFinalDoubleBackSlash: 1
+  Vmatrix:
+    multiColumnGrouping: 1
+    alignRowsWithoutMaxDelims: 1
+    alignFinalDoubleBackSlash: 1
+
+# ----------------------------------------------------------------------------
+# .:: 5.6 Indent after items, specials and headings
+# ----------------------------------------------------------------------------
+indentAfterItems:
+  itemize: 1
+  enumerate: 1
+  description: 1
+  tcbitemize: 1
+itemNames:
+  item: 1
+  tcbitem: 1
+specialBeginEnd:
+  specialBeforeCommand: 1  # treat specialBeginEnds before other commands
+  ifcaseOrElse:
+    begin: '\\ifcase'
+    middle:
+      - '\\or'
+      - '\\else'
+    end: '\\fi'
+  leftrightParen:
+    begin: '\\left\('
+    end: '\\right\)'
+  leftrightBrackets:
+    begin: '\\left\['
+    end: '\\right\]'
+  leftrightBraces:
+    begin: '\\left\{'
+    end: '\\right\}'
+  displayMath:
+    begin: '\\\['
+    end: '\\\]'
+
+# ----------------------------------------------------------------------------
+# .:: 5.8 noAdditionalIndent and indentRules
+# ----------------------------------------------------------------------------
+# indentation rules on a per environment/command name basis
+noAdditionalIndent:
+  document: 1
+  comment: 1
+indentRules:
+  item: 0
+  path: '  '
+  draw: '  '
+  node: '  '
+# intentation rules on a per "type of thing" basis
+noAdditionalIndentGlobal:
+  environments: 0
+  commands: 1
+  optionalArguments: 0
+  mandatoryArguments: 0
+  ifElseFi: 0
+  items: 0
+  keyEqualsValuesBracesBrackets: 0
+  namedGroupingBracesBrackets: 1
+  UnNamedGroupingBracesBrackets: 1
+  specialBeginEnd: 0
+  afterHeading: 1
+  filecontents: 1
+indentRulesGlobal:
+  environments: '  '
+  commands: 0
+  optionalArguments: '  '
+  mandatoryArguments: '  '
+  ifElseFi: '  '
+  items: '  '
+  keyEqualsValuesBracesBrackets: '  '
+  namedGroupingBracesBrackets: 0
+  UnNamedGroupingBracesBrackets: 0
+  specialBeginEnd: '  '
+  afterHeading: 0
+  filecontents: 0
+
+# ----------------------------------------------------------------------------
+# .:: 5.9 Commands and the strings between their arguments
+# ----------------------------------------------------------------------------
+commandCodeBlocks:
+  roundedParenthesesAllowed: 1
+  # define special strings which are treated as parts of commands
+  # specially useful for TikZ
+  stringsAllowedBetweenArguments:
+    - amalgamate: 0
+    - 'at'
+    - 'to'
+    - 'node'
+    - 'in'
+    - '\+\+'
+    - '\-\-'
+    - '\+'
+    - '\-'
+    - 'rectangle'
+    - 'circle'
+    - 'ellipse'
+    - 'cos'
+    - 'sin'
+  # commands that need to be treated specially
+  # e.g. because of unmatched brackets or braces
+  commandNameSpecial:
+    - amalgamate: 0
+    - '@ifnextchar\['
+
+# ----------------------------------------------------------------------------
+# .:: 6. The -m (modifylinebreaks) switch
+# ----------------------------------------------------------------------------
+modifyLineBreaks:
+  preserveBlankLines: 1
+  condenseMultipleBlankLinesInto: 2
+  textWrapOptions:
+    multipleSpacesToSingle: 1
+    # columns: 78
+  oneSentencePerLine:
+    manipulateSentences: 0

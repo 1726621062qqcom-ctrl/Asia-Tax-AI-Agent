@@ -1,0 +1,68 @@
+ok   residence_cert is typed bool from its is_true predicate
+ok   debt/equity ratio is typed number from its le predicate
+ok   receipt_kind is an enum whose values come from the param (REMITTED/DEBT_SETTLED/MOVABLE_PROPERTY)
+ok   payable_on is a date
+ok   evidence hints come from 信息收集.md
+ok   meaning and unit come from data/field_gloss.csv (foreign_headline_rate: 来源地对居民企业的法定企业所得税税率；不是预提税率、协定税率)
+ok   a field no predicate compares is typed from its gloss unit (cost_basis, arms_length_value: 金额 -> number), not text
+ok   channels come from the dictionary (57 fields in E)
+ok   the retrieval query carries the field's name words and example phrasings
+ok   numbers_in resolves million / 亿 / thousands separators / % / a table scale
+ok   dates_in reads ISO, 中文, '22 November 2024' and 'May 5, 2023'; a day and month without a year is no date
+ok   a number or a date is accepted only when the quote states it
+ok   a table header's RMB'000 is read as a scale
+ok   the incorporation pattern finds every mention with its verbatim sentence (3 hits)
+ok   `about` keeps the sentences that name the party
+ok   'holds 100%' is read as a percentage by the pattern
+ok   company names match without legal-form suffixes
+ok   a definitions section parses into term -> definition
+ok   a cell-per-line table and a row-on-one-line (with a note reference) parse into rows with the header's years, scale and currency; quotes are verbatim (4 rows)
+ok   a year that repeats opens the months-ended columns: full-year values only, the interim columns stay in `columns`
+ok   years on one line with the unit stated above them: the unit is read from the lines before the years
+ok   two revenue rows that agree across scales (RMB'000 vs millions) give one value, the finer scale kept
+ok   a statement row with its header is a candidate passage for the reader
+ok   revenue converts to EUR by the library's year-end central parity (2024-12-31 EUR/CNY 7.5257)
+ok   payee.group_revenue_eur is derived by program from the revenue row of 2024 and the year-end rate, the D17 substitution noted (265756009.41)
+ok   with no statement table, the model names the revenue sentence; the program parses 41.8 billion and the US$ before it and converts (39926534408.76)
+ok   a record a person dropped in cases/registry/HK is found by name (legal suffixes ignored)
+ok   a record in another register than the case's jurisdiction is a conflict and a violation; name similarity and non-live status are notes
+ok   'yes' on a bool field becomes True, with its quote kept
+ok   evidence = (doc, quote)
+ok   a computed ratio (400 from 4,000 / 1,000) is refused: the quote does not state it (value not in the quote (quote states 4000, 1000))
+ok   a quote with typographic quote marks across a line break is found (quotes.loose)
+ok   an ISO date stated in the quote is accepted
+ok   a quote not found in the document is not evidence: the field stays missing (P4)
+ok   'maybe' on a bool field is rejected, not guessed
+ok   a field without passages is missing, not invented
+ok   two readings of one passage that disagree leave the field missing, both values recorded (samples disagree: 25.0 / 20.0)
+ok   a reading that is sure and one that is not: missing (samples disagree: True / null)
+ok   a call that raises: the field is missing, the exception is a note, the run goes on
+ok   a reply that is not JSON is rejected with the reason
+ok   a raw control character inside a JSON string does not break the reading
+ok   an amount written as prose on a number field is rejected, not stored as text
+ok   1,234 under an RMB'000 header is accepted as 1,234,000 (the program applies the table scale)
+ok   a quote that is only a figure (a table cell) is not evidence: rejected
+ok   two passages read separately with different values: a conflict, both values with their quotes, no value taken
+ok   a passage that does not settle the field beside one that does is not a disagreement
+ok   a pattern's sentence near the party's name is a candidate the model reads (twice, as the only passage); the value comes from the reading
+ok   two pattern sentences about one party (loan: Hong Kong, accounts: Cayman) are read separately: a conflict, not a choice
+ok   a pattern sentence that does not name the party nearby is no candidate
+ok   a holding stated in words (wholly owned, half) counts as its percentage
+ok   one passage is read twice by default (samples=2)
+ok   two passages are read once each, separately
+ok   the read prompt carries the field's meaning and the guard
+ok   the locate prompt lists the fields before and after the documents
+ok   per-field features for a calibrator: passages, reads, agreement, quote length, figures, retrieval score
+ok   samples=1 takes the single reading
+ok   a locate reply that is not JSON: every field missing, noted, no exception
+ok   a locate call that raises: every field missing, noted, no exception
+ok   retrieval returns verbatim spans with offsets, ranked (top: cor-2026)
+ok   with locate=retrieval the model only reads candidate passages (3 passages, 3 reads)
+ok   denial constraints: percent in [0, 100], date in [1900, 2100], amount not negative
+ok   provenance rows follow 案例采集.md §4.2 (disclosed, source, quote)
+ok   fill() keeps stated values, skips a value a constraint refuses, adds the rest with a review note, never edits in place
+ok   extract_case asks the model only for typed fields; untyped ones are listed for a person (2 untyped)
+ok   channels: the model is asked E/C fields only (11); B/D listed for a person (5); derived ones listed as missing inputs (0)
+ok   the result records prompt version, locate mode, temperature and features
+ok   a registry value in hand that differs from the reading is a conflict and a violation (flows.fee.arms_length_low)
+67 checks, 0 failures

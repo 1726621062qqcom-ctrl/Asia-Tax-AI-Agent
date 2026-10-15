@@ -1,0 +1,2163 @@
+=== [p.1] ===
+Proceedings of the 17th Conference of the European Chapter of the Association for Computational Linguistics, pages 2761–2776
+May 2-6, 2023 ©2023 Association for Computational Linguistics
+Finding the Law: Enhancing Statutory Article Retrieval via Graph
+Neural Networks
+Antoine Louis
+Gijs van Dijck
+Gerasimos Spanakis
+Law & Tech Lab, Maastricht University
+{a.louis, gijs.vandijck, jerry.spanakis}@maastrichtuniversity.nl
+Abstract
+Statutory article retrieval (SAR), the task of
+retrieving statute law articles relevant to a le-
+gal question, is a promising application of le-
+gal text processing. In particular, high-quality
+SAR systems can improve the work efficiency
+of legal professionals and provide basic legal
+assistance to citizens in need at no cost. Unlike
+traditional ad-hoc information retrieval, where
+each document is considered a complete source
+of information, SAR deals with texts whose
+full sense depends on complementary infor-
+mation from the topological organization of
+statute law. While existing works ignore these
+domain-specific dependencies, we propose a
+novel graph-augmented dense statute retriever
+(G-DSR) model that incorporates the structure
+of legislation via a graph neural network to
+improve dense retrieval performance. Experi-
+mental results show that our approach outper-
+forms strong retrieval baselines on a real-world
+expert-annotated SAR dataset.1
+1
+Introduction
+Today, the high cost of legal expertise prevents less
+fortunate people from understanding and reacting
+to legal issues that may arise (Ponce et al., 2019).
+In recent years, an increasing number of works
+have focused on legal text processing (Zhong et al.,
+2020) with the intent to assist legal practitioners
+and citizens while reducing legal costs and improv-
+ing equal access to justice for all. Statutory article
+retrieval (SAR), the task of retrieving statute law
+articles relevant to a legal question, marks the first
+and one of the most crucial steps in any legal aid
+process. Our goal is to help reduce the gap between
+people and the law by improving SAR systems that
+could provide citizens with the first component of
+a free professional legal aid service.
+Prior work has addressed SAR with standard in-
+formation retrieval approaches such as term-based
+1Our source code is available at https://github.
+com/maastrichtlawtech/gdsr.
+Penal Code
+Civil Code
+Rural Code
+Book 1
+Book 2
+Book 3
+Book M
+Title 1
+Title 2
+Title 3
+Title 4
+Title N
+Statute
+Law
+Section 1
+Art. R
+...
+...
+...
+...
+...
+...
+...
+...
+...
+Chapter 1 Chapter 2 Chapter 3 Chapter 4 Chapter 5
+Chapter P
+...
+...
+...
+...
+...
+Section Q
+Section 2 Section 3 Section 4 Section 5 Section 6
+...
+...
+...
+...
+...
+...
+Art.101 Art.102 Art.103
+Art.104 Art.105 Art.106 Art.107 Art.108
+Figure 1: Illustration of the hierarchical organization
+of statute law. Each law code is structured into books,
+titles, chapters, and sections. The deeper the divisions,
+the closer the legal concepts of the articles below them.
+models or dense embedding-based models (Kim
+et al., 2019; Nguyen et al., 2021). While good per-
+formance has been achieved, these approaches rely
+on the flawed assumption that articles are complete
+and independent sources of information. In reality,
+statute law is an ensemble of interdependent rules
+meticulously organized into different codes, books,
+titles, chapters, and sections, as illustrated in Fig-
+ure 1. Each level in the structure of legislation
+comes with a unique heading that informs about
+the content of the articles below it. An article takes
+on its whole meaning only when considered at its
+rightful place in the structure with the complemen-
+tary information from its neighboring articles.
+This work shows that such a structure can be
+highly beneficial for retrieving statutes. We pro-
+pose a graph-augmented dense statute retriever (G-
+2761
+=== [p.2] ===
+DSR) model that leverages the topological structure
+of legislation to enhance the article content infor-
+mation. Specifically, the proposed model extends
+the document encoder of a dense retriever with
+a graph neural network to learn knowledge-rich
+cross-article representations. Similar to previous
+work, we adopt a contrastive learning strategy to
+optimize the similarity between the representations
+of relevant query-article pairs.
+The contributions of this paper are threefold:
+• We propose a graph-augmented dense re-
+triever model for statutory article retrieval that
+explicitly utilizes the topological organization
+of statute law to enrich the article information.
+• We conduct empirical evaluations on our
+model and demonstrate improvements over
+strong retrieval baselines.
+• We perform ablation studies on various model
+components and training strategies to under-
+stand the impact of several design options on
+the effectiveness of our model.
+2
+Preliminaries
+In this section, we formally introduce the task of
+statutory article retrieval and discuss the specific
+difficulties associated with it. We then explain
+how we identify the structure of legislation as an
+essential consideration in SAR.
+Problem formulation.
+Given a simple legal ques-
+tion, such as "Who should pay for the construction
+of the common wall?", SAR aims to return one or
+several relevant articles from the legislation. For-
+mally speaking, a SAR system can be expressed
+as a function R : (q, C) 7→F that takes as in-
+put a question q along with a corpus of articles
+C = {a1, a2, · · · , aN}, and returns a much smaller
+filter set F ⊂C of the supposedly relevant articles,
+ranked by decreasing order of relevance. For a
+fixed k = |F| ≪|C|, the retriever can be evaluated
+in isolation with multiple rank-based metrics. Most
+modern retriever systems follow a two-stage re-
+trieval approach (Guo et al., 2016; Hui et al., 2017;
+McDonald et al., 2018), where a pre-fetcher first
+aims to return all relevant documents in the filter
+set F and a re-ranker then attempts to make more
+relevant documents in F appear before less rele-
+vant ones. In this work, we focus our research on
+improving the pre-fetcher component for SAR.
+Challenges.
+SAR comes with two core chal-
+lenges that make the task unique compared to tra-
+ditional information retrieval. First, the statutes
+to be retrieved are written in a language that dra-
+matically differs from the ordinary plain language
+used in the questions. The legal language uses a
+specialized jargon known for its frequent and delib-
+erate use of formal words, Latin phrases, lengthy
+sentences, and expressions with flexible meanings
+(Charrow and Crandall, 1990). Second, statutory
+articles are long text sequences that may reach sev-
+eral thousand words. This implies overcoming the
+maximum input length limit of 512 tokens imposed
+by BERT-based models, which have recently be-
+come the standard in neural information retrieval
+due to their effectiveness.
+Structure of legislation.
+The legislation comes
+with a well-thought-out organization of its written
+rules to facilitate access to provisions covering a
+given subject (Onoge, 2015). This organization is
+established in a hierarchical manner, where higher-
+level divisions cover broad legal domains while
+lower-level divisions deal with specific legal con-
+cepts. To examine the importance of this hierarchy
+in the SAR process, we conduct a preliminary in-
+vestigation in which we study the reasoning legal
+experts follow when performing the task. We sum-
+marize these experts’ approach in Appendix A.1.
+We observe that legal experts rely heavily on the
+structure of law when retrieving relevant articles
+to a legal question, which indicates that the dif-
+ferent divisions’ headings in the legislation carry
+valuable information that retrieval systems should
+consider. Additionally, we analyze the degree to
+which neighboring articles cover related subjects in
+Appendix A.2 and find high levels of similarities,
+which suggests that information from neighboring
+articles should be considered to capture an article’s
+whole meaning.
+3
+Approach
+In this section, we present a new general approach
+for SAR that learns to retrieve relevant statutes by
+using both the textual semantic information from
+articles and the structural graph information from
+the legislation. Our model, called graph-augmented
+dense statute retriever (G-DSR), consists of two
+main building blocks, as depicted in Figure 2, that
+are trained independently with the same objective.
+We first describe the dense retriever component
+of our approach in Section 3.1 and then explain
+how our legislative graph encoder builds upon it in
+Section 3.2.
+2762
+=== [p.3] ===
+Legislative Graph Encoder
+Scoring
+Function
+GNN
+Query Encoder
+Hierarchical Article Encoder
+BERT-based
+encoder
+Transformer encoder
+Pooling
+Dense Statute Retriever
+Article embeddings
+Query embeddings
+article
+query
+Scoring
+Function
+Knowledge-rich
+article embeddings
+Legislative graph
+BERT-based
+encoder
+BERT-based
+encoder
+Figure 2: An illustration of the graph-augmented dense statute retriever (G-DSR) model. G-DSR consists
+of two main building blocks that are trained independently. Left: The dense statute retriever (DSR) first learns
+high-quality low-dimensional embedding spaces for both the queries and articles such that relevant query-article
+pairs appear closer than irrelevant ones in those vector spaces. Right: The legislative graph encoder (LGE) then
+learns to enrich the article representations by aggregating information from the organization of statute law.
+3.1
+Dense Statute Retriever
+Our approach’s first component, called dense
+statute retriever (DSR), aims to learn high-quality
+low-dimensional embedding spaces for questions
+and articles so that relevant question-article pairs
+appear closer than irrelevant ones in those spaces.
+Below, we review the overall architecture of the re-
+triever and detail the design of its query and article
+encoders. We then describe the contrastive learning
+strategy we employ and choice of negative pairs.
+Bi-encoder.
+We use the widely adopted bi-
+encoder architecture (Bromley et al., 1993) as
+the foundation of our dense retriever.
+The lat-
+ter maps queries and articles into dense vector
+representations and calculates a relevance score
+s : (q, a) 7→R+ between query q and article a by
+the similarity of their embeddings, i.e.,
+s(q, a) = sim
+
+Eθ
+Q(q), Eϕ
+A(a)
+
+,
+(1)
+where Eθ
+Q(q), Eϕ
+A(a) ∈Rd denote the query and
+article embeddings respectively, and sim : Rd ×
+Rd 7→R is a similarity function such as cosine or
+dot-product.
+Query encoder.
+To encode the queries, we feed
+them into a BERT-based (Devlin et al., 2019) model
+Eθ
+Q : Wn 7→Rd with weights θ, that maps an
+input sequence of n tokens from vocabulary W to
+d-dimensional real-valued token embeddings. We
+take the last layer’s [CLS] token representation as
+the query embedding, i.e.,
+Eθ
+Q(q) = BERT[CLS](q).
+(2)
+Hierarchical article encoder.
+Since statutory
+articles may be longer than the maximum in-
+put length of a standard BERT-based encoder,
+we use a hierarchical variation that can process
+longer textual sequences (Pappagari et al., 2019;
+Zhang et al., 2019; Yang et al., 2020a).
+Each
+article a is first split into smaller text passages
+[p1, p2, · · · , pm], where a passage pi is a sequence
+of tokens [t(i)
+1 , t(i)
+2 , · · · , t(i)
+n ] with n ≤512. These
+passages are then independently passed through
+a shared BERT-based model to extract a list of
+context-unaware passage representations using the
+respective [CLS] token embeddings, as illustrated
+in Figure 2. Next, the hierarchical model sums the
+[CLS] token representations of each passage with
+learnable passage position embeddings and feeds
+the resulting representations into a small Trans-
+former encoder to make them aware of the sur-
+rounding passages. The final article representation
+is computed through a pooling operation over the
+2763
+=== [p.4] ===
+context-aware passage representations, i.e.,
+Eϕ
+A(a) = pool
+h
+˜h
+(1)
+[CLS], · · · , ˜h
+(m)
+[CLS]
+i
+,
+(3)
+where ˜h
+(i)
+[CLS] ∈Rd is the contextualized embed-
+ding of passage pi, and pool : Rm×d 7→Rd is
+either mean or max pooling.
+Contrastive learning.
+The training objective of
+the bi-encoder is to learn effective embedding func-
+tions Eθ
+Q(·) and Eϕ
+A(·) such that relevant question-
+article pairs have a higher similarity than irrelevant
+ones. Let D = {⟨qi, a+
+i ⟩}N
+i=1 be the training data
+where each of the N instances consists of a query qi
+associated with a relevant article a+
+i . By sampling a
+set of negative articles A−
+i for each question qi, we
+can create a training set T = {⟨qi, a+
+i , A−
+i ⟩}N
+i=1.
+For each training instance in T , we contrastively
+optimize the negative log-likelihood of the positive
+article against the negative ones, i.e.,
+L
+ qi, a+
+i , A−
+i
+
+= −log
+es(qi,a+
+i )/τ
+P
+a∈A−
+i ∪{a+
+i } es(qi,a)/τ ,
+(4)
+where τ > 0 is a temperature parameter to be set.
+Negatives.
+We consider two types of negative ex-
+amples: (i) in-batch (Chen et al., 2017; Henderson
+et al., 2017), i.e., articles paired with the other ques-
+tions from the same mini-batch, and (ii) BM25, i.e.,
+top articles returned by BM25 that are not relevant
+to the question.
+3.2
+Legislative Graph Encoder
+Our approach’s second component, called Legisla-
+tive Graph Encoder (LGE), aims to enrich article
+representations given by the trained retriever’s arti-
+cle encoder by fusing information from a legislative
+graph. Below, we elaborate on the legislative graph
+construction and the graph training process.
+Graph construction.
+To leverage the hierarchi-
+cal organization of statute law, we formalize the
+latter as a tree structure consisting of two types
+of node: (i) section nodes, which are titled struc-
+tural units that represent the consecutive divisions
+in codes of law (i.e., the headings of the books,
+titles, chapters, and sections), and (ii) article nodes,
+which are textual content units that represent the
+different statutory articles. As illustrated in Fig-
+ure 1, the edges represent the hierarchical connec-
+tions between section and article nodes. Formally,
+such a tree can be represented as a directed acyclic
+graph G = (V, E), with V as the node set and
+E ⊆V × V as the edge set.
+Node feature initialization.
+Nodes in V are com-
+monly associated with d-dimensional features. We
+apply the article encoder Eϕ
+A(·) from the trained
+bi-encoder to encode the semantic information of
+nodes (i.e., section headings and article contents)
+offline and use the resulting embeddings as the
+initial node features X ∈R|V|×d.
+Node feature update.
+To fuse the information of
+node features using the graph structure, we use a
+graph neural network (GNN). Such a model con-
+sists of a stack of neural network layers, where each
+layer aggregates local neighborhood information
+(i.e., features of neighbors) around each node and
+then passes this aggregated information on to the
+next layer. Generally speaking, a GNN takes as in-
+puts the feature matrix X and the graph’s adjacency
+matrix A ∈R|V|×|V|
++
+, with Ai,j as the edge weight
+between nodes i and j, and produces a node-level
+output Z ∈R|V|×d that captures each node’s struc-
+tural properties. Every GNN layer can be written
+as a non-linear function
+H(l+1) = f(H(l), A),
+(5)
+with H0 = X and HL = Z, L being the num-
+ber of layers. In its simplest form, the layer-wise
+propagation rule is such that
+f(H(l), A) = σ(AH(l)W(l)),
+(6)
+where W(l) is the input linear transformation’s
+weight matrix for the l-th neural network layer
+and σ(·) is a non-linear activation function. We
+propose to use a 3-layer GATv2 network (Brody
+et al., 2022), a variant of GAT (Velickovic et al.,
+2018) that has the ability to learn the strength of
+connection between neighboring nodes through a
+dynamic attention mechanism. Formally, a GATv2
+layer updates a node’s hidden state as follows
+h(l+1)
+i
+= σ
+
+X
+j∈N(i)
+α(l)
+ij W(l)h(l)
+j
+
+,
+(7)
+where N(i) is the set of first-order neighbors of
+node i, and α(l)
+ij are normalized attention coeffi-
+cients indicating the importance of node j’s fea-
+tures to i in the l-th layer. The latter are computed
+based on the features of the connected nodes using
+an attention function att : Rd × Rd 7→R such that
+α(l)
+ij = softmax
+
+σ(att(h(l)
+i , h(l)
+j )
+
+.
+(8)
+2764
+=== [p.5] ===
+Learning process.
+To optimize the GNN param-
+eters, we adopt the same contrastive learning strat-
+egy used to train the bi-encoder. Since graph G
+can be relatively large, performing an update of
+all the node features in G at every training itera-
+tion would incur high computational costs. Be-
+sides, most of these computations would be of no
+use as only the updated representations of nodes
+{A−
+i ∪a+
+i }|B|
+i=1 from batch B are needed to update
+the model parameters. Therefore, we build a sub-
+graph Gsub at each training step that only contains
+the article nodes from batch B as well as their L-
+hop neighbors (where L is decided by the number
+of GNN layers). We then pass that sub-graph to
+the graph network and use the resulting article rep-
+resentations to compute the loss in Equation (4).
+Comparably to the node features, the query embed-
+dings are pre-computed offline before training by
+the query encoder Eθ
+Q(·) of our trained bi-encoder.
+4
+Experimental Setup
+In this section, we present the basic setup for ex-
+periments. In particular, Section 4.1 describes the
+dataset we conduct our experiments on, Section 4.2
+details our model implementation, Section 4.3 re-
+views the different baselines we use for comparison,
+and Section 4.4 reports the evaluation metrics.
+4.1
+Dataset
+We conduct experiments on the publicly available
+Belgian Statutory Article Retrieval Dataset (Louis
+and Spanakis, 2022, BSARD).2 To the best of our
+knowledge, BSARD is the only SAR dataset that
+provides the lists of consecutive division headings
+each article belongs to, which is crucial for building
+the graph of the legislative structure. The dataset
+consists of 1,100+ French native questions on var-
+ious legal topics, as shown in Table 1, labeled by
+skilled experts with references to relevant statutory
+articles from the Belgian legislation. The retrieval
+corpus comprises 22,600+ articles collected from
+32 Belgian codes covering numerous legal domains.
+The questions are relatively short and might have
+several relevant legal articles. We refer readers to
+the original paper for further data collection and
+analysis details.
+4.2
+Implementation Details
+Model.
+We use the publicly released Camem-
+BERT (Martin et al., 2020) checkpoint to initialize
+2https://huggingface.co/datasets/antoiloui/bsard
+Topic
+Train
+Dev
+Test
+Family
+216
+56
+67
+Housing
+203
+38
+66
+Money
+103
+35
+36
+Justice
+96
+25
+30
+Foreigners
+41
+9
+13
+Social security
+27
+8
+6
+Work
+23
+6
+4
+Total
+709
+177
+222
+Table 1: Topic distribution of questions in BSARD.
+DSR’s query encoder. Due to the specificity of the
+legal language the article encoder has to deal with,
+we follow prior work on domain adaptation (Gu-
+rurangan et al., 2020; Jørgensen et al., 2021) and
+continue pre-training CamemBERT on BSARD
+statutory articles for 50k gradient steps to adapt it
+to the target legal domain. We use the resulting
+domain-specific checkpoint to warm-start the arti-
+cle’s first-level encoder. The second-level encoder
+is a two-layer Transformer encoder of 14M param-
+eters with a similar configuration (i.e., 768-hidden,
+3072-intermediate, 12-heads, 0.1 dropout, GeLU).
+We use max-pooling to aggregate the final chunk
+representations and cosine as the decomposable
+similarity function.
+Data augmentation.
+Due to the recent success in
+using synthetic query generation to improve dense
+retrieval performance (Liang et al., 2020; Ma et al.,
+2021; Thakur et al., 2021), we propose to augment
+BSARD with synthetic domain-targeted queries.
+We use a mT5 model (Raffel et al., 2020) fine-tuned
+on general domain data from mMARCO (Bonifa-
+cio et al., 2021) to synthesize queries for our target
+statutory articles.3 We generate five queries per
+article, which results in a total of around 118k syn-
+thetic queries. We combine the latter with the gold
+BSARD train samples and obtain an augmented
+training set of around 122.5k question-article pairs.
+Optimization.
+We train DSR for 15 epochs with
+a batch size of 24 using AdamW (Loshchilov and
+Hutter, 2017) with β1 = 0.9, β2 = 0.999, ϵ =1e-
+7, weight decay of 0.01, and learning rate warm
+up along the first 5% of the training steps to a
+maximum value of 2e-5, after which linear decay is
+applied. We then optimize LGE parameters for 10
+3https://huggingface.co/doc2query/
+msmarco-french-mt5-base-v1
+2765
+=== [p.6] ===
+epochs with a batch size of 512 using AdamW with
+β1 = 0.9, β2 = 0.999, ϵ =1e-7, weight decay of
+0.1, and a constant learning rate of 2e-4. We use 16-
+bit automatic mixed precision to accelerate training
+and save memory. Details on our hyperparameter
+tuning process are given in Appendix B.
+Hardware & schedule.
+Training is performed
+on a single 32 GB NVIDIA V100 GPU hosted on
+a server with a dual 20-core Intel Xeon E5-2698
+v4 CPU @2.20GHz and 512 GB of RAM. It takes
+around 1 day to train DSR and 35 minutes for LGE.
+Libraries.
+We implement, train, and tune our
+models using Transformers (Wolf et al., 2020), Py-
+Torch (Paszke et al., 2019), PyTorch-Geometric
+(Fey and Lenssen, 2019), PyTorch-Lightning (Fal-
+con, 2019), W&B Sweeps (Biewald, 2020), and
+DeepSpeed (Rasley et al., 2020).
+4.3
+Baselines
+We compare our approach against three strong re-
+trieval systems. As a sparse baseline model, we
+follow prior work and consider BM25 (Robertson
+et al., 1994),4 a popular bag-of-words retrieval func-
+tion based on exact term matching. We then exam-
+ine the document expansion technique docT5query
+(Nogueira and Lin, 2019), which augments each ar-
+ticle with a pre-defined number of synthetic queries
+generated by a finetuned mT5 model,3 and then
+uses a traditional BM25 lexical index from the
+augmented articles for retrieval. Last, we include
+the results of a supervised dense passage retriev-
+ers (Karpukhin et al., 2020, DPR) pre-finetuned
+on more than 90.5k question-context pairs from a
+combination of three French QA datasets.5
+4.4
+Evaluation
+We evaluate model performance using three com-
+monly used ranking measures (Manning et al.,
+2008), namely the macro-averaged recall at differ-
+ent cutoffs (R@k), mean average precision (mAP),
+and mean r-precision (mRP). Those metrics are fur-
+ther defined in Appendix D. We deliberately omit
+to report the precision@k given that questions in
+BSARD have a variable number of relevant articles,
+which implies that questions with r relevant articles
+would always have P@k < 1 if k > r. Similarly,
+the mean reciprocal rank (mRR) is not appropriate
+4We use k1 = 2.5 and b = 0.2. Details on BM25 hyper-
+parameters tuning are given in Appendix C.
+5https://huggingface.co/etalab-ia/dpr-question_
+encoder-fr_qa-camembert
+for BSARD as only the first relevant article would
+be considered. As some questions might have up to
+100 relevant articles, we use k ∈{100, 200, 500}
+for the recall@k.
+5
+Experiments
+In this section, we empirically evaluate the effec-
+tiveness of our proposed approach against com-
+petitive baselines and discuss the main results in
+Section 5.1. Next, we provide an ablation study in
+Section 5.2 to understand how different design and
+training options affect our model’s performance.
+5.1
+Main Results
+Table 2 shows retrieval performance on BSARD
+test set. Although we report model performance on
+two rank-aware metrics (i.e., mAP and mRP), we
+emphasize that our approach is specifically aimed
+at improving the pre-fetching component of a re-
+triever (Zhang et al., 2021a) and therefore focuses
+on optimizing rank-unaware metrics (i.e., R@k).
+First, we compare the performance of our pro-
+posed G-DSR model(8) against other well-known
+retrieval approaches and find it significantly outper-
+forms all of them on SAR. In particular, it improves
+over the sparse retrieval methods(1,2) by around
+30% on recall@k and by more than 25% on mAP
+and mRP. It also outperforms a competitive pre-
+finetuned DPR model(4) by 6% on R@100, 9% on
+R@200, and 5% on R@500. However, the latter
+shows a better performance on rank-aware metrics
+compared to our DSR models, which we speculate
+might be due to its extensive pre-finetuning step on
+three domain-general retrieval datasets, leading the
+model to a deeper knowledge of the task at hand.
+Next, we investigate the influence of different
+training strategies on the rank-unaware results of
+our base dense retriever.(5) We find that DSR’s per-
+formance is improved when adapting the article
+text encoder to the legal domain before finetuning
+on the target data.(6) Besides, training DSR on a
+larger dataset containing synthetic domain-targeted
+queries improves its performance even more.(7)
+Finally, our results show that using a GNN model
+on top of DSR allows to enrich the article represen-
+tations and leads to the best overall performance.(8)
+Interestingly, G-DSR also significantly improves
+the rank-aware performance of our best perform-
+ing DSR model by ∼12%, suggesting that a GNN
+could act as an effective re-ranker for SAR.
+2766
+=== [p.7] ===
+Model
+#Params
+R@100 (↑)
+R@200 (↑)
+R@500 (↑)
+mAP (↑)
+mRP (↑)
+Baselines
+1
+BM25
+-
+49.3
+57.3
+63.0
+16.8
+13.6
+2
+docT5query
+-
+51.7
+59.4
+65.8
+18.7
+15.0
+4
+DPR
+220M
+77.9
+81.3
+88.2
+45.4
+39.1
+Ours
+5
+DSR
+234M
+77.1
+81.8
+86.7
+35.6
+28.8
+6
+DSR w. domain-adaptive pre-training
+234M
+79.8
+83.9
+88.9
+39.5
+31.3
+7
+DSR w. data augmentation
+234M
+82.7
+88.7
+92.8
+35.3
+27.5
+8
+G-DSR
+262M
+84.3
+90.4
+93.1
+47.1
+40.2
+Table 2: Retrieval performance on BSARD Test set. The best results are marked in bold.
+5.2
+Ablation Study
+To further understand how different design choices
+and training strategies affect the results, we con-
+duct several additional experiments and discuss our
+findings below.
+Alternative pre-trained LMs.
+In addition to
+CamemBERT, we experiment with several other
+French or multilingual pre-trained language mod-
+els to initialize the first-level text encoders in DSR
+– namely, mBERT (Devlin et al., 2019), XLM-R
+(Conneau et al., 2020), and ELECTRA-fr (Clark
+et al., 2020).6 We fine-tune the different warm-
+started models on BSARD training set and report
+dev results in Table 3. We find that a CamemBERT-
+initialized DSR model performs best.
+Alternative GNNs.
+Additionally to GATv2, we
+explore different GNN architectures to perform
+the node feature update – namely, GCN (Kipf
+and Welling, 2017), GraphSAGE (Hamilton et al.,
+2017), GAT (Velickovic et al., 2018), and k-GNN
+(Morris et al., 2019) – and summarize the results
+in Table 4. Our experiments show that using an al-
+ternative GNN model does not affect performance
+much, which suggests that the act of fusing infor-
+mation from neighboring nodes is more important
+than the way the aggregation is performed.
+Similarity and loss functions.
+Besides cosine
+for scoring pairs of query-article representations,
+we also experiment with dot-product and Euclidean
+distance and find both inferior to cosine. As an
+alternative to negative log-likelihood, we test the
+triplet loss (Burges et al., 2005) and observe that the
+latter significantly decreases model performance.
+More details can be found in Appendix E.
+6https://huggingface.co/dbmdz/
+electra-base-french-europeana-cased-discriminator
+Pre-trained LM
+#Params
+R@100 (↑)
+R@500 (↑)
+XLM-R
+278M
+59.8
+78.7
+mBERT
+177M
+69.2
+86.6
+ELECTRA-fr
+110M
+57.6
+73.7
+CamemBERT
+110M
+75.4
+88.5
+Table 3: BSARD Dev results of DSR warm-started with
+different pre-trained word embedding models.
+Model
+#Params
+R@100 (↑)
+R@500 (↑)
+GCN
+14M
+84.4
+92.0
+GAT
+14M
+84.4
+92.1
+GraphSAGE
+28M
+84.5
+92.9
+k-GNN
+28M
+83.8
+93.0
+GATv2
+28M
+84.8
+92.3
+Table 4: BSARD Dev results of LGE with different
+(3-layer) GNN architectures.
+6
+Related Work
+Our work operates at the intersection of several
+research areas, including long document modeling,
+dense information retrieval, graph neural networks,
+and legal NLP.
+Long document modeling.
+The emergence of
+deep neural networks for language processing
+brought new challenges to text encoding, one of
+which is learning high-quality representations of
+long documents. For example, Tang et al. (2015)
+employ a bottom-up approach using CNN and
+BiLSTM-based hierarchical networks, where sen-
+tences are first encoded into vectors, which are
+then combined to form a single document vector.
+Similarly, Yang et al. (2016) build a document vec-
+tor by aggregating important words into sentence
+vectors and then aggregating important sentence
+vectors to document vectors using attention mech-
+2767
+=== [p.8] ===
+anisms. More recently, hierarchical variants of
+Transformer-based models have been explored for
+various language tasks, including document classi-
+fication (Mulyar et al., 2019; Pappagari et al., 2019;
+Chalkidis et al., 2019; Wu et al., 2021), summa-
+rization (Zhang et al., 2019), semantic matching
+(Yang et al., 2020a), and question answering (Liu
+et al., 2022). In addition to hierarchical attention
+Transformer-based (HAT) models, several sparse
+attention Transformers (SAT) have been introduced
+to reduce the computational complexity of the
+model, thus allowing to process sequences longer
+than 512 tokens (Child et al., 2019; Beltagy et al.,
+2020; Zaheer et al., 2020). However, Chalkidis
+et al. (2022) show that a pre-trained HAT model per-
+forms comparably or better than an equally-sized
+SAT model across several downstream tasks while
+being substantially faster and less memory inten-
+sive. Recently, other non-Transformer-based ap-
+proaches have been proposed for efficient long se-
+quence processing based on structured state spaces
+(Gu et al., 2022; Gupta et al., 2022).
+Dense information retrieval.
+Traditionally, lexi-
+cal approaches such as TF-IDF and BM25 (Robert-
+son et al., 1994) have been the de facto standard
+for textual information retrieval due to their robust-
+ness and efficiency. However, these approaches
+suffer from the lexical gap problem (Berger et al.,
+2000) and can only retrieve documents containing
+keywords present in the query. To overcome this
+limitation, recent work relies on neural-based archi-
+tectures to capture semantic relationships between
+pairs of texts (Lee et al., 2019; Karpukhin et al.,
+2020; Yang et al., 2020b; Xiong et al., 2021). These
+models map queries and documents into dense
+vector representations and calculate a relevance
+score by the similarity of the vectors (Gillick et al.,
+2018), which allows the document representations
+to be pre-computed and indexed offline for infer-
+ence. The dense retrieval approach was recently
+extended by hybrid lexical-dense methods, which
+aim to combine the strengths of both approaches
+(Seo et al., 2019; Gao et al., 2021; Luan et al.,
+2021). We refer the readers to Yates et al. (2021)
+for a survey on neural information retrieval.
+Graph neural networks.
+Graph neural net-
+works (GNNs) capture the topological relationships
+among the nodes of a graph using an information
+diffusion mechanism that propagates node features
+according to the underlying graph-structured data
+(Scarselli et al., 2009). These models have shown
+their effectiveness and flexibility in a wide vari-
+ety of NLP tasks, including text classification (Lin
+et al., 2021; Yu et al., 2022), relation extraction
+(Zhang et al., 2018; Li et al., 2020; Carbonell et al.,
+2020), and question answering (Cao et al., 2019;
+Xu et al., 2021b). Recently, GNNs have been em-
+ployed for document retrieval to enhance the vec-
+tor representations by leveraging the topological
+structure of the documents, where nodes are pas-
+sages from a document and edges are relations
+between these passages (Xu et al., 2021a; Zhang
+et al., 2021b; Albarede et al., 2022).
+Application to the legal domain.
+In recent years,
+the legal domain has attracted much interest in the
+NLP community, both for its challenging char-
+acteristics and massive volumes of textual data
+(Chalkidis and Kampas, 2019; Zhong et al., 2020).
+Researchers see it as an opportunity to develop
+novel automated methodologies that can reduce
+heavy and redundant tasks for legal professionals
+while providing a reliable, affordable form of legal
+support for laypeople (Bommasani et al., 2021).
+Earlier techniques for legal information retrieval
+were mainly based on term-matching approaches
+(Kim and Goebel, 2017; Tran et al., 2018). Re-
+cently, a growing number of works have used neu-
+ral networks to enhance retrieval performance, in-
+cluding word embedding models (Landthaler et al.,
+2016), doc2vec models (Sugathadasa et al., 2018),
+CNN-based models (Tran et al., 2019), and BERT-
+based models (Nguyen et al., 2021; Chalkidis et al.,
+2021; Althammer et al., 2022). To the best of our
+knowledge, we are the first to exploit the structure
+of statute law with GNNs to improve the perfor-
+mance of dense retrieval models.
+7
+Conclusion
+In this paper, we introduce G-DSR, a novel ap-
+proach for statutory article retrieval (SAR) that
+leverages the topological structure of legislation
+to improve retrieval performance. Specifically, G-
+DSR enriches the article representations of a dense
+retriever designed for long document retrieval by
+employing a graph neural network that uses the
+organization of statute law to learn knowledge-rich
+cross-article embeddings. Experiments show that
+G-DSR outperforms competitive baselines on a
+real-world expert-annotated SAR dataset. We also
+include a detailed analysis to motivate our design
+choices and training strategies.
+2768
+=== [p.9] ===
+Limitations
+While our approach performs well on statutory arti-
+cle retrieval, it comes with several limitations that
+provide avenues for future work.
+First, experimental results are based on ques-
+tions and labels drafted by legal professionals. It is
+possible that other legal professionals would draft
+the questions differently or, less likely yet possible,
+that they would deem different statutory provisions
+relevant. This raises the question of to what extent
+similar results would be obtained if the model were
+trained on a different dataset, for instance, based
+on other experts or domains, hence testing the ap-
+proach’s generalizability. The main challenge in
+this regard is obtaining data, as organizations are
+unlikely to share or even collect similar data.
+Second, our proposed methodology was evalu-
+ated exclusively on the Belgian legislation, whose
+laws are organized in a hierarchical manner where
+the deeper the divisions, the more closely related
+the legal concepts of the articles under them. Al-
+though we believe our approach could be applied
+to most, if not all, jurisdictions that rely on statute
+law (including both civil and common law coun-
+tries), different jurisdictions may have different
+organizations of their legal provisions, which could
+potentially affect the model’s performance. It is
+also worth mentioning that the dataset used for eval-
+uation comes with a linguistic bias as Belgium is a
+multilingual country with French, Dutch, and Ger-
+man speakers, but the provided provisions are only
+available in French. Studying the applicability and
+impact of the present work to other jurisdictions
+and languages is an exciting research direction that
+is challenging in practice due to the scarcity of
+high-quality multilingual statute retrieval datasets.
+Then, our approach currently considers the topo-
+logical structure of legislation for modeling the
+inter-article dependencies, which implies that infor-
+mation is aggregated between direct neighboring
+articles only while those from more distant sec-
+tions are completely ignored. Nevertheless, it is
+common for articles to cite other articles from dif-
+ferent sections or even different statutes. Therefore,
+we believe that considering richer legal graph struc-
+tures, especially legal citation networks, could in-
+crease effectiveness even more. However, building
+such citation networks from raw texts requires a
+considerable text-processing effort.
+Finally, although G-DSR shows promise for
+statutory article retrieval, it is not yet ready for
+practical use in the real world. One issue is that
+our model is designed to be an effective pre-fetcher,
+optimizing recall such that all articles relevant to
+a question appear in an unordered filter set of size
+k (k being relatively large). However, in practice,
+users would expect a high-quality retrieval system
+to not only find these relevant articles but also to
+sort them by decreasing order of importance, re-
+quiring an adequate re-ranker. Then, it is essential
+to recognize that while access to relevant legal pro-
+visions is a necessary step in helping the general
+public solve their legal issues, it is not a sufficient
+condition on its own as laypeople may still strug-
+gle to understand the legal jargon and apply the
+provisions to their specific situations. Ideally, the
+tool to be made accessible to the public should con-
+sist of a two-stage framework: (i) a legal provision
+retriever, which selects a small subset of relevant le-
+gal articles in response to a given question, and (ii)
+a legal-to-natural translator or summarizer, which
+examines the retrieved articles and generates an an-
+swer in natural language. In the present work, we
+chose to focus on the first stage of this framework
+and leave the second for future work.
+Ethics Statement
+The scope of this work is to provide a new method-
+ology along with extensive experiments to drive
+research forward in statutory article retrieval. We
+believe the latter is an important application field
+where more research should be conducted to im-
+prove legal aid services and access to justice for all.
+We do not foresee situations where the use of our
+methodology would lead to harm (Tsarapatsanis
+and Aletras, 2021). Nevertheless, although our goal
+is to improve the understanding of the law by those
+who suffer from legal information asymmetry, it
+cannot be excluded that the technology presented
+here could exacerbate inequality if states, compa-
+nies, or lawyers benefit more from its use than the
+intended beneficiaries (i.e., citizens, consumers, or
+employees).
+Acknowledgments
+This research is partially supported by the Sector
+Plan Digital Legal Studies of the Dutch Ministry of
+Education, Culture, and Science. In addition, this
+research was made possible, in part, using the Data
+Science Research Infrastructure (DSRI) hosted at
+Maastricht University.
+2769
+=== [p.10] ===
+References
+Lucas Albarede, Philippe Mulhem, Lorraine Goeu-
+riot, Claude Le Pape-Gardeux, Sylvain Marie, and
+Trinidad Chardin-Segui. 2022. Passage retrieval on
+structured documents using graph attention networks.
+In Proceedings of the 44th European Conference on
+Information Retrieval Research, volume 13186 of
+Lecture Notes in Computer Science, pages 13–21.
+Springer. [Page 8]
+Sophia Althammer, Sebastian Hofstätter, Mete Sertkan,
+Suzan Verberne, and Allan Hanbury. 2022. PARM:
+A paragraph aggregation retrieval model for dense
+document-to-document retrieval. In Proceedings of
+the 44th European Conference on Information Re-
+trieval Research, volume 13185 of Lecture Notes in
+Computer Science, pages 19–34. Springer. [Page 8]
+Iz Beltagy, Matthew E. Peters, and Arman Cohan. 2020.
+Longformer: The long-document transformer. CoRR,
+abs/2004.05150. [Page 8]
+Adam L. Berger, Rich Caruana, David Cohn, Dayne Fre-
+itag, and Vibhu O. Mittal. 2000. Bridging the lexical
+chasm: statistical approaches to answer-finding. In
+Proceedings of the 23rd Annual International ACM
+SIGIR Conference on Research and Development in
+Information Retrieval, pages 192–199. ACM. [Page 8]
+Lukas Biewald. 2020.
+Experiment tracking with
+weights and biases.
+Software available from
+wandb.com. [Page 6]
+Rishi Bommasani, Drew A. Hudson, Ehsan Adeli, Russ
+Altman, Simran Arora, Sydney von Arx, Michael S.
+Bernstein, Jeannette Bohg, Antoine Bosselut, Emma
+Brunskill, Erik Brynjolfsson, Shyamal Buch, Dal-
+las Card, Rodrigo Castellon, Niladri S. Chatterji,
+Annie S. Chen, Kathleen Creel, Jared Quincy
+Davis, Dorottya Demszky, Chris Donahue, Moussa
+Doumbouya, Esin Durmus, Stefano Ermon, John
+Etchemendy, Kawin Ethayarajh, Li Fei-Fei, Chelsea
+Finn, Trevor Gale, Lauren Gillespie, Karan Goel,
+Noah D. Goodman, Shelby Grossman, Neel Guha,
+Tatsunori Hashimoto, Peter Henderson, John He-
+witt, Daniel E. Ho, Jenny Hong, Kyle Hsu, Jing
+Huang, Thomas Icard, Saahil Jain, Dan Jurafsky,
+Pratyusha Kalluri, Siddharth Karamcheti, Geoff Keel-
+ing, Fereshte Khani, Omar Khattab, Pang Wei Koh,
+Mark S. Krass, Ranjay Krishna, Rohith Kuditipudi,
+and et al. 2021. On the opportunities and risks of
+foundation models. CoRR, abs/2108.07258. [Page 8]
+Luiz Henrique Bonifacio, Israel Campiotti, Roberto
+de Alencar Lotufo, and Rodrigo Nogueira. 2021.
+mmarco: A multilingual version of MS MARCO pas-
+sage ranking dataset. CoRR, abs/2108.13897. [Page 5]
+Shaked Brody, Uri Alon, and Eran Yahav. 2022. How at-
+tentive are graph attention networks? In Proceedings
+of the 10th International Conference on Learning
+Representations. OpenReview.net. [Page 4]
+Jane Bromley, Isabelle Guyon, Yann LeCun, Eduard
+Säckinger, and Roopak Shah. 1993. Signature veri-
+fication using a siamese time delay neural network.
+Advances in Neural Information Processing Systems,
+6:737–744. [Page 3]
+Christopher J. C. Burges, Tal Shaked, Erin Renshaw, Ari
+Lazier, Matt Deeds, Nicole Hamilton, and Gregory N.
+Hullender. 2005. Learning to rank using gradient
+descent. In Proceedings of the 22nd International
+Conference on Machine Learning, volume 119 of
+ACM International Conference Proceeding Series,
+pages 89–96. ACM. [Page 7]
+Nicola De Cao, Wilker Aziz, and Ivan Titov. 2019.
+Question answering by reasoning across documents
+with graph convolutional networks. In Proceedings
+of the 2019 Conference of the North American Chap-
+ter of the Association for Computational Linguistics,
+pages 2306–2317. Association for Computational
+Linguistics. [Page 8]
+Manuel Carbonell, Pau Riba, Mauricio Villegas, Ali-
+cia Fornés, and Josep Lladós. 2020. Named entity
+recognition and relation extraction with graph neural
+networks in semi structured documents. In Proceed-
+ings of the 25th International Conference on Pattern
+Recognition, pages 9622–9627. IEEE. [Page 8]
+Ilias Chalkidis, Ion Androutsopoulos, and Nikolaos
+Aletras. 2019. Neural legal judgment prediction in
+english. In Proceedings of the 57th Conference of
+the Association for Computational Linguistics, pages
+4317–4323. Association for Computational Linguis-
+tics. [Page 8]
+Ilias Chalkidis, Xiang Dai, Manos Fergadiotis, Pro-
+dromos Malakasiotis, and Desmond Elliott. 2022.
+An exploration of hierarchical attention transform-
+ers for efficient long document classification. CoRR,
+abs/2210.05529. [Page 8]
+Ilias Chalkidis, Manos Fergadiotis, Nikolaos Mangi-
+nas, Eva Katakalou, and Prodromos Malakasiotis.
+2021. Regulatory compliance through doc2doc infor-
+mation retrieval: A case study in EU/UK legislation
+where text similarity has limitations. In Proceedings
+of the 16th Conference of the European Chapter of
+the Association for Computational Linguistics, pages
+3498–3511. Association for Computational Linguis-
+tics. [Pages 8 and 15]
+Ilias Chalkidis and Dimitrios Kampas. 2019.
+Deep
+learning in law: early adaptation and legal word em-
+beddings trained on large corpora. Artificial Intelli-
+gence and Law, 27(2):171–198. [Page 8]
+Veda R Charrow and Jo Ann Crandall. 1990. Legal
+language: What is it and what can we do about it?.
+[Page 2]
+Ting Chen, Yizhou Sun, Yue Shi, and Liangjie Hong.
+2017. On sampling strategies for neural network-
+based collaborative filtering. In Proceedings of the
+23rd ACM SIGKDD International Conference on
+2770
+=== [p.11] ===
+Knowledge Discovery and Data Mining, pages 767–
+776. [Page 4]
+Rewon Child, Scott Gray, Alec Radford, and Ilya
+Sutskever. 2019. Generating long sequences with
+sparse transformers. CoRR, abs/1904.10509. [Page 8]
+Kevin Clark, Minh-Thang Luong, Quoc V. Le, and
+Christopher D. Manning. 2020.
+ELECTRA: pre-
+training text encoders as discriminators rather than
+generators. CoRR, abs/2003.10555. [Page 7]
+Alexis Conneau, Kartikay Khandelwal, Naman Goyal,
+Vishrav Chaudhary, Guillaume Wenzek, Francisco
+Guzmán, Edouard Grave, Myle Ott, Luke Zettle-
+moyer, and Veselin Stoyanov. 2020. Unsupervised
+cross-lingual representation learning at scale. In Pro-
+ceedings of the 58th Annual Meeting of the Associa-
+tion for Computational Linguistics, pages 8440–8451.
+Association for Computational Linguistics. [Page 7]
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and
+Kristina Toutanova. 2019. BERT: pre-training of
+deep bidirectional transformers for language under-
+standing. In Proceedings of the 2019 Conference of
+the North American Chapter of the Association for
+Computational Linguistics, pages 4171–4186. Asso-
+ciation for Computational Linguistics. [Pages 3 and 7]
+William Falcon. 2019. PyTorch Lightning. [Page 6]
+Matthias Fey and Jan Eric Lenssen. 2019. Fast graph
+representation learning with PyTorch Geometric.
+In ICLR Workshop on Representation Learning on
+Graphs and Manifolds. [Page 6]
+Luyu Gao, Zhuyun Dai, Tongfei Chen, Zhen Fan, Ben-
+jamin Van Durme, and Jamie Callan. 2021. Comple-
+ment lexical retrieval model with semantic residual
+embeddings. In Proceedings of the 43rd European
+Conference on Information Retrieval Research, vol-
+ume 12656 of Lecture Notes in Computer Science,
+pages 146–160. Springer. [Page 8]
+Daniel Gillick, Alessandro Presta, and Gaurav Singh
+Tomar. 2018.
+End-to-end retrieval in continuous
+space. CoRR, abs/1811.08008. [Page 8]
+Albert Gu, Karan Goel, and Christopher Ré. 2022. Ef-
+ficiently modeling long sequences with structured
+state spaces. In Proceedings of the 10th International
+Conference on Learning Representations. OpenRe-
+view.net. [Page 8]
+Jiafeng Guo, Yixing Fan, Qingyao Ai, and W. Bruce
+Croft. 2016. A deep relevance matching model for
+ad-hoc retrieval. In Proceedings of the 25th ACM
+International Conference on Information and Knowl-
+edge Management, pages 55–64. ACM. [Page 2]
+Ankit Gupta, Albert Gu, and Jonathan Berant. 2022.
+Diagonal state spaces are as effective as structured
+state spaces. CoRR, abs/2203.14343. [Page 8]
+Suchin
+Gururangan,
+Ana
+Marasovic,
+Swabha
+Swayamdipta, Kyle Lo, Iz Beltagy, Doug Downey,
+and Noah A. Smith. 2020. Don’t stop pretraining:
+Adapt language models to domains and tasks.
+In Proceedings of the 58th Annual Meeting of
+the Association for Computational Linguistics,
+pages 8342–8360. Association for Computational
+Linguistics. [Page 5]
+William L. Hamilton, Zhitao Ying, and Jure Leskovec.
+2017.
+Inductive representation learning on large
+graphs. Advances in Neural Information Process-
+ing Systems, 30:1024–1034. [Page 7]
+Matthew L. Henderson, Rami Al-Rfou, Brian Strope,
+Yun-Hsuan Sung, László Lukács, Ruiqi Guo, Sanjiv
+Kumar, Balint Miklos, and Ray Kurzweil. 2017. Effi-
+cient natural language response suggestion for smart
+reply. CoRR, abs/1705.00652. [Page 4]
+Kai Hui, Andrew Yates, Klaus Berberich, and Gerard
+de Melo. 2017. PACRR: A position-aware neural IR
+model for relevance matching. In Proceedings of the
+2017 Conference on Empirical Methods in Natural
+Language Processing, pages 1049–1058. Association
+for Computational Linguistics. [Page 2]
+Rasmus Kær Jørgensen, Mareike Hartmann, Xiang Dai,
+and Desmond Elliott. 2021. mdapt: Multilingual
+domain adaptive pretraining in a single model. In
+Findings of the Association for Computational Lin-
+guistics: EMNLP 2021, pages 3404–3418. Associa-
+tion for Computational Linguistics. [Page 5]
+Vladimir Karpukhin, Barlas Oguz, Sewon Min, Patrick
+S. H. Lewis, Ledell Wu, Sergey Edunov, Danqi Chen,
+and Wen-tau Yih. 2020. Dense passage retrieval for
+open-domain question answering. In Proceedings
+of the 2020 Conference on Empirical Methods in
+Natural Language Processing, pages 6769–6781. As-
+sociation for Computational Linguistics. [Pages 6 and 8]
+Mi-Young Kim and Randy Goebel. 2017. Two-step cas-
+caded textual entailment for legal bar exam question
+answering. In Proceedings of the 16th edition of the
+International Conference on Artificial Intelligence
+and Law, pages 283–290. ACM. [Page 8]
+Mi-Young Kim, Juliano Rabelo, and Randy Goebel.
+2019. Statute law information retrieval and entail-
+ment. In Proceedings of the 6th Competition on Legal
+Information Retrieval and Entailment Workshop in
+association with the Seventeenth International Con-
+ference on Artificial Intelligence and Law, pages 283–
+289. ACM. [Page 1]
+Thomas N. Kipf and Max Welling. 2017.
+Semi-
+supervised classification with graph convolutional
+networks. In Proceedings of the 5th International
+Conference on Learning Representations. OpenRe-
+view.net. [Page 7]
+Jörg Landthaler, Bernhard Waltl, Patrick Holl, and Flo-
+rian Matthes. 2016. Extending full text search for
+legal document collections using word embeddings.
+2771
+=== [p.12] ===
+In Proceedings of the 29th International Conference
+on Legal Knowledge and Information Systems, vol-
+ume 294 of Frontiers in Artificial Intelligence and
+Applications, pages 73–82. IOS Press. [Page 8]
+Kenton Lee, Ming-Wei Chang, and Kristina Toutanova.
+2019. Latent retrieval for weakly supervised open do-
+main question answering. In Proceedings of the 57th
+Conference of the Association for Computational Lin-
+guistics, pages 6086–6096. Association for Compu-
+tational Linguistics. [Page 8]
+Bo Li, Wei Ye, Zhonghao Sheng, Rui Xie, Xiangyu Xi,
+and Shikun Zhang. 2020. Graph enhanced dual atten-
+tion network for document-level relation extraction.
+In Proceedings of the 28th International Conference
+on Computational Linguistics, pages 1551–1560. In-
+ternational Committee on Computational Linguistics.
+[Page 8]
+Davis
+Liang,
+Peng
+Xu,
+Siamak
+Shakeri,
+Cícero
+Nogueira
+dos
+Santos,
+Ramesh
+Nalla-
+pati, Zhiheng Huang, and Bing Xiang. 2020.
+Embedding-based zero-shot retrieval through query
+generation. CoRR, abs/2009.10270. [Page 5]
+Yuxiao Lin, Yuxian Meng, Xiaofei Sun, Qinghong Han,
+Kun Kuang, Jiwei Li, and Fei Wu. 2021. Bertgcn:
+Transductive text classification by combining GCN
+and BERT. CoRR, abs/2105.05727. [Page 8]
+Yang Liu, Jiaxiang Liu, Li Chen, Yuxiang Lu, Shikun
+Feng, Zhida Feng, Yu Sun, Hao Tian, Hua Wu, and
+Haifeng Wang. 2022.
+ERNIE-SPARSE: learning
+hierarchical efficient transformer through regularized
+self-attention. CoRR, abs/2203.12276. [Page 8]
+Ilya Loshchilov and Frank Hutter. 2017. Decoupled
+weight decay regularization. In Proceedings of the
+7th International Conference on Learning Represen-
+tations. [Page 5]
+Antoine Louis and Gerasimos Spanakis. 2022. A statu-
+tory article retrieval dataset in french. In Proceedings
+of the 60th Annual Meeting of the Association for
+Computational Linguistics (Volume 1: Long Papers),
+pages 6789–6803. Association for Computational
+Linguistics. [Pages 5, 14, and 15]
+Yi Luan, Jacob Eisenstein, Kristina Toutanova, and
+Michael Collins. 2021. Sparse, dense, and attentional
+representations for text retrieval. Transactions of the
+Association for Computational Linguistics, 9:329–
+345. [Page 8]
+Ji Ma, Ivan Korotkov, Yinfei Yang, Keith B. Hall, and
+Ryan T. McDonald. 2021. Zero-shot neural passage
+retrieval via domain-targeted synthetic question gen-
+eration. In Proceedings of the 16th Conference of the
+European Chapter of the Association for Computa-
+tional Linguistics: Main Volume, pages 1075–1088.
+Association for Computational Linguistics. [Page 5]
+Christopher D. Manning, Prabhakar Raghavan, and Hin-
+rich Schütze. 2008. Introduction to information re-
+trieval. Cambridge University Press. [Page 6]
+Louis Martin, Benjamin Müller, Pedro Javier Ortiz
+Suárez, Yoann Dupont, Laurent Romary, Éric de la
+Clergerie, Djamé Seddah, and Benoît Sagot. 2020.
+Camembert: a tasty french language model. In Pro-
+ceedings of the 58th Annual Meeting of the Associa-
+tion for Computational Linguistics, pages 7203–7219.
+Association for Computational Linguistics. [Page 5]
+Ryan T. McDonald, George Brokos, and Ion Androut-
+sopoulos. 2018. Deep relevance ranking using en-
+hanced document-query interactions. In Proceedings
+of the 2018 Conference on Empirical Methods in
+Natural Language Processing, pages 1849–1860. As-
+sociation for Computational Linguistics. [Page 2]
+Christopher Morris, Martin Ritzert, Matthias Fey,
+William L. Hamilton, Jan Eric Lenssen, Gaurav Rat-
+tan, and Martin Grohe. 2019. Weisfeiler and leman
+go neural: Higher-order graph neural networks. In
+The Thirty-Third AAAI Conference on Artificial Intel-
+ligence, pages 4602–4609. AAAI Press. [Page 7]
+Andriy
+Mulyar,
+Elliot
+Schumacher,
+Masoud
+Rouhizadeh, and Mark Dredze. 2019.
+Pheno-
+typing of clinical notes with improved document
+classification models using contextualized neural
+language models. CoRR, abs/1910.13664. [Page 8]
+Ha-Thanh Nguyen, Phuong Minh Nguyen, Thi-Hai-
+Yen Vuong, Quan Minh Bui, Chau Minh Nguyen,
+Tran Binh Dang, Vu Tran, Minh Le Nguyen, and Ken
+Satoh. 2021. JNLP team: Deep learning approaches
+for legal processing tasks in COLIEE 2021. CoRR,
+abs/2106.13405. [Pages 1 and 8]
+Rodrigo Nogueira and Jimmy Lin. 2019.
+From
+doc2query to doctttttquery. [Page 6]
+Elohor Onoge. 2015.
+Structure of legislation:
+A
+paradigm for accessibility and effectiveness. Euro-
+pean Journal of Law Reform, 17:440–470. [Page 2]
+Raghavendra Pappagari, Piotr Zelasko, Jesús Villalba,
+Yishay Carmiel, and Najim Dehak. 2019. Hierarchi-
+cal transformers for long document classification. In
+2019 IEEE Automatic Speech Recognition and Un-
+derstanding Workshop, pages 838–844. IEEE. [Pages 3
+and 8]
+Adam Paszke, Sam Gross, Francisco Massa, Adam
+Lerer, James Bradbury, Gregory Chanan, Trevor
+Killeen, Zeming Lin, Natalia Gimelshein, Luca
+Antiga, Alban Desmaison, Andreas Köpf, Edward Z.
+Yang, Zachary DeVito, Martin Raison, Alykhan Te-
+jani, Sasank Chilamkurthy, Benoit Steiner, Lu Fang,
+Junjie Bai, and Soumith Chintala. 2019. Pytorch:
+An imperative style, high-performance deep learning
+library. Advances in Neural Information Processing
+Systems, 32:8024–8035. [Page 6]
+Alejandro Ponce, Sarah Chamness Long, Elizabeth An-
+dersen, Camilo Gutierrez Patino, Matthew Harman,
+Jorge A Morales, Ted Piccone, Natalia Rodriguez Ca-
+jamarca, Adriana Stephan, Kirssy Gonzalez, Jen-
+nifer VanRiper, Alicia Evangelides, Rachel Martin,
+2772
+=== [p.13] ===
+Priya Khosla, Lindsey Bock, Erin Campbell, Emily
+Gray, Amy Gryskiewicz, Ayyub Ibrahim, Leslie So-
+lis, Gabriel Hearn-Desautels, and Francesca Tinucci.
+2019. Global Insights on Access to Justice 2019:
+Findings from the World Justice Project General Pop-
+ulation Poll in 101 Countries. World Justice Project.
+[Page 1]
+Colin Raffel, Noam Shazeer, Adam Roberts, Kather-
+ine Lee, Sharan Narang, Michael Matena, Yanqi
+Zhou, Wei Li, and Peter J. Liu. 2020. Exploring the
+limits of transfer learning with a unified text-to-text
+transformer. Journal of Machine Learning Research,
+21:140:1–140:67. [Page 5]
+Jeff Rasley, Samyam Rajbhandari, Olatunji Ruwase, and
+Yuxiong He. 2020. Deepspeed: System optimiza-
+tions enable training deep learning models with over
+100 billion parameters. In The 26th ACM SIGKDD
+Conference on Knowledge Discovery and Data Min-
+ing, pages 3505–3506. [Page 6]
+Stephen E. Robertson, Steve Walker, Susan Jones,
+Micheline Hancock-Beaulieu, and Mike Gatford.
+1994. Okapi at TREC-3. In Proceedings of the 3rd
+Text REtrieval Conference, volume 500-225 of NIST
+Special Publication, pages 109–126. National Insti-
+tute of Standards and Technology (NIST). [Pages 6 and 8]
+Franco Scarselli, Marco Gori, Ah Chung Tsoi, Markus
+Hagenbuchner, and Gabriele Monfardini. 2009. The
+graph neural network model. IEEE Transactions on
+Neural Networks, 20(1):61–80. [Page 8]
+Min Joon Seo, Jinhyuk Lee, Tom Kwiatkowski, Ankur P.
+Parikh, Ali Farhadi, and Hannaneh Hajishirzi. 2019.
+Real-time open-domain question answering with
+dense-sparse phrase index. In Proceedings of the
+57th Conference of the Association for Computa-
+tional Linguistics, pages 4430–4441. Association for
+Computational Linguistics. [Page 8]
+Keet Sugathadasa, Buddhi Ayesha, Nisansa de Silva,
+Amal Shehan Perera, Vindula Jayawardana, Dimuthu
+Lakmal, and Madhavi Perera. 2018. Legal document
+retrieval using document vector embeddings and deep
+learning. In Science and information conference,
+pages 160–175. Springer. [Page 8]
+Duyu Tang, Bing Qin, and Ting Liu. 2015. Document
+modeling with gated recurrent neural network for sen-
+timent classification. In Proceedings of the 2015 Con-
+ference on Empirical Methods in Natural Language
+Processing, pages 1422–1432. The Association for
+Computational Linguistics. [Page 7]
+Nandan Thakur, Nils Reimers, Andreas Rücklé, Ab-
+hishek Srivastava, and Iryna Gurevych. 2021. BEIR:
+A heterogenous benchmark for zero-shot evalu-
+ation of information retrieval models.
+CoRR,
+abs/2104.08663. [Page 5]
+Vu Tran, Son Truong Nguyen, and Minh Le Nguyen.
+2018. JNLP group: legal information retrieval with
+summary and logical structure analysis. In 12th In-
+ternational Workshop on Juris-informatics. [Page 8]
+Vu D. Tran, Minh Le Nguyen, and Ken Satoh. 2019.
+Building legal case retrieval systems with lexical
+matching and summarization using A pre-trained
+phrase scoring model. In Proceedings of the Sev-
+enteenth International Conference on Artificial Intel-
+ligence and Law, pages 275–282. ACM. [Page 8]
+Dimitrios Tsarapatsanis and Nikolaos Aletras. 2021. On
+the ethical limits of natural language processing on
+legal text. In Findings of the Association for Com-
+putational Linguistics: ACL/IJCNLP 2021, pages
+3590–3599. Association for Computational Linguis-
+tics. [Page 9]
+Petar Velickovic, Guillem Cucurull, Arantxa Casanova,
+Adriana Romero, Pietro Liò, and Yoshua Bengio.
+2018. Graph attention networks. In Proceedings of
+the 6th International Conference on Learning Repre-
+sentations. OpenReview. [Pages 4 and 7]
+Thomas Wolf, Lysandre Debut, Victor Sanh, Julien
+Chaumond, Clement Delangue, Anthony Moi, Pier-
+ric Cistac, Tim Rault, Rémi Louf, Morgan Funtowicz,
+Joe Davison, Sam Shleifer, Patrick von Platen, Clara
+Ma, Yacine Jernite, Julien Plu, Canwen Xu, Teven Le
+Scao, Sylvain Gugger, Mariama Drame, Quentin
+Lhoest, and Alexander M. Rush. 2020. Transform-
+ers: State-of-the-art natural language processing. In
+Proceedings of the 2020 Conference on Empirical
+Methods in Natural Language Processing: System
+Demonstrations, pages 38–45. Association for Com-
+putational Linguistics. [Page 6]
+Chuhan Wu, Fangzhao Wu, Tao Qi, and Yongfeng
+Huang. 2021. Hi-transformer: Hierarchical interac-
+tive transformer for efficient and effective long docu-
+ment modeling. In Proceedings of the 59th Annual
+Meeting of the Association for Computational Lin-
+guistics and the 11th International Joint Conference
+on Natural Language Processing, pages 848–853.
+Association for Computational Linguistics. [Page 8]
+Lee Xiong, Chenyan Xiong, Ye Li, Kwok-Fung Tang,
+Jialin Liu, Paul N. Bennett, Junaid Ahmed, and
+Arnold Overwijk. 2021. Approximate nearest neigh-
+bor negative contrastive learning for dense text re-
+trieval. In Proceedings of the 9th International Con-
+ference on Learning Representations. OpenReview.
+[Page 8]
+Peng Xu, Xinchi Chen, Xiaofei Ma, Zhiheng Huang,
+and Bing Xiang. 2021a. Contrastive document rep-
+resentation learning with graph attention networks.
+In Findings of the Association for Computational
+Linguistics: EMNLP 2021, pages 3874–3884. Asso-
+ciation for Computational Linguistics. [Page 8]
+Yichong Xu, Chenguang Zhu, Ruochen Xu, Yang Liu,
+Michael Zeng, and Xuedong Huang. 2021b. Fus-
+ing context into knowledge graph for commonsense
+question answering. In Findings of the Association
+for Computational Linguistics: ACL/IJCNLP 2021,
+pages 1201–1207. Association for Computational
+Linguistics. [Page 8]
+2773
+=== [p.14] ===
+Liu Yang, Mingyang Zhang, Cheng Li, Michael Bender-
+sky, and Marc Najork. 2020a. Beyond 512 tokens:
+Siamese multi-depth transformer-based hierarchical
+encoder for long-form document matching. In Pro-
+ceedings of the 29th ACM International Conference
+on Information and Knowledge Management, pages
+1725–1734. ACM. [Pages 3 and 8]
+Yinfei Yang, Daniel Cer, Amin Ahmad, Mandy Guo,
+Jax Law, Noah Constant, Gustavo Hernández Ábrego,
+Steve Yuan, Chris Tar, Yun-Hsuan Sung, Brian
+Strope, and Ray Kurzweil. 2020b. Multilingual uni-
+versal sentence encoder for semantic retrieval. In
+Proceedings of the 58th Annual Meeting of the Associ-
+ation for Computational Linguistics: System Demon-
+strations, pages 87–94. Association for Computa-
+tional Linguistics. [Page 8]
+Zichao Yang, Diyi Yang, Chris Dyer, Xiaodong He,
+Alexander J. Smola, and Eduard H. Hovy. 2016. Hi-
+erarchical attention networks for document classifi-
+cation. In Proceedings of the 2016 Conference of
+the North American Chapter of the Association for
+Computational Linguistics, pages 1480–1489. The
+Association for Computational Linguistics. [Page 7]
+Andrew Yates, Rodrigo Nogueira, and Jimmy Lin. 2021.
+Pretrained transformers for text ranking: BERT and
+beyond. In Proceedings of the 44th International
+ACM SIGIR Conference on Research and Develop-
+ment in Information Retrieval, pages 2666–2668.
+ACM. [Page 8]
+Donghan Yu, Chenguang Zhu, Yiming Yang, and
+Michael Zeng. 2022. JAKET: joint pre-training of
+knowledge graph and language understanding. In
+Proceedings of the 36th AAAI Conference on Artifi-
+cial Intelligence, pages 11630–11638. AAAI Press.
+[Page 8]
+Manzil Zaheer, Guru Guruganesh, Kumar Avinava
+Dubey, Joshua Ainslie, Chris Alberti, Santiago On-
+tañón, Philip Pham, Anirudh Ravula, Qifan Wang,
+Li Yang, and Amr Ahmed. 2020. Big bird: Trans-
+formers for longer sequences. Advances in Neural
+Information Processing Systems, 33:17283–17297.
+[Page 8]
+Xingxing Zhang, Furu Wei, and Ming Zhou. 2019. HIB-
+ERT: document level pre-training of hierarchical bidi-
+rectional transformers for document summarization.
+In Proceedings of the 57th Conference of the Associa-
+tion for Computational Linguistics, pages 5059–5069.
+Association for Computational Linguistics. [Pages 3 and 8]
+Yue Zhang, Chengcheng Hu, Yuqi Liu, Hui Fang, and
+Jimmy Lin. 2021a. Learning to rank in the age of
+muppets: Effectiveness-efficiency tradeoffs in multi-
+stage ranking. In Proceedings of the Second Work-
+shop on Simple and Efficient Natural Language Pro-
+cessing, pages 64–73. Association for Computational
+Linguistics. [Page 6]
+Yufeng Zhang, Jinghao Zhang, Zeyu Cui, Shu Wu, and
+Liang Wang. 2021b. A graph-based relevance match-
+ing model for ad-hoc retrieval. In Proceedings of
+the 35th AAAI Conference on Artificial Intelligence,
+pages 4688–4696. AAAI Press. [Page 8]
+Yuhao Zhang, Peng Qi, and Christopher D. Manning.
+2018. Graph convolution over pruned dependency
+trees improves relation extraction. In Proceedings
+of the 2018 Conference on Empirical Methods in
+Natural Language Processing, pages 2205–2215. As-
+sociation for Computational Linguistics. [Page 8]
+Haoxi Zhong, Chaojun Xiao, Cunchao Tu, Tianyang
+Zhang, Zhiyuan Liu, and Maosong Sun. 2020. How
+does NLP benefit legal system: A summary of legal
+artificial intelligence. In Proceedings of the 58th An-
+nual Meeting of the Association for Computational
+Linguistics, pages 5218–5230. Association for Com-
+putational Linguistics. [Pages 1 and 8]
+Appendix
+A
+Preliminary Studies
+A.1
+How important is the structure of law for
+statutory article retrieval?
+To better understand the reasoning skilled humans
+follow when retrieving statutory articles, we ask
+several legal experts to retrieve relevant articles to
+questions sampled from the Belgian Statutory Ar-
+ticle Retrieval Dataset (Louis and Spanakis, 2022,
+BSARD). We deliberately choose experts unfamil-
+iar with Belgian law and thus have no past knowl-
+edge of the location of articles covering a particular
+subject. In what follows, we summarize the ap-
+proach these experts use.
+First, they determine whether the issue involves
+either public or private law. To distinguish between
+the two, it is necessary to identify to whom the
+rules apply (i.e., the parties involved in the issue
+that hold the rights or duties). Generally speaking,
+public law deals with issues that affect the general
+public or state (i.e., society as a whole), whereas
+private law deals with issues that affect individuals,
+families, and businesses. This first step allows
+the experts to make an initial selection among the
+codes of law, which generally relate to only one of
+either public or private law.
+Next, the experts refine their search by determin-
+ing the field of law (e.g., contract law), followed
+by the sub-field (e.g., tenant law), and so on, un-
+til a set of potentially relevant codes is created in
+the question’s domains. The experts then focus on
+the table of contents of one of the selected codes
+and undertake a hierarchical search that starts from
+the book’s headings and progressively extends to
+its titles, chapters, and sections. This step makes
+it possible to filter out many irrelevant articles by
+2774
+=== [p.15] ===
+analyzing the connection between the question’s
+subject and the different sections’ headings.
+Finally, the experts explore the articles within the
+sections deemed potentially relevant to the question
+in search of the expected answer. If the experts
+realize that the chosen direction is a dead end, they
+return to the previous higher level of the structure,
+choose another potentially relevant direction, and
+narrow their search from there.
+From this study, we conclude that legal experts
+rely heavily on the structure of law when retrieving
+relevant articles to a legal question, which indicates
+that the different divisions’ headings carry valuable
+information that retrieval systems should consider.
+A.2
+How related are neighboring articles in
+statute law?
+In statute law, the sense of a given article is not nec-
+essarily self-contained by itself but instead spans
+across different articles from the same or even dif-
+ferent sections. To confirm this, we study to what
+extent consecutive articles (as they appear in the
+statute books) address similar subjects.
+We consider the Belgian Civil Code, which is the
+book whose articles are most cited in BSARD, and
+randomly sample sets of 200 consecutive articles
+out of it. We then normalize the articles by low-
+ercasing, lemmatizing, and removing stop-words,
+punctuation, and numbers. Finally, we compute the
+cosine similarities between the TF-IDF representa-
+tions of all articles from a given set. Figure 3 shows
+a heatmap of article similarities for such a set. We
+see that consecutive articles do indeed cover sim-
+ilar topics, suggesting that the information in a
+given article is likely to be complementary to that
+in its neighboring articles. Therefore, we assume
+that neighboring articles should be considered to
+capture an article’s whole meaning.
+B
+G-DSR Hyperparameter Tuning
+We conduct hyperparameter tuning using Bayes
+search based on performance on BSARD devel-
+opment set, measured with the macro-averaged
+R@200. Due to limited computational resources,
+we train our models on BSARD training set only –
+which takes approximately 1 hour and 15 minutes
+for DSR and around 5 minutes for LGE – and use
+the constrained search spaces described below.
+DSR grid search space:
+• batch size: {8, 16, 24, 32}
+• learning rate: {5e-5, 4e-5, 3e-5, 2e-5, 1e-5}
+0
+0.2
+0.4
+0.6
+0.8
+1
+Figure 3: Cosine similarities between TF-IDF repre-
+sentations of 200 consecutive articles from the Belgian
+Civil Code, taken from the Belgian Statutory Article
+Retrieval Dataset (Louis and Spanakis, 2022, BSARD).
+• weight decay: {0, 0.1, 0.01, 0.001}
+• max chunk length: {64, 128, 256, 512}
+• max document length: {1024, 2048}
+• pooling strategy: {mean, max}
+• similarity function: {dot-product, cosine, L2}
+• temperature: {0, 0.1, 0.01, 0.001}
+LGE grid search space:
+• batch size: {8, 16, 32, 64, 128, 256, 512}
+• learning rate: {2e-2, 2e-3, 2e-4, 2e-5, 2e-6}
+• weight decay: {0, 0.1, 0.01, 0.001}
+• #layers: {1, 2, 3, 4}
+In total, we run 100 hyperparameter search trials
+for both DSR and LGE. The optimal hyperparam-
+eters, shown in Table 5, are used to re-train the
+models combining both train and development sets
+for a final evaluation on the test set.
+C
+BM25 Hyperparameter Tuning
+Following Chalkidis et al. (2021), who show that
+BM25 performance is highly dependent on ade-
+quately choosing the (k1, b) values for the task at
+hand, we perform a hyperparameter grid search on
+BSARD development set and plot the results in
+Figure 4. We observe that, in the case of SAR, the
+best performance is obtained with k1 = 2.5 and
+b = 0.2. Therefore, we use these values for the
+final evaluation on BSARD test set.
+2775
+=== [p.16] ===
+Hyperparam
+DSR
+LGE
+Model
+Maximum Chunk Length
+128
+-
+Maximum Document Length
+1024
+-
+Pooling Strategy
+max
+-
+#Layers
+-
+3
+Loss
+Temperature
+0.01
+0.01
+Similarity
+cos
+cos
+Training
+Batch Size
+24
+512
+Weight Decay
+0.01
+0.1
+Max Epochs
+15
+10
+Peak Learning Rate
+2e-5
+2e-4
+Learning Rate Decay
+Linear
+Constant
+Warmup ratio
+0.05
+0.0
+AdamW ϵ
+1e-7
+1e-7
+AdamW β1
+0.9
+0.9
+AdamW β2
+0.999
+0.999
+Gradient Clipping
+1.0
+1.0
+Table 5: Training hyperparameters for DSR and LGE.
+D
+Evaluation Metrics
+Let relq(a) ∈{0, 1} be the binary relevance label
+of article a for question q, and ⟨i, a⟩∈Fq a result
+tuple (article a at rank i) from the filter set Fq ⊂C
+of ranked articles retrieved for question q.
+Recall.
+The recall is the fraction of relevant arti-
+cles retrieved for query q w.r.t. the total number of
+relevant articles in the corpus C, i.e.,
+Rq =
+P
+⟨i,a⟩∈Fq relq(a)
+P
+a∈C relq(a)
+.
+(9)
+When computed for a filter set of size k = |Fq| ≪
+|C|, i.e., at a certain cutoff and not on the entire
+list of articles in C, we report the metrics with the
+suffix “@k”.
+R-Precision
+The R-Precision is the proportion
+of the top-R retrieved articles that are relevant to
+query q, where R is the total number of relevant
+articles for q, i.e.,
+RPq =
+P
+⟨i,a⟩∈{Fq}R
+i=1 relq(a)
+R
+.
+(10)
+Average Precision.
+The average precision is the
+mean of the precision value obtained after each
+relevant article is retrieved, that is
+APq =
+P
+⟨i,a⟩∈Fq Pq,i × relq(a)
+P
+a∈C relq(a)
+,
+(11)
+0.0
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1.0
+b
+8.0
+7.5
+7.0
+6.5
+6.0
+5.5
+5.0
+4.5
+4.0
+3.5
+3.0
+2.5
+2.0
+1.5
+1.0
+0.5
+k1
+49.1
+51.3
+52.8
+52.1
+51.4
+52.2
+51.8
+51.4
+49.9
+49.4
+43.3
+49.4
+51.6
+52.8
+52.4
+51.4
+52.2
+52.2
+51.4
+49.9
+49.5
+43.3
+49.7
+51.6
+52.8
+52.5
+51.4
+52.2
+52.5
+51.3
+50.1
+49.5
+44.8
+49.9
+51.9
+53.2
+52.5
+51.4
+52.5
+52.5
+51.3
+50.4
+49.7
+45.2
+50.0
+51.9
+53.3
+52.5
+51.7
+52.6
+52.5
+51.9
+50.5
+49.3
+44.9
+50.1
+51.9
+53.4
+52.5
+51.9
+52.7
+52.7
+52.1
+50.7
+49.3
+45.4
+50.1
+51.8
+53.6
+52.5
+51.9
+52.5
+52.7
+52.1
+50.9
+49.4
+45.9
+50.3
+52.1
+53.6
+52.8
+52.2
+52.5
+52.8
+52.2
+50.9
+49.3
+45.9
+50.2
+53.0
+53.6
+52.9
+52.8
+52.6
+52.8
+52.4
+50.9
+49.6
+47.1
+50.8
+53.0
+53.7
+52.9
+52.7
+52.6
+52.6
+52.6
+50.9
+49.7
+46.9
+51.2
+53.3
+53.8
+53.5
+53.4
+52.6
+52.4
+52.6
+50.7
+50.4
+47.2
+51.5
+53.3
+54.1
+53.4
+53.5
+52.6
+52.3
+52.2
+51.5
+50.6
+48.0
+51.1
+53.3
+54.0
+53.3
+53.4
+52.6
+52.1
+52.3
+52.1
+50.7
+48.0
+50.8
+53.0
+53.8
+52.3
+53.1
+52.5
+52.3
+52.4
+51.6
+51.7
+48.2
+51.2
+52.2
+52.8
+53.2
+52.1
+52.1
+51.6
+51.9
+51.6
+51.2
+49.2
+50.3
+51.1
+51.1
+51.9
+52.1
+52.1
+51.7
+51.0
+50.9
+51.1
+49.2
+Figure 4: Heatmap showing BM25 results on BSARD
+Dev set for different values of k1 and b.
+Loss
+Similarity
+R@100 (↑)
+R@200 (↑)
+R@500 (↑)
+Cross-entropy
+Cosine
+75.0
+80.7
+86.7
+Dot
+21.6
+37.1
+56.0
+Euclidean
+43.9
+58.1
+71.6
+Triplet
+Cosine
+5.4
+9.9
+17.2
+Dot
+4.3
+6.4
+10.3
+Euclidean
+9.0
+14.3
+25.2
+Table 6: BSARD Dev results of DSR trained using
+different similarity and loss functions.
+where Pq,j is the precision computed at rank j
+for query q, i.e., the fraction of relevant articles
+retrieved for query q w.r.t. the total number of
+articles in the retrieved set {Fq}j
+i=1:
+Pq,j =
+P
+⟨i,a⟩∈{Fq}j
+i=1 relq(a)
+{Fq}j
+i=1
+
+.
+(12)
+We report the macro-averaged recall at various cut-
+offs (R@k), mean Average Precision (mAP), and
+mean R-Precision (mRP), which are the average
+values over a set of n queries.
+E
+Ablation Details
+Besides cosine similarity and negative log-
+likelihood (NLL) loss, we also test the dot-product
+and Euclidean (inverse of distance is taken as sim-
+ilarity measure) as well as the triplet loss. The
+temperature for the NLL loss is set to 0.01, and the
+margin value of the triplet loss is set to 1. We report
+the results on BSARD development set in Table 6.
+For a fair comparison, all models are trained for
+15 epochs with a batch size of 24, weight decay of
+0.01, warm-up proportion of 0.05, an initial learn-
+ing rate of 2e-5, and a linear decay learning rate
+schedule.
+2776

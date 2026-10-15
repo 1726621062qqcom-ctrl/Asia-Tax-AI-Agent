@@ -8,6 +8,7 @@ sg_s45, cn_wht and hk_tax are thin presentations over the same evaluation.
 from dataclasses import dataclass
 from typing import List, Optional
 
+from .facts import hk_months, regime_facts
 from .params import Params
 from .rules.compile import compile_rules
 from .rules.eval import Flow, evaluate_flow
@@ -42,6 +43,8 @@ def flow_tax(payer_loc, payee_loc, income, facts, jur, on=None, amount=None, par
     facts.setdefault(("payee", "payee_in_source_jur"), payee_loc == f.source_loc)
     facts.setdefault(("flow", "authority_action"), "none")
     facts.setdefault(("flow", "prior_map_outcome"), "none")
+    regime_facts(facts, income, on, facts.get(("flow", "accrued_on")) or on, P)      # as facts_for (decision D34, D36)
+    hk_months(facts)                                                                  # as facts_for (decision D44)
     rules = rules or RULES
     lo = evaluate_flow(rules, Ctx(facts, ticks), f, FLOOR, P, amount=amount)
     hi = evaluate_flow(rules, Ctx(facts, ticks), f, CEILING, P, amount=amount)

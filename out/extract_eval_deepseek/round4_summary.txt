@@ -1,0 +1,90 @@
+cases per model: {'deepseek-flash': 10} | settings: {'samples': 2, 'k': 5, 'locate': 'retrieval', 'patterns': True, 'dense': True, 'temperature': 0.7, 'prompt_version': '2026-10-14c'}
+deepseek-flash   derived        {'correct': 9, 'null': 50, 'wrong': 1, 'conflict': 2}
+deepseek-flash   null-expected  {'abstained': 18, 'false_fill': 4}
+deepseek-flash   value          {'correct': 72, 'conflict': 7, 'null': 5, 'wrong': 1, 'rejected': 1}
+deepseek-flash   by pattern-sentence {'correct': 40}
+deepseek-flash   by retrieved   {'correct': 41, 'null': 55, 'conflict': 9, 'abstained': 18, 'false_fill': 4, 'wrong': 2, 'rejected': 1}
+deepseek-flash {'calls': 0, 'cached': 1025, 'prompt_tokens': 0, 'completion_tokens': 0, 'cache_hit_tokens': 0, 'retries': 0, 'seconds': 0} max case wall 10s
+
+NON-CORRECT ROWS
+(K3-carote-2026, roles.OP.loc, disclosed, gold='CN')
+    conflict   None retrieved |  ['conflict: CN / HK']
+        conflict 'CN' (K3-carote-2024, same document): Zhejiang Carote was established in China on April 28, 2007, with an initial registered share capital of RMB5,0
+        conflict 'HK' (K3-carote-2024, same document): Carote International Limited (卡羅特國際有限公司) (formerly known as Zhejiang Carote Ind & Trade Co., Limited (浙江卡羅特工貿有
+(K3-carote-2026, roles.OP.attrs.incorporated_in, disclosed, gold='CN')
+    conflict   None retrieved |  ['conflict: CN / HK']
+        conflict 'CN' (K3-carote-2024, same document): Zhejiang Carote was established in China on April 28, 2007, with an initial registered share capital of RMB5,0
+        conflict 'HK' (K3-carote-2024, same document): “Carote International” Carote International Limited (卡羅特國際有限公司) (formerly known as Zhejiang Carote Ind & Trade
+(K3-carote-2026, holds.ULT>OP.ratio, disclosed, gold=100.0)
+(K3-carote-2026, holds.ULT>HOLD.cost, missing, gold=None)
+    false_fill 100000.0 retrieved | On January 23, 2024, pursuant to a share transfer agreement entered into on January 18, 2024, Carote Group acquired the  
+(K3-carote-2026, flows.up2.foreign_headline_rate, disclosed, gold=17)
+(K3-ekh-2026, holds.HOLD>OP.ratio, disclosed, gold=100.0)
+    conflict   None retrieved |  ['conflict: 100.0 / 80.0']
+        conflict 100.0 (K3-ekh-2026, same document): Shanghai Anxin Rong Cheng Container Logistics Co., Ltd.* (上海 安信榮成集裝箱儲運有限公司), a limited liability company estab
+        conflict 80.0 (K3-ekh-2026, same document): (HK) Best  China (Hong Kong) (PRC) SH  Anxin (PRC) (PRC) SH Yifa (PRC) (PRC) QD  Keyun (PRC) (PRC) SH  Keyun (
+(K3-ekh-2026, flows.up2.foreign_headline_rate, disclosed, gold=16.5)
+(K3-jst-2026, holds.ULT>OP.ratio, disclosed, gold=100.0)
+    conflict   None retrieved |  ['conflict: 91.35 / 8.65 / 91.3517 / 100.0']
+        conflict 91.35 (K3-jst-2025, same document): Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund) transferred
+        conflict 8.65 (K3-jst-2025, same document): StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund transferred to Hon
+        conflict 91.3517 (K3-jst-2025, same document): HK True Value agreed to acquire their equity interests in Shanghai Jushuitan equivalent to RMB3,484,473 of reg
+        conflict 100.0 (K3-jst-2025, same document): Hong Kong True Value Limited (Hong Kong) Offshore 100% 100% 100% 100% 100% 100% 100% 100% 90%(1) 85%(2) 100% O
+    wrong      '2023-02-21' retrieved | On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Hol 
+(K3-jst-2026, holds.ULT>OP.cost, missing, gold=None)
+    false_fill 3484473.0 retrieved | On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Hol 
+(K3-mirxes-2026, holds.ULT>HOLD.cost, missing, gold=None)
+    false_fill 83463359.41 retrieved | Pursuant to an equity transfer agreement entered into between MiRXEA Pte. Ltd. and Huzhou Mirui dated June 14, 2023, MiR 
+(K3-mirxes-2026, flows.reorg.amount, disclosed, gold=83463359.41)
+(K4-freetech-2024, holds.ULT>OP.since, disclosed, gold='2015-08-31')
+    wrong      '2015-06-30' retrieved | On 30 June 2015, Tianjin Expressway Group Company Limited. and Freetech Smart Road Recycling Engineering Investment Limi 
+    conflict   None retrieved |  ['conflict: OTHER / CN']
+        conflict 'OTHER' (K4-shuion-2024, same document): Wisdom Forever Limited Partnership, a limited partnership incorporated in the Cayman Islands and is owned as t
+        conflict 'CN' (K4-shuion-2024, same document): Ningbo Fund is a limited partnership established under the laws of the PRC and is principally engaged in inves
+(K4-shuion-kic-2024, holds.ULT>OP.cost, missing, gold=None)
+    false_fill 1149390000.0 retrieved | Following the capital reduction, the registered capital of the Company was HK$1,128,000,000, of which Top Victory Develo 
+(K4-shuion-ypu-2024, roles.ULT.attrs.incorporated_in, disclosed, gold='HK')
+    rejected   None retrieved |  ['reply is not JSON']
+    conflict   None retrieved |  ['conflict: OTHER / CN']
+        conflict 'OTHER' (K4-shuion-2024, same document): Wisdom Forever Limited Partnership, a limited partnership incorporated in the Cayman Islands and is owned as t
+        conflict 'CN' (K4-shuion-2024, same document): Ningbo Fund is a limited partnership established under the laws of the PRC and is principally engaged in inves
+(K4-shuion-ypu-2024, holds.ULT>OP.ratio, disclosed, gold=86.8)
+    conflict   None retrieved |  ['conflict: 86.8 / 51.0']
+        conflict 86.8 (K4-shuion-2024, same document): YPU is directly owned as to 86.8% by Bright Continental and 13.2% by Yangpu Knowledge Innovation.
+        conflict 51.0 (K4-shuion-2024, same document): 49% 51% 13.2% 1% 99% 100% 100% 100% GP Shui On Knowledge and  Innovation Partners YPU Bright Continental
+(K4-shuion-ypu-2024, holds.ULT>OP.since, disclosed, gold='2003-08-26')
+    conflict   None retrieved |  ['conflict: 2009-05-07 / 2003-08-26']
+        conflict '2009-05-07' (K4-shuion-2024, same document): On 7 May 2009, according to the Resolution of the Board of Directors and the provisions of the Amended Article
+        conflict '2003-08-26' (K4-shuion-2024, same document): Shanghai Yang Pu Centre Development Co., Ltd. (formerly known as Shanghai Yang Pu University Town Centre Devel
+(K4-shuion-ypu-2024, present.exit_route, disclosed, gold='DIRECT')
+(K4-smit-2026, holds.ULT>OP.ratio, disclosed, gold=7.8125)
+    conflict   None retrieved |  ['conflict: 7.8125 / 0.99']
+        conflict 7.8125 (K4-smit-2026, same document): the RMB100 million registered capital in Shenzhen Giga subscribed by the Vendor, representing 7.8125% of the t
+        conflict 0.99 (K4-smit-2026, same document): On 21 May 2019, the Vendor first acquired RMB10 million fully paid-up capital in Shenzhen Giga, representing a
+
+DISCLOSED ROWS WITHOUT A VALUE, BY WHERE THE GOLD QUOTE WAS (rank among the k candidates; None = outside; -1 = in no passage)
+  conflict   retrieved gold_rank=0     2
+  conflict   retrieved gold_rank=4     1
+  conflict   retrieved gold_rank=None  4
+  null       retrieved gold_rank=0     1
+  null       retrieved gold_rank=None  4
+  rejected   retrieved gold_rank=2     1
+  wrong      retrieved gold_rank=None  1
+
+COVERAGE–ERROR (fields with a value, ordered by agreement then retrieval score; error = wrong + false_fill)
+  coverage  25%  n= 22  errors= 0  (0.0%)
+  coverage  50%  n= 44  errors= 0  (0.0%)
+  coverage  75%  n= 65  errors= 2  (3.1%)
+  coverage 100%  n= 87  errors= 6  (6.9%)
+  feature spread: agree {1.0: 2, 0.83: 1, 0.8: 1, 0.78: 3, 0.71: 1, 0.67: 7, 0.62: 2, 0.6: 5, 0.57: 2, 0.56: 5, 0.5: 4, 0.44: 1, 0.4: 12, 0.38: 2, 0.33: 10, 0.29: 1, 0.22: 1, 0.2: 25, 0.12: 2}
+
+METAMORPHIC TESTS (K4)
+  K4-freetech-2024   holds.ULT>OP.ratio                   substitute 55% -> 65% expected 65.0 got None missing conflict: 65.0 / 55.0
+  K4-freetech-2024   holds.ULT>OP.cost                    substitute 46.8 million -> 56.8 million expected 56800000.0 got 46802400.0 old figure stated elsewhere
+  K4-shuion-kic-2024 holds.ULT>OP.ratio                   substitute 99% -> 19% expected 19.0 got None missing conflict: 19.0 / 99.0
+  K4-shuion-ypu-2024 holds.ULT>OP.ratio                   substitute 86.8% -> 96.8% expected 96.8 got None missing conflict: 96.8 / 100.0
+  K4-smit-2026       holds.ULT>OP.ratio                   substitute 7.8125% -> 8.8125% expected 8.8125 got None missing conflict: 8.8125 / 0.99
+  K4-smit-2026       event.exit                           substitute 266.2 million -> 366.2 million expected 366200000.0 got 266200000.0 old figure stated elsewhere
+  substitute follows    4
+  substitute missing    4
+  substitute old figure stated elsewhere 2

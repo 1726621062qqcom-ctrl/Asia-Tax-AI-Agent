@@ -1,0 +1,104 @@
+%%
+% This is an Overleaf template for scientific posters
+% using the TUM Corporate Desing https://www.tum.de/cd
+%
+% For further details on how to use the template, take a look at our
+% GitLab repository and browse through our test documents
+% https://gitlab.lrz.de/latex4ei/tum-templates.
+%
+% The tumposter class is based on the KOMA-Script class scrartcl and the
+% poster framework of the package tcolorbox.
+% If you need further customization please consult the KOMA-Script guide
+% https://ctan.org/pkg/koma-script
+% and the tcolorbox user guide (especially the poster section)
+% https://ctan.org/pkg/tcolorbox.
+% Additional class options are passed down to the base class.
+%
+% If you encounter any bugs or undesired behaviour, please raise an issue
+% in our GitLab repository
+% https://gitlab.lrz.de/latex4ei/tum-templates/issues
+% and provide a description and minimal working example of your problem.
+%%
+
+
+\documentclass[
+  a0paper,    % poster size (a0paper, a1paper, a2paper, a3paper, a4paper)
+  portrait,   % poster orientation (portrait, landscape)
+  english,    % define the document language (english, german)
+]{tumposter}
+
+
+% load additional packages
+\usepackage{tummath}
+\usepackage{lipsum}
+
+
+% poster metadata
+\title{Poster title}
+\subtitle{Subtitle of the poster}
+
+\author[affil=1]{First Author}
+\author[affil=2]{Second Author}
+\author[affil=1]{Last Author}
+
+\affil[mark=1]{\theSchoolName, \theUniversityName}
+\affil[mark=2]{Another affiliation}
+
+
+% macro to configure the style of the poster
+\TUMpostersetup{
+  columns = 4,            % number of columns of the poster
+  rows = 6,               % number of rows of the poster
+  background = white,     % background color (white, blue, shaded)
+  boxes = TUMBoxBlank,    % default box style (TUMBox, TUMBoxVariant, TUMBoxInverse, TUMBoxBlank)
+  headline = threeliner,  % choose headline (tumlogo, oneliner, twoliner, threeliner)
+  % printaffil = false,     % disable affiliation in title area (in case you print it in a footer)
+  % fontsize = 25pt,        % choose larger base font size if necessary
+  % showframe = true,       % print poster row and column grid (for draft versions)
+}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{tcbposter}
+
+  % footer with some contact information
+  \posterbox[fontupper=\small, height=5cm,
+    enlarge top initially by = .5\TUMposterboxsep
+  ]{
+    name=footer, column=1, span=4, above=bottom
+  }{
+    \textbf{\theUniversityName}\\
+    This footer box could be used to place contact information.\\
+    Setting a fixed height and insert additional spacing\\
+    to separate the footer from the main content is possible.
+  }
+
+  % figure on the top right
+  \posterbox{name=fig1, column=4, below=top}{
+    \includegraphics[width=\columnwidth, height=30cm]{example-image-a}
+    \captionof{figure}{This is a figure caption. The figure contains a
+      placeholder to test the layout.}
+  }
+
+  % figure on the bottom left
+  \posterbox{name=fig2, column=1, above=footer}{
+    \includegraphics[width=\columnwidth, height=20cm]{example-image-b}
+    \captionof{figure}{This is another figure placeholder.}
+  }
+
+  % main text box is a sequence over the rest of the page
+  \posterbox{name=text, column=1,
+    sequence = 1 between top and fig2 then
+    2 between top and footer then
+    3 between top and footer then
+    4 between fig1 and footer
+  }{
+    \lipsum[1-15]
+  }
+
+\end{tcbposter}
+
+\end{document}

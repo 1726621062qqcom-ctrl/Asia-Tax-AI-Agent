@@ -1,0 +1,314 @@
+{
+ "model": "deepseek-flash",
+ "case": "K3-shein-2026",
+ "rows": [
+  {
+   "path": "roles.ULT.loc",
+   "kind": "disclosed",
+   "gold": "SG",
+   "value": "SG",
+   "status": "correct",
+   "quote": "On 22 November 2019, Roadget Business Pte. Ltd. was established as a private company limited by shares under the laws of Singapore.",
+   "rejected": []
+  },
+  {
+   "path": "roles.ULT.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "SG",
+   "value": "SG",
+   "status": "correct",
+   "quote": "On 22 November 2019, Roadget Business Pte. Ltd. was established as a private company limited by shares under the laws of Singapore.",
+   "rejected": []
+  },
+  {
+   "path": "roles.ULT.attrs.group_revenue_eur",
+   "kind": "derived",
+   "gold": 35675288689.21,
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "roles.OP.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "quote": "On 30 August 2017, Guangzhou Shein International Import & Export Co., Ltd. was established as a limited liability company under the laws of the PRC.",
+   "rejected": []
+  },
+  {
+   "path": "roles.OP.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "quote": "On 30 August 2017, Guangzhou Shein International Import & Export Co., Ltd. was established as a limited liability company under the laws of the PRC.",
+   "rejected": []
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "kind": "derived",
+   "gold": 100.0,
+   "value": 100.0,
+   "status": "correct",
+   "quote": "Guangzhou Shein International Import & Export Co., Ltd. (廣州希音國際進出口有限公司) Supply chain management, product selection, merchant management, product design, information technology, and research and development 100% 30 August 2017, the People’s Republic of China",
+   "rejected": []
+  },
+  {
+   "path": "flows.up1.foreign_taxed",
+   "kind": "derived",
+   "gold": true,
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "flows.up1.foreign_headline_rate",
+   "kind": "disclosed",
+   "gold": 25,
+   "value": 25.0,
+   "status": "correct",
+   "quote": "Chinese mainland Our subsidiaries in the Chinese mainland are generally subject to the tax rate of 25% for the periods presented.",
+   "rejected": []
+  },
+  {
+   "path": "flows.up1.deductible_at_payer",
+   "kind": "derived",
+   "gold": false,
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "present.HOLD",
+   "kind": "derived",
+   "gold": "NONE",
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "present.financing",
+   "kind": "derived",
+   "gold": "EQUITY",
+   "value": "EQUITY",
+   "status": "correct",
+   "quote": "100%",
+   "rejected": []
+  },
+  {
+   "path": "event.on",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "event.dividend",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "quote": null,
+   "rejected": []
+  }
+ ],
+ "usage": {
+  "calls": 10,
+  "prompt_tokens": 322795,
+  "completion_tokens": 21951,
+  "cache_hit_tokens": 128,
+  "seconds": 144.4823546409607
+ },
+ "wall": 145.9,
+ "error": null,
+ "log": [
+  {
+   "prompt_head": "For each field below, list the passages of the documents that bear on it. Answer with JSON only:\n{\"<field key>\": [{\"doc\": \"<doc id>\", \"quote\": \"<verbatim passage>\"}], ...}. Quote verbatim; an empty li",
+   "reply": "{\n  \"roles.ULT.loc\": [\n    {\n      \"doc\": \"K3-shein-2026\",\n      \"quote\": \"Establishment of Roadget Business Pte. Ltd. On 22 November 2019, Roadget Business Pte. Ltd. was established as a private company limited by shares under the laws of Singapore. The company was wholly owned by Beauty of Fashion Investment Co., Ltd. (“Beauty of Fashion”), a wholly-owned subsidiary of SHEIN Global Holdings Limited, at the relevant time.\"\n    }\n  ],\n  \"roles.ULT.attrs.incorporated_in\": [\n    {\n      \"doc\": \"K3-shein-2026\",\n      \"quote\": \"Establishment of Roadget Business Pte. Ltd. On 22 November 2019, Roadget Business Pte. Ltd. was established as a private company limited by shares under the laws of Singapore. The company was wholly owned by Beauty of Fashion Investment Co., Ltd. (“Beauty of Fashion”), a wholly-owned subsidiary of SHEIN Global Holdings Limited, at the relevant time.\"\n    }\n  ],\n  \"roles.ULT.attrs.group_revenue_eur\": [\n    {\n      \"doc\": \"K3-shein-2026\",\n      \"quote\": \"Total net revenues 32,103 100.0 38,748 100.0 41,847 100.0 8,952 100.0 9,052 100.0\"\n    },\n    {\n      \"doc\": \"K3-shein-2026\",\n      \"quote\": \"Our net revenues have grown substantially in recent years, reaching US$32.1 billion, US$38.7 billion and US$41.8 billion in 2023, 2024 and 2025, respectively.\"\n    }\n  ],\n  \"roles.OP.loc\": [\n    {\n      \"doc\": \"K3-shein-2026\",\n      \"quote\": \"Establishment of Guangzhou Shein International Import & Export Co., Ltd. On 30 August 2017, Guangzhou Shein International Import & Export Co., Ltd. was established as a limited liability company under the laws of the PRC. The company has been a subsidiary of the Company since its establishment.\"\n    }\n  ],\n  \"roles.OP.attrs.incorporated_in\": [\n    {\n      \"doc\": \"K3-shein-2026\",\n      \"quote\": \"Establishment of Guangzhou Shein International Import & Export Co., Ltd. On 30 August 2017, Guangzhou Shein International Import & Export Co., Ltd. was established as a limited liability company under the laws of the PRC. The company has been a subsidiary of the Company since its establishment.\"\n    }\n  ],\n  \"holds.ULT>OP.ratio\": [\n    {\n      \"doc\": \"K3-shein-2026\",\n      \"quote\": \"Guangzhou Shein International Import & Export Co., Ltd. (廣州希音國際進出口有限公司) Supply chain management, product selection, merchant management, product design, information technology, and research and development 100% 30 August 2017, the People’s Republic of China\"\n    },\n    {\n      \"doc\": \"K3-shein-2026\",\n      \"quote\": \"Equity interests SHEIN Global Holdings Limited (Cayman Islands) 100% Beauty of Fashion Investment Co., Ltd. (British Virgin Islands) 100% Roadget Business Pte. Ltd. (Singapore) 100% Xiyin E Commerce FZE (The United Arab Emirates) Infinite Styles eCommerce Co., Ltd. (Ireland) 100% Infinite Remit Services Co., Limited (Ireland) 100% Fashion Choice Pte. Ltd. (Singapore) 100% SHEIN US Services, LLC(7) (Delaware) 100% Shein Distribution UK Limited (United Kingdom) 100% 100% Shein Distribution Corporation(7) (Delaware) Guangzhou Shein International Import & Export Co., Ltd. (China)\"\n    }\n  ],\n  \"flows.up1.foreign_taxed\": [\n    {\n      \"doc\": \"K3-shein-2026\",\n      \"quote\": \"In addition, many jurisdictions require withholding taxes on dividends, interests, royalties and cross-border payments.\"\n    }\n  ],\n  \"flows.up1.foreign_headline_rate\": [\n    {\n      \"doc\": \"K3-shein-2026\",\n      \"quote\": \"Chinese mainland Our subsidiaries in the Chinese mainland are generally subject to the tax rate of 25% for the periods presented. Based on our assessment and relevant tax regulations, certain subsidiaries are entitled to concessionary tax treatment, as listed below: Certain subsidiaries in the Chinese mainland are classified as a Technology Advanced Service Enterprise and are entitled to a concessionary tax rate of 15%, under the Law of the People’s Republic of China on Enterprise Income Tax for the years ended 31 December 2023, 2024, 2025 and the three months ended 31 March 2025 and 2026. A subsidiary in the Chinese mainland is classified as a Software Enterprise and is entitled to a concessionary tax rate of 12.5% under the Law of the People’s Republic of China on Enterprise Income Tax for the year ended 31 December 2023.\"\n    }\n  ],\n  \"flows.up1.deductible_at_payer\": [],\n  \"present.HOLD\": [\n    {\n      \"doc\": \"K3-shein-2026\",\n      \"quote\": \"Equity interests SHEIN Global Holdings Limited (Cayman Islands) 100% Beauty of Fashion Investment Co., Ltd. (British Virgin Islands) 100% Roadget Business Pte. Ltd. (Singapore) 100% Xiyin E Commerce FZE (The United Arab Emirates) Infinite Styles eCommerce Co., Ltd. (Ireland) 100% Infinite Remit Services Co., Limited (Ireland) 100% Fashion Choice Pte. Ltd. (Singapore) 100% SHEIN US Services, LLC(7) (Delaware) 100% Shein Distribution UK Limited (United Kingdom) 100% 100% Shein Distribution Corporation(7) (Delaware) Guangzhou Shein International Import & Export Co., Ltd. (China)\"\n    }\n  ],\n  \"present.financing\": [\n    {\n      \"doc\": \"K3-shein-2026\",\n      \"quote\": \"Guangzhou Shein International Import & Export Co., Ltd. (廣州希音國際進出口有限公司) Supply chain management, product selection, merchant management, product design, information technology, and research and development 100% 30 August 2017, the People’s Republic of China\"\n    },\n    {\n      \"doc\": \"K3-shein-2026\",\n      \"quote\": \"Equity interests SHEIN Global Holdings Limited (Cayman Islands) 100% Beauty of Fashion Investment Co., Ltd. (British Virgin Islands) 100% Roadget Business Pte. Ltd. (Singapore) 100% Xiyin E Commerce FZE (The United Arab Emirates) Infinite Styles eCommerce Co., Ltd. (Ireland) 100% Infinite Remit Services Co., Limited (Ireland) 100% Fashion Choice Pte. Ltd. (Singapore) 100% SHEIN US Services, LLC(7) (Delaware) 100% Shein Distribution UK Limited (United Kingdom) 100% 100% Shein Distribution Corporation(7) (Delaware) Guangzhou Shein International Import & Export Co., Ltd. (China)\"\n    }\n  ],\n  \"event.on\": [],\n  \"event.dividend\": []\n}",
+   "usage": {
+    "prompt_tokens": 320383,
+    "completion_tokens": 15163,
+    "total_tokens": 335546,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 13557
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 320383
+   },
+   "seconds": 82.2
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"SG\", \"doc\": \"K3-shein-2026\", \"quote\": \"On 22 November 2019, Roadget Business Pte. Ltd. was established as a private company limited by shares under the laws of Singapore.\"}",
+   "usage": {
+    "prompt_tokens": 271,
+    "completion_tokens": 204,
+    "total_tokens": 475,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 148
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 271
+   },
+   "seconds": 4.3
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"SG\", \"doc\": \"K3-shein-2026\", \"quote\": \"On 22 November 2019, Roadget Business Pte. Ltd. was established as a private company limited by shares under the laws of Singapore.\"}",
+   "usage": {
+    "prompt_tokens": 275,
+    "completion_tokens": 174,
+    "total_tokens": 449,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 118
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 275
+   },
+   "seconds": 3.3
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\": null}",
+   "usage": {
+    "prompt_tokens": 252,
+    "completion_tokens": 462,
+    "total_tokens": 714,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 456
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 252
+   },
+   "seconds": 5.9
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"CN\", \"doc\": \"K3-shein-2026\", \"quote\": \"On 30 August 2017, Guangzhou Shein International Import & Export Co., Ltd. was established as a limited liability company under the laws of the PRC.\"}",
+   "usage": {
+    "prompt_tokens": 254,
+    "completion_tokens": 184,
+    "total_tokens": 438,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 125
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 254
+   },
+   "seconds": 2.8
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"CN\", \"doc\": \"K3-shein-2026\", \"quote\": \"On 30 August 2017, Guangzhou Shein International Import & Export Co., Ltd. was established as a limited liability company under the laws of the PRC.\"}",
+   "usage": {
+    "prompt_tokens": 258,
+    "completion_tokens": 196,
+    "total_tokens": 454,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 137
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 258
+   },
+   "seconds": 4.5
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\":100,\"doc\":\"K3-shein-2026\",\"quote\":\"Guangzhou Shein International Import & Export Co., Ltd. (廣州希音國際進出口有限公司) Supply chain management, product selection, merchant management, product design, information technology, and research and development 100% 30 August 2017, the People’s Republic of China\"}",
+   "usage": {
+    "prompt_tokens": 261,
+    "completion_tokens": 682,
+    "total_tokens": 943,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 602
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 261
+   },
+   "seconds": 5.1
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <true or false>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if the pass",
+   "reply": "{\"value\": null}",
+   "usage": {
+    "prompt_tokens": 211,
+    "completion_tokens": 150,
+    "total_tokens": 361,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 144
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 211
+   },
+   "seconds": 3.8
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\": 25, \"doc\": \"K3-shein-2026\", \"quote\": \"Chinese mainland Our subsidiaries in the Chinese mainland are generally subject to the tax rate of 25% for the periods presented.\"}",
+   "usage": {
+    "prompt_tokens": 380,
+    "completion_tokens": 1212,
+    "total_tokens": 1592,
+    "prompt_tokens_details": {
+     "cached_tokens": 128
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 1163
+    },
+    "prompt_cache_hit_tokens": 128,
+    "prompt_cache_miss_tokens": 252
+   },
+   "seconds": 9.7
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of EQUITY/DEBT>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if the",
+   "reply": "{\"value\":\"EQUITY\",\"doc\":\"K3-shein-2026\",\"quote\":\"100%\"}",
+   "usage": {
+    "prompt_tokens": 250,
+    "completion_tokens": 3524,
+    "total_tokens": 3774,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 3501
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 250
+   },
+   "seconds": 23.0
+  }
+ ]
+}

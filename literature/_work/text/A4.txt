@@ -1,0 +1,809 @@
+=== [p.1] ===
+ Electronic copy available at: https://ssrn.com/abstract=3088206 
+ 
+ 
+ 
+ 
+ 
+A Logic for Statutes 
+ 
+ 
+ 
+Florida Tax Review, forthcoming 
+NORTHWESTERN UNIVERSITY PRITZKER SCHOOL OF LAW 
+PUBLIC LAW AND LEGAL THEORY SERIES • NO. 17-28 
+ 
+ 
+Sarah B. Lawsky 
+Northwestern University Pritzker School of Law 
+ 
+ 
+ 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.2] ===
+ Electronic copy available at: https://ssrn.com/abstract=3088206 
+A LOGIC FOR STATUTES 
+by 
+Sarah B. Lawsky* 
+ABSTRACT 
+Case-based reasoning is, without question, a puzzle. When students 
+are taught to “think like lawyers” in their first year of law school, they are 
+taught case-based common-law reasoning. Books on legal reasoning are 
+devoted almost entirely to the topic. How do courts reason from one case to 
+the next? Is case-based reasoning reasoning from analogy? How should case-
+based reasoning be modeled? How can it be justified? 
+In contrast, rule-based legal reasoning (as exemplified in much 
+statutory reasoning) is taken as simple in legal scholarship. Statutory 
+interpretation—how to determine the meaning of words in a statute, the 
+relevance of the lawmakers’ intent, and so forth—is much discussed, but there 
+is little treatment of the structure of statutory reasoning once the meaning of 
+the words is established. Once the meaning of terms is established, statutory 
+reasoning is considered, roughly speaking, to be deductive reasoning.  
+This Essay examines the structure of statutory reasoning after 
+ambiguities are resolved and the meaning of the statute’s terms established. 
+It argues that standard formal logic is not the best approach for modeling 
+statutory rule-based reasoning. Rather, the Essay argues, using the Internal 
+Revenue Code and accompanying regulations, judicial decisions, and rulings 
+as its primary example, that at least some statutory reasoning is best 
+characterized as defeasible reasoning—reasoning that may result in 
+conclusions that can be defeated by subsequent information—and is best 
+modeled using default logic. The Essay then addresses the practical and 
+theoretical benefits of this alternative understanding of rule-based legal 
+reasoning. 
+I.
+INTRODUCTION .......................................................................................2
+II. DEFEASIBLE REASONING AND DEFAULT LOGIC ..................................4 
+III. USING DEFAULT LOGIC TO FORMALIZE THE LAW: AN EXAMPLE ....6 
+A. The Law: Section 163 ........................................................................6 
+* Professor of Law, Northwestern Pritzker School of Law. Thanks to Joshua
+Blank, Elizabeth Emens, J. Ethan Galebach, Jeffrey Helmreich, Joshua Kleinfeld, 
+Ellen Lawsky, Kyle Stanford, Alex Stein, Vernon Walker, Sean Walsh, Kai 
+Wehmeier, and participants in the 2015 Harvard Tax Policy Seminar, 2015 
+Northwestern Tax Policy Workshop, 2015–2016 Columbia Law School Legal Theory 
+Workshop, 2015 UC Irvine Center for the Advancement of Logic, its Philosophy, 
+History and Applications Logic Seminar, and 2014–2015 UC Irvine Law, Reason and 
+Value Colloquium for helpful conversations and comments on earlier drafts. 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.3] ===
+ Electronic copy available at: https://ssrn.com/abstract=3088206 
+B. Section 163 Formalized .....................................................................8 
+IV. WHY DEFAULT LOGIC? .......................................................................11 
+A. The Accuracy of Default Logic ........................................................11 
+B. The Benefits of Default Logic ..........................................................16 
+V. CONCLUSION .........................................................................................18
+I. INTRODUCTION
+Common law reasoning is, without question, a puzzle. When students 
+are taught to “think like lawyers” in their first year of law school, they are 
+taught case-based, common law reasoning. Books on legal reasoning—and 
+there are many—are devoted almost entirely to case-based reasoning. Is case-
+based reasoning reasoning from analogy? How should such reasoning be 
+modeled? How can it be justified? 
+Rule-based legal reasoning, as exemplified by statutory reasoning, is 
+in contrast taken as simple in legal scholarship. Statutory interpretation—
+how to determine the meaning of words in a statute, the relevance of the 
+lawmakers’ intent, and so forth—is much discussed, but there is little 
+treatment of the structure of statutory reasoning once the meaning of the 
+words is established. For example, in a leading book on legal reasoning, the 
+chapter entitled “Interpreting Statutes and Other Posited Rules” addresses 
+only the problems of interpreting the lawmaker’s intended meaning.1 The 
+actual reasoning underlying statutory analysis is disposed of in just two pages: 
+statutory reasoning simply involves following rules. Statutory reasoning is 
+difficult only to the extent that understanding a term in the statute is difficult, 
+and the meaning of the term, they explain, will be determined by a court, 
+which throws us right back into common law reasoning. The classic text An 
+Introduction to Legal Reasoning2 deals with statutory reasoning in a similarly 
+cursory fashion: statutory reasoning is often considered deductive, the book 
+explains, and, while this may not be true, it is a useful approach; any 
+complications that arise come from “ambiguity in the words used.”3  
+This Essay examines the structure of rule-based reasoning after 
+ambiguities are resolved and the meaning of the rule’s terms established. For 
+rule-based legal reasoning is not best understood as merely deductive. And 
+while rule-based reasoning can be fruitfully modeled using formal logic, 
+standard formal logic is not the best approach for modeling rule-based legal 
+reasoning. Rather, this Essay argues, using the Internal Revenue Code and 
+accompanying regulations, judicial decisions, and rulings as its primary 
+example, that at least some rule-based legal reasoning is best characterized as 
+1 LARRY ALEXANDER & EMILY SHERWIN, DEMYSTIFYING LEGAL 
+REASONING 131–66 (2008). 
+2 EDWARD H. LEVI, AN INTRODUCTION TO LEGAL REASONING (Univ. of Chi. 
+Press 2013) (1949). 
+3 Id. at 28. 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.4] ===
+defeasible reasoning—reasoning that may result in conclusions that can be 
+defeated by subsequent information—and is best modeled using a 
+nonstandard logic called default logic. Default logic, unlike standard logic, 
+directly represents defeasible reasoning: default logic permits formal 
+reasoning that results in conclusions that may later be defeated. 
+Default logic is superior to standard logic for representing certain 
+statutory reasoning because, as the Essay explains, default logic makes 
+explicit otherwise implicit reasoning and decisions about rule priority, 
+decisions that are required to follow statutes and other legal rules. Default 
+logic also captures the structure of legal rules, which standard logic entirely 
+fails to do, and it more accurately reflects rule-based legal reasoning as 
+actually practiced by lawyers, judges, and legislative drafters. 
+Moreover, because default logic permits a more accurate 
+representation of rule-based legal reasoning, there are a number of theoretical 
+and practical advantages to using default logic, as opposed to standard logic, 
+to model such reasoning. First, using default logic to model rule-based legal 
+reasoning highlights the importance of and permits theorizing about rule 
+priority. Second, because default logic captures the actual structure of the law, 
+default logic makes it easier to translate (legal) code into (computer) code, 
+which is particularly important given the growing use of artificial intelligence 
+in legal practice, whether for e-discovery or for searching for the structure (as 
+opposed to substance) of arguments that have been particularly effective. 
+And, finally, because default logic allows legislative drafters to formalize 
+their actual practice, drafters who use default logic will find it simpler to 
+detect errors and ambiguities in legislation. 
+A range of literature argues that legal reasoning is best understood as 
+defeasible reasoning.4 Indeed, the word “defeasibility” is borrowed from the 
+law.5 Yet these sources generally (though not entirely) neglect the intrinsic 
+defeasibility of rule-based legal reasoning. Hage, for example, argues that 
+legal reasoning may be defeasible, but his reasons for defeasibility include 
+only that the burden of proof or the process of discovery may introduce new 
+information, and that extralegal considerations may include implied 
+exceptions to the law.6 Vernon Walker argues for the application of default 
+logic to the law but limits his discussion to reasoning about evidence (fact-
+4 E.g., Jaap Hage, Law and Defeasibility, 11 ARTIFICIAL INTELLIGENCE & L. 
+221 (2003); Henry Prakken & Giovanni Sartor, The Three Faces of Defeasibility in 
+the Law, 17 RATIO JURIS 118 (2004); Giovanni Sartor, A Formal Model of Legal 
+Argumentation, 7 RATIO JURIS 177 (1994); Giovanni Sartor, Normative Conflicts in 
+Legal Reasoning, 1 ARTIFICIAL INTELLIGENCE & L. 209 (1992). 
+5 The term dates back to at least H.L.A. Hart, The Ascription of 
+Responsibility and Rights, 49 PROC. ARISTOTELIAN SOC’Y 171 (1948). 
+6 Hage, supra note 4. 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.5] ===
+ 
+finding).7 There are a few examples of defeasible rule-based reasoning in the 
+literature. John Horty, for example, provides a fictional example of a conflict 
+between a federal and a state statute to illustrate default reasoning.8 This 
+Essay takes a similar approach, but instead of using a fictional example, it 
+draws from an actual statute and demonstrates defeasibility intrinsic to the 
+statute itself. 
+ 
+II.  DEFEASIBLE REASONING AND DEFAULT LOGIC 
+ 
+Once deductive reasoning provides a conclusion, nothing within 
+deductive reasoning can unseat that conclusion. Consider a very basic 
+deductive argument: “If A, then B. We know that A. Therefore, B.” Given A, 
+no additional information can shake the reasoner from B. (Of course, 
+changing the information one has can change the conclusion. “I thought that 
+if A, then B. But I was wrong. So although I have A, I cannot conclude B.”) 
+Because conclusions arrived at through deductive reasoning cannot be 
+defeated by additional information, such conclusions are indefeasible. 
+Most everyday reasoning, in contrast, leads to defeasible conclusions, 
+conclusions that might be defeated by additional information. (Defeasible 
+reasoning is sometimes referred to as the logic of jumping to conclusions.) In 
+the classic example, someone learns that Tweety is a bird and concludes that 
+Tweety can fly. But this conclusion is defeasible, because additional 
+information could cause the reasoner to change his mind. For example, if the 
+reasoner learns that Tweety is a penguin, he will conclude that Tweety can’t 
+in fact fly. 
+Because deductive logic is indefeasible—regardless of additional 
+information, a conclusion, once reached, will not be rejected—the 
+formalization of deductive logic (“standard logic”) is monotonic: once a 
+conclusion is accepted, it cannot be rejected. In contrast, formalized 
+defeasible logic is nonmonotonic: additional information can cause the 
+reasoner to reject an earlier conclusion. 
+There are a variety of ways to formalize nonmonotonic reasoning. 
+This Essay uses a variant of default logic.9 Under this approach, the reasoner 
+has a set of propositional formulas, W, which we can informally think of as a 
+world of facts; default rules (each default rule δ, and the set of default rules 
+D); and a relationship between the default rules (<). We can call the collection 
+of the set of facts, default rules, and relationship between the rules Δ = (W, 
+D, <). The relationship between the default rules establishes the relative 
+                                                                                                                            
+7 Vern R. Walker, A Default-Logic Paradigm for Legal Fact-Finding, 47 
+JURIMETRICS 193 (2007). 
+8 JOHN F. HORTY, REASONS AS DEFAULTS 120–21 (2012). 
+9 Default logic was originally developed in R. Reiter, A Logic for Default 
+Reasoning, 13 ARTIFICIAL INTELLIGENCE 81 (1980). 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.6] ===
+ 
+priority of the default rules—which rule takes precedence over another—and 
+thus this approach is a type of prioritized default logic.  
+For example, consider trying to determine whether a particular 
+person—call him Henry—can read. If the only information you have is that 
+Henry lives in the United States (UnitedStates), you should conclude that he 
+can read (Read).10 If you learn, however, that Henry is five years old, you 
+should conclude he cannot read, as most children in the United States do not 
+read before age six (Young for younger than age six). These two rules together 
+give us our set Δ of default rules, rules that might be defeated by each other 
+or by other rules. These rules don’t apply with certainty, but in general they 
+are good guides to reasoning. 
+More formally, if we know that Henry lives in the United States and 
+Henry is five years old, we have Δ=(W, D, <), where 
+ 
+W = {UnitedStates, Young} 
+ 
+D = {δ1, δ2} 
+ 
+δ2: UnitedStates → Read 
+ 
+δ1: Young → ¬Read 
+ 
+<: δ1 < δ2. 
+ 
+The “lower” the rule, the stronger, so here, δ1 dominates δ2. That is, 
+if both might apply, δ1 “beats” δ2. 
+Given W, we reason as follows. First, accept everything in our 
+world—W—and everything that we can prove (using regular, monotonic, 
+standard logic) from that world. The only thing we can prove from our world 
+and nothing else is UnitedStates and Young—i.e., that Henry lives in the 
+United States and is young. 
+Second, take the most dominant rule—here, δ1: Young → ¬Read, that 
+is, if a person is young, then in general he cannot read. (Notice that this is the 
+most specific rule as well.) Adding δ1: Young → ¬Read to what we believe 
+won’t create any contradictions, as all we believe is UnitedStates and Young. 
+So we add δ1 to the things we believe, along with everything else we can 
+derive from W along with δ1. We now believe that Henry can’t read—
+¬Read—because from Young and Young → ¬Read we can derive ¬Read. 
+We then move to the next-most-dominant rule—here, δ2: 
+UnitedStates → Read. This rule is inconsistent with what we already believe. 
+                                                                                                                            
+10 Approximately 99% of the U.S. population older than 14 can read, 
+CENTRAL INTELLIGENCE AGENCY, THE WORLD FACTBOOK (2016), and 80% of the 
+U.S. population is older than 14, U.S. CENSUS BUREAU, 2010 CENSUS BRIEFS: AGE 
+AND SEX COMPOSITION 4 (2011). 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.7] ===
+ 
+If we were to add this rule to what we already believe, we’d be able to derive 
+both Read (because we already believe UnitedStates) and ¬Read (because we 
+already believe Young and Young → ¬Read). So we don’t add δ2 to what we 
+believe. 
+There are no more rules to check, so we are done. We should now 
+believe everything we can derive from W together with δ1: Young → ¬Read, 
+so we should believe that Henry can’t read.  
+A legal example helps show why this approach to formalizing 
+defeasible reasoning captures rule-based legal reasoning well. 
+ 
+III.  USING DEFAULT LOGIC TO FORMALIZE THE LAW: AN EXAMPLE 
+ 
+This Essay focuses on section 163(h) of the Code, the statute that 
+permits the home mortgage interest deduction. There is nothing unusual about 
+this section, but it is a useful statute on which to focus because it is both a 
+complex section, permitting explication of a range of concerns, and yet also 
+fairly brief. This Part first describes the law contained in section 163(h), and 
+then provides a formalization of that law. 
+ 
+     A.  The Law: Section 163 
+ 
+In general, interest payments are deductible.11 Deductions reduce 
+income subject to tax. For example, if a company borrows $10,000 from a 
+bank at an interest rate of, say, 8% per year, payable annually, the annual 
+payments of $800 will reduce the company’s income that is subject to tax. If 
+the company is subject to tax at a rate of 35% (the highest corporate tax rate), 
+all else equal, the deduction will reduce its tax by $280 (that is, by 35% of 
+$800). Assume, for example, that the company has, taking into account all 
+other income and deductions but not taking into account the interest 
+deduction, taxable income of $1000. It owes tax of $350 (35% of $1000). But 
+taking into account the deduction, the company will have taxable income of 
+$200 (that is, $1,000 minus $800), and thus will owe tax of only $70 (35% of 
+$200). 
+However, personal interest payments are in general not deductible.12 
+“Personal interest payments” are defined by exclusion: all payments are 
+personal interest payments except six discrete items, which include (roughly 
+speaking) interest on debts that were incurred for business purposes and, most 
+importantly for our purposes, “qualified residence interest,”13 commonly 
+known as the “home mortgage interest deduction.” 
+                                                                                                                            
+11 I.R.C. § 163(a). 
+12 I.R.C. § 163(h)(1). 
+13 I.R.C. § 163(h)(2)(D). 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.8] ===
+ 
+Qualified residence interest is defined as interest accrued on either 
+“acquisition indebtedness” or “home equity indebtedness,” both with regard 
+to a “qualified residence” of the taxpayer.14 A “qualified residence” includes 
+both the taxpayer’s principal residence and one other residence of the 
+taxpayer for which the taxpayer makes an election to count it as a qualified 
+residence.15 Thus the home mortgage interest deduction is available with 
+respect to interest paid on debt related to up to two homes. 
+Acquisition indebtedness is debt that is incurred in acquiring, 
+constructing, or substantially improving a qualified residence, and that is 
+secured by such residence.16 (Debt is “secured” by a residence if the lender 
+has recourse to the residence if the borrower fails to pay the debt.) The 
+maximum amount that can be treated as acquisition indebtedness for a given 
+year is $1 million.17 For example, imagine Benny, a taxpayer who buys a $1.6 
+million home. He pays $500,000 cash and takes out a $1.1 million purchase 
+money mortgage. That is, he borrows $1.1 million from the bank and uses 
+that money to buy the house. If Benny does not pay the debt, the lender can 
+foreclose on the house and sell it in order to pay the balance of the debt. 
+Therefore, the mortgage is secured by the house. The interest rate on the debt 
+is 7%, accruing and payable annually, so the taxpayer owes $77,000 of 
+interest per year. 
+The general rule says that interest is deductible. But a more specific 
+rule says that personal interest is not deductible. Benny’s interest does seem 
+to be personal in an informal sense (because he uses it for the personal purpose 
+of buying a house), but the statute defines personal interest as not including, 
+inter alia, interest paid on acquisition indebtedness up to $1 million. The $1.1 
+million mortgage was used to acquire a home that is Benny’s principal 
+residence, and it is secured by that home, so a portion of the debt is acquisition 
+indebtedness. Specifically, the interest on $1 million is deductible with 
+respect to acquisition indebtedness. But the $77,000 represents interest on 
+$1.1 million. With respect to acquisition indebtedness, Benny may deduct 
+only the amount that bears the same relation to $77,000 that $1 million bears 
+to $1.1 million. Therefore, with respect to acquisition indebtedness, Benny 
+may deduct $70,000: 
+ 
+Deductible
+$77,000 = $1,000,000
+$1,100,000 
+ 
+Therefore Deductible = $70,000. 
+                                                                                                                            
+14 I.R.C. § 163(h)(3)(A). 
+15 I.R.C. § 163(h)(4)(A). 
+16 I.R.C. § 163(h)(3)(B)(i). 
+17 I.R.C. § 163(h)(3)(B)(ii). 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.9] ===
+ 
+Thus Benny’s income subject to tax is reduced, all else equal, by 
+$70,000, which provides Benny a benefit, the value of which depends on his 
+tax rate. If Benny is in the highest tax bracket, for example, he will save 
+$25,830 (39.6% of $70,000) on his taxes due to the deduction.18 
+Home equity indebtedness is debt that is secured by a qualified 
+residence, to the extent that the debt does not exceed the fair market value of 
+the qualified residence, reduced by the amount of acquisition indebtedness 
+with respect to that residence.19 The total amount treated as home equity 
+indebtedness cannot exceed $100,000.20 For example, take a taxpayer in the 
+highest tax bracket who purchases her principal residence for $700,000, using 
+only debt secured by the house. By assumption, the debt is acquisition 
+indebtedness, and she pays 5% annual interest on the debt. Each year, 
+therefore, she may deduct $35,000 with respect to the debt, thus reducing her 
+tax owed by $13,860 (39.6% of $35,000). 
+Some time passes, and the value of her house increases to $800,000. 
+She has paid down none of the principal on the first loan. Another lender now 
+lends her $100,000 secured by the house. (To see why the second lender is 
+willing to lend her $100,000, think about what happens if the taxpayer 
+defaults on her debt. The debt is secured by the house, so the house will be 
+seized and sold and the funds distributed to the lenders. The first $700,000 
+will go to pay the first lender, but there will still be $100,000 left to pay the 
+second lender.) This second $100,000 is home equity indebtedness, because 
+it is secured by the home and does not exceed the fair market value of the 
+qualified residence ($800,000) reduced by the acquisition indebtedness 
+($700,000). If she had borrowed $150,000 instead, she would still be able to 
+deduct only the interest with respect to the $100,000 difference between the 
+fair market value and the acquisition indebtedness.21 
+     B.  Section 163 Formalized 
+I turn now to formalizing the law just described. As described above, 
+the relevant law provides three main rules with regard to the deductibility of 
+interest.  
+First, in general, interest payments (Interest) are deductible 
+(Deductible):  
+ 
+                                                                                                                            
+18 Interest on the remaining $100,000 may also be deductible, of course; this 
+portion of the example addresses only the interest due to the acquisition indebtedness. 
+19 I.R.C. § 163(h)(3)(C)(i). 
+20 I.R.C. § 163(h)(3)(C)(ii). 
+21 Why would a lender lend more than the difference between the fair market 
+value and the acquisition indebtedness? Perhaps the lender thinks that the fair market 
+value is incorrect and in fact the house is, or will be, worth more. Or perhaps the 
+lender will not bear the risk of default because it plans to resell the debt quickly. For 
+an illustration, consider the market collapse of 2007–2008. 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.10] ===
+ 
+δ3: Interest → Deductible. 
+Second, even though in general interest payments are deductible, 
+personal interest payments (Personal) are in general not deductible:  
+ 
+δ2: Personal → ¬Deductible. 
+And, finally, even though personal interest payments are in general 
+not deductible, if the personal interest payments are payments of qualified 
+residence interest (QRI), then those payments are deductible:  
+δ1: QRI → Deductible.22 
+It may seem that δ1 does not track the Code. According to the Code, 
+“personal” interest does not include, inter alia, qualified residence interest. So 
+the Code embeds the exception for qualified residence interest within the 
+definition of personal interest. But, notwithstanding the language of the Code, 
+qualified residence interest is conceptually an exception to the rule that 
+personal interest is not deductible. This is how court opinions, treatises, and 
+the legislative history characterize the rule, even as they accurately reflect its 
+placement in the Code. I provide a few examples below, selected almost at 
+random from the relevant pool of sources; each of these examples could be 
+multiplied. 
+In Pau v. Commissioner, the Tax Court states, “Section 163(h) 
+disallows personal interest deductions unless they fit within certain narrowly 
+prescribed categories. Among these narrow exceptions is the deduction for 
+interest on a qualified residence.”23 Of course, by the language of the Code, 
+section 163(h) simply disallows what it defines as personal interest 
+deductions, and deductions for interest on a qualified residence is not a 
+personal interest deduction. But notwithstanding the structure of the Code, the 
+court reads the home mortgage interest deduction as an exception to the 
+personal interest rule. Similarly, a leading federal income taxation treatise 
+explains that personal interest is generally nondeductible, then notes 
+“[Congress] qualified § 163(h) with a broad exception for home 
+mortgages.”24 Again, strictly speaking, from the structure of the Code, 
+personal interest is nondeductible, and personal interest does not include 
+qualified residence interest. 
+The history of current section 163(h) also reflects the home mortgage 
+interest deduction as an exception from the general rule that personal interest 
+                                                                                                                            
+22 Even though no rule within Code section 163 suggests that this rule is 
+defeasible, it is defeasible, because other rules in the Code may defeat it. 
+23 T.C. Memo 1997-43, 1997 WL 28678, at *12. 
+24 BORIS I. BITTKER & LAWRENCE LOKKEN, FEDERAL TAXATION OF INCOME, 
+ESTATES AND GIFTS ¶ 31.1 (2017). 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.11] ===
+ 
+is not deductible. In the tax reform proposal that limited personal interest 
+deductions, the change in law was described as limiting the deduction of “all 
+interest not incurred in connection with a trade or business (other than interest 
+on debt secured by the taxpayer’s principal residence…).”25 
+Additionally, order the rules, defining  
+ 
+< : δ1 < δ2 < δ3. 
+That is, δ1 dominates δ2, which dominates δ3. 
+There are also two rules that are certain (essentially, they are 
+definitional) and thus go in W (additional information may also go in W): 
+personal interest payments are always interest payments, and qualified 
+residence interest payments are always personal: 
+ 
+Personal → Interest 
+QRI → Personal. 
+Thus: 
+W = {Personal → Interest, QRI → Personal} 
+δ3: Interest → Deductible 
+δ2: Personal → ¬Deductible 
+δ1: QRI → Deductible 
+<  : δ1 < δ2 < δ3. 
+This δ = (W, D, <) shows the general structure of the system of rules. 
+Formally defining these terms adds a level of complication, but at heart, these 
+rules provide the structure of section 163(h). (One might argue that there are 
+four relevant rules, and that one should consider that in general, payments are 
+not deductible—that is, without an explicit statutory authorization, no 
+deduction may be taken; thus, add Interest → Payment to W, and δ0: Payment 
+→ ¬Deductible to D. But for our purposes, these three suffice.) 
+                                                                                                                            
+25 RONALD REAGAN, THE PRESIDENT’S TAX PROPOSALS TO CONGRESS FOR 
+FAIRNESS, GROWTH, AND SIMPLICITY 323 (1985). For a general discussion of the 
+history of the mortgage interest deduction that clearly reflects that the deduction is an 
+exception to the general rule that personal interest is not deductible, see Dennis J. 
+Ventry, Jr., The Accidental Deduction: A History and Critique of the Tax Subsidy for 
+Mortgage Interest, 73 L. & CONTEMP. PROBLEMS 233 (2010). 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.12] ===
+ 
+To see how these rules combine, take, for example, the situation in 
+which an individual makes a payment of personal interest, and there is no 
+evidence that the payment is qualified residence interest. 
+W = {Personal → Interest, QRI → Personal, Personal} 
+At first, we believe only what we can derive from our world: the 
+payment is personal, and the payment is interest. Then we consider our first, 
+most dominant rule that has not yet been applied: If a payment is qualified 
+residence interest, then it is deductible (δ1: QRI → Deductible). This rule is 
+consistent with what we know, so we add it to what we believe. Now we 
+believe everything that we can prove from W together with δ1.  
+Next, consider the second most dominant rule: if an interest payment 
+is personal, then it isn’t deductible δ2: Personal → ¬Deductible. That is also 
+consistent with everything we know, so add that as well. 
+Finally, consider the third, weakest rule: if a payment is interest, then 
+it’s deductible δ3: Interest → Deductible. This rule is not consistent with what 
+we’ve already accepted. We’ve accepted that if interest is personal, it isn’t 
+deductible (δ2: Personal → ¬Deductible). And we also know that the interest 
+in question is personal (that was one of our initial facts). We don’t know that 
+the interest is qualified residence interest—that fact isn’t in W, and we can’t 
+derive it from anything else we know. So from everything we have already 
+accepted, we can derive that the interest isn’t deductible. Thus, we can’t add 
+a rule that would have us conclude that the interest is deductible. So don’t add 
+δ3 to the set of things we believe.  
+In the end, we should believe everything we can derive from W 
+together with δ1 and δ2, among which is that the payment in question isn’t 
+deductible. 
+ 
+IV.  WHY DEFAULT LOGIC? 
+ 
+This Part explains, first, why default logic more accurately represents 
+rule-based legal reasoning than does standard logic, and, second, concrete 
+advantages that result from using default logic over standard logic. I use 
+section 163 as the example throughout this Part, but again, section 163 is in 
+no way unique. 
+     A.  The Accuracy of Default Logic 
+First, strictly speaking, some metarule is required to know how to 
+apply apparently conflicting statutory rules. Section 163(a), for example, 
+states simply, “There shall be allowed as a deduction all interest paid or 
+accrued within the taxable year on indebtedness.” It does not say, for example, 
+“except as otherwise stated in this Section, there shall be allowed as a 
+deduction all interest paid . . . .” (There are sections of the Code that contain 
+explicit carveouts; for example, section 61 states, “Except as otherwise 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.13] ===
+ 
+provided in this subtitle, gross income means . . . .” But section 163(a) does 
+not contain such language.) Section 163(h) seems, again, strictly speaking, 
+inconsistent with the rule in section 163(a): “In the case of a taxpayer other 
+than a corporation, no deduction shall be allowed . . . for personal interest 
+paid or accrued during the taxable year.” 
+How is one to reconcile “there shall be allowed as a deduction all 
+interest” with “no deduction shall be allowed . . . for personal interest”? The 
+statute itself does not tell us. Of course, this is not difficult to resolve; indeed, 
+in this example, the task is so easy as to nearly disappear. As the canons of 
+statutory interpretation state, both the specific and general rule are to be given 
+meaning, and the more specific rule (section 163(h)) dominates the more 
+general rule (section 163(a)).26 But simply on the statute’s face, deductive 
+logic is not sufficient to represent the rules.27 
+But in other situations the answer is less obvious. What advice should 
+a lawyer give a taxpayer when, for example, the Internal Revenue Service 
+(Service) declines to acquiesce in the decision of the Tax Court? Should the 
+lawyer recommend that the client follow the court’s ruling on the one hand, 
+or the (opposite) revenue ruling on the other? To resolve the dilemma, the 
+lawyer will take into account the extra-statutory rule that the revenue ruling 
+means that the Service, which is charged with enforcing the tax law and would 
+be the agency to pursue the taxpayer were he to file incorrectly, is committing 
+not to pursue the taxpayer if he takes the approach described in the revenue 
+ruling. In other words, the taxpayer-favorable revenue ruling controls. There 
+are many sources of authority for interpreting statutes—different levels of 
+government (federal, state, local); within each level, there may be different 
+branches of government (legislative, judicial, administrative); and within 
+each branch, different strengths of authority (for example, district court, 
+appeals court, and so forth). One must know how to resolve conflicts among 
+these various authorities to apply statutes correctly, and for the most part, the 
+relative strength of these authorities is not contained in the statute one 
+attempts to interpret. 
+This is consistent with Dworkin’s approach to rules:  
+ 
+[W]e cannot say that one rule is more important than another 
+within the system of rules, so that when two rules conflict 
+                                                                                                                            
+26 E.g., Townsend v. Little, 109 U.S. 504, 512 (1883) (referring to “the well-
+settled rule, that general and specific provisions, in apparent contradiction, whether 
+in the same or different statutes, and without regard to priority of enactment, may 
+subsist together, the specific qualifying and supplying exceptions to the general”). 
+27 As Karl N. Llewellyn, Remarks on the Theory of Appellate Decision and 
+the Rules or Canons About How Statutes Are to Be Construed, 3 VAND. L. REV. 395, 
+401–06 (1949), notes, the canons, especially the substantive canons, can have a 
+“thrust and parry” nature, with many canons having an equal and opposite canon—
+but in the core cases canons can resolve conflicts. 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.14] ===
+ 
+one supercedes the other by virtue of its greater weight. If 
+two rules conflict, one of them cannot be a valid rule. The 
+decision as to which is valid, and which must be abandoned 
+or recast, must be made by appealing to considerations 
+beyond the rules themselves. A legal system might regulate 
+such conflicts by other rules, which prefer the rule enacted 
+by the higher authority, or the rule enacted later, or the more 
+specific rule, or something of that sort. A legal system may 
+also prefer the rule supported by the more important 
+principles. (Our own legal system uses both of these 
+techniques.)28 
+This description of appealing to other rules outside the system to 
+decide which rule is to be discarded (overridden) is exactly the approach of 
+defeasible reasoning and default logic. Dworkin characterizes the abandoned 
+rule as “not valid,” but it is perhaps more accurate to say that in a given 
+situation, a particular rule might not apply because it is dominated by another 
+rule. 
+Default logic also reflects more accurately the statutory structure. 
+Even if the Code did say “except as otherwise stated in this Section, there 
+shall be allowed as a deduction all interest paid…,” and even if no authorities 
+conflicted, to take the deductive approach would miss the structure of the 
+Code. The Code is not flat. Section 163 itself is not flat: Section 163(a) is the 
+“general rule” (that is its title), with various subrules and exceptions that 
+follow. And it is itself embedded in a title (Title 26, which includes all tax 
+law), a subtitle (Subtitle A, income taxes), chapter (Chapter 1—normal taxes 
+and surtaxes), subchapter (Subchapter B—computation of taxable income), 
+and part (Part VI—itemized deductions for individuals and corporations).  
+These divisions are far from incidental. The law itself is defined by 
+these groupings, as some sections include definitions “for purposes of this 
+Part,” or “for purposes of this Subchapter,” and so forth. Financial 
+consequences of these groupings can be significant: when the net investment 
+income tax (NIIT) was created in 2013, it was placed in Chapter 2A of the 
+Code, thus making NIIT payments ineligible for the foreign tax credit. By its 
+terms, the foreign tax credit is available only for taxes imposed by “this 
+chapter” (section 901). Because of the location of section 901, the credit is 
+available only for those taxes imposed by Chapter 1 of the Code. And neither 
+are the NIIT payments covered by social security totalization treaties, which 
+apply only to those taxes imposed by Chapter 2 of the Code. These 
+limitations, and the resulting double tax, are apparent nowhere on the face of 
+the statute, but are entirely due to the location of the NIIT in the Code. The 
+Code’s structure matters. 
+                                                                                                                            
+28 Ronald M. Dworkin, The Model of Rules, 35 U. CHI. L. REV. 14, 27 (1967). 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.15] ===
+ 
+It’s not surprising that default logic accurately reflects the statutory 
+structure, as the general-to-specific approach (general rules followed by 
+exceptions) is the approach recommended by legislative drafters. For 
+example, a manual created by the office in the House of Representatives that 
+drafts legislation and intended as a “guidebook for individuals who are 
+undergoing . . . on-the-job drafting training,” urges drafters to follow, as 
+much as possible, a general-to-specific organization: 
+Before choosing an organization for a draft, determine to 
+what extent it could appropriately fit into the following 
+arrangement: 
+(1) GENERAL RULE.—State the main message. 
+(2) EXCEPTIONS.—Describe the persons or things to which 
+the main message does not apply. 
+(3) SPECIAL RULES.—Describe the person or things— 
+(A) to which the main message applies in a different way; 
+or 
+(B) for which there is a different message.29 
+The Senate legislative drafting manual contains a similar exhortation: 
+IN GENERAL—A section contains some or all of the 
+following provisions and is organized as follows: 
+SEC. 101. SECTION HEADING. 
+(a) DEFINITIONS.— 
+(b) GENERAL RULE.— 
+(c) EXCEPTIONS.— 
+(d) SPECIAL RULES.—30 
+                                                                                                                            
+29 OFFICE OF THE LEGISLATIVE COUNSEL, U.S. HOUSE OF REPRESENTATIVES, 
+HOUSE LEGISLATIVE COUNSEL’S MANUAL ON DRAFTING STYLE 23 (1995). 
+30 OFFICE OF THE LEGISLATIVE COUNSEL, U.S. SENATE, LEGISLATIVE 
+DRAFTING MANUAL 9 (1997). 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.16] ===
+ 
+This organization is also how people describe the law: in Revenue 
+Ruling 2010–25, for example, the Service begins by stating the general rule 
+(a deduction is allowed for interest payments), then introduces the first 
+exception (there is no deduction for personal interest) and then the last 
+exception, the least general rule (there is a deduction for qualified residence 
+interest). The same approach appears in any textbook,31 treatise,32 or case.33 
+That said, a nonmonotonic logic such as default logic isn’t necessary 
+for representing defeasible reasoning. Take section 163, for example. One 
+arrives at the correct answer (deductible or not deductible) with just one rule, 
+in standard monotonic logic: If a payment is interest, then it is deductible if 
+and only if either it is not personal, or it is qualified residence interest. That 
+is,  
+ 
+Interest → (Deductible ↔ (¬Deductible v QRI)).34  
+ 
+Thus Dworkin proposes that rules are “all-or-nothing”: an “accurate” 
+statement of a rule takes all exceptions into account and “legal consequences 
+that follow automatically.”35  
+Or perhaps the choice between representing rule-based legal 
+reasoning using, on the one hand, a nonmonotonic logic, or, on the other, a 
+monotonic logic is a false choice: other nonstandard logics may actually be 
+better suited to represent rule-based legal reasoning.36  
+But my claim isn’t that default logic is required to represent rule-
+based legal reasoning, but rather that default logic is preferable for 
+formalizing such reasoning, as compared both to standard nonmonotonic 
+logic and to other nonstandard logics. Whether to use default logic in a 
+particular situation is a question of pragmatics.37 What logic is best depends 
+on one’s purpose. Nolt, for example, aims to find a logic that permits artificial 
+intelligence to reach accurate legal conclusions.38 For that purpose, whether 
+the logic accurately reflects, for example, the statutory structure is of little 
+interest. But in the case of rule-based legal reasoning, the pragmatics is on the 
+side of default logic, as the next Subpart describes. 
+                                                                                                                            
+31 E.g., RICHARD SCHMALBECK ET AL., FEDERAL INCOME TAXATION 383–
+386 (4th ed. 2015). 
+32 E.g., BITTKER & LOKKEN, supra note 24, at ¶ 31.1. 
+33 Pau v. Comm’r, T.C. Memo 1997-43, 1997 WL 28678. 
+34 This isn’t an exhaustively accurate statement of the law but rather a 
+summary of the few exemplary rules described in this Essay. 
+35 Dworkin, supra note 28, at 25. 
+36 See, e.g., John Nolt et al., A Logic for Statutory Law, 35 JURIMETRICS 121 
+(1995) (proposing a logic for statutory reasoning that is closely related to relevance 
+logic, which adds constraints to the conditional in order to require a relation between 
+the premise and the conclusion). 
+37 Hage, supra note 4. 
+38 Nolt, supra note 36, at 122. 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.17] ===
+ 
+     B.   The Benefits of Default Logic  
+Because default logic more accurately reflects the structure of statutes 
+and the practice of rule-based legal reasoning than does standard logic, using 
+default logic to represent rule-based legal reasoning in general, and statutory 
+reasoning in particular, has both theoretical and practical benefits. 
+First, using default logic to represent rule-based legal reasoning 
+highlights the conceptual category rule priority, a category that crosscuts 
+legal reasoning and is implicit to what much of lawyers do, but remains 
+undertheorized. As an initial matter, certain types of rule priority seem 
+obvious. A statute (for example) obviously dominates, say, a notice from the 
+Service. In some sense this is accurate; a statute is enacted by Congress and 
+signed by the President, whereas an administrative agency notice is simply a 
+statement of how an administrative agency will administer the law. On the 
+other hand, if the enforcer tells you that it will not enforce the law, then it 
+seems safe to violate the law, and the enforcer’s notice dominates the statute. 
+This is precisely what happened when, for example, in Notice 2008–76, the 
+Service announced that it would not enforce a provision of section 382 against 
+banks, effectively transferring over $100 billion to certain private parties in 
+violation of explicit, clear statutory law. No lawyer would advise his client to 
+follow the statute and not the Notice. 
+More generally, in many situations there may be a variety of different 
+“right” answers to a question of law, depending on the precise question one 
+is asking. The right answer might be, for example, “the answer that is most 
+compliant with the law,” or the right answer might be “the advice that a tax 
+lawyer should give a risk-averse client,” or the right answer might be “the 
+conclusion a judge would reach.” Default logic’s formalization will in fact be 
+able to provide any of those three answers (and others!), even though the 
+answers might be different than one another, depending on the priority the 
+formalizer gives to the various rules. In this Essay, “right answer” means “the 
+advice that a tax lawyer should give a risk-averse client,” and the rules are 
+ordered accordingly. A tax lawyer giving advice to a client would, for 
+example, give a recent Service ruling higher priority than a Supreme Court 
+opinion that held to the contrary, notwithstanding that a Supreme Court 
+opinion has, in some very important sense, more authority. Conceiving of 
+rule-based legal reasoning as defeasible reasoning, reasoning that is best 
+formalized by a nonmonotonic logic such as default logic, thus suggests 
+another area, rule priority, to which more attention should be paid.  
+Second, because default logic tracks the structure of statutes and 
+statutory drafting, it is easier to convert statutes into default logic than into 
+standard logic. Consider again section 163. Extracting the three default rules39 
+from the statute is straightforward; indeed, each rule can be cited to a 
+particular subsection. In contrast, creating the single rule that captures section 
+                                                                                                                            
+39 I.e., the rules in Δ. 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.18] ===
+ 
+163 in standard logic requires applying metarules and deviating from the 
+statutory structure. Artificial intelligence based on default logic can more 
+easily encode statutes and extract information from statutes than artificial 
+intelligence based on standard logic.40 For example, just as e-discovery 
+extracts factual information from large amounts of text, computer programs 
+looking for default logic-type arguments could check to see what kind of 
+arguments have been successful before courts or administrative agencies. And 
+it would be easier and less expensive to create programs meant to apply the 
+law if the programs are written in languages that more closely track the actual 
+structure of the Code. For example, one could tag certain rules with priorities 
+instead of having to manually combine the rules to get the right answer. 
+Third, and relatedly, if formalizing statutes is relatively easy, drafters 
+may be more likely to use formalization to check the structure of the statute, 
+which might help avoid errors and unintentional ambiguities. Consider, for 
+example, the definition of acquisition indebtedness. Is acquisition 
+indebtedness the amount incurred in acquiring, etc., the qualified residence 
+and secured by that residence? Or is it the amount up to $1 million that is 
+incurred, etc.? Put another way, is the $1 million limitation part of the 
+definition of “acquisition indebtedness”? Or is it a limit on how much 
+acquisition indebtedness there may be?  
+Why does this matter? Because definitions are extensional: if X = Y, 
+then anywhere in the Code that X appears, one can substitute Y salva veritate. 
+So what should substitute for acquisition indebtedness in the portion of the 
+definition of home equity indebtedness that limits home equity indebtedness 
+to the excess of the fair market value over the acquisition indebtedness? 
+“Amount incurred in acquiring, etc.” or “amount incurred in acquiring, etc. 
+up to $1 million”? If the latter, then if a taxpayer borrows $1.1 million to 
+acquire his home, he may deduct the interest with respect to the first $1 
+million as interest with respect to acquisition indebtedness, and the interest 
+with respect to the last $100,000 as interest with respect to home equity 
+indebtedness. If the former, then the last $100,000 cannot be home acquisition 
+indebtedness.  
+The issue has been extensively litigated. The government argued first 
+that the definition did not include the $1 million limitation, and thus that the 
+last $100,000 did not constitute home equity indebtedness. Although the 
+government won in court in Pau v. Commissioner, the Service later backed 
+                                                                                                                            
+40 For an initial attempt to use natural language processing to extract default-
+logic rules from the tax law, see Marcos Pertierra, Sarah Lawsky, Erik Hemberg, & 
+Una-May O’Reilly, Towards Formalizing Statute Law as Default Logic Through 
+Automatic Semantic Parsing (July 2017), http://groups.csail.mit.edu/EVO-
+DesignOpt/groupWebSite/uploads/Site/ASAIL_2017_Pertierra.pdf (proceedings of 
+Second Workshop on Automated Detection, Extraction and Analysis of Semantic 
+Information in Legal Texts (ASAIL)). 
+Electronic copy available at: https://ssrn.com/abstract=3088206
+=== [p.19] ===
+ 
+off their (winning) position and permitted the second $100,000 to count as 
+home equity indebtedness. Had the drafters formalized their statute to check 
+its structure, they would have had to decide what was included in the 
+definition of acquisition indebtedness and would have resolved what seems 
+to be an unintentional ambiguity.41  
+ 
+V.  CONCLUSION 
+ 
+This Essay argues that formal logic is a useful way to model rule-
+based legal reasoning if one uses a nonstandard logic. In particular, using the 
+example of section 163 of the Internal Revenue Code, the Essay argues that 
+certain types of rule-based legal reasoning are defeasible reasoning and best 
+modeled by default logic. Finally, the Essay suggests both theoretical and 
+practical advantages of using default logic to model rule-based legal 
+reasoning. 
+ 
+                                                                                                                            
+41 For further discussion, see Sarah B. Lawsky, Formalizing the Code, 70 
+TAX L. REV. 377 (2017). 
+Electronic copy available at: https://ssrn.com/abstract=3088206

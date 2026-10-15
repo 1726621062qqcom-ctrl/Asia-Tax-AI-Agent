@@ -10,8 +10,12 @@ DIVIDEND, INTEREST, ROYALTY, SHARE_TRANSFER = "DIVIDEND", "INTEREST", "ROYALTY",
 SERVICE_FEE, LIQUIDATION, CAPITAL_REDUCTION = "SERVICE_FEE", "LIQUIDATION", "CAPITAL_REDUCTION"
 CFC_INCLUSION = "CFC_INCLUSION"
 IP_TRANSFER = "IP_TRANSFER"
+GOODS = "GOODS"                                                 # decision D42
+BRANCH_PROFIT = "BRANCH_PROFIT"                                 # decision D47
+PROPERTY = "PROPERTY_TRANSFER"                                  # decision D48
+RENT = "PROPERTY_RENT"                                          # decision D49
 RELATED = (INTEREST, ROYALTY, SERVICE_FEE)                       # the related-party dealings the model prices
-PASSIVE = (DIVIDEND, INTEREST, ROYALTY, SHARE_TRANSFER)          # EIT art 3(3) income, withheld at source (art 37)
+PASSIVE = (DIVIDEND, INTEREST, ROYALTY, SHARE_TRANSFER, PROPERTY, RENT)   # EIT art 3(3) income, withheld at source (art 37)
 INDIRECT = Scope(ALL, None, SHARE_TRANSFER, mount=Mount.SUBGRAPH, side=CN)   # an offshore transfer the Mainland taxes
 
 
@@ -19,7 +23,18 @@ def dom(income):
     return Scope(CN, None, income)
 
 
-# 财税〔2009〕59号 §5 with 109号 §1: the conditions every special reorganisation meets (口径 D18)
+LOSS_CN = Scope(ALL, CN, ALL, mount=Mount.ENTITY, side="residence")      # decision D51
+
+
+# 财税〔2018〕102号 第二条: the conditions of the reinvestment deferral
+REINVEST_DEFERRAL = And(Leaf("reinvested_in_cn", is_true),
+                        Leaf("reinvestment_form", is_in, "cn.reinvest.forms"),
+                        Leaf("direct_payment", is_true, "cn.reinvest.direct_payment"),
+                        Leaf("reinvestment_from_distributed_profit", is_true, "cn.reinvest.profit_is_distributed_retained_earnings"))
+CAPITALISED = Leaf("capitalised", is_true)                      # decision D46: capitalisation of reserves (转增股本)
+SHARE_PREMIUM = And(CAPITALISED, Leaf("capitalised_from", is_in, "cn.capitalisation.not_income_sources"))
+
+# 财税〔2009〕59号 §5 with 109号 §1: the conditions every special reorganisation meets (decision D18)
 REORG_COMMON = And(Leaf("reorg_step", is_true),
                    Leaf("reorg_control_ratio", ge, "cn.reorg.control_ratio"),
                    Leaf("reorg_acquired_ratio", ge, "cn.reorg.acquired_ratio_min"),
@@ -66,19 +81,23 @@ NO_PE = lambda days_param: And(RESIDENT, Leaf("fixed_place_in_cn", is_false, on=
 GAIN_RESIDENCE_ONLY = lambda immovable, ratio: And(RESIDENT, Leaf("immovable_ratio", le, immovable),
                                                     Leaf("max_ratio_12m", lt, ratio))
 
-# 口径 D30: the laws the library starts from — a flow dated before one is outside the library for that levy (the VAT
+# decision D30: the laws the library starts from — a flow dated before one is outside the library for that levy (the VAT
 # rules of 营改增 36号 and the stamp-duty regulations they replaced are not kept: current law only)
 VAT_LAW = ("增值税法", "cn.law.vat#38")
+LAT_REG = ("土地增值税暂行条例", "cn.reg.lat#15")                  # decision D48
+DEED_LAW = ("契税法", "cn.law.deed#16")
+UCMT_LAW = ("城市维护建设税法", "cn.law.ucmt#11")
 STAMP_LAW = ("印花税法", "cn.law.stamp.flk#20")
-# 口径 D23: the VAT Law's cross-border charge — withheld by the buyer (第十五条) on the sales amount, a VAT-inclusive price
+TARIFF_LAW = ("关税法", "cn.law.tariff#72")                     # decision D43
+# decision D23: the VAT Law's cross-border charge — withheld by the buyer (第十五条) on the sales amount, a VAT-inclusive price
 # divided by 1 + rate (实施条例 第十六条); the buyer credits it (实施条例 第十二条) when a general taxpayer holding the contract,
 # the payment proof and the seller's statement or invoice (公告2026年第13号), or the special invoice of a domestic seller
 LAW_VAT = ("cn.vat.law.withholding_agent", "cn.vat.law.withheld_on_sales", "cn.vat.law.inclusive_price", "cn.vat.law.taxable_in_cn")
 INPUT_LAW = And(Leaf("vat_general_taxpayer", is_true, "cn.vat.law.input_credit", on="payer"),
                 Or(DOMESTIC, Leaf("input_vat_documents_kept", is_true, "cn.vat.law.input_documents")))
-# 口径 D25: 统借统还 — a group's core company on-lending what it borrowed from banks at no more than their rate
+# decision D25: 统借统还 — a group's core company on-lending what it borrowed from banks at no more than their rate
 UNIFIED = Leaf("unified_borrowing_relending", is_false, "cn.vat.law.unified_borrowing_exempt")
-# 口径 D22: technology transfers — the income-tax reduction (财税〔2010〕111号: the kinds listed, the contract registered, no
+# decision D22: technology transfers — the income-tax reduction (财税〔2010〕111号: the kinds listed, the contract registered, no
 # restricted export, not between companies one of which holds the other wholly; sisters wholly held by one holder are
 # not named there — judged) and the VAT exemption (公告2026年第10号: patents and know-how, the contract recognised)
 TECH = And(Leaf("ip_kind", is_in, "cn.tech.kinds"), Leaf("tech_transfer_registered", is_true, "cn.tech.registration"),
@@ -123,11 +142,23 @@ SPEC = [
     # ---- transfer pricing (范围.md 4): the local file when related-party dealings exceed the threshold, due 30 June of the
     #      next year; interest on a special adjustment at the benchmark plus five points (benchmark only with documentation)
     RuleObj("cn.tp.local_file", dom(RELATED), Effect.DEADLINE, "cn.tp.local_file_due",
-            cond=And(Leaf("payee_is_related", is_true, on="payee"), Leaf("related_party_volume", gt, "cn.tp.local_file_other_threshold", on="payer"))),
+            cond=And(Leaf("cn_related", is_true), Leaf("related_party_volume", gt, "cn.tp.local_file_other_threshold", on="payer")),
+            uses=("cn.tp.related_share_min",)),
     RuleObj("cn.tp.adjustment_interest", dom(RELATED), Effect.PENALTY, "cn.tp.interest_spread",
-            cond=Leaf("payee_is_related", is_true, on="payee"), uses=("cn.tp.interest_from", "cn.tp.interest_base_only_with_docs")),
+            cond=Leaf("cn_related", is_true), uses=("cn.tp.interest_from", "cn.tp.interest_base_only_with_docs", "cn.tp.related_share_min")),
+    # ---- decision D41: a related payer's interest, royalty or fee below its arm's-length amount — the Mainland payee is taxed
+    #      on that amount (EIT art 41; 公告2017年第6号 第二十五条: a profit below the median, to the median), the special
+    #      adjustment's interest on the payee's side too; a Mainland payer's deduction follows a Hong Kong or Singapore
+    #      adjustment of the payee through the treaties' corresponding adjustment (Art 9(2)) — the authority's judgement
+    RuleObj("cn.tp.income_uplift", Scope(ALL, CN, RELATED, side="residence"), Effect.BASE, None, cond=CROSS_BORDER,
+            uses=("cn.tp.income_arms_length", "cn.tp.adjust_to_median", "cn.tp.related_share_min", "cn.tp.related_via_intermediate")),
+    RuleObj("cn.tp.adjustment_interest.income", Scope(ALL, CN, RELATED, side="residence"), Effect.PENALTY, "cn.tp.interest_spread",
+            cond=And(CROSS_BORDER, Leaf("cn_related", is_true)),
+            uses=("cn.tp.interest_from", "cn.tp.interest_base_only_with_docs", "cn.tp.related_share_min")),
+    RuleObj("cn.tp.corresponding", dom(RELATED), Effect.DEDUCT_BASE, None, cond=CROSS_BORDER,
+            uses=("cn-hk.tp.corresponding", "cn-sg.tp.corresponding")),
 
-    # ---- 口径 D23: the VAT Law from 2026-01-01 (口径 D30: before it, outside the library): a foreign
+    # ---- decision D23: the VAT Law from 2026-01-01 (decision D30: before it, outside the library): a foreign
     #      seller's services and IP sold to a Mainland buyer are consumed in the Mainland (实施条例 第四条) — services
     #      consumed on site abroad excepted, IP without exception; 6%, a lease of tangible movables 13% (第十条)
     RuleObj("cn.vat.law.service", dom(SERVICE_FEE), Effect.VAT, "cn.vat.law.rate_services", before=VAT_LAW, bearer="payee",
@@ -137,9 +168,20 @@ SPEC = [
             uses=LAW_VAT),
     RuleObj("cn.vat.law.lease", dom(ROYALTY), Effect.VAT, "cn.vat.law.rate_tangible_lease", before=VAT_LAW, bearer="payee",
             cond=And(CROSS_BORDER, Or(Leaf("is_equipment_lease", is_true), Leaf("is_aircraft_or_ship_lease", is_true))), uses=LAW_VAT),
-    RuleObj("cn.vat.law.input_credit", dom((SERVICE_FEE, ROYALTY, IP_TRANSFER)), Effect.VAT, "cn.vat.law.rate_services", before=VAT_LAW, bearer="payer",
+    # decision D48: a sale of land use rights or a building in the Mainland (增值税法 第四条第二项): 9% (第十条第二项), or for
+    # one acquired before 2016-05-01 the 5% simplified method on the price less the purchase price (公告2026年第10号
+    # 三（二）4-5、四（八）), a small-scale taxpayer 3% on the same difference (第十一条; 四（八）)
+    RuleObj("cn.vat.law.property", dom(PROPERTY), Effect.VAT, "cn.vat.law.rate_property", before=VAT_LAW, bearer="payee",
+            uses=("cn.vat.law.taxable_in_cn", "cn.vat.property_simplified_rate", "cn.vat.property_old_cutoff",
+                  "cn.vat.property_simplified_until", "cn.vat.property_purchase_deducted", "cn.vat.law.simplified_rate")),
+    # decision D49: the lease of land or a building in the Mainland, 9% (第十条第二项 不动产租赁服务); one acquired before 2016-05-01
+    # at the 5% simplified method (公告2026年第10号 三（二）3), a small-scale taxpayer 3% (第十一条)
+    RuleObj("cn.vat.law.rent", dom(RENT), Effect.VAT, "cn.vat.rent_rate", before=VAT_LAW, bearer="payee",
+            uses=("cn.vat.law.taxable_in_cn", "cn.vat.property_simplified_rate", "cn.vat.property_old_cutoff",
+                  "cn.vat.property_simplified_until", "cn.vat.law.simplified_rate")),
+    RuleObj("cn.vat.law.input_credit", dom((SERVICE_FEE, ROYALTY, IP_TRANSFER, PROPERTY, RENT)), Effect.VAT, "cn.vat.law.rate_services", before=VAT_LAW, bearer="payer",
             cond=INPUT_LAW, uses=("cn.vat.law.input_credit_invoice",)),
-    # ---- 口径 D25: interest is the price of a loan service (实施条例 第二条): a foreign lender's interest from a Mainland
+    # ---- decision D25: interest is the price of a loan service (实施条例 第二条): a foreign lender's interest from a Mainland
     #      borrower is consumed in the Mainland and withheld at 6%; a Mainland lender's is taxed whoever borrows (销售方为
     #      境内单位); the borrower credits none of it (实施条例 第二十一条) — no input credit rule covers interest, so the VAT
     #      is a cost of the group. 统借统还 interest is exempt (公告2026年第10号)
@@ -149,16 +191,53 @@ SPEC = [
             bearer="payee", cond=UNIFIED,
             uses=("cn.vat.law.taxable_in_cn", "cn.vat.law.inclusive_price", "cn.vat.law.loan_services",
                   "cn.vat.law.loan_input_not_creditable")),
-    # ---- 口径 D26: a non-resident's Article 3(3) income is taxed on the income net of the VAT (公告2013年第9号): with a
+    # ---- decision D26: a non-resident's Article 3(3) income is taxed on the income net of the VAT (公告2013年第9号): with a
     #      VAT-inclusive price the withholding base, and the treaty cap's base, are the price ÷ (1 + rate); a gain is the
     #      net price less the basis. Services done here are establishment income, outside the announcement
-    RuleObj("cn.wht.vat_exclusive", dom((INTEREST, ROYALTY, IP_TRANSFER)), Effect.BASE, "cn.wht.base_excludes_vat", cond=CROSS_BORDER),
-    # ---- 口径 D29: a Mainland company's revenue leaves out the VAT on its own sale (增值税会计处理规定: the output VAT is a
+    RuleObj("cn.wht.vat_exclusive", dom((INTEREST, ROYALTY, IP_TRANSFER, PROPERTY, RENT)), Effect.BASE, "cn.wht.base_excludes_vat", cond=CROSS_BORDER),
+    # ---- decision D49: property tax (房产税) on a building let, 12% of the rent net of the VAT (房产税暂行条例 第三条、第四条; 财税〔2016〕43号
+    #      第二条), the owner's (第二条), in cities, county towns, towns and industrial and mining areas (第一条); the lease
+    #      contract's stamp duty, 0.1% of the rent, each party (印花税法 税目税率表)
+    RuleObj("cn.property_tax.rent", dom(RENT), Effect.PROPERTY_TAX, "cn.property_tax.rent_rate", bearer="payee",
+            cond=Leaf("property_tax_area", is_true, "cn.property_tax.area"),
+            uses=("cn.property_tax.rent_base", "cn.property_tax.owner", "cn.property_tax.rent_excludes_vat")),
+    RuleObj("cn.stamp.lease.lessor", dom(RENT), Effect.STAMP, "cn.stamp.lease_rate", before=STAMP_LAW, bearer="payee",
+            uses=("cn.stamp.taxpayer_each_party",)),
+    RuleObj("cn.stamp.lease.lessee", dom(RENT), Effect.STAMP, "cn.stamp.lease_rate", before=STAMP_LAW, bearer="payer",
+            uses=("cn.stamp.taxpayer_each_party",)),
+    # a Mainland lessor's rent is income net of its costs (the profit in it, profit_margin); the tenant deducts it (实施条例
+    # 第四十七条: operating-lease rent spread over the lease)
+    RuleObj("cn.rent.base", Scope(ALL, CN, RENT, side="residence"), Effect.BASE, None, uses=("cn.rent.lessor_profit",)),
+    RuleObj("cn.deduct.rent", dom(RENT), Effect.DEDUCTION, "cn.eit.rate", uses=("cn.deduct.operating_lease", "cn.eit.rate_entity")),
+    # ---- decision D48: on every VAT actually paid in the Mainland (城市维护建设税法 第二条; 公告2021年第28号 第一条) — not on
+    #      import VAT or the VAT of a foreign seller of services or intangibles (第三条) — each item's own bearer and sign:
+    #      7% / 5% / 1% by where the taxpayer is (第四条), and the local education surcharge of 2% on the same base (财综
+    #      〔2010〕98号 第二条; 公告2021年第28号 第二条). The education surcharge (国发〔1986〕50号) is not in the library
+    RuleObj("cn.surcharge.ucmt", Scope(ALL, None, ALL, side=CN), Effect.SURCHARGE, "cn.ucmt.rate_urban", before=UCMT_LAW,
+            uses=("cn.ucmt.base_vat_paid", "cn.ucmt.no_foreign_services", "cn.ucmt.rate_county", "cn.ucmt.rate_other",
+                  "cn.ucmt.location_of_taxpayer")),
+    RuleObj("cn.surcharge.local_edu", Scope(ALL, None, ALL, side=CN), Effect.SURCHARGE, "cn.local_edu.rate", before=UCMT_LAW,
+            uses=("cn.local_edu.base_as_ucmt",)),
+    # ---- decision D48: LAT on the value a transfer of land or buildings adds (条例 第二条至第七条; 细则 第七条、第十条),
+    #      the transferor's; deed tax on the price, the transferee's (契税法 第一条、第三条、第四条), each net of the VAT (财税
+    #      〔2016〕43号); stamp duty on the transfer instrument by each party (印花税法 税目税率表)
+    RuleObj("cn.lat.charge", dom(PROPERTY), Effect.LAT, "cn.lat.rate_1", before=LAT_REG, bearer="payee",
+            uses=("cn.lat.rate_2", "cn.lat.rate_3", "cn.lat.rate_4", "cn.lat.band_1", "cn.lat.band_2", "cn.lat.band_3",
+                  "cn.lat.quick_2", "cn.lat.quick_3", "cn.lat.quick_4", "cn.lat.revenue_excludes_vat", "cn.lat.old_building_appraisal",
+                  "cn.lat.invoice_uplift", "cn.lat.invoice_year", "cn.lat.deed_deductible", "cn.lat.taxes_deductible",
+                  "cn.lat.stamp_and_local_edu_deductible")),
+    RuleObj("cn.deed.charge", dom(PROPERTY), Effect.DEED, "cn.deed.rate_min", before=DEED_LAW, bearer="payer",
+            uses=("cn.deed.rate_max", "cn.deed.transferee", "cn.deed.base_price", "cn.deed.base_excludes_vat")),
+    RuleObj("cn.stamp.property.seller", dom(PROPERTY), Effect.STAMP, "cn.stamp.property_rate", before=STAMP_LAW, bearer="payee",
+            uses=("cn.stamp.taxpayer_each_party",)),
+    RuleObj("cn.stamp.property.buyer", dom(PROPERTY), Effect.STAMP, "cn.stamp.property_rate", before=STAMP_LAW, bearer="payer",
+            uses=("cn.stamp.taxpayer_each_party",)),
+    # ---- decision D29: a Mainland company's revenue leaves out the VAT on its own sale (增值税会计处理规定: the output VAT is a
     #      liability, not income; the annual return starts from that revenue, A101010): with a VAT-inclusive price its
     #      interest income, and the proceeds of its IP sale, are net of the VAT — before the technology-transfer relief
     RuleObj("cn.resident.vat_exclusive", Scope(ALL, CN, (INTEREST, IP_TRANSFER), side="residence"), Effect.BASE,
             "cn.eit.revenue_excludes_output_vat"),
-    # ---- 口径 D22: the IP transfer step's VAT — a foreign seller's IP sold to a Mainland buyer, withheld; a Mainland
+    # ---- decision D22: the IP transfer step's VAT — a foreign seller's IP sold to a Mainland buyer, withheld; a Mainland
     #      seller's, charged whoever buys (销售方为境内单位, 第四条); a technology transfer recognised is exempt — whether a
     #      foreign seller, which has no 所在地 for the recognition, can have it is the authority's judgement. The zero rate
     #      for technology used wholly abroad (实施条例 第九条) does not arise: OP goes on using the IP in the Mainland.
@@ -168,7 +247,7 @@ SPEC = [
             uses=LAW_VAT + ("cn.vat.tech_transfer_exempt",)),
     RuleObj("cn.vat.law.ip_sale", Scope(ALL, CN, IP_TRANSFER, side="residence"), Effect.VAT, "cn.vat.law.rate_services", before=VAT_LAW, bearer="payee",
             cond=Not(VAT_TECH), uses=("cn.vat.law.taxable_in_cn", "cn.vat.law.inclusive_price", "cn.vat.tech_transfer_exempt")),
-    # ---- 口径 D22: the IP transfer step's income tax. A Mainland seller: the gain (proceeds less net value, 实施条例
+    # ---- decision D22: the IP transfer step's income tax. A Mainland seller: the gain (proceeds less net value, 实施条例
     #      第十六条、第七十四条) at its rate, a technology transfer's first 5 million yuan exempt and the rest halved
     #      (第九十条). A non-resident seller: 10% on the gain (第十九条) if the gain arises in the Mainland — 第七条 names no
     #      source for intangibles and leaves "other income" to the authorities, who have set none: their judgement; the
@@ -194,7 +273,7 @@ SPEC = [
             uses=("cn.stamp.unstated_amount_market_price", "cn.stamp.restructuring_exemption_scope")),
     RuleObj("cn.stamp.ip.buyer", Scope(ALL, None, IP_TRANSFER, side=CN), Effect.STAMP, "cn.stamp.ip_rate", before=STAMP_LAW, bearer="payer", cond=STAMP_IP,
             uses=("cn.stamp.unstated_amount_market_price", "cn.stamp.restructuring_exemption_scope")),
-    # ---- 口径 D28: the IP step at book value between Mainland companies one wholly holding the other or both wholly held
+    # ---- decision D28: the IP step at book value between Mainland companies one wholly holding the other or both wholly held
     #      by the same Mainland company (the template allows the mode only then): with a reasonable business purpose (a
     #      judgement), no change of the IP's business for 12 months and the filing at the annual return (the plan's
     #      actions), neither side recognises a gain and the buyer amortises the seller's tax basis (109号 第三条; 公告2015年
@@ -223,7 +302,7 @@ SPEC = [
                   "cn.cfc.whitelist", "cn.cfc.exempt_active", "cn.eit.rate_entity")),
 
     # ---- stamp duty (范围.md 2): the equity-transfer instrument is stamped at 0.05% of the price by each party writing it
-    #      — a writing that transfers shares: shares a liquidation or capital reduction cancels pass by none (口径 D19)
+    #      — a writing that transfers shares: shares a liquidation or capital reduction cancels pass by none (decision D19)
     RuleObj("cn.stamp.seller", dom(SHARE_TRANSFER), Effect.STAMP, "cn.stamp.equity_rate", before=STAMP_LAW, bearer="payee",
             cond=Leaf("shares_cancelled", is_false, "cn.stamp.equity_rate"), uses=("cn.stamp.taxpayer_each_party",)),
     RuleObj("cn.stamp.buyer", dom(SHARE_TRANSFER), Effect.STAMP, "cn.stamp.equity_rate", before=STAMP_LAW, bearer="payer",
@@ -236,7 +315,7 @@ SPEC = [
 
     # ---- domestic flows (EIT art 3(1), art 4, art 26(2), 实施条例 第八十三条): a resident's domestic interest, royalty or fee
     #      is charged at its own rate; a dividend between residents is exempt unless on listed shares held under 12 months
-    RuleObj("cn.domestic.charge", Scope(CN, CN, (INTEREST, ROYALTY, SERVICE_FEE), side="residence"), Effect.CHARGE, "cn.eit.rate",
+    RuleObj("cn.domestic.charge", Scope(CN, CN, (INTEREST, ROYALTY, SERVICE_FEE, GOODS, RENT), side="residence"), Effect.CHARGE, "cn.eit.rate",
             cond=DOMESTIC, uses=("cn.eit.resident_worldwide", "cn.eit.rate_entity")),
     RuleObj("cn.domestic.dividend_exempt", Scope(CN, CN, DIVIDEND, side="residence"), Effect.NOCHARGE, None, cond=DOMESTIC,
             uses=("cn.domestic.dividend_exempt",)),
@@ -247,20 +326,39 @@ SPEC = [
     # ---- the Mainland as residence: worldwide income at 25% (art 3(1)); foreign tax credited within the Mainland tax on
     #      the same income (art 23), per country, five-year carry-forward; the tax a >= 20% subsidiary bore on the profits
     #      behind a dividend is credited too (art 24, five tiers)
-    RuleObj("cn.resident.charge", Scope(ALL, CN, (DIVIDEND, INTEREST, ROYALTY, SERVICE_FEE), side="residence"), Effect.CHARGE, "cn.eit.rate",
-            cond=CROSS_BORDER, uses=("cn.eit.resident_worldwide", "cn.eit.rate_entity")),
+    RuleObj("cn.resident.charge", Scope(ALL, CN, (DIVIDEND, INTEREST, ROYALTY, SERVICE_FEE, GOODS, BRANCH_PROFIT, RENT), side="residence"),
+            Effect.CHARGE, "cn.eit.rate",
+            cond=CROSS_BORDER, uses=("cn.eit.resident_worldwide", "cn.eit.rate_entity",
+                                     # decision D47: a foreign branch's profit in the year its own year ends, remitted or not; a
+                                     # loss does not reach the Mainland profit (engine.branch_flows places none)
+                                     "cn.branch.accrual", "cn.branch.tax_year", "cn.branch.loss_not_offset")),
     # a domestic share sale is charged too: the buyer gets a cost base, not a deduction, so nothing offsets it
-    RuleObj("cn.resident.gain.charge", Scope(ALL, CN, SHARE_TRANSFER, side="residence"), Effect.CHARGE, "cn.eit.rate",
+    RuleObj("cn.resident.gain.charge", Scope(ALL, CN, (SHARE_TRANSFER, PROPERTY), side="residence"), Effect.CHARGE, "cn.eit.rate",
             uses=("cn.eit.resident_worldwide", "cn.eit.rate_entity")),
+    # decision D48: a resident's gain on land or a building is the price net of the VAT less its basis and the taxes on the sale
+    # (实施条例 第三十一条: 税金 other than the income tax and the creditable VAT)
+    RuleObj("cn.property.resident.base", Scope(ALL, CN, PROPERTY, side="residence"), Effect.BASE, None,
+            uses=("cn.property.taxes_deductible", "cn.property.source")),   # the output VAT taken out inside (not NET_OF_VAT)
     RuleObj("cn.resident.gain.base", Scope(ALL, CN, SHARE_TRANSFER, side="residence"), Effect.BASE, None,
-            uses=("cn.eit.asset_net_value_deductible",)),
-    RuleObj("cn.ftc.direct", Scope(ALL, CN, (INTEREST, ROYALTY, SHARE_TRANSFER, SERVICE_FEE), side="residence"), Effect.CREDIT, None,
+            uses=("cn.eit.asset_net_value_deductible", "cn.tp.related_transfer_arms_length", "cn.tp.related_share_min")),  # decision D38, D40
+    RuleObj("cn.ftc.direct", Scope(ALL, CN, (INTEREST, ROYALTY, SHARE_TRANSFER, SERVICE_FEE, GOODS, BRANCH_PROFIT, PROPERTY, RENT), side="residence"),
+            Effect.CREDIT,
+            None,
             uses=("cn.ftc.credit", "cn.ftc.limit_per_country", "cn.ftc.carryforward_years", "cn.ftc.method_lock_years",
                   "cn.ftc.not_due_under_treaty_not_creditable")),
     # per-country limit with a five-year carry-forward, across the entity's flows and years (engine.carryforward_credit)
     RuleObj("cn.ftc.carryforward", Scope(ALL, CN, ALL, mount=Mount.ENTITY, side="residence"), Effect.CREDIT, None,
             uses=("cn.ftc.limit_per_country", "cn.ftc.carryforward_years")),
-    # foreign-source only (口径 D08): a dividend between residents is the domestic rules' business
+    # decision D51: losses, by year and by country, over the company's items (tax_graph.losses — the stage reads the company's
+    # facts and every item of the year; nothing is read per flow)
+    RuleObj("cn.loss.carryforward", LOSS_CN, Effect.DEDUCTION, "cn.loss.carryforward_years",
+            uses=("cn.loss.definition", "cn.loss.order", "cn.loss.carryforward_years_extended", "cn.loss.carryforward_years_2020",
+                  "cn.loss.covid_loss_year")),
+    RuleObj("cn.loss.foreign_offset", LOSS_CN, Effect.DEDUCTION, None,
+            uses=("cn.loss.foreign_offset_elective", "cn.loss.foreign_offset_order", "cn.loss.foreign_offset_limit")),
+    RuleObj("cn.loss.foreign_branch", LOSS_CN, Effect.DEDUCTION, None,
+            uses=("cn.loss.foreign_not_domestic", "cn.loss.foreign_branch_country", "cn.loss.branch_nonactual_unlimited")),
+    # foreign-source only (decision D08): a dividend between residents is the domestic rules' business
     RuleObj("cn.ftc.dividend", Scope(ALL, CN, (DIVIDEND, CFC_INCLUSION), side="residence"), Effect.CREDIT, None,
             cond=And(CROSS_BORDER, Leaf("direct_ratio", lt, "cn.ftc.indirect_ratio_min")),
             uses=("cn.ftc.credit", "cn.ftc.limit_per_country", "cn.ftc.income_recognition_dividend")),
@@ -270,13 +368,17 @@ SPEC = [
                   "cn.ftc.limit_per_country", "cn.ftc.income_recognition_dividend", "cn.cfc.credit")),
 
     # ---- reinvestment deferral (财税〔2018〕102号): withholding on a dividend reinvested in the Mainland is deferred
-    RuleObj("cn.reinvest.deferral", dom(DIVIDEND), Effect.DEFER, "cn.reinvest.deferral",
-            cond=And(Leaf("reinvested_in_cn", is_true),
-                     Leaf("reinvestment_form", is_in, "cn.reinvest.forms"),
-                     Leaf("direct_payment", is_true, "cn.reinvest.direct_payment"),
-                     Leaf("reinvestment_from_distributed_profit", is_true, "cn.reinvest.profit_is_distributed_retained_earnings")),
+    RuleObj("cn.reinvest.deferral", dom(DIVIDEND), Effect.DEFER, "cn.reinvest.deferral", cond=REINVEST_DEFERRAL,
             uses=("cn.reinvest.excludes_listed_shares", "cn.reinvest.recapture_days", "cn.reinvest.special_reorg_continues",
                   "cn.reinvest.fifo_disposal", "cn.reinvest.treaty_at_payment_time")),
+    # decision D46 (第六条): the investment taken back among the modelled flows — the deferred tax is paid within 7 days of the
+    # proceeds; its clock replaces the withholding one (procedure_cn.surcharge)
+    RuleObj("cn.reinvest.recapture", dom(DIVIDEND), Effect.DENY, "cn.reinvest.recapture_days",
+            cond=Leaf("reinvestment_withdrawn", is_true, "cn.reinvest.withdrawal_forms"),
+            overrides=frozenset({"cn.reinvest.deferral"}), uses=("cn.reinvest.fifo_disposal",)),
+    RuleObj("cn.reinvest.recapture.due", dom(DIVIDEND), Effect.DEADLINE, "cn.reinvest.recapture_days",
+            cond=And(REINVEST_DEFERRAL, Leaf("reinvestment_withdrawn", is_true, "cn.reinvest.withdrawal_forms")),
+            uses=("cn.time.holiday_roll", "cn.time.long_holiday_days")),
     # 2025–2028 reinvestment credit (财政部 税务总局 商务部公告2025年第2号): 10% of the reinvested amount (the treaty dividend
     # rate if lower) offsets later Mainland tax on income from the same payer; entity-level because it spans flows
     RuleObj("cn.reinvest.credit", Scope(CN, None, DIVIDEND, mount=Mount.ENTITY), Effect.CREDIT, "cn.reinvest.credit_rate",
@@ -289,7 +391,24 @@ SPEC = [
                   "cn.reinvest.credit_early_withdrawal_reduces", "cn.reinvest.credit_fx", "cn.reinvest.credit_holding_stop")),
     RuleObj("cn.gaar", dom(ALL), Effect.DENY, "cn.gaar",
             cond=Discretion("reasonable_commercial_purpose_absent", cites=("cn.law.eit#47", "cn.reg.eit#120")),
-            overrides=frozenset({"cn.reinvest.deferral", "cn.reinvest.credit"})),
+            overrides=frozenset({"cn.reinvest.deferral", "cn.reinvest.credit", "cn.reinvest.recapture.due"})),
+    # ---- decision D47: a foreign company's establishment in the Mainland (机构、场所) is taxed on its own profit at 25% (EIT art
+    #      3(2), art 4); nothing is withheld (art 37 reaches art 3(3) income only) and its passing to the head office is no income
+    RuleObj("cn.branch.charge", dom(BRANCH_PROFIT), Effect.CHARGE, "cn.eit.rate", cond=CROSS_BORDER,
+            uses=("cn.branch.own_computation", "cn.eit.rate_entity")),
+    # ---- decision D46: capitalisation of reserves (国税函〔2010〕79号 第四条). Retained earnings capitalised are a dividend on the
+    #      decision (the dividend rules apply as they stand); share premium capitalised is no dividend for the investor,
+    #      wherever it sits. The investee's books stamp on the increase in paid-in capital and capital reserve (印花税法
+    #      第五条（三）、第十一条; 财税公告2024年第14号 第一条（四）): retained earnings moved into capital raise it, share
+    #      premium moved into share capital leaves the total unchanged
+    RuleObj("cn.capitalisation.share_premium", dom(DIVIDEND), Effect.EXEMPT, None, cond=SHARE_PREMIUM,
+            uses=("cn.capitalisation.share_premium_not_income", "cn.capitalisation.share_premium_no_basis",
+                  "cn.capitalisation.dividend_on_decision", "cn.capitalisation.basis_paid_in")),
+    RuleObj("cn.capitalisation.share_premium.resident", Scope(ALL, CN, DIVIDEND, side="residence"), Effect.EXEMPT, None, cond=SHARE_PREMIUM,
+            uses=("cn.capitalisation.share_premium_not_income", "cn.capitalisation.share_premium_no_basis")),
+    RuleObj("cn.stamp.books", dom(DIVIDEND), Effect.STAMP, "cn.stamp.books_rate", before=STAMP_LAW, bearer="payer",
+            cond=And(CAPITALISED, Leaf("capitalised_from", is_in, "cn.stamp.books_increase_sources")),
+            uses=("cn.stamp.books_base", "cn.stamp.books_increase_only")),
 
     # ---- Arrangement with Hong Kong
     RuleObj("cn-hk.div.cap_qualified@cn", to(HK, DIVIDEND), Effect.RATE_CAP, "cn-hk.div.cap_qualified",
@@ -323,8 +442,44 @@ SPEC = [
     RuleObj("cn-sg.ppt@cn", to(SG, ALL), Effect.DENY, "cn-sg.ppt",
             cond=Discretion("ppt", cites=("treaty.cn-sg.2007.mli.zh#27",)), overrides=frozenset(SG_TREATY)),
 
-    # ---- share transfers: the charge above applies to the gain, not the proceeds
-    RuleObj("cn.gain.base", dom(SHARE_TRANSFER), Effect.BASE, None, uses=("cn.wht.base_gain",)),
+    # ---- decision D42: a sale of goods. The Mainland seller (charged above, at home or abroad) on its profit — the price, at
+    #      least the arm's-length price from a related buyer (decision D41), less the cost of the goods (实施条例 第十四条、
+    #      第二十九条). A non-resident seller only on Mainland-source profits, which arise where the transaction takes place
+    #      (第七条): through an establishment here a judgement, at 25% (EIT art 3(2)); without one, its sales into the
+    #      Mainland are made abroad — no charge (art 3(3))
+    RuleObj("cn.goods.base", Scope(ALL, CN, GOODS, side="residence"), Effect.BASE, None,
+            uses=("cn.goods.income", "cn.goods.cost", "cn.tp.income_arms_length", "cn.tp.adjust_to_median", "cn.tp.related_share_min")),
+    RuleObj("cn.goods.nonresident", dom(GOODS), Effect.CHARGE, "cn.eit.rate",
+            cond=And(CROSS_BORDER, Leaf("fixed_place_in_cn", is_true, on="payee"),
+                     Discretion("goods_sale_sourced_in_cn", cites=("cn.reg.eit#7",))),
+            uses=("cn.goods.source", "cn.goods.nonresident_scope", "cn.eit.rate_entity")),
+    RuleObj("cn.goods.nonresident.base", dom(GOODS), Effect.BASE, None, cond=CROSS_BORDER, uses=("cn.goods.cost",)),
+    RuleObj("cn.nocharge.goods_nonresident", dom(GOODS), Effect.NOCHARGE, None,
+            cond=And(CROSS_BORDER, Leaf("fixed_place_in_cn", is_false, on="payee")),
+            uses=("cn.goods.source", "cn.goods.nonresident_scope")),
+
+    # ---- decision D43: goods crossing the Mainland's border. An export is zero-rated, the input VAT refunded at the refund
+    #      rate and the difference a cost of the seller (公告2026年第11号); export duty where the tariff lists the goods,
+    #      paid by the consignor. An import: duty on the duty value and import VAT on it plus the duty, paid by the
+    #      consignee — the buyer (关税法 第三条) — which credits the VAT as a general taxpayer (增值税法 第十六条)
+    RuleObj("cn.vat.export.goods", Scope(ALL, CN, GOODS, side="residence"), Effect.VAT, "cn.vat.law.export_zero", before=VAT_LAW,
+            bearer="payee", cond=Leaf("goods_exported_from_cn", is_true),
+            uses=("cn.vat.law.rate_goods", "cn.vat.export.refund_rate_default", "cn.vat.export.non_refundable",
+                  "cn.vat.export.fob_basis", "cn.vat.export.trader_basis")),
+    RuleObj("cn.customs.export", Scope(ALL, CN, GOODS, side="residence"), Effect.CUSTOMS, None, before=TARIFF_LAW, bearer="payee",
+            cond=Leaf("goods_exported_from_cn", is_true), uses=("cn.tariff.taxpayer", "cn.tariff.ad_valorem")),
+    RuleObj("cn.customs.import", dom(GOODS), Effect.CUSTOMS, None, before=TARIFF_LAW, bearer="payer",
+            cond=Leaf("goods_imported_into_cn", is_true), uses=("cn.tariff.taxpayer", "cn.tariff.ad_valorem", "cn.tariff.value",
+                                                                "cn.tariff.related")),
+    RuleObj("cn.vat.import.goods", dom(GOODS), Effect.VAT, "cn.vat.law.rate_goods", before=VAT_LAW, bearer="payer",
+            cond=Leaf("goods_imported_into_cn", is_true), uses=("cn.vat.law.import", "cn.vat.law.rate_goods_reduced", "cn.tariff.value")),
+    RuleObj("cn.vat.import.goods.credit", dom(GOODS), Effect.VAT, "cn.vat.law.rate_goods", before=VAT_LAW, bearer="payer",
+            cond=And(Leaf("goods_imported_into_cn", is_true), Leaf("vat_general_taxpayer", is_true, "cn.vat.law.input_tax", on="payer"))),
+
+    # ---- share transfers: the charge above applies to the gain, not the proceeds (a non-resident's base, art 19(2); a
+    #      resident's gain has cn.resident.gain.base — both on one item would take the gain share twice; decision D32)
+    RuleObj("cn.gain.base", dom((SHARE_TRANSFER, PROPERTY)), Effect.BASE, None, cond=CROSS_BORDER,
+            uses=("cn.wht.base_gain", "cn.tp.related_transfer_arms_length", "cn.tp.related_share_min")),  # decision D38, D40
     RuleObj("cn-hk.gain.residence_only@cn", to(HK, SHARE_TRANSFER), Effect.EXEMPT, None,
             cond=GAIN_RESIDENCE_ONLY("cn-hk.gain.immovable_ratio_over", "cn-hk.gain.share_ratio_min"),
             uses=("cn-hk.gain.immovable_lookback", "cn-hk.gain.share_lookback")),
@@ -344,24 +499,32 @@ SPEC = [
                             Leaf("limited_functions_and_risks", is_true),
                             Leaf("foreign_tax_lower_than_cn", is_true)),
                         Discretion("no_reasonable_commercial_purpose", cites=("cn.sta.2015-07#i3",)))))),
-    RuleObj("cn.indirect.gain.base", INDIRECT, Effect.BASE, None),
+    RuleObj("cn.indirect.gain.base", INDIRECT, Effect.BASE, None,           # a non-resident's (7号 第一条; decision D32): a
+            cond=Leaf("payee_resident_in_cn", is_false, on="payee"),        # resident's gain has cn.resident.gain.base
+            uses=("cn.tp.related_transfer_arms_length", "cn.tp.related_share_min")),   # decision D38, D40
     RuleObj("cn.indirect.listed_safe_harbour", INDIRECT, Effect.EXEMPT, None,
             cond=Leaf("listed_market_trade", is_true, "cn.indirect.listed_safe_harbour")),
-    # ---- the restructuring step (口径 D18): 财税〔2009〕59号 §5 (all five conditions), §7(1) a non-resident's transfer to
+    # ---- the restructuring step (decision D18): 财税〔2009〕59号 §5 (all five conditions), §7(1) a non-resident's transfer to
     #      the non-resident it holds wholly — deferred; §7(3), §8 a resident's investment in the non-resident it holds
-    #      wholly — the gain spread over ten tax years; 109号 §1 (50%); 公告2013年第72号 §2 (filing), §8 (dividends)
+    #      wholly — the gain spread over ten tax years; 109号 §1 (50%); 公告2013年第72号 §2 (filing), §8 (dividends);
+    #      decision D35: §7(2) a non-resident's transfer to the resident it holds wholly — deferred, with neither §7(1)'s
+    #      withholding-burden test nor its 3-year commitment (72号 §5 and §8 name §7(1) only)
     RuleObj("cn.reorg.special", dom(SHARE_TRANSFER), Effect.DEFER, None,
             cond=And(REORG_COMMON, Leaf("payee_resident_in_cn", is_false, on="payee"), Leaf("reorg_buyer_resident_in_cn", is_false),
                      Or(Leaf("reorg_same_residence", is_true),
                         Discretion("reorg_wht_burden_unchanged", cites=("cn.cs.2009-59#i7",))),
                      Leaf("reorg_commitment_3y", is_true, "cn.reorg.commitment_years")),
             uses=("cn.reorg.control_ratio", "cn.reorg.filing_days")),
+    RuleObj("cn.reorg.special_inbound", dom(SHARE_TRANSFER), Effect.DEFER, None,
+            cond=And(REORG_COMMON, Leaf("payee_resident_in_cn", is_false, on="payee"), Leaf("reorg_buyer_resident_in_cn", is_true)),
+            uses=("cn.reorg.control_ratio", "cn.reorg.filing_days")),
     RuleObj("cn.reorg.special_resident", Scope(ALL, CN, SHARE_TRANSFER, side="residence"), Effect.BASE, None,
             cond=And(REORG_COMMON, Leaf("payee_resident_in_cn", is_true, on="payee"), Leaf("reorg_buyer_resident_in_cn", is_false)),
             overrides=frozenset({"cn.resident.gain.base"}),      # the gain share is taken inside, spread over the years
             uses=("cn.reorg.resident_spread_years", "cn.reorg.control_ratio")),
     RuleObj("cn.reorg.treaty_dividend_denied", dom(DIVIDEND), Effect.DENY, "cn.reorg.dividend_treaty_denied",
-            cond=And(Leaf("reorg_special_applied", is_true), Leaf("reorg_same_residence", is_false),
+            cond=And(Leaf("payee_resident_in_cn", is_false, on="payee"),       # §7(1)'s transferee (decision D35)
+                     Leaf("reorg_special_applied", is_true), Leaf("reorg_same_residence", is_false),
                      Leaf("dividend_from_pre_reorg_profits", is_true)),
             overrides=frozenset({"cn-hk.div.cap_qualified@cn", "cn-hk.div.cap_other@cn", "cn-sg.div.cap_qualified@cn",
                                  "cn-sg.div.cap_other@cn"})),
@@ -373,15 +536,15 @@ SPEC = [
     # ---- the payer's deduction: interest within the related-party debt-equity limit (or at arm's length), royalties
     #      if reasonable; both are judgements beyond the stated ratio, so grade D
     RuleObj("cn.deduct.interest", dom(INTEREST), Effect.DEDUCTION, "cn.eit.rate",
-            cond=Or(Leaf("payee_is_related", is_false, on="payee"),
+            cond=Or(Leaf("cn_related", is_false),
                     Leaf("related_party_debt_equity_ratio", le, "cn.thincap.ratio_other", on="payer"),
                     Discretion("arms_length_interest", cites=("cn.cs.2008-121#i2",), on="payer")),
             uses=("cn.deduct.general", "cn.thincap.disallow", "cn.thincap.ratio_financial", "cn.thincap.arms_length_exception",
-                  "cn.eit.rate_entity")),
+                  "cn.eit.rate_entity", "cn.tp.related_share_min")),
     # 实施条例 第三十八条: interest from a non-financial lender is deductible only up to the financial-enterprise rate
     RuleObj("cn.deduct.interest.benchmark", dom(INTEREST), Effect.DEDUCT_BASE, None,
             uses=("cn.deduct.interest_benchmark",)),
-    # a stated arm's-length ceiling caps the deductible royalty / fee / interest (国税发〔2009〕2号 第四十一条: adjustment to the median)
+    # a stated arm's-length ceiling caps the deductible royalty / fee / interest (公告2017年第6号 第二十五条: adjustment to the median)
     *[RuleObj("cn.tp.deduction_cap", dom((INTEREST, ROYALTY, SERVICE_FEE)), Effect.DEDUCT_BASE, None, cond=CROSS_BORDER,
               uses=("cn.tp.adjust_to_median", "cn.tp.domestic_same_burden_no_adjustment"))],
     RuleObj("cn.deduct.royalty", dom(ROYALTY), Effect.DEDUCTION, "cn.eit.rate",

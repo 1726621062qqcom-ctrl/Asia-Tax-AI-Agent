@@ -1,0 +1,68 @@
+\documentclass{tumbook}
+
+
+\usepackage{lipsum}
+\usepackage{booktabs}
+\usepackage{esint}
+\usepackage{cleveref}
+
+
+\title{On the Viscosity of Pudding}
+\subtitle{A \LaTeX\ class for pretty Theses, Lecture Notes, and Books}
+\edition{Fourth Edition}
+
+\publishers{Springer Spektrum}
+\uppertitleback{This is the \texttt{uppertitleback},\\
+  usually used for author information.}
+\lowertitleback{This is the \texttt{lowertitleback}.\\
+  It usually contains ISBN, ISSN, and other publisher information.}
+
+\dedication{To Franz X. Gabelsberger, inventor of the street named after him.}
+
+
+\begin{document}
+
+\frontmatter
+\maketitle
+
+\chapter{Preface}
+ {\color{TUMOrange}This is the default version of the \emph{tumbook} class.
+  It contains a \emph{coverpage} with title, subtitle, edition, and author.
+  The default cover image is the TUM clock tower. The coverpage uses the TUM
+  titlepage layout.\par
+  The following \emph{titlepage} contains the title information plus publisher
+  (if provided). On a twosided layout, the backside of the titlepage contains
+  the uppertitleback and lowertitileback. The next page contains the
+  \emph{dedication}.\par
+  After the \emph{preface} the \emph{table of contents},
+  \emph{list of figures}, and \emph{list of tables} follow.
+  The page numbering of the entire \emph{frontmatter} is printed as
+  lowercase Roman numerals.\par
+  The \emph{mainmatter} contains an example document with multiple chapters,
+  sections, and subsections. The page numbering is printed in Arabic numbers
+  always at the outer margin of the page.
+ }
+
+\lipsum[1-4]
+\cleardoublepage
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\mainmatter
+\chapter{The beginning of the book}
+\input{content/chapter1.tex}
+
+\chapter{Mathematical Foundations}
+\input{content/chapter2.tex}
+
+\appendix
+\chapter{Appendix}
+\input{content/chapter3.tex}
+
+\backmatter
+\bibliographystyle{IEEEtran}
+\bibliography{content/literature}
+
+\end{document}

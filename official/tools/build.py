@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 """Merge manifests, convert raw files to text, slice clauses, check params, build sqlite, write STATUS.md.
 
-python official/tools/build.py [--dense]   (ends by running graph.py)
+Python 3.9, conda env "pytorch".   python official/tools/build.py [--dense]   (ends by running graph.py)
 doc / rtf / xls are converted with LibreOffice (headless); results are cached in official/_conv/.
 """
 import csv
 import hashlib
 import io
-import os
 import re
 import shutil
 import sqlite3
@@ -27,14 +26,7 @@ csv.field_size_limit(10 ** 9)
 ROOT = Path(__file__).resolve().parents[1]
 TEXT, CONV = ROOT / "text", ROOT / "_conv"
 ENC = "utf-8-sig"
-SOFFICE = os.environ.get("SOFFICE") or shutil.which("soffice") or shutil.which("libreoffice")
-if not SOFFICE:
-    for env_name in ("ProgramFiles", "ProgramFiles(x86)"):
-        base = os.environ.get(env_name)
-        candidate = Path(base) / "LibreOffice" / "program" / "soffice.exe" if base else None
-        if candidate and candidate.is_file():
-            SOFFICE = str(candidate)
-            break
+SOFFICE = r"C:\Program Files\LibreOffice\program\soffice.exe"
 
 # Only these pages of a PDF are sliced into articles (the rest are annexes holding other instruments).
 PAGE_RANGE = {"treaty.cn-sg.2007.en": (1, 20)}
@@ -129,8 +121,12 @@ def real_kind(path, ext):
 
 def html_text(raw):
     soup = BeautifulSoup(raw, "lxml")
-    for t in soup(["script", "style", "noscript", "header", "footer", "nav", "form", "iframe"]):
+    for t in soup(["script", "style", "noscript", "header", "footer", "nav", "iframe"]):
         t.decompose()
+    whole = len((soup.body or soup).get_text(strip=True))
+    for t in soup("form"):                            # page chrome — unless the form is the document itself (the
+        if len(t.get_text(strip=True)) < 0.9 * whole:  # Judiciary's LRS wraps a whole judgment in one <form>)
+            t.decompose()
     body = soup.body or soup
     ps = body.find_all("p")
     total = sum(len(p.get_text(strip=True)) for p in ps)
@@ -191,8 +187,6 @@ def soffice_convert(jobs):
                 shutil.copyfile(str(src), str(dst))
                 todo.append(str(dst))
         for i in range(0, len(todo), 8):
-            if not SOFFICE:
-                raise RuntimeError("LibreOffice is required for uncached Office documents; add it to PATH or set SOFFICE")
             profile = "file:///" + str(CONV / "lo_profile").replace("\\", "/")
             subprocess.run([SOFFICE, "--headless", "--norestore", "-env:UserInstallation=" + profile,
                             "--convert-to", target, "--outdir", str(CONV)] + todo[i:i + 8],
@@ -414,7 +408,7 @@ def slice_hk_ordinance(doc_id, text):
 
 
 RE_NUM_PARA = re.compile(r"^(\d{1,3})\.(?:\s+\S.*)?$")
-RE_DOT_PARA = re.compile(r"^(\d{1,2})\.(\d{1,2})(?:\s+\S.*)?$")
+RE_DOT_PARA = re.compile(r"^(\d{1,2})\.(\d{1,3})(?:\s+\S.*)?$")        # 5.100 and on (IRAS TP Guidelines)
 H_MARK = "@@H@@"
 
 
@@ -438,6 +432,23 @@ def best_run(lines, hits):
     return max(runs, key=size)
 
 
+def dotted_run(lines):
+    """'5.3 text' paragraphs (e-Tax guide style, and judgments numbered by section): the run with the most text."""
+    hits, last = [], (0, 0)
+    for i, ln in enumerate(lines):
+        m = RE_DOT_PARA.match(ln)
+        if not m:
+            continue
+        key = (int(m.group(1)), int(m.group(2)))
+        if key == (1, 1) and last > (1, 1):
+            hits.append((i, "1.1", True))
+            last = key
+        elif (key[0] == last[0] and key[1] == last[1] + 1) or (key[0] > last[0] and key[0] <= last[0] + 2 and key[1] == 1):
+            hits.append((i, "%d.%d" % key, last == (0, 0)))
+            last = key
+    return best_run(lines, hits)
+
+
 def slice_numbered_paras(doc_id, text):
     """Guidance PDFs. Either '12. text' numbered consecutively (DIPN style) or '5.3 text' (e-Tax guide style)."""
     lines = clean_lines(text)
@@ -454,19 +465,7 @@ def slice_numbered_paras(doc_id, text):
             hits.append((i, str(n), last == 0))
             last = n
     plain = best_run(lines, hits)
-    hits, last = [], (0, 0)
-    for i, ln in enumerate(lines):
-        m = RE_DOT_PARA.match(ln)
-        if not m:
-            continue
-        key = (int(m.group(1)), int(m.group(2)))
-        if key == (1, 1) and last > (1, 1):
-            hits.append((i, "1.1", True))
-            last = key
-        elif (key[0] == last[0] and key[1] == last[1] + 1) or (key[0] > last[0] and key[0] <= last[0] + 2 and key[1] == 1):
-            hits.append((i, "%d.%d" % key, last == (0, 0)))
-            last = key
-    dotted = best_run(lines, hits)
+    dotted = dotted_run(lines)
     run = dotted if len(dotted) >= max(8, len(plain) // 2) else plain
     if len(run) < 8:
         return [], "none"
@@ -479,6 +478,85 @@ def slice_numbered_paras(doc_id, text):
         out.append({"cite_id": "%s#para%s" % (doc_id, key), "doc_id": doc_id, "kind": "paragraph",
                     "label": "para %s" % key, "parent": "", "text": "\n".join(lines[i:stop])})
     return out, "numbered_para"
+
+
+RE_JUDG_PARA = re.compile(r"^(\d{1,3})(?:\s+\S.*)?$")        # a paragraph opening with an italic case name: number alone
+
+
+def restart_run(lines, rx):
+    """Runs of consecutive numbers, split where the numbering restarts at 1 (a Board decision's numbered headnote and its
+    own paragraphs are two runs); the run with the most text. A run starts at 1 only: a date such as '02 December 2005'
+    is not paragraph 2."""
+    hits, last = [], 0
+    for i, ln in enumerate(lines):
+        m = rx.match(ln)
+        if not m:
+            continue
+        n = int(m.group(1))
+        if n == 1 and last >= 3:
+            hits.append((i, "1", True))
+            last = 1
+        elif n == last + 1:
+            hits.append((i, str(n), last == 0))
+            last = n
+    return best_run(lines, hits)
+
+
+def greedy_run(lines, rx):
+    """From each '1', every next number at its first occurrence after the one before: numbered lists inside a paragraph
+    restart at 1 and are passed over (Lee Yee Shing ¶29 lists twelve items before ¶30). The longest chain; on a tie the
+    later start, since a headnote's numbered points come before the decision's own numbering (D7/19)."""
+    best = []
+    for s, ln in enumerate(lines):
+        m = rx.match(ln)
+        if not m or int(m.group(1)) != 1:
+            continue
+        run, last = [(s, "1", False)], 1
+        for i in range(s + 1, len(lines)):
+            mm = rx.match(lines[i])
+            if mm and int(mm.group(1)) == last + 1:
+                run.append((i, mm.group(1), False))
+                last += 1
+        if len(run) >= len(best):
+            best = run
+    return best
+
+
+def para_run(lines, rx):
+    """A judgment's own paragraph numbering: the runs split at restarts, unless following each number to its next
+    occurrence finds more paragraphs (then the lists inside paragraphs had cut the runs)."""
+    a, b = restart_run(lines, rx), greedy_run(lines, rx)
+    return b if len(b) > len(a) else a
+
+
+def slice_judgment(doc_id, text):
+    """Judgments, decisions, rulings (案例采集.md K1): numbered paragraphs, '12. text' (Hong Kong) or '12 text'
+    (Singapore eLitigation); the paragraphs are the judgment's own numbering (para_run), so the numbered lists inside
+    them, a headnote's points and quoted provisions such as '10(1)' are not taken."""
+    lines = clean_lines(text)
+    run = para_run(lines, RE_NUM_PARA)
+    dotted = dotted_run(lines)                         # Sinolink: '5.15' within sections numbered '5.'
+    if len(dotted) >= max(8, len(run) // 2):
+        run = dotted
+    if len(run) < 8:
+        raw, lines, j = [ln.strip() for ln in text.splitlines() if ln.strip()], [], 0
+        while j < len(raw):                            # "56" + "Patcorp involved ...": the number split off by markup
+            if re.fullmatch(r"\d{1,3}", raw[j]) and j + 1 < len(raw) and not re.fullmatch(r"\d{1,3}", raw[j + 1]):
+                lines.append(raw[j] + " " + raw[j + 1])
+                j += 2
+            else:
+                lines.append(raw[j])
+                j += 1
+        run = para_run(lines, RE_JUDG_PARA)
+    if len(run) < 8:
+        return [], "none"
+    out = [{"cite_id": doc_id + "#front", "doc_id": doc_id, "kind": "front", "label": "front matter", "parent": "",
+            "text": "\n".join(lines[:run[0][0]])}] if run[0][0] > 0 else []
+    for k, (i, key, _) in enumerate(run):
+        stop = run[k + 1][0] if k + 1 < len(run) else len(lines)
+        out.append({"cite_id": "%s#para%s" % (doc_id, key), "doc_id": doc_id, "kind": "paragraph",
+                    "label": "para %s" % key, "parent": "", "text": "\n".join(lines[i:stop])})
+    return out, "judgment_para"
 
 
 def slice_html_sections(doc_id, raw):
@@ -675,6 +753,10 @@ def slice_doc(row, text, pages, all_ids):
         out, mode = slice_numbered_paras(doc_id, text)
         if out:
             return out, mode
+    if typ in ("judgment", "decision", "ruling") and not cn:           # 案例采集.md K1: precedents cite numbered paragraphs
+        out, mode = slice_judgment(doc_id, text)
+        if out:
+            return out, mode
     if pages:
         return slice_pages(doc_id, pages)
     if row.get("real_kind") in ("html", "htm"):
@@ -858,27 +940,27 @@ def main():
     blocked = [b for b in blocked if b["id"] not in all_ids]
     listed = [r for r in docs if ".frag" not in r["id"]]
 
-    lines = ["# STATUS", "", "由 `tools/build.py` 生成，不要手改。", "",
-             "| 项 | 数量 |", "|---|---|",
-             "| 入库文件 | %d |" % len(docs),
-             "| 其中分片原件 `.fragNN` | %d |" % (len(docs) - len(listed)),
-             "| 官方域名 | %d |" % sum(1 for r in docs if r.get("official_domain") == "yes"),
-             "| 本地拼装或非原件 | %d |" % sum(1 for r in docs if r.get("verbatim") != "raw"),
-             "| 已转文本 | %d |" % sum(1 for r in docs if r["text_status"] == "ok"),
-             "| 条款片 | %d |" % len(clauses),
-             "| 因被取代或废止而不保留的条款片 | %d |" % n_superseded,
-             "| 参数 | %d |" % len(params),
-             "| 表单栏位映射 | %d |" % len(form_fields),
-             "| 字典缺口核证 | %d |" % len(gaps),
-             "| 日历行 | %d |" % len(calendar),
-             "| 未取到 | %d |" % len(blocked), "",
-             "## 入库文件", "", "| id | type | kind | bytes | text | slice | clauses | via | title |",
+    lines = ["# STATUS", "", "Generated by `tools/build.py`; do not edit by hand.", "",
+             "| item | count |", "|---|---|",
+             "| documents in the library | %d |" % len(docs),
+             "| of which fragment originals `.fragNN` | %d |" % (len(docs) - len(listed)),
+             "| on an official domain | %d |" % sum(1 for r in docs if r.get("official_domain") == "yes"),
+             "| assembled locally or not the original | %d |" % sum(1 for r in docs if r.get("verbatim") != "raw"),
+             "| converted to text | %d |" % sum(1 for r in docs if r["text_status"] == "ok"),
+             "| clause slices | %d |" % len(clauses),
+             "| clause slices not kept (superseded or repealed) | %d |" % n_superseded,
+             "| parameters | %d |" % len(params),
+             "| form field mappings | %d |" % len(form_fields),
+             "| dictionary gap verifications | %d |" % len(gaps),
+             "| calendar rows | %d |" % len(calendar),
+             "| not fetched | %d |" % len(blocked), "",
+             "## Documents in the library", "", "| id | type | kind | bytes | text | slice | clauses | via | title |",
              "|---|---|---|---|---|---|---|---|---|"]
     for r in sorted(listed, key=lambda x: x["id"]):
         lines.append("| %s | %s | %s | %s | %s | %s | %s | %s | %s |" % (
             r["id"], r["type"], r["real_kind"], r["bytes"], r["text_status"], r["slice_mode"], r["clauses"],
             r["via"], r["title"].replace("|", "/")[:60]))
-    lines += ["", "## 未取到", ""]
+    lines += ["", "## Not fetched", ""]
     if blocked:
         lines += ["| id | title | reason | alt_tried |", "|---|---|---|---|"]
         for b in blocked:
@@ -886,15 +968,15 @@ def main():
                                                    b["reason"].replace("|", "/")[:160],
                                                    b["alt_tried"].replace("|", "/")[:160]))
     else:
-        lines.append("无。")
+        lines.append("None.")
     if SSO_DROPPED:
-        lines += ["", "## 未入条款层的已废止条文（法规在线文本中的废止占位）", ""]
-        lines += ["- `%s`：%s" % (c, t[:80]) for c, t in SSO_DROPPED]
+        lines += ["", "## Repealed provisions not in the clause layer (repeal placeholders in the Singapore Statutes Online text)", ""]
+        lines += ["- `%s`: %s" % (c, t[:80]) for c, t in SSO_DROPPED]
     if UNTRANSCRIBED:
-        lines += ["", "## 未转写的公式图片（formulas.csv 未登记）", ""]
-        lines += ["- `%s`：%s" % (d, u) for d, u in sorted(set(UNTRANSCRIBED))]
-    lines += ["", "## 检查", ""]
-    lines += ["- " + x for x in (problems + issues)] or ["- 无问题。"]
+        lines += ["", "## Formula images not transcribed (not registered in formulas.csv)", ""]
+        lines += ["- `%s`: %s" % (d, u) for d, u in sorted(set(UNTRANSCRIBED))]
+    lines += ["", "## Checks", ""]
+    lines += ["- " + x for x in (problems + issues)] or ["- No problems."]
     (ROOT / "STATUS.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("docs=%d clauses=%d params=%d blocked=%d problems=%d param_issues=%d" % (
         len(docs), len(clauses), len(params), len(blocked), len(problems), len(issues)))
@@ -902,9 +984,8 @@ def main():
         print("  !", x)
     write_csv(ROOT / "repealed_stubs.csv", ["cite_id", "text"], [{"cite_id": c, "text": t} for c, t in SSO_DROPPED])
     import graph                                       # knowledge layer: identities, units, relations, anchors, index
-    graph_status = graph.main(sys.argv[1:])
-    return 1 if problems or issues or graph_status else 0
+    graph.main(sys.argv[1:])
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()

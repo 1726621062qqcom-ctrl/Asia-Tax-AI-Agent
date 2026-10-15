@@ -9,14 +9,23 @@
              tax certainty scheme (Sch 17K)
 Structure only; every number is a param_id.
 """
-from .model import (ALL, ALWAYS, And, Discretion, Effect, Leaf, Not, Or, RuleObj, Scope, ge, gt, is_false, is_in, is_true, le)
+from .model import (ALL, ALWAYS, And, Discretion, Effect, Leaf, Mount, Not, Or, RuleObj, Scope, ge, gt, is_false, is_in, is_true, le)
 
 HK, CN, SG = "HK", "CN", "SG"
 DIVIDEND, INTEREST, ROYALTY, SHARE_TRANSFER = "DIVIDEND", "INTEREST", "ROYALTY", "SHARE_TRANSFER"
 SERVICE_FEE = "SERVICE_FEE"
 IP_TRANSFER = "IP_TRANSFER"
-FSIE_INCOME = (DIVIDEND, INTEREST, ROYALTY, SHARE_TRANSFER)        # s15H "specified foreign-sourced income"
+GOODS = "GOODS"                                                 # decision D42
+BRANCH_PROFIT = "BRANCH_PROFIT"                                 # decision D47
+PROPERTY = "PROPERTY_TRANSFER"                                  # decision D48
+RENT = "PROPERTY_RENT"                                          # decision D49
+FSIE_INCOME = (DIVIDEND, INTEREST, ROYALTY, SHARE_TRANSFER, "PROPERTY_TRANSFER")   # s15H "specified foreign-sourced income"
+# (a property's gain abroad is a non-IP disposal gain, accrued and received on or after 2024-01-01: Sch 56 s2(1); decision D48)
 NON_RESIDENT = Leaf("payee_in_source_jur", is_false, on="payee")
+HK_RENT_BUSINESS = Or(Leaf("payee_in_source_jur", is_true, on="payee"),            # decision D49: rent part of a business here
+                      Discretion("rent_from_business_in_hk", cites=("hk.cap112.en#s14",)))
+HK_AVD = tuple("hk.stamp.avd_%s" % k for k in ("flat", "flat_limit", "first_marginal", "rate_1", "rate_2", "rate_3", "rate_4", "rate_5",
+                                               "limit_1", "limit_2", "limit_3", "limit_4", "limit_5", "marginal", "top_marginal"))   # decision D48
 
 
 def out(income, residence=None):
@@ -27,6 +36,13 @@ def inbound(income):
     return Scope(ALL, HK, income, side="residence")
 
 
+# decision D42 (DIPN 21 ¶23): a trader's contracts of purchase and sale effected in Hong Kong — both: taxed; one: presumed so,
+# all the operations decide (a judgement); neither: not
+TRADING_IN_HK = Or(And(Leaf("purchase_effected_in_hk", is_true, "hk.goods.both_in_hk"),
+                       Leaf("sale_effected_in_hk", is_true, "hk.goods.both_in_hk")),
+                   And(Or(Leaf("purchase_effected_in_hk", is_true, "hk.goods.one_in_hk"),
+                          Leaf("sale_effected_in_hk", is_true, "hk.goods.one_in_hk")),
+                       Discretion("trading_profits_sourced_in_hk", cites=("hk.dipn.21#para23", "hk.cap112.en#s14"))))
 SUBSTANCE = Or(Leaf("substance_ruled_adequate", is_true, on="payee"),          # an advance ruling binds (s88A, Sch 10)
                Discretion("adequate_substance", cites=("hk.cap112.en#s15K",)))
 SUBSTANCE_COND = Or(And(Leaf("pure_equity_holding", is_true, "hk.fsie.substance_pure_holding", on="payee"),
@@ -35,9 +51,10 @@ SUBSTANCE_COND = Or(And(Leaf("pure_equity_holding", is_true, "hk.fsie.substance_
 PARTICIPATION_COND = And(
     Leaf("hk_resident_or_pe", is_true, "hk.fsie.participation_resident_or_pe", on="payee"),
     Leaf("ratio", ge, "hk.fsie.participation_ratio_min"),
-    Leaf("holding_months", ge, "hk.fsie.participation_months_min"),
+    Leaf("hk_holding_months", ge, "hk.fsie.participation_months_min"),       # decision D44: the seller's date after relief
     Or(Leaf("foreign_taxed", is_true, "hk.fsie.participation_subject_to_tax"),
-       Leaf("underlying_profits_taxed", is_true, "hk.fsie.participation_headline_rate_basis")),
+       Leaf("underlying_profits_taxed", is_true, "hk.fsie.participation_headline_rate_basis"),
+       Leaf("subject_income_taxed_abroad", is_true, "hk.fsie.intragroup_subject_to_tax")),   # decision D44: Example 38
     Leaf("foreign_headline_rate", ge, "hk.fsie.reference_rate"),
     Leaf("deductible_at_payer", is_false, "hk.fsie.participation_anti_hybrid"),
     Discretion("no_main_purpose_of_tax_benefit", cites=("hk.cap112.en#s15N",)))
@@ -70,6 +87,8 @@ SPEC = [
             cond=And(Leaf("payee_in_source_jur", is_false, on="payee"), Or(Leaf("ip_used_in_hk", is_true, "hk.royalty.deemed_use_in_hk"),
                             Leaf("royalty_deductible_in_hk", is_true, "hk.royalty.deemed_use_outside_hk_deductible"))),
             uses=("hk.royalty.payer_chargeable", "hk.royalty.payer_must_deduct", "hk.royalty.deemed_film_use_in_hk")),
+    # decision D32, D33. s21A computes the profit of a sum s15(1)(b) deems — only sums "not otherwise chargeable": a Hong Kong
+    # company's royalty charged under s14 (hk.domestic.charge, which overrides these) is taxed on its profit instead
     RuleObj("hk.royalty.deemed_profit", out(ROYALTY), Effect.BASE, "hk.royalty.deemed_profit"),
     RuleObj("hk.royalty.deemed_profit_associate", out(ROYALTY), Effect.BASE, "hk.royalty.deemed_profit_associate",
             cond=And(Leaf("payee_is_associate", is_true, on="payee"),
@@ -84,8 +103,8 @@ SPEC = [
     # ---- stamp duty on a transfer of Hong Kong stock: every person effecting the sale or purchase makes a contract note
     #      (s19(1)), each stamped at 0.1% of the consideration (First Schedule head 2(1)); a levy, not income tax
     # SDO s45: no duty between associated bodies corporate (90%) when the Collector is shown the relief's conditions —
-    #   claimed, the consideration from within the association, no ceasing to be associated within 2 years (口径 D18)
-    #      (shares a liquidation or capital reduction cancels are neither sold nor transferred: no note, 口径 D19)
+    #   claimed, the consideration from within the association, no ceasing to be associated within 2 years (decision D18)
+    #      (shares a liquidation or capital reduction cancels are neither sold nor transferred: no note, decision D19)
     RuleObj("hk.stamp.seller", out(SHARE_TRANSFER), Effect.STAMP, "hk.stamp.stock_rate", bearer="payee",
             cond=And(Leaf("shares_cancelled", is_false, "hk.stamp.contract_note_each_party"), Not(HK_S45)),
             uses=("hk.stamp.contract_note_each_party",)),
@@ -111,9 +130,18 @@ SPEC = [
             uses=("hk.tp.arms_length",)),
     # s58C: a group entity above any two of the Schedule 17I thresholds keeps master and local files, 9 months after year end
     RuleObj("hk.tp.local_file", out((INTEREST, ROYALTY, SERVICE_FEE)), Effect.DEADLINE, "hk.tp.local_file_months",
-            cond=And(Leaf("payee_is_related", is_true, on="payee"), Leaf("is_mne_member", is_true, on="payer"),
+            cond=And(Leaf("hk_associated", is_true), Leaf("is_mne_member", is_true, on="payer"),
                      Leaf("hk_tp_small_entity", is_false, "hk.tp.threshold_revenue", on="payer")),
-            uses=("hk.tp.threshold_assets", "hk.tp.threshold_employees")),
+            uses=("hk.tp.threshold_assets", "hk.tp.threshold_employees", "hk.tp.participation", "hk.tp.control_more_than_half")),
+    # ---- decision D41: a payer meeting the participation condition (s50AAG) pays interest, a royalty or a fee below its
+    #      arm's-length amount — the Hong Kong payee's income is computed at that amount (s50AAF(1)): none inside the
+    #      arm's-length range, else normally to the median (DIPN 59 ¶121-122); a Hong Kong payer's corresponding relief when
+    #      the Mainland taxed the payee at arm's length comes through the Arrangement's MAP (s50AAN) — a judgement
+    RuleObj("hk.tp.income_uplift", Scope(ALL, HK, (INTEREST, ROYALTY, SERVICE_FEE), side="residence"), Effect.BASE, None,
+            cond=NON_RESIDENT, uses=("hk.tp.income_arms_length", "hk.tp.range_no_adjustment", "hk.tp.adjustment_point_median",
+                                     "hk.tp.participation", "hk.tp.control_more_than_half")),
+    RuleObj("hk.tp.corresponding", out((INTEREST, ROYALTY, SERVICE_FEE)), Effect.DEDUCT_BASE, None, cond=NON_RESIDENT,
+            uses=("hk.tp.corresponding_relief_map", "cn-hk.tp.corresponding")),
 
     # ---- inbound, Hong Kong-sourced: s14 charges profits arising in or derived from Hong Kong whatever their payer's
     #      jurisdiction; where interest (provision of credit) or a royalty (place of use) arises is a judgement. When it is
@@ -126,25 +154,43 @@ SPEC = [
     # ---- inbound: FSIE charge on specified foreign-sourced income received in Hong Kong by an MNE entity
     RuleObj("hk.fsie.charge", inbound(FSIE_INCOME), Effect.CHARGE, "hk.profits.rate_corp",
             cond=And(Leaf("payee_in_source_jur", is_false, on="payee"), Leaf("is_mne_member", is_true, "hk.fsie.mne_entity_only", on="payee"),
-                     Leaf("receipt_kind", is_in, "hk.fsie.receipt_kinds")),
+                     Leaf("receipt_kind", is_in, "hk.fsie.receipt_kinds"),
+                     Leaf("accrued_in_fsie_regime", is_true, "hk.fsie.commencement")),     # Sch 55 s2(1): accrued and received
             uses=("hk.fsie.covered_income", "hk.fsie.received_in_hk_trigger", "hk.fsie.remittance_is_receipt",
-                  "hk.fsie.commencement", "hk.profits.charge_scope", "hk.profits.rate_entity")),
-    RuleObj("hk.fsie.gain.base", inbound(SHARE_TRANSFER), Effect.BASE, None, uses=("hk.fsie.gain_not_capital",)),
-    RuleObj("hk.fsie.ip_nexus", inbound(ROYALTY), Effect.BASE, None,
+                  "hk.fsie.commencement", "hk.profits.charge_scope", "hk.profits.rate_entity",
+                  "hk.fsie.in_kind_not_received",         # decision D46: a capitalisation pays no sum (facts.capitalisation_facts)
+                  "hk.fsie.stand_alone_mne", "hk.fsie.mne_group_pe")),   # decision D47: a permanent establishment abroad
+    # decision D32: foreign-sourced only — a Hong Kong-sourced gain or royalty has its own base (hk.gain.base, s14) — both on one item
+    # would take the share twice
+    RuleObj("hk.fsie.gain.base", inbound((SHARE_TRANSFER, PROPERTY)), Effect.BASE, None, cond=NON_RESIDENT,
+            uses=("hk.fsie.gain_not_capital", "hk.fsie.disposal_gains_commencement")),
+    # decision D48: a trader's gain from its trade is no specified foreign-sourced income (s15H "specified foreign-sourced income"
+    # (e)); its profit is charged only if it arises in Hong Kong (s14, a judgement)
+    RuleObj("hk.property.trader", inbound(PROPERTY), Effect.CHARGE, "hk.profits.rate_corp",
+            cond=And(NON_RESIDENT, Leaf("held_as_trading_stock", is_true, "hk.fsie.trader_excluded"),
+                     Discretion("property_profits_sourced_in_hk", cites=("hk.cap112.en#s14",))),
+            overrides=frozenset({"hk.fsie.charge"}), uses=("hk.profits.charge_scope", "hk.profits.rate_entity")),
+    RuleObj("hk.property.trader.none", inbound(PROPERTY), Effect.EXEMPT, None,
+            cond=And(NON_RESIDENT, Leaf("held_as_trading_stock", is_true, "hk.fsie.trader_excluded"),
+                     Not(Discretion("property_profits_sourced_in_hk", cites=("hk.cap112.en#s14",)))),
+            overrides=frozenset({"hk.fsie.charge"})),
+    RuleObj("hk.fsie.ip_nexus", inbound(ROYALTY), Effect.BASE, None, cond=NON_RESIDENT,
             uses=("hk.fsie.ip_nexus_exception", "hk.fsie.nexus_uplift", "hk.fsie.nexus_cap")),
-    *[RuleObj("hk.fsie.substance.%s" % inc.lower(), inbound(inc), Effect.EXEMPT, None, cond=SUBSTANCE_COND,
-              uses=("hk.fsie.substance_exception_income",)) for inc in (DIVIDEND, INTEREST, SHARE_TRANSFER)],
-    *[RuleObj("hk.fsie.participation.%s" % inc.lower(), inbound(inc), Effect.EXEMPT, None, cond=PARTICIPATION_COND,
+    # decision D32: the exceptions to s15I(1) (s15K, s15M, s15OA) speak of specified foreign-sourced income only: a Hong Kong-sourced
+    # item of the same flow (hk.gain.charge, hk.domestic.charge) is not theirs to exempt
+    *[RuleObj("hk.fsie.substance.%s" % inc.lower(), inbound(inc), Effect.EXEMPT, None, cond=And(NON_RESIDENT, SUBSTANCE_COND),
+              uses=("hk.fsie.substance_exception_income",)) for inc in (DIVIDEND, INTEREST, SHARE_TRANSFER, PROPERTY)],
+    *[RuleObj("hk.fsie.participation.%s" % inc.lower(), inbound(inc), Effect.EXEMPT, None, cond=And(NON_RESIDENT, PARTICIPATION_COND),
               uses=("hk.fsie.participation_main_purpose",)) for inc in (DIVIDEND, SHARE_TRANSFER)],
     # intragroup transfer: no gain or loss if seller and buyer are associated and both chargeable; undone if within
     # 2 years either ceases to be chargeable or they cease to be associated (s15OA, s15OB)
     RuleObj("hk.fsie.intragroup_relief", inbound(SHARE_TRANSFER), Effect.EXEMPT, None,
-            cond=And(Leaf("intragroup_transfer", is_true, "hk.fsie.intragroup_relief"),
+            cond=And(NON_RESIDENT, Leaf("intragroup_transfer", is_true, "hk.fsie.intragroup_relief"),
                      Leaf("acquirer_chargeable_in_hk", is_true),
                      Leaf("clawback_event_within_2y", is_false, "hk.fsie.intragroup_clawback_years")),
-            uses=("hk.fsie.intragroup_assoc_ratio_min",)),
+            uses=("hk.fsie.intragroup_assoc_ratio_min", "hk.fsie.intragroup_carry_over")),
 
-    # ---- 口径 D22: the IP transfer step. A non-resident selling IP to a Hong Kong buyer carries on no business here (s14);
+    # ---- decision D22: the IP transfer step. A non-resident selling IP to a Hong Kong buyer carries on no business here (s14);
     #      the buyer, its associate, deducts nothing (s16EC(2)). A Hong Kong seller: the proceeds above the expenditure
     #      still unallowed, up to the deductions allowed, are a trading receipt sourced here (s16E(3), s16EB(2)); a gain
     #      arising offshore and received here is an IP disposal gain charged under FSIE (s15I — not capital even if it so
@@ -167,21 +213,59 @@ SPEC = [
             overrides=frozenset({"hk.ip.recapture", "hk.ip.fsie"}),
             uses=("hk.profits.charge_scope", "hk.profits.rate_entity")),
 
+    # ---- decision D47: a branch's profit. A foreign company's branch here is charged on the profits arising here (s14, a
+    #      judgement); a Hong Kong company's branch abroad: its profit is charged only if it arises here — the same judgement;
+    #      no FSIE head covers a trade's profit (s15H)
+    RuleObj("hk.branch.charge", out(BRANCH_PROFIT), Effect.CHARGE, "hk.profits.rate_corp",
+            cond=And(NON_RESIDENT, Discretion("branch_profit_sourced_in_hk", cites=("hk.cap112.en#s14",))),
+            uses=("hk.branch.profits_in_hk", "hk.profits.rate_entity")),
+    RuleObj("hk.branch.resident", inbound(BRANCH_PROFIT), Effect.CHARGE, "hk.profits.rate_corp",
+            cond=And(NON_RESIDENT, Discretion("branch_profit_sourced_in_hk", cites=("hk.cap112.en#s14",))),
+            uses=("hk.branch.profits_in_hk", "hk.profits.rate_entity")),
+
     # ---- foreign tax credit on FSIE income: under the Arrangement for Mainland tax (s50), unilaterally for Singapore tax (s50AAA)
     RuleObj("hk.ftc.dta", Scope(CN, HK, ALL, side="residence"), Effect.CREDIT, None,
-            cond=Leaf("hk_resident_or_pe", is_true, on="payee"), uses=("hk.ftc.credit_limit",)),
-    RuleObj("hk.ftc.unilateral", Scope(SG, HK, ALL, side="residence"), Effect.CREDIT, None,
+            cond=Leaf("hk_resident_or_pe", is_true, on="payee"), uses=("hk.ftc.credit_limit", "hk.fsie.intragroup_foreign_tax")),   # decision D44
+    # decision D47: Sch 54 Part 2 s2(1) — only specified foreign-sourced income charged because of s15I(1) (an IP disposal gain
+    # included); income charged under s14 (a fee, a trading profit, a branch's profit) gets no unilateral credit
+    RuleObj("hk.ftc.unilateral", Scope(SG, HK, FSIE_INCOME + (IP_TRANSFER,), side="residence"), Effect.CREDIT, None,   # decision D44: s15OA(8)
             cond=Leaf("hk_resident_or_pe", is_true, on="payee"),
-            uses=("hk.ftc.unilateral_no_dta", "hk.ftc.unilateral_fsie_only", "hk.ftc.credit_limit")),
+            uses=("hk.ftc.unilateral_no_dta", "hk.ftc.unilateral_fsie_only", "hk.ftc.credit_limit", "hk.fsie.intragroup_foreign_tax")),
 
     # ---- domestic remedies: objection within 1 month of the assessment (s64), appeal within 1 month of the determination (s66)
     # ---- domestic flows: a Hong Kong company's interest, royalty or fee from a Hong Kong payer is charged under s14 when the
     #      profits arise here (a judgement); a dividend from a chargeable corporation is excluded (s26(a))
     RuleObj("hk.domestic.charge", Scope(HK, HK, (INTEREST, ROYALTY, SERVICE_FEE), side="residence"), Effect.CHARGE, "hk.profits.rate_corp",
             cond=And(Leaf("payee_in_source_jur", is_true, on="payee"), Discretion("profits_arise_in_hk", cites=("hk.cap112.en#s14",))),
+            overrides=frozenset({"hk.domestic.royalty_deemed", "hk.royalty.deemed_profit", "hk.royalty.deemed_profit_associate"}),
             uses=("hk.profits.charge_scope", "hk.profits.rate_entity")),
+    # decision D33: a royalty s14 does not charge is "not otherwise chargeable": s15(1)(b) deems it a Hong Kong trading receipt
+    # when the IP is used in Hong Kong (s15(1)(ba): used outside but deductible here), whoever receives it, and s21A sets
+    # the profit (30%, 100% from an associate) — the s14 charge above, when it applies, displaces both
+    RuleObj("hk.domestic.royalty_deemed", Scope(HK, HK, ROYALTY, side="residence"), Effect.CHARGE, "hk.profits.rate_corp",
+            cond=And(Leaf("payee_in_source_jur", is_true, on="payee"),
+                     Or(Leaf("ip_used_in_hk", is_true, "hk.royalty.deemed_use_in_hk"),
+                        Leaf("royalty_deductible_in_hk", is_true, "hk.royalty.deemed_use_outside_hk_deductible"))),
+            uses=("hk.profits.rate_entity",)),
     RuleObj("hk.domestic.dividend", Scope(HK, HK, DIVIDEND, side="residence"), Effect.NOCHARGE, None,
             cond=Leaf("payee_in_source_jur", is_true, on="payee"), uses=("hk.domestic.dividend_excluded",)),
+
+    # ---- decision D42: a Hong Kong seller of goods. A trader's profit arises where its contracts of purchase and sale are
+    #      effected (TRADING_IN_HK; ¶24: wholly taxable or not). A manufacturer's own sale: where the profit arises is a
+    #      judgement (s14). A non-resident seller without a fixed place here carries on no business here
+    RuleObj("hk.goods.charge", inbound(GOODS), Effect.CHARGE, "hk.profits.rate_corp",
+            cond=Or(And(Leaf("trading_resale", is_true), TRADING_IN_HK),
+                    And(Leaf("trading_resale", is_false), Discretion("profits_arise_in_hk", cites=("hk.cap112.en#s14",)))),
+            uses=("hk.profits.charge_scope", "hk.profits.rate_entity", "hk.goods.both_outside", "hk.goods.hk_customer",
+                  "hk.goods.hk_supplier", "hk.goods.no_apportionment")),
+    RuleObj("hk.goods.base", inbound(GOODS), Effect.BASE, None, uses=("hk.profits.charge_scope", "hk.tp.income_arms_length")),
+    RuleObj("hk.goods.nonresident", out(GOODS), Effect.CHARGE, "hk.profits.rate_corp",
+            cond=And(NON_RESIDENT, Leaf("fixed_place_in_hk", is_true, on="payee"),
+                     Discretion("profits_arise_in_hk", cites=("hk.cap112.en#s14",))),
+            uses=("hk.profits.charge_scope", "hk.profits.rate_entity")),
+    RuleObj("hk.goods.nonresident.base", out(GOODS), Effect.BASE, None, cond=NON_RESIDENT, uses=("hk.profits.charge_scope",)),
+    RuleObj("hk.nocharge.goods_nonresident", out(GOODS), Effect.NOCHARGE, None,
+            cond=And(NON_RESIDENT, Leaf("fixed_place_in_hk", is_false, on="payee")), uses=("hk.nocharge.scope",)),
 
     # ---- a Hong Kong company's service income: charged on the profit when the work is done in Hong Kong, otherwise
     #      offshore and outside s14 (FSIE does not list service income)
@@ -198,7 +282,7 @@ SPEC = [
     RuleObj("hk.p2.topup", Scope(HK, HK, "TOPUP", side="residence"), Effect.CHARGE, "p2.minimum_rate",
             cond=And(Leaf("group_revenue_eur", ge, "p2.revenue_threshold", on="payee"), Leaf("p2_iir", is_false, "p2.qualified_iir_hk")),
             uses=("hk.p2.hkmtt",)),
-    #      口径 D20: the IIR top-up tax (s26AE(2), (6); Sch 60 Art 2.1-2.3) — a Hong Kong parent that applies the IIR pays
+    #      decision D20: the IIR top-up tax (s26AE(2), (6); Sch 60 Art 2.1-2.3) — a Hong Kong parent that applies the IIR pays
     #      its allocable share of a low-taxed entity's top-up abroad (the engine's iir: pseudo-flow, the parent's own)
     RuleObj("hk.p2.iir", Scope(HK, HK, "TOPUP", side="residence"), Effect.CHARGE, "p2.minimum_rate",
             cond=And(Leaf("group_revenue_eur", ge, "p2.revenue_threshold", on="payee"), Leaf("p2_iir", is_true, "p2.qualified_iir_hk")),
@@ -208,6 +292,41 @@ SPEC = [
     RuleObj("hk.objection", Scope(ALL, HK, ALL, side="residence"), Effect.DEADLINE, "hk.objection.months"),
     RuleObj("hk.objection.source", out(ALL), Effect.DEADLINE, "hk.objection.months"),
     RuleObj("hk.appeal", Scope(ALL, HK, ALL, side="residence"), Effect.DEADLINE, "hk.appeal.months"),
+
+    # ---- decision D48: land or a building in Hong Kong. Ad valorem stamp duty on the conveyance at Scale 1 (Cap 117 First
+    #      Schedule head 1(1)), all parties liable — the contract says who bears it (stamp_borne_by); the gain is charged
+    #      under s14 unless the property was a capital asset (a judgement)
+    RuleObj("hk.stamp.property.buyer", out(PROPERTY), Effect.STAMP, "hk.stamp.avd_rate_top", bearer="payer",
+            cond=Leaf("stamp_borne_by_payer", is_true, "hk.stamp.avd_all_parties"), uses=HK_AVD),
+    RuleObj("hk.stamp.property.seller", out(PROPERTY), Effect.STAMP, "hk.stamp.avd_rate_top", bearer="payee",
+            cond=Leaf("stamp_borne_by_payer", is_false, "hk.stamp.avd_all_parties"), uses=HK_AVD),
+    RuleObj("hk.property.charge", out(PROPERTY), Effect.CHARGE, "hk.profits.rate_corp", uses=("hk.profits.charge_scope", "hk.profits.rate_entity")),
+    RuleObj("hk.property.base", out(PROPERTY), Effect.BASE, None),
+    RuleObj("hk.property.capital", out(PROPERTY), Effect.EXEMPT, None,
+            cond=Discretion("capital_asset", cites=("hk.cap112.en#s14",)), uses=("hk.gain.capital_asset_excluded",)),
+
+    # ---- decision D49: rent of land or a building in Hong Kong. Its owner pays property tax at the standard rate on the net
+    #      assessable value — the rent less a 20% allowance for repairs (s5, s5B, s5(1A)) — unless the rent is part of the
+    #      profits of a business it carries on here: then profits tax on them, the property tax set off against it (s25), so
+    #      the profits tax stands; a Hong Kong company's rent is such, a foreign owner's a judgement. The lease is stamped on
+    #      execution — 0.25% of the rent of a term up to a year, 0.5% / 1% of the yearly rent above (Cap 117 head 1(2)) —
+    #      the contract says who bears it. A Hong Kong company's rent of property abroad is not Hong Kong-sourced (s14) and
+    #      is no specified foreign-sourced income (s15H)
+    RuleObj("hk.rent.charge", out(RENT), Effect.CHARGE, "hk.profits.rate_corp", cond=HK_RENT_BUSINESS,
+            uses=("hk.profits.charge_scope", "hk.profits.rate_entity", "hk.property_tax.set_off")),
+    RuleObj("hk.rent.base", out(RENT), Effect.BASE, None),
+    # (the two regimes exclude each other; a foreign owner's is a judgement each rule meets on its own — the bounds are
+    # wide rather than wrong: none at the favourable end, both at the other)
+    RuleObj("hk.property_tax.rent", out(RENT), Effect.PROPERTY_TAX, "hk.property_tax.rate", bearer="payee", cond=Not(HK_RENT_BUSINESS),
+            uses=("hk.property_tax.repairs_allowance", "hk.property_tax.assessable_value")),
+    RuleObj("hk.deduct.rent", out(RENT), Effect.DEDUCTION, "hk.profits.rate_corp", uses=("hk.deduct.rent_for_premises", "hk.profits.rate_entity")),
+    RuleObj("hk.stamp.lease.lessee", out(RENT), Effect.STAMP, "hk.stamp.lease_long", bearer="payer",
+            cond=And(Leaf("lease_first_year", is_true), Leaf("stamp_borne_by_payer", is_true, "hk.stamp.avd_all_parties")),
+            uses=("hk.stamp.lease_short", "hk.stamp.lease_mid")),
+    RuleObj("hk.stamp.lease.lessor", out(RENT), Effect.STAMP, "hk.stamp.lease_long", bearer="payee",
+            cond=And(Leaf("lease_first_year", is_true), Leaf("stamp_borne_by_payer", is_false, "hk.stamp.avd_all_parties")),
+            uses=("hk.stamp.lease_short", "hk.stamp.lease_mid")),
+    RuleObj("hk.nocharge.rent_offshore", inbound(RENT), Effect.NOCHARGE, None, cond=NON_RESIDENT, uses=("hk.nocharge.scope",)),
 
     # ---- onshore equity disposal gains: charge on the gain; capital assets excluded; tax certainty scheme
     RuleObj("hk.gain.charge", out(SHARE_TRANSFER), Effect.CHARGE, "hk.profits.rate_corp", uses=("hk.profits.charge_scope", "hk.profits.rate_entity")),
@@ -219,4 +338,12 @@ SPEC = [
                      Leaf("holding_months", ge, "hk.onshore_gain.holding_months_min"),
                      Leaf("held_as_trading_stock", is_false, "hk.onshore_gain.trading_stock_disregarded"),
                      Leaf("sch17k_elected", is_true, "hk.onshore_gain.election_required", on="payee"))),
+
+    # ---- decision D51: losses (tax_graph.losses): s19C(4), the loss attributable to activities in Hong Kong (s19C(6)(d));
+    #      s61B, the Commissioner's view of a change in shareholding
+    RuleObj("hk.loss.carryforward", Scope(ALL, HK, ALL, mount=Mount.ENTITY, side="residence"), Effect.DEDUCTION, None,
+            uses=("hk.loss.carryforward", "hk.loss.hk_activities")),
+    RuleObj("hk.loss.change", Scope(ALL, HK, ALL, mount=Mount.ENTITY, side="residence"), Effect.DENY, None,
+            cond=Discretion("hk_loss_change_dominant_purpose", cites=("hk.cap112.en#s61B",)),
+            overrides=frozenset({"hk.loss.carryforward"}), uses=("hk.loss.change",)),
 ]

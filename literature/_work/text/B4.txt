@@ -1,0 +1,1014 @@
+=== [p.1] ===
+Vol.:(0123456789)
+Evolutionary and Institutional Economics Review (2018) 15:477–493
+https://doi.org/10.1007/s40844-018-0111-z
+1 3
+ARTICLE
+Identification of conduit jurisdictions and community 
+structures in the withholding tax network
+Tembo Nakamoto1   · Yuichi Ikeda1
+Published online: 1 November 2018 
+© Japan Association for Evolutionary Economics 2018
+Abstract
+Due to economic globalization, international tax avoidance has emerged as a well-
+known global issue. To contribute to providing the solution of international tax 
+avoidance, we tried to investigate which part of the network is vulnerable. Specifi-
+cally, focusing on treaty shopping, which is one of the international tax avoidance 
+schemes, we attempt to find which jurisdictions are likely to be used for treaty shop-
+ping from the viewpoint of tax rates and reveal the relationships between jurisdic-
+tions used for treaty shopping and the others. For that purpose, based on withholding 
+tax rates imposed on dividends, interest, and royalties, we produced the withholding 
+tax network expressed as weighted graphs, computed the centralities and detected 
+the communities. As a result, we identified the jurisdictions used for treaty shopping 
+and pointed out that there are community structures. The results of our study sug-
+gested that fewer jurisdictions need to introduce more regulations for the prevention 
+of treaty shopping worldwide.
+Keywords  International taxation · International tax avoidance · Network analysis
+JEL Classification  H26 · K34 · F69
+ *	 Tembo Nakamoto 
+	
+nakamoto.tembo.75w@st.kyoto‑u.ac.jp
+	
+Yuichi Ikeda 
+	
+ikeda.yuichi.2w@kyoto‑u.ac.jp
+1	
+Graduate School of Advanced Integrated Studies in Human Survivability, 1, 
+Yoshida‑Nakaadachi‑cho, Sakyo‑ku, Kyoto 606‑8306, Japan
+=== [p.2] ===
+478
+	
+Evolutionary and Institutional Economics Review (2018) 15:477–493
+1 3
+1  Introduction
+Economic globalization has great influences on multinationals’ business activities 
+and international taxation. The activities of multinationals cross more borders and 
+become more complex. Accordingly, the number of tax treaties regulating conflicts 
+of each jurisdiction’s1 right of taxation increases from 1,200 in 1975 to 3200 today 
+worldwide. Now each jurisdiction’s tax laws and treaties overlap and function as a 
+single legal system (Ogata 2016) or network.
+However, it occurs a severe problem. When tax laws and treaties of multiple juris-
+dictions overlap, the differences among them create opportunities for unexpected 
+reductions in the tax burden because each jurisdiction often legislates their laws and 
+treaties individually and without consideration of the overlapping. The phenome-
+non, that is commonly called international tax avoidance, is one of the side effects of 
+economic globalization.
+Meanwhile, in recent years, network science has made remarkable progress by 
+offering accurate network information in various fields, and found networks follow 
+the same principle, although the networks come from different fields (Barabsi 2016). 
+They have revealed interesting results that had hitherto not been found in a broad 
+realm from sociology to physics.
+Our study focuses on “Treaty Shopping,” which is one of international tax avoid-
+ance schemes, and attempts to highlight interesting aspects that have not yet been 
+found far in the realm of international taxation. We make use of the methods and 
+knowledge of network science because international tax avoidance emerges through 
+tax laws and treaties’ working as one network.
+The previous studies incorporating the method of network science only studied 
+withholding tax on dividends (Polak 2014; Van’t Riet and Lejour 2014; Hong 2017), 
+but the other passive incomes, that are interest and royalties, are also important, and 
+relationships among each jurisdiction have not been analyzed in a context of treaty 
+shopping, even though experts pointed out the existence (Honjo 2012). “Treaty 
+Shopping” is clarified through making these points clear by the methods of network 
+science.
+2  International tax avoidance
+2.1  International taxation system
+Companies are subject to various forms of taxation in the process of conduct-
+ing cross-border transactions, most importantly corporate tax and withholding tax. 
+According to international custom, each jurisdiction has the primary right to tax 
+income which arises in or is derived from that jurisdiction (Arnold 2016). Therefore, 
+each jurisdiction imposes corporate tax on business income arising in its jurisdiction 
+1  The meaning of “jurisdiction” is almost the same as that of “country and region.”
+=== [p.3] ===
+479
+1 3
+Evolutionary and Institutional Economics Review (2018) 15:477–493	
+and imposes withholding tax on dividends, interest, and royalties derived from its 
+jurisdiction and paid to other jurisdictions. Even if dividends, interest and royalties 
+are paid to companies in the same corporate group, withholding tax is imposed as 
+long as the group company is in another jurisdiction.
+However, when dividends, interest, and royalties are paid to jurisdictions that 
+conclude a tax treaty, the amount of withholding tax is often lower than usual. This 
+is because many tax treaties have provisions to reduce the withholding tax rate or 
+exempt the company from paying the tax altogether. This reduction or exemption 
+benefit is generally called tax treaty benefit. The purpose of offering a tax treaty 
+benefit is to encourage economic activities between the two contracting jurisdic-
+tions, so the reduction or exemption is applied only to dividends, interest, and royal-
+ties paid to the other contracting state.
+2.2  Treaty shopping
+The tax treaty benefits considered the amount of withholding tax that may be 
+reduced by circumventing the third jurisdiction rather than paying dividends, inter-
+est, and royalties directly to other jurisdictions. Figure 1 shows an example. Sup-
+pose that jurisdiction A (a source jurisdiction) imposes a 25% withholding tax, 
+jurisdiction C imposes a 5% withholding tax and the withholding tax is waived for 
+dividends, interest and royalties paid from jurisdiction A to jurisdiction C because 
+jurisdiction A has concluded a tax treaty with jurisdiction C. In this case, if a com-
+pany located in jurisdiction A pays dividends, interest, and royalties directly to a 
+company located in jurisdiction B, a 25% withholding tax is imposed. However, if 
+a company located in jurisdiction A pays its dividends, interest, and royalties to a 
+company located in jurisdiction B via jurisdiction C (a conduit jurisdictions), it is 
+exempted from the withholding tax for payments made between jurisdiction A and 
+jurisdiction C because of the A=C tax treaty, and jurisdiction C imposes a 5% with-
+holding tax on payments made between jurisdiction C and jurisdiction B. In a case 
+where a company located in jurisdiction A pays its dividends, interest, and royalties 
+to a company located in jurisdiction B, if it pays them via jurisdiction C, it can avoid 
+a 20% withholding tax, compared to paying them directly.
+Fig. 1   Treaty shopping
+=== [p.4] ===
+480
+	
+Evolutionary and Institutional Economics Review (2018) 15:477–493
+1 3
+Reducing the amount of tax through the unexpected use of tax treaty benefits 
+described above is called “Treaty Shopping.” Treaty shopping is not illegal unless 
+violates the provisions of a jurisdiction’s tax law or tax treaty, but particularly if it is 
+done solely to reduce the amount of tax, it is called “treaty abuse” (Marian 2016) or 
+“improper use of the convention” (OECD 2015a) and should be corrected.
+For companies engaged in treaty shopping, this is just one of the ways to avoid 
+tax. However, for source jurisdictions, this is one of the ways in which their rights to 
+impose taxation are eroded by third jurisdictions (conduit jurisdictions). It is source 
+jurisdictions that originally have the right to impose taxation since the dividends, 
+interest, and royalties are income derived from their jurisdiction. Nevertheless, it is 
+the third jurisdictions that impose their tax on these incomes. In this way, it has been 
+found that using a particular bilateral tax treaty erodes the tax sources of jurisdic-
+tions that did not conclude the bilateral tax treaty. In other words, vulnerabilities 
+in one jurisdiction’s tax treaty potentially erode other jurisdictions’ tax bases. This 
+is why treaty shopping is regarded as a form of tax base erosion and is viewed as a 
+problem in the area of international taxation.
+3  Withholding tax network
+3.1  Datasets
+The withholding tax rate data relating to dividends, interest, and royalties come 
+from Ernst and Young (2017). We analyzed 165 jurisdictions, which include impor-
+tant jurisdictions of each area in the data. With respect to the withholding tax rate 
+on dividends, many tax treaties apply different tax rates depending on the percentage 
+of holdings. Generally, the higher the shareholding ratio, the lower the tax rate. The 
+interest in this study is in the tax burden that arises when the profit is transferred 
+within a corporate group. This is because international tax avoidance by multina-
+tionals is often done through the transfer of their profits between group companies. 
+Therefore, assuming that the dividend was generated by a 100% wholly owned sub-
+sidiary, the lowest tax rate is applied. Regarding interest, some jurisdictions have 
+applied different tax rates for non-bank deposits and bank deposits. For the same 
+reason, it is assumed that the tax rate for the non-bank deposit is applied.
+Some tax treaties have other requirements for granting withholding tax exemp-
+tions or reductions, apart from the shareholding ratio mentioned above. We consider 
+that all requirements are met in this case. Moreover, the applied withholding tax 
+rate is not always clear because the wording in a given tax treaty and the relation-
+ship between domestic tax laws and tax treaties are not always clear. In these cases, 
+the lowest tax rate among the possible withholding tax rates is applied. On the other 
+hand, although some jurisdictions do not impose withholding tax according to their 
+domestic tax laws, their tax treaties determine the withholding tax rate. Since the 
+primary purpose of tax treaties is usually to avoid international double taxation, it is 
+considered that withholding tax is not imposed, but only in this case, we assume that 
+the tax rate stipulated in tax treaties is to be applied.
+=== [p.5] ===
+481
+1 3
+Evolutionary and Institutional Economics Review (2018) 15:477–493	
+It is also necessary to consider corporate taxes in the third jurisdiction when cal-
+culating the strict amount of tax. This is especially true in the case of dividends. 
+However, corporate taxes in the third jurisdiction are not considered in this study 
+because only a few jurisdictions impose corporate tax on dividend income today2 
+(Dittmer 2012).
+3.2  Constructing the network
+As a withholding tax network, we produce weighted multi-directed graphs. In the 
+graph, the vertices represent jurisdictions, and all pairs of vertices are connected 
+by arcs because, logically, any jurisdiction can pay dividends, interest, and royalties 
+to any other jurisdictions. Every arc has the withholding tax rate imposed on divi-
+dends, interest, and royalties as a weight, respectively. Moreover, 1 × 10−6 , which 
+is small enough not to affect the validity of our analysis, compared with other tax 
+rates, is given to arcs whose tax rates are 0%, so that the paths include many arcs 
+whose tax rates 0% were not counted as shortage paths. Figure 2 shows an example 
+of Afghanistan and the United Kingdom. Afghanistan imposes a 20% withholding 
+tax on dividends paid to the United Kingdom and the United Kingdom imposes a 
+0% withholding tax on dividends paid to Afghanistan. The arc from Afghanistan to 
+the United Kingdom B has 20 as the weight, while the arc from the United Kingdom 
+to Afghanistan has 1 × 10−6.
+4  Methods of network analysis
+4.1  Centrality calculation
+We try to estimate which jurisdiction is important for treaty shopping from the 
+viewpoint of withholding tax rates by calculating centrality. Centrality is an index 
+that shows how important a vertex is for the overall network. The higher the value, 
+the more important the vertex is in the network. In this study, centrality is calcu-
+lated based on the idea that the vertex contributing to the shortest paths, that is the 
+minimum weighted paths, in the network is essential for the whole network because 
+jurisdictions used for treaty shopping are located on the shortest paths.
+Fig. 2   An example of Afghani-
+stan and the United Kingdom 
+in the weighted multi-directed 
+graph
+2  Many countries have introduced participation exemptions. For example, in Japan, corporate tax is 
+exempted for 95% of dividend income.
+=== [p.6] ===
+482
+	
+Evolutionary and Institutional Economics Review (2018) 15:477–493
+1 3
+We use load centrality as the centrality of the graph (Goh et al. 2001). Load cen-
+trality was originally designed to calculate how much data processing capacity each 
+passing point requires for the efficient movement of data packets in a network such 
+as the Internet. The definition is as follows: Suppose one data packet is sent from 
+vertex i to vertex j. The data packet moves along the minimum weight path. When 
+one data packet is sent among all vertices like this, the amount of the data packets 
+which passed through vertex k is represented by lk . The load centrality of vertex k is 
+given by
+Even though load centrality is sometimes thought to be similar in concept to 
+betweenness centrality (Freeman 1979), the results differ when a graph has multi-
+ple shortest paths (Brandes 2008). This is because load centrality assumes a data 
+packet is divided equally at the fork of shortest paths, while betweenness centrality 
+is divided equally by the number of shortest paths (Fig. 3). In this study, we think of 
+data packets as the amount of dividends, interest, and royalties and withholding tax 
+rates as weight to find the vulnerabilities of the worldwide legal system (Sect. 1).
+4.2  Community detection
+For the purpose of clarifying relationships between jurisdictions using treaty 
+shopping and jurisdictions used for treaty shopping, we try to detect communi-
+ties in the withholding tax network. When detecting community, the weighted 
+multi-directed graphs were transformed into weighted undirected graphs 
+because the way of community detection described below can be applied only 
+(1)
+Cl(k) =
+∑
+i≠j≠k
+li,j(k)
+Fig. 3   Difference in the treatment of multiple shortest paths between load centrality and betweenness 
+centrality. O indicates origin and D indicates destination. a Load centrality. b Betweenness centrality
+Fig. 4   An example of Afghani-
+stan and the United Kingdom in 
+the weighted undirected graph, 
+in the case of no threshold or 
+threshold 30–20%
+=== [p.7] ===
+483
+1 3
+Evolutionary and Institutional Economics Review (2018) 15:477–493	
+to undirected graphs. When withholding tax rates differ between the same two 
+jurisdictions, the higher withholding tax rate is put on edges as a weight in the 
+weighted undirected graphs because the higher rate is suitable for measuring 
+strength of the relationships. Since the higher the withholding tax rate of the 
+edge, the lower is the possibility of the edges being used for treaty shopping, 
+edges of the weighted undirected graphs were removed according to thresholds 
+with the intention of searching at which threshold value a community struc-
+ture can be found. The threshold was provided every 5% in the range of 30–0%, 
+that is, 30%, 25%, 20%, 15%, 10%, 5%, and 0%. This is because few jurisdic-
+tions impose a withholding tax higher than 35%. Figure 4 shows an example of 
+Afghanistan and the United Kingdom. In the weighted undirected graph of divi-
+dends, 20 is put on the edge between Afghanistan and the United Kingdom as 
+a weight because Afghanistan imposes a 20% withholding tax on the dividends 
+paid for British company, although no withholding tax is imposed on the divi-
+dends paid for Afghan company (Fig. 2). The edge between Afghanistan and the 
+United Kingdom is removed when the threshold is 15%, 10%, 5%, or 0%.
+Then, the way of community detection was applied to each of the weighted 
+undirected graphs removing their edges depending on the given thresholds. 
+Communities whose modularities are highest among all threshold values are 
+chosen finally. In addition, correlation coefficients are calculated between the 
+centralities in the weighted multi-directed graphs (Tables 1, 2, 3) and the cen-
+tralities in the weighted undirected graphs with each threshold value in order to 
+check that the result of the centralities is not affected too much by providing the 
+threshold.
+Table 1   Ranking of dividends’ 
+centrality
+Rank
+Jurisdiction
+Centrality
+Rank
+Jurisdiction
+Centrality
+1
+UK
+0.070639
+18
+Malta
+0.015731
+2
+UAE
+0.058244
+19
+USA
+0.01268
+3
+Kuwait
+0.044943
+20
+South Africa
+0.011743
+4
+Netherlands
+0.027664
+21
+Mexico
+0.010967
+5
+Cyprus
+0.024464
+22
+Oman
+0.010475
+6
+Hong Kong
+0.0239
+23
+Denmark
+0.010308
+7
+Singapore
+0.0228
+24
+Hungary
+0.010111
+8
+Switzerland
+0.022725
+25
+Belgium
+0.009487
+9
+Mauritius
+0.022512
+26
+France
+0.009139
+10
+Spain
+0.02209
+27
+Lithuania
+0.007719
+11
+Luxembourg
+0.020043
+28
+Georgia
+0.007616
+12
+Lucia
+0.018178
+29
+Bulgaria
+0.006243
+13
+Bahrain
+0.018153
+30
+Colombia
+0.006188
+14
+Malaysia
+0.018115
+31
+Zambia
+0.006114
+15
+Qatar
+0.017946
+32
+Tunisia
+0.006075
+16
+Ireland
+0.017523
+33
+Germany
+0.005091
+17
+Estonia
+0.016039
+=== [p.8] ===
+484
+	
+Evolutionary and Institutional Economics Review (2018) 15:477–493
+1 3
+Table 2   Ranking of interest’s 
+centrality
+Rank
+Jurisdiction
+Centrality
+Rank
+Jurisdiction
+Centrality
+1
+UAE
+0.041796
+20
+Cyprus
+0.009644
+2
+Switzerland
+0.039489
+21
+Russia
+0.009492
+3
+Germany
+0.035639
+22
+Bahrain
+0.009354
+4
+France
+0.033565
+23
+Latvia
+0.009251
+5
+UK
+0.032811
+24
+Italy
+0.008287
+6
+Hungary
+0.025905
+25
+Belarus
+0.006977
+7
+Canada
+0.024145
+26
+Mauritius
+0.006841
+8
+Netherlands
+0.023775
+27
+Oman
+0.006553
+9
+Sweden
+0.023619
+28
+Ukraine
+0.006507
+10
+Luxembourg
+0.022488
+29
+Bulgaria
+0.006357
+11
+Kuwait
+0.019532
+30
+Israel
+0.006243
+12
+Norway
+0.016801
+31
+Algeria
+0.006228
+13
+Ireland
+0.016736
+32
+Japan
+0.006183
+14
+Czech
+0.016253
+33
+Seychelles
+0.006154
+15
+USA
+0.014057
+34
+Portugal
+0.006108
+16
+Estonia
+0.013082
+35
+Zambia
+0.006101
+17
+Malta
+0.011142
+36
+Cameroon
+0.006067
+18
+Austria
+0.01061
+37
+Denmark
+0.005954
+19
+South Africa
+0.010495
+Table 3   Ranking of royalties’ 
+centrality
+Rank
+Jurisdiction
+Centrality
+Rank
+Jurisdiction
+Centrality
+1
+UAE
+0.079455
+20
+Germany
+0.016731
+2
+Switzerland
+0.079043
+21
+Macau
+0.01241
+3
+France
+0.05139
+22
+Canada
+0.012097
+4
+Hungary
+0.048268
+23
+Monaco
+0.01029
+5
+Mauritius
+0.047201
+24
+South Korea
+0.009735
+6
+Sweden
+0.045731
+25
+South Africa
+0.009731
+7
+Netherlands
+0.042169
+26
+Japan
+0.008836
+8
+Norway
+0.037786
+27
+Denmark
+0.007992
+9
+Cyprus
+0.034533
+28
+Italy
+0.007951
+10
+Ireland
+0.029864
+29
+Guernsey
+0.007783
+11
+Luxembourg
+0.029044
+30
+Estonia
+0.007717
+12
+Senegal
+0.029034
+31
+Slovak
+0.006905
+13
+UK
+0.024726
+32
+Austria
+0.006784
+14
+Malta
+0.02437
+33
+Zambia
+0.006121
+15
+Gabon
+0.024012
+34
+Libya
+0.005969
+16
+USA
+0.019653
+35
+Liechtenstein
+0.005768
+17
+Spain
+0.018766
+36
+Belgium
+0.005208
+18
+Bahrain
+0.018091
+37
+Russia
+0.005146
+19
+Latvia
+0.01757
+=== [p.9] ===
+485
+1 3
+Evolutionary and Institutional Economics Review (2018) 15:477–493	
+4.2.1  Modularity
+A community is a subgraph closely connected in a graph. Although there is no 
+strict definition of “community” in network science, it is thought that the network 
+has a community structure, if the graph can be divided into subgraphs where the 
+edges connected has density. To evaluate only significant community structures, we 
+use modularity, which is often used as an index of evaluating community structure 
+(Newman and Girvan 2004; Newman 2004). Modularity is calculated as follows:
+where M is the total number of the edges, C(i) is the subset including vertex i, and 
+훿[C(i), C(j)] is 1 if C(i) and C(j) are the same subset, otherwise it is 0. aij repre-
+sents the weight of the edges between vertex i and vertex j, and ki kj represents the 
+expected weight of the edges assigned randomly to vertex i.
+Modularity is normalized so that the maximum value is 1. Therefore, it can be 
+said that there is a strong community structure in the network as it moves closer to 1, 
+but from an empirical point of view, if it is larger than about 0.3, it is often consid-
+ered that the network has a community structure.
+4.2.2  Louvain method
+Communities are detected through the Louvain method (Blondel et al. 2008). For 
+the detection, the Louvain method optimizes local and aggregates vertices as fol-
+lows: First, it assumes that every vertex belongs to every community and calculates 
+how much the modularity rises, if each vertex belongs to the same community with 
+an adjacent vertex:
+where if vertex i belongs to a community, ∑
+in represents the sum of the weights of 
+edges in the community, ∑
+tot represents the sum of the weights of all the edges adja-
+cent to the vertices in the community, ki represents the sum of the weights of edges 
+whose end point is vertex i, and ki,in represents the sum of the weights of edges in the 
+community whose endpoint is vertex i. The combination of vertices with the great-
+est modularity rise is specified (the first step). Next, combinations of the specified 
+vertices in the first step are aggregated into one vertex, and the size of the network 
+is reduced (the second step). The first stage and the second stage are recursively 
+repeated until the modularity converges. The characteristic of the Louvain method is 
+not to assume all vertices belong to one community, but to assume each belongs to 
+each community.
+(2)
+Q =
+1
+2M
+N
+∑
+i,j
+(
+aij −
+kikj
+2M
+)
+훿[C(i), C(j)]
+(3)
+ΔQ =
+∑
+in +ki,in
+2M
+−
+∑
+tot +ki,in
+2M
+2
+−
+∑
+in
+2M −
+∑
+tot
+2M
+2
+−
+ ki
+2M
+2
+=== [p.10] ===
+486
+	
+Evolutionary and Institutional Economics Review (2018) 15:477–493
+1 3
+5  Results
+5.1  The centralities
+Tables 1, 2 and 3 show rankings and jurisdictions whose centralities were higher 
+than 0.05 about dividends, interest, and royalties without any threshold. The top 
+jurisdictions differed markedly depending on dividends, interest, and royalties, 
+and the centrality of interest is much lower than those of others.
+In the area of international taxation, the Netherlands, Cyprus, Estonia, Hun-
+gary, Luxembourg, Malta, Switzerland, the United Kingdom and so on are com-
+monly known to be used for treaty shopping (Diamond et al. 2017). Comparison 
+of the jurisdictions whose centralities were higher than 0.05 in our calculation 
+and the jurisdictions commonly known shows that our method is capable of iden-
+tifying the jurisdictions used for treaty shopping effectively.
+5.2  Communities founded
+Figure 5 shows changes in modularity of the weighted undirected graphs accord-
+ing to the thresholds. When threshold is 5%, all graphs recorded the highest mod-
+ularity, which is 0.2853738 (dividends), 0.283715 (interest), and 0.325377 (roy-
+alties). Because of this, we detected community as for the weighted undirected 
+graphs with a 5% threshold. Table 4 shows correlation coefficients between the 
+centralities in the weighted multi-directed graphs (Table 1, 3) and the centralities 
+in the weighted undirected graphs with each threshold value. Since all coefficients 
+Fig. 5   Changes in modularity
+=== [p.11] ===
+487
+1 3
+Evolutionary and Institutional Economics Review (2018) 15:477–493	
+Table 4   Correlation coefficients 
+of the centralities
+Threshold (%)
+Coefficient
+(a) Dividends
+30
+0.964963813
+25
+0.964979316
+20
+0.96515412
+15
+0.963629098
+10
+0.965430042
+5
+0.959738913
+0
+0.925707564
+(b) Interest
+30
+0.951327102
+25
+0.951316117
+20
+0.951212308
+15
+0.950376936
+10
+0.937609801
+5
+0.912283135
+0
+0.920637142
+(c) Royalties
+30
+0.944070249
+25
+0.943941746
+20
+0.943555807
+15
+0.936168543
+10
+0.93951127
+5
+0.911668238
+0
+0.880016323
+Table 5   Communities 
+(dividends)
+Community 1 (61)
+Community 2 (48)
+Community 3 (19)
+UK
+Estonia
+Cyprus
+UAE
+Kuwait
+Malta
+Hong Kong
+Singapore
+Netherlands
+USA
+Saint Lucia
+Malaysia
+Switzerland
+South Africa
+Bahrain
+Qatar
+Spain
+Mexico
+Mauritius
+Luxembourg
+Denmark
+Oman
+Ireland
+Hungary
+=== [p.12] ===
+488
+	
+Evolutionary and Institutional Economics Review (2018) 15:477–493
+1 3
+are around 0.9, it can be said for providing the thresholds not to influence the 
+results of the centralities so much.
+5.2.1  Dividends
+The graph of dividends can be divided into four communities. Community 1 has 
+61 jurisdictions, community 2 has 48 jurisdictions, community 3 has 19 jurisdic-
+tions, community 4 has 3 jurisdictions. Table 5 shows which communities the juris-
+dictions whose centrality is higher than 0.01 in the weighted multi-directed graph 
+belong to (Table 1). The other 34 jurisdictions are isolated. Although the change in 
+the threshold values did not give big influences to the value of the centrality, some 
+jurisdictions are fluctuating. Figure 6 shows an example of Cyprus. Top 3 jurisdic-
+tions indicate jurisdictions whose centralities are the highest in the weighted multi-
+directed graph. Here, the United Kingdom, the United Arab Emirates and Kuwait 
+correspond to the top 3 jurisdictions (Table 4). The rank of Cyprus fell sharply after 
+a threshold 30%, while the ranks of top 3 jurisdictions were stable.
+5.2.2  Interest
+Four communities are detected relating to interest. Community 1 has 55 jurisdic-
+tions, community 2 has 48 jurisdictions, community 3 has 13 jurisdictions, and 
+community 4 has 2 jurisdictions. Table 6 shows which communities the jurisdictions 
+whose centrality is higher than 0.01 in the weighted multi-directed graph belong 
+to  (Table  2). The other 47 jurisdictions are isolated. Many European countries 
+Fig. 6   Change in ranking of top 3 jurisdictions and Cyprus in the case of dividends
+=== [p.13] ===
+489
+1 3
+Evolutionary and Institutional Economics Review (2018) 15:477–493	
+belong to Community 1 or 2. This may be because the European Union (EU) has 
+issued an “Interest Directive” (2003/49/EC), which exempts companies from paying 
+withholding tax on interest paid within the EU member jurisdictions, to help create 
+a single market. A few jurisdictions whose ranks were fluctuating by change in the 
+threshold values. Figure 7 shows an example of the United Kingdom. The rank of 
+the United Kingdom fell sharply after a threshold 10%, even though the ranks of top 
+3 jurisdictions were stable. 
+5.2.3  Royalties
+We identified five communities. Community 1 has 41 jurisdictions, community 
+2 has 33 jurisdictions, community 3 has 35 jurisdictions, community 4 has 9 
+Fig. 7   Changes in ranking of top 3 jurisdictions and the United Kingdom in the case of interest
+Table 6   Communities (interest)
+Community 1 (55)
+Community 2 (48)
+Com-
+munity 3 
+(13)
+Switzerland
+Czech
+Hungary
+UAE
+Germany
+Russia
+Netherlands
+France
+Austria
+Sweden
+Kuwait
+Malta
+Canada
+UK
+Luxembourg
+Ireland
+Norway
+USA
+Estonia
+=== [p.14] ===
+490
+	
+Evolutionary and Institutional Economics Review (2018) 15:477–493
+1 3
+jurisdictions, and community 5 has 4 jurisdictions. Table 7 shows which com-
+munities the jurisdictions whose centrality is higher than 0.01 in the weighted 
+multi-directed graph belong to (Table 3). The other 43 jurisdictions are isolated. 
+Many European countries belong to Community 1 or 2. This may be because the 
+EU has issued a “Royalty Directive” (2003/49/EC), which exempts companies 
+from paying withholding tax on royalties paid within the EU member jurisdic-
+tions. Figure 8 shows the rank of the Netherlands as an example of a few juris-
+dictions whose ranks were fluctuating by the threshold. The rank of the Nether-
+lands fell when the threshold value was 30% and 10%. 
+Fig. 8   Changes in ranking of top 3 jurisdictions and the Netherlands in the case of royalties
+Table 7   Communities (royalties)
+Community 1 (41)
+Community 2 (33)
+Community 3 (35)
+Community 4 (9)
+Community5 (4)
+Switzerland
+France
+Senegal
+UAE
+Gabon
+Hungary
+Sweden
+Cyprus
+Mauritius
+Netherlands
+Norway
+Bahrain
+Ireland
+Luxembourg
+Macau
+Malta
+USA
+Monaco
+Spain
+Latvia
+Germany
+UK
+Canada
+=== [p.15] ===
+491
+1 3
+Evolutionary and Institutional Economics Review (2018) 15:477–493	
+6  Discussion
+We cannot find a relationship between the detected communities and each jurisdic-
+tion’s location. It might cause the United Arab Emirates not to be suitable for treaty 
+shopping that the size of the community to which it belongs is small, although its 
+centrality is high. The jurisdictions whose ranks vary much by change in the thresh-
+old, such as Cyprus, the United Kingdom, and the Netherlands, might be crucial 
+with jurisdictions whose withholding tax rates are high.
+To resolve the vulnerable elements of tax treaties, it is necessary to amend trea-
+ties. The realm of international taxation is trying to deal with the vulnerable aris-
+ing from a single network that tax laws and treaties of each jurisdiction form by a 
+multilateral treaty (OECD 2015b). The multilateral treaty aims to amend tax treaties 
+of each jurisdiction uniformly, instead of sequentially revising tax treaties through 
+bilateral negotiations as in the past. When a jurisdiction ratifies a multilateral treaty, 
+the new provisions stipulated in the multilateral treaty overwrite the existing pro-
+visions of any tax treaties that the jurisdiction has concluded, producing the same 
+effect as that of an amendment to the tax treaty. In order for many jurisdictions to 
+ratify the multilateral treaty, the multilateral treaty can effectively include only the 
+minimum standard deemed necessary for the prevention of treaty abuse. From the 
+intention of trying to be “fair” to each jurisdiction, it seems possible only to make 
+revisions to each jurisdiction’s tax treaties “uniformly.” However, according to our 
+study, only some jurisdictions are conducive to treaty shopping, so to solve treaty 
+shopping, it seems sufficient to amend the tax treaties of those jurisdictions for the 
+time being. This would mean fewer jurisdictions that need to obtain consensus, 
+which we believe would allow additional provisions to be introduced into the tax 
+treaties3.
+7  Conclusion
+Due to economic globalization, each jurisdiction’s tax laws and treaties have been 
+forced to work as a single network. However, the jurisdictions have not made their 
+laws and treaties under the assumption that the laws and treaties function as an ele-
+ment of one network, so unexpected results have been brought. We thought that the 
+results are exactly international tax avoidance. To contribute to providing the solu-
+tion of international tax avoidance, we tried to investigate which part of the network 
+is vulnerable. Specifically, focusing on treaty shopping, which is one of international 
+tax avoidance schemes, we attempt to identify which jurisdiction are likely to be 
+used for treaty shopping from the viewpoint of tax rates and reveal the relation-
+ships between jurisdictions used for treaty shopping and the others. For this pur-
+pose, based on withholding tax rates imposed on dividends, interest, and royalties, 
+3  However, seeking prevention measures only for specific countries also has the risk of disrupting efforts 
+towards international tax avoidance. About how the harmful tax competition taking the initiative by the 
+OECD was abandoned, see Sharman (2006).
+=== [p.16] ===
+492
+	
+Evolutionary and Institutional Economics Review (2018) 15:477–493
+1 3
+we produced the withholding tax network expressed as weighted graphs, computed 
+the centralities and detected the communities.
+As a result, we were able to identify jurisdictions used for treaty shopping from 
+the viewpoint of the withholding tax rates because our results matched with the 
+jurisdictions known to be used for treaty shopping. The community structures were 
+founded at a 5% threshold, and all jurisdictions can be divided into four or five 
+communities.
+As a future task, we would like to study the relation between withholding tax 
+rates and economic activities of multinationals by analyzing flows of dividend, inter-
+est, and royalties.
+Acknowledgements  The present study was supported by the Ministry of Education, Science, Sports, and 
+Culture, Grants-in-Aid for Scientific Research (B), Grant No. 17KT0034 (2017-2019) and Exploratory 
+Challenges on Post-K computer (Studies of Multi-level Spatiotemporal Simulation of Socioeconomic 
+Phenomena).
+Compliance with ethical standards 
+Conflict of interest statement  On behalf of all authors, the corresponding author states that there is no 
+conflict of interest.
+References
+Arnold BJ (2016) International tax primer. Kluwer Law International BV, The Netherlands
+Barabsi A (2016) Network science. Cambridge University Press, Cambridge
+Blondel VD, Guillaume J, Lambiotte R, Lefebvre E (2008) Fast unfolding of communities in large net-
+works. J Stat Mech: Theory Exp 2008:P10008
+Brandes U (2008) On variants of shortest-path betweenness centrality and their generic computation. 
+Social Netw 30(2):136–145
+Dittmer P (2012) A global perspective on territorial taxation. Special Report No. 202, Tax Foundation
+Diamond WH, Diamond DB, Byrnes William H, Munro RJ RJ (2017) Tax havens of the world. Matthew 
+Bender & Company Inc, New York
+Ernst Y (2017) Worldwide corporate tax guide 2017
+Freeman LC (1979) Centrality in social networks conceptual clarification. Social Netw 1:215–239
+Goh K, Kahng B, Kim D (2001) Universal behavior of load distribution in scale-free networks. Phys Rev 
+Lett 87(27):1–4
+HJI Panayi C, Avi-Yonah RS (2010) rethinking treaty-shopping: lessons for the European Union. U of 
+Michigan Law & Econ, Empirical Legal Studies Center Paper No. 10–002
+Hong S (2017) Tax treaties and foreign direct investment: a network approach. Int Tax Publ Finance 
+25:1277–320
+Honjo T (2012) NEW TAX TIDBIT offshore sekai no hanashi (3): maboroshi no offshore sekai-sono 
+jitsuzou ha kakusareteiru [The story of offshore world (3): phantom offshore world - the real image 
+is hidden]. Int Tax 32(11):138–140 (in Japanese)
+Marian O (2016) Unilateral responses to tax treaty abuse: a functional approach. Brooklyn J Int Law 
+41(3):1157–1183
+Newman MEJ, Girvan M (2004) Finding and evaluating community structure in networks. Phys Rev E 
+69:026113
+Newman MEJ (2004) Analysis of weighted networks. Phys Rev E 70:056131
+OECD (2015) Preventing the granting of treaty benefits in inappropriate circumstances, Action 6—2015 
+Final Report, OECD/G20 Base Erosion and Profit Shifting Project. OECD Publishing, Paris
+OECD (2015) Developing a multilateral instrument to modify bilateral tax treaties, Action 15—2015 
+Final Report, OECD/G20 Base Erosion and Profit Shifting Project, OECD Publishing, Paris
+=== [p.17] ===
+493
+1 3
+Evolutionary and Institutional Economics Review (2018) 15:477–493	
+Ogata K (2016) Debate about anti-tax avoidance measures under the beps project etc. Fin Rev 126:196–
+225 (in Japanese)
+Polak S (2014) Algorithms for the network analysis of bilateral tax treaties. Master’s thesis conducted at 
+UvA/CWI/CPB
+Sharman JC (2006) Heavens in a storm: the struggle for global tax regulation. Cornell University Press, 
+New York
+Van’t Riet M, Lejour (2014) A ranking the stars: network analysis of bilateral tax treaties. CPB Discus-
+sion Paper 290

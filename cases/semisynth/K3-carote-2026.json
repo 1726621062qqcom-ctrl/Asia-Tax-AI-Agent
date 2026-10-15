@@ -1,0 +1,235 @@
+{
+ "case_id": "K3-carote-2026",
+ "kind": "K3",
+ "template": "holding",
+ "subject": "GROUP",
+ "members": [
+  "ULT",
+  "HOLD",
+  "OP"
+ ],
+ "roles": {
+  "ULT": {
+   "loc": "HK",
+   "attrs": {
+    "incorporated_in": "HK",
+    "is_mne_member": true,
+    "group_revenue_eur": 201430425.49
+   }
+  },
+  "HOLD": {
+   "loc": "SG",
+   "attrs": {
+    "incorporated_in": "SG"
+   }
+  },
+  "OP": {
+   "loc": "CN",
+   "attrs": {
+    "incorporated_in": "CN"
+   }
+  }
+ },
+ "holds": [
+  {
+   "holder": "ULT",
+   "held": "OP",
+   "ratio": 100.0,
+   "since": "2023-08-29"
+  },
+  {
+   "holder": "ULT",
+   "held": "HOLD",
+   "ratio": 100.0,
+   "since": "2024-01-23"
+  }
+ ],
+ "flows": {
+  "up1": {
+   "foreign_taxed": true,
+   "foreign_headline_rate": 25,
+   "deductible_at_payer": false
+  },
+  "up2": {
+   "foreign_headline_rate": 17,
+   "deductible_at_payer": false
+  }
+ },
+ "present": {
+  "HOLD": null,
+  "financing": "EQUITY",
+  "payment": false
+ },
+ "settled": {},
+ "event": {
+  "on": "2026-06-30",
+  "years": 1,
+  "dividend": 50000000.0,
+  "onward": 50000000.0
+ },
+ "synthetic_share": 0.21,
+ "provenance": {
+  "roles.ULT.loc": {
+   "kind": "disclosed",
+   "source": "K3-carote-2024",
+   "page": "pdf 31",
+   "quote": "“Carote Group” Carote Group Limited (卡羅特集團有限公司), a limited liability company incorporated in Hong Kong SAR on March 7, 2023 and one of our subsidiaries"
+  },
+  "roles.ULT.attrs.incorporated_in": {
+   "kind": "disclosed",
+   "source": "K3-carote-2024",
+   "page": "pdf 167",
+   "quote": "On March 7, 2023, Carote Group was incorporated as a limited liability company in Hong Kong SAR. It issued and allotted 100,000 ordinary shares to our Company."
+  },
+  "roles.ULT.attrs.is_mne_member": {
+   "kind": "derived",
+   "source": "K3-carote-2024",
+   "page": "pdf 520",
+   "quote": "Carote (Singapore) Management Pte. Ltd . . . . . . . . . . . Singapore/ March 12, 2021 Procurement and sales of kitchenware, in Singapore USD100,000 100% 100% 100% 100% 100%",
+   "formula": "the subsidiaries table (pdf 519–521) has companies outside Hong Kong, in the Mainland, Singapore etc. — the Hong Kong company is a member of an MNE group (Cap 112 s15H)"
+  },
+  "roles.ULT.attrs.group_revenue_eur": {
+   "kind": "derived",
+   "source": "K3-carote-2024",
+   "page": "pdf 505",
+   "quote": "Note 2021 2022 2023 2023 2024 RMB’000 RMB’000 RMB’000 RMB’000 RMB’000 (Unaudited) Revenue . . . . . . . . . . . . . . . . . . 5 675,345 768,482 1,583,082 291,829 502,917",
+   "formula": "group revenue for 2023 RMB1,583,082,000 ÷ EUR/CNY central parity on 2023-12-29 of 7.8592 (official/fx/cny_central_parity.csv) = EUR201,430,425.49; kept after re-dating to 2026 (the threshold looks at the four preceding years; 2024 and 2025 are not disclosed)"
+  },
+  "roles.HOLD.loc": {
+   "kind": "disclosed",
+   "source": "K3-carote-2024",
+   "page": "pdf 31",
+   "quote": "“Carote (Singapore) Management” Carote (Singapore) Management Pte. Ltd, a limited liability company incorporated in Singapore on March 12, 2021 and one of our subsidiaries"
+  },
+  "roles.HOLD.attrs.incorporated_in": {
+   "kind": "disclosed",
+   "source": "K3-carote-2024",
+   "page": "pdf 31",
+   "quote": "a limited liability company incorporated in Singapore on March 12, 2021"
+  },
+  "roles.OP.loc": {
+   "kind": "disclosed",
+   "source": "K3-carote-2024",
+   "page": "pdf 49",
+   "quote": "“Zhejiang Carote” means Zhejiang Carote Industry & Trade Co., Ltd. (浙江卡 羅特工貿有限公司), a company established in China with limited liability on April 28, 2007, and our main operating entity in China"
+  },
+  "roles.OP.attrs.incorporated_in": {
+   "kind": "disclosed",
+   "source": "K3-carote-2024",
+   "page": "pdf 49",
+   "quote": "a company established in China with limited liability on April 28, 2007"
+  },
+  "holds.ULT>OP.ratio": {
+   "kind": "disclosed",
+   "source": "K3-carote-2024",
+   "page": "pdf 171",
+   "quote": "Immediately following completion of these share transfers, Carote Group became the sole shareholder of Zhejiang Carote."
+  },
+  "holds.ULT>OP.since": {
+   "kind": "disclosed",
+   "source": "K3-carote-2024",
+   "page": "pdf 170",
+   "quote": "Carote Group completed the registration procedures for the acquisition of the entire equity interest in Zhejiang Carote as held by the aforementioned shareholders."
+  },
+  "holds.ULT>OP.cost": {
+   "kind": "missing",
+   "source": "K3-carote-2024",
+   "page": "pdf 170",
+   "note": "the consideration differs in two places: the history section totals RMB68,000,000 (pdf 170), the accountants' report says RMB67,731,000 paid in cash in October 2023 (pdf 518); the difference roughly equals the consolidated employee shareholding platform Luoqin line of RMB268,532, which the prospectus does not reconcile — neither is taken, the program asks"
+  },
+  "holds.ULT>HOLD.ratio": {
+   "kind": "disclosed",
+   "source": "K3-carote-2024",
+   "page": "pdf 176",
+   "quote": "At completion of the transaction described above, Carote (Singapore) Management was held as to 100% by Carote Group."
+  },
+  "holds.ULT>HOLD.since": {
+   "kind": "disclosed",
+   "source": "K3-carote-2024",
+   "page": "pdf 176",
+   "quote": "On January 23, 2024, pursuant to a share transfer agreement entered into on January 18, 2024, Carote Group acquired the entire issued share capital in Carote (Singapore) Management from Zhejiang Carote for a consideration of US$100,000."
+  },
+  "holds.ULT>HOLD.cost": {
+   "kind": "missing",
+   "source": "K3-carote-2024",
+   "page": "pdf 176",
+   "note": "consideration US$100,000 (nominal price of US$1 per share, pdf 176); amounts in this case are in RMB and this case does not sell that company, so it is not converted"
+  },
+  "flows.up1.foreign_taxed": {
+   "kind": "derived",
+   "source": "K3-carote-2024",
+   "page": "pdf 550",
+   "quote": "a 10% withholding tax will be levied on the immediate holding companies established outside the PRC when their PRC subsidiaries declare dividends out of their profits earned after January 1, 2008.",
+   "formula": "the Mainland levies withholding tax on dividends paid to a foreign direct holding company"
+  },
+  "flows.up1.foreign_headline_rate": {
+   "kind": "disclosed",
+   "source": "K3-carote-2024",
+   "page": "pdf 549",
+   "quote": "The Company’s subsidiaries in the PRC are subject to PRC CIT which is calculated based on the applicable tax rate of 25% on the assessable profits of the subsidiaries"
+  },
+  "flows.up1.deductible_at_payer": {
+   "kind": "derived",
+   "formula": "a dividend is a distribution of after-tax profit, not deductible by the payer (Enterprise Income Tax Law Article 10(1))"
+  },
+  "flows.up2.foreign_headline_rate": {
+   "kind": "disclosed",
+   "source": "K3-carote-2024",
+   "page": "pdf 549",
+   "quote": "The Group’s subsidiary in Singapore is subject to Singapore CIT which is calculated based on the applicable tax rate of 17% on the assessable profits of the subsidiaries"
+  },
+  "flows.up2.deductible_at_payer": {
+   "kind": "derived",
+   "formula": "a dividend is distributed out of after-tax profit, and s 14 of the Singapore Income Tax Act allows only outgoings incurred in producing taxable income — not deductible by the payer"
+  },
+  "present.HOLD": {
+   "kind": "derived",
+   "source": "K3-carote-2024",
+   "page": "pdf 171",
+   "quote": "Immediately following completion of these share transfers, Carote Group became the sole shareholder of Zhejiang Carote.",
+   "formula": "Hong Kong Carote Group holds Zhejiang Carote directly, with no intermediate holding company in between; Singapore Carote (Singapore) Management is likewise its wholly owned subsidiary and does not hold Zhejiang Carote"
+  },
+  "present.financing": {
+   "kind": "derived",
+   "source": "K3-carote-2024",
+   "page": "pdf 518",
+   "quote": "In August 2023, Carote Group purchased 100% equity interests in Zhejiang Carote from the Controlling Shareholders, the companies controlled by Controlling Shareholders and Denk Trade with a consideration of RMB67,731,000",
+   "formula": "equity acquired for cash (equity); no shareholder loan disclosed"
+  },
+  "present.payment": {
+   "kind": "synthetic",
+   "basis": "whether the dividend is paid across years is not disclosed; payment in the same year is taken"
+  },
+  "event.on": {
+   "kind": "synthetic",
+   "basis": "synthetic: 2026-06-30 (the prospectus period is 2021 to Q1 2024; no dividend to the Hong Kong company is disclosed)"
+  },
+  "event.years": {
+   "kind": "synthetic",
+   "basis": "one year only"
+  },
+  "event.dividend": {
+   "kind": "synthetic",
+   "source": "K3-carote-2024",
+   "page": "pdf 553",
+   "quote": "Pursuant to the resolution of the shareholder’s meeting of Zhejiang Carote held on December 3, 2022, dividends of RMB50,000,000 were approved to be paid to its then shareholders of the Zhejiang Carote.",
+   "basis": "the dividend to the Hong Kong company is not disclosed (the directors say they do not expect a distribution, pdf 550); the RMB50,000,000 Zhejiang Carote declared to its then shareholders in 2022 is taken as the order of magnitude of one dividend"
+  },
+  "event.onward": {
+   "kind": "synthetic",
+   "basis": "the intermediate company passes all the dividends it receives on to the Hong Kong parent"
+  }
+ },
+ "notes": [
+  "Source: Carote Ltd (2549.HK, incorporated in the Cayman Islands) prospectus of 2024-09-23 (cases/sources/K3-carote-2024/source.pdf). K3 semi-synthetic: structure, ratios, dates and tax rates come from the prospectus; the dividend amount and date are synthetic values (see provenance).",
+  "Only the part within the three jurisdictions is taken: ULT is Carote Group (Hong Kong investment holding, incorporated 2023-03-07), OP is Zhejiang Carote (the main Mainland operating company, high-tech enterprise status 2022–2024, renewal for 2026 not disclosed), HOLD is Carote (Singapore) Management (Singapore, wholly owned by Carote Group since 2024-01-23, currently not holding Zhejiang Carote). The Cayman listed company and the BVI shareholders are not in this case.",
+  "The red-chip reorganisation itself (on 2023-08-29 seven shareholders transferred 100% of Zhejiang Carote to Carote Group for cash consideration of RMB68,000,000 or RMB67,731,000) had individuals, a Mainland company and partnerships as sellers, outside the scope of v1 (companies only), and is background only; this case tests the post-reorganisation Hong Kong–Mainland chain and the candidate of inserting a Singapore intermediate company.",
+  "Not disclosed: the Hong Kong company's economic substance, whether the dividend is received in Hong Kong, tax residence certificates, the facts needed for the beneficial-owner determination — left for the program to ask. Amounts are in RMB.",
+  "names: each party's defined term / full name in the document (aliases separated by /), individuals written as in the document, used for locating extraction patterns, search queries and registry look-ups (抽取改造.md §2, §7)"
+ ],
+ "names": {
+  "ULT": "Carote Group Limited / Carote Group",
+  "HOLD": "Carote (Singapore) Management",
+  "OP": "Zhejiang Carote Industry & Trade Co., Ltd. / Zhejiang Carote"
+ }
+}

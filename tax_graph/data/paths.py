@@ -20,7 +20,7 @@ class Route:
 
 PATHS = {
     ("CN", OVER_WITHHELD): (
-        Route("refund", "taxpayer", "cn.refund", "cn.treaty.refund_route"),          # 2019-35 第十条; 征管法第51条 3 年
+        Route("refund", "taxpayer", "cn.refund", "cn.treaty.refund_route"),          # 2019-35 第十条; 征管法第51条: 3 years
         Route("map", "competent_authority", "cn-hk.map"),                            # Arrangement 23: 3 years from first notification
         Route("map", "competent_authority", "cn-sg.map"),                            # Agreement 24
     ),
@@ -28,7 +28,7 @@ PATHS = {
         Route("refund", "taxpayer", "cn.refund", "cn.treaty.claim_proc"),            # self-assessed relief, refund of the excess
     ),
     ("CN", DENIED): (
-        Route("review", "taxpayer", "cn.review", "cn.review.pay_first"),             # 征管法第88条 复议前置; 行政复议法第20条 60 日
+        Route("review", "taxpayer", "cn.review", "cn.review.pay_first"),             # 征管法第88条: administrative review must come first; 行政复议法第20条: 60 days
         Route("map", "competent_authority", "cn-hk.map"),
         Route("map", "competent_authority", "cn-sg.map"),
     ),

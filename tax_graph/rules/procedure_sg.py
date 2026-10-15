@@ -8,25 +8,32 @@ import csv
 from datetime import date, timedelta
 
 from ..params import OFFICIAL
-from .procedure_common import (add_months, arms_length_share, gain_share, ip_gain_share, ip_recapture_share,  # noqa: F401
-                               months_after, p2_shortfall_share, profit_share)
+from .procedure_common import (add_months, arms_length_share, arms_length_uplift, corresponding_share, gain_share, goods_share,  # noqa: F401
+                               ip_gain_share, ip_recapture_share, months_after, p2_shortfall_share, profit_share)
 
 JUR = "SG"
 
 
+_SG_HOLIDAYS = {}
+
+
 def load_holidays(P):
-    """Public holidays from the official calendar, plus the day after a holiday that falls on a Sunday."""
-    with open(str(OFFICIAL / "calendars" / "sg_public_holidays.csv"), encoding="utf-8-sig", newline="") as f:
-        days = {date.fromisoformat(r["date"]) for r in csv.DictReader(f)}
-    years = {d.year for d in days}
-    if P["sg.holiday.sunday_substitute"]:
-        for h in sorted(days):
-            if h.weekday() == 6:
-                nxt = h + timedelta(days=1)
-                while nxt in days:
-                    nxt += timedelta(days=1)
-                days.add(nxt)
-    return days, years
+    """Public holidays from the official calendar, plus the day after a holiday that falls on a Sunday; the calendar
+    is read once per process."""
+    sub = bool(P["sg.holiday.sunday_substitute"])
+    if sub not in _SG_HOLIDAYS:
+        with open(str(OFFICIAL / "calendars" / "sg_public_holidays.csv"), encoding="utf-8-sig", newline="") as f:
+            days = {date.fromisoformat(r["date"]) for r in csv.DictReader(f)}
+        years = {d.year for d in days}
+        if sub:
+            for h in sorted(days):
+                if h.weekday() == 6:
+                    nxt = h + timedelta(days=1)
+                    while nxt in days:
+                        nxt += timedelta(days=1)
+                    days.add(nxt)
+        _SG_HOLIDAYS[sub] = (frozenset(days), frozenset(years))
+    return _SG_HOLIDAYS[sub]
 
 
 class GapDate(date):
@@ -130,6 +137,49 @@ def sg_tp_surcharge(rule, facts, P, deadlines, tax):
     return round(float(adj) * P["sg.tp.surcharge_rate"] / 100.0, 2)
 
 
+def sg_tp_income_surcharge(rule, facts, P, deadlines, tax):
+    """ITA s34E(1)(a) (decision D41): 5% of the increase in income the Comptroller makes under s34D(1A)(a) — the arm's-length
+    amount less the price, when the price is outside the arm's-length range; whether or not tax is payable on it (IRAS TP
+    Guidelines 9.2). Unknown relatedness: no amount."""
+    alv, amount = facts.get(("flow", "arms_length_value")), facts.get(("flow", "amount"))
+    if alv is None or not amount or float(alv) <= float(amount) or facts.get(("flow", "sg_related")) is not True:
+        return None
+    low = facts.get(("flow", "arms_length_low"))
+    if low is not None and float(amount) >= float(low):
+        return None
+    return round((float(alv) - float(amount)) * P["sg.tp.surcharge_rate"] / 100.0, 2)
+
+
+def sg_uplift(facts, P, ch):
+    """decision D41: s34D(1A)(a) — the Singapore payee's income increased to the arm's-length amount, a price inside the
+    arm's-length results left alone (IRAS TP Guidelines 5.115)."""
+    return arms_length_uplift(facts, P, ch, "sg_related", True)
+
+
+def sg_corresponding(facts, P, ch, items=()):
+    """decision D41: a Singapore payer's deduction when the Mainland taxed the payee at arm's length (Agreement Art 9(2) as
+    MLI Art 17(1) replaced it)."""
+    return corresponding_share(facts, P, ch, items, JUR)
+
+
+sg_corresponding.takes_items = True
+
+
+def s10l_gain_share(facts, P, ch):
+    """The gain share of a foreign disposal received here; s10L(10), (11) (decision D41): sold below its open-market price
+    (arms_length_value), the Comptroller may treat A + B - C as the gain received — the model's receipt is the whole
+    gain, so the share becomes (open-market price - basis) over the price. Whether the Comptroller does is a judgement
+    unless the case states it (s10l_open_market_applied); a nil price brings no gain in (e-Tax Guide 11.3)."""
+    share = gain_share(facts, P, ch)
+    b, c, k = (facts.get(("flow", x)) for x in ("arms_length_value", "consideration", "cost_basis"))
+    if b is None or c is None or k is None or c <= 0 or float(b) <= float(c):
+        return share
+    applied = facts.get(("flow", "s10l_open_market_applied"))
+    if applied is None:
+        applied = not ch.judged("flow.s10l_open_market_price")
+    return max(0.0, (float(b) - float(k)) / float(c)) if applied else share
+
+
 def _objection(f, P, d):
     return months_after(f, P, "assessment_notice_on", "sg.objection.months_company")
 
@@ -146,15 +196,129 @@ def wda_share(facts, P, ch):
     return min(1.0, years / P["sg.ip.wda_years"])
 
 
+
+def sg_goods_share(facts, P, ch, items=()):
+    """decision D42: the seller's profit on goods for Singapore, the price at arm's length (decision D41)."""
+    return goods_share(facts, P, ch, items, "SG", "sg_related", True)
+
+
+sg_goods_share.takes_items = True
+GOODS_READS = ("flow.cost_basis", "flow.arms_length_value", "flow.arms_length_low", "flow.operating_costs", "flow.trading_resale",
+                 "flow.purchase_price", "flow.purchase_arms_length_value", "flow.purchase_arms_length_low",
+                 "flow.purchase_arms_length_max", "flow.purchase_supplier_jur", "flow.purchase_treaty", "flow.purchase_cn_related",
+                 "flow.purchase_hk_associated", "flow.purchase_sg_related", "flow.corresponding_adjustment_granted", "flow.sg_related")
+
+def _sgd(facts):
+    """The price in Singapore dollars: the case's amount if it is stated in SGD, else times sgd_rate (SGD per unit)."""
+    amount = float(facts.get(("flow", "amount")) or 0.0)
+    if facts.get(("flow", "currency")) == "SGD":
+        return amount
+    rate = facts.get(("flow", "sgd_rate"))
+    return None if rate is None else amount * float(rate)
+
+
+def sg_bsd(facts, P, ch, items):
+    """First Schedule Article 3(a)(iv) (decision D48): 1% / 2% / 3% / 4% on the first $180,000 / next $180,000 / next $640,000 /
+    next $500,000, then 5% on the next $1,500,000 and 6% beyond for residential property; 5% beyond $1,500,000 for the
+    rest. As a rate on the price; the use or the SGD value unknown: the scales' ends."""
+    amount = float(facts.get(("flow", "amount")) or 0.0)
+    if amount <= 0:
+        return 0.0
+    res, x = facts.get(("flow", "property_residential")), _sgd(facts)
+    if res is None or x is None:                          # the residential scale is the higher one
+        keys = [k for k, v in (("flow.property_use", res), ("flow.sgd_rate", x)) if v is None]
+        fav = ch.missing(*keys)
+        if x is None:
+            return 0.0 if fav else P["sg.stamp.bsd_rate_top"]
+        res = (not fav) if res is None else res
+    return _scale(x, P, bool(res)) / x * 100.0
+
+
+def _scale(x, P, residential):
+    cuts = [P["sg.stamp.bsd_band_%d" % k] for k in range(1, 6)]
+    rates = ([P["sg.stamp.bsd_res_%d" % k] for k in range(1, 6)] + [P["sg.stamp.bsd_rate_top"]] if residential else
+             [P["sg.stamp.bsd_nonres_%d" % k] for k in range(1, 5)] + [P["sg.stamp.bsd_nonres_top"]])
+    duty, left = 0.0, x
+    for i, rate in enumerate(rates):
+        width = cuts[i] if i < len(cuts) and (residential or i < 4) else float("inf")
+        part = min(left, width)
+        duty += part * rate / 100.0
+        left -= part
+        if left <= 0:
+            break
+    return duty
+
+
+def sg_ssd(facts, P, ch, items):
+    """First Schedule Article 3(bd), (bg), (bj) (decision D48): the seller's duty on residential property sold within 4 years
+    (16 / 12 / 8 / 4%) when acquired on or after 4 July 2025, within 3 years (12 / 8 / 4%) when acquired from 11 March
+    2017; on industrial property within 3 years (15 / 10 / 5%) when acquired on or after 12 January 2013. Other property,
+    or a longer holding: none. As a rate on the price; the use or the acquisition date unknown: the ends."""
+    use, acq, on = facts.get(("flow", "property_use")), facts.get(("flow", "acquired_on")), facts.get(("flow", "date_of_payment"))
+    if use is None or acq is None:
+        keys = [k for k, v in (("flow.property_use", use), ("flow.acquired_on", acq)) if v is None]
+        return 0.0 if ch.missing(*keys) else P["sg.stamp.ssd_res_1y"]
+    year = lambda n: on is not None and on <= add_months(acq, 12 * n)   # "within one year", "not exceeding n years"
+    d = lambda k: date.fromisoformat(str(P[k]))
+    if use == "residential" and acq >= d("sg.stamp.ssd_res_new_from"):
+        steps = ("sg.stamp.ssd_res_1y", "sg.stamp.ssd_res_2y", "sg.stamp.ssd_res_3y", "sg.stamp.ssd_res_4y")
+    elif use == "residential" and acq >= d("sg.stamp.ssd_res_old_from"):
+        steps = ("sg.stamp.ssd_res_old_1y", "sg.stamp.ssd_res_old_2y", "sg.stamp.ssd_res_old_3y")
+    elif use == "industrial" and acq >= d("sg.stamp.ssd_ind_from"):
+        steps = ("sg.stamp.ssd_ind_1y", "sg.stamp.ssd_ind_2y", "sg.stamp.ssd_ind_3y")
+    else:
+        return 0.0
+    for n, k in enumerate(steps, start=1):
+        if year(n):
+            return P[k]
+    return 0.0
+
+
+def sg_property_tax(facts, P, ch, items):
+    """decision D49. The owner's property tax on the annual value (annual_value, SGD; the engine asks it): 10% for
+    non-residential property; for residential property let (not owner-occupied) 12% / 20% / 28% on the first $30,000 /
+    next $15,000 / next $15,000 and 36% above (IRAS, from 1 January 2024). As a rate on the rent; the use unknown: the
+    ends."""
+    amount, av = float(facts.get(("flow", "amount")) or 0.0), facts.get(("flow", "annual_value"))
+    if amount <= 0 or av is None:
+        return 0.0
+    res = facts.get(("flow", "property_residential"))
+    if res is None:
+        res = not ch.missing("flow.property_use")
+    av = float(av)
+    if not res:
+        tax = av * P["sg.property_tax.non_residential"] / 100.0
+    else:
+        cuts = [P["sg.property_tax.band_%d" % k] for k in range(1, 4)]
+        rates = [P["sg.property_tax.res_%d" % k] for k in range(1, 5)]
+        tax, left = 0.0, av
+        for i, rate in enumerate(rates):
+            part = min(left, cuts[i]) if i < 3 else left
+            tax += part * rate / 100.0
+            left -= part
+            if left <= 0:
+                break
+    x = _sgd(facts)
+    return 0.0 if not x else 100.0 * tax / x
+
+
 REGISTRY = {
+    "sg.property_tax.rent": ("PROPERTY_TAX", sg_property_tax, ("sg.pta1960.s9#all", "sg.iras.ptax.rates#h6", "sg.iras.ptax.rates#h9")),   # decision D49
+    "sg.rent.base": ("BASE", profit_share, ("sg.ita1947.full#s10",)),
+    "sg.rent.foreign.base": ("BASE", profit_share, ("sg.ita1947.full#s10",)),
+    "sg.stamp.bsd": ("STAMP", sg_bsd, ("sg.sda1929.sch1#sch1",)),                    # decision D48
+    "sg.stamp.ssd": ("STAMP", sg_ssd, ("sg.sda1929.sch1#sch1",)),
+    "sg.property.base": ("BASE", gain_share, ("sg.ita1947.full#s10",)),
+    "sg.goods.base": ("BASE", sg_goods_share, ("sg.ita1947.full#s10", "sg.ita1947.full#s34D")),   # decision D42
+    "sg.goods.nonresident.base": ("BASE", sg_goods_share, ("sg.ita1947.full#s10", "sg.ita1947.full#s34D")),
     "sg.gain.base": ("BASE", gain_share, S10),
-    "sg.ip.recapture": ("CHARGE", ip_recapture_share, ("sg.ita1947.full#s19B",)),                     # 口径 D22
+    "sg.ip.recapture": ("CHARGE", ip_recapture_share, ("sg.ita1947.full#s19B",)),                     # decision D22
     "sg.ip.revenue": ("CHARGE", ip_gain_share, S10),
     "sg.ip.wda.horizon": ("DEDUCT_BASE", wda_share, ("sg.ita1947.full#s19B",)),
-    "sg.fsie.gain.base": ("BASE", gain_share, S10),
+    "sg.fsie.gain.base": ("BASE", s10l_gain_share, S10 + ("sg.ita1947.full#s10L", "sg.etax.10l#para11.3")),   # decision D41
     "sg.service.base": ("BASE", profit_share, S10),
     "sg.p2.base": ("BASE", _p2, ("sg.memta2024.s16#s16", "sg.memta2024.s17#s17", "sg.memta2024.s21#s21",
-                                 "sg.memta2024.s30#s30")),                           # 口径 D13, D14, D15
+                                 "sg.memta2024.s30#s30")),                           # decision D13, D14, D15
     "sg.tp.deduction_cap": ("DEDUCT_BASE", arms_length_share, ("sg.ita1947.full#s34D",)),
     "15th day of the second month following payment": ("DEADLINE", ("filing", _filing), S45),
     "observed:sg.wht.due_date_saturday_rolls": ("DEADLINE", ("filing", _filing_practice), S45),
@@ -165,10 +329,14 @@ REGISTRY = {
     "sg.objection.source": ("DEADLINE", ("objection", _objection), ("sg.ita1947.full#s76",)),
     "sg.wht.penalty": ("PENALTY", penalty, S45),
     "sg.tp.surcharge": ("PENALTY", sg_tp_surcharge, ("sg.ita1947.full#s34E",)),
+    "sg.tp.income_uplift": ("BASE", sg_uplift, ("sg.ita1947.full#s34D", "sg.ita1947.full#s2", "sg.iras.etax.tp#para5.115")),
+    "sg.tp.corresponding": ("DEDUCT_BASE", sg_corresponding, ("treaty.cn-sg.2007.mli.zh#9.2",)),
+    "sg.tp.income_surcharge": ("PENALTY", sg_tp_income_surcharge, ("sg.ita1947.full#s34E", "sg.iras.etax.tp#para9.2")),
 }
 
 # facts each rule reads besides its parameters and condition; compile.py adds them to RuleObj.reads
 READS = {
+    "sg.goods.base": GOODS_READS, "sg.goods.nonresident.base": GOODS_READS,
     "sg.ftc.dta": ("flow.foreign_tax_rate",),
     "sg.ip.recapture": ("flow.consideration", "flow.cost_basis", "flow.ip_allowances_claimed"),
     "sg.ip.revenue": ("flow.consideration", "flow.cost_basis"),
@@ -180,7 +348,10 @@ READS = {
     "sg.dtr.cor": ("flow.period_to",),
     "sg.dtr.cor_prior_years": ("flow.as_at",),
     "sg.objection": ("flow.assessment_notice_on",), "sg.objection.source": ("flow.assessment_notice_on",),
-    "sg.fsie.gain.base": ("flow.consideration", "flow.cost_basis"),
+    "sg.fsie.gain.base": ("flow.consideration", "flow.cost_basis", "flow.arms_length_value", "flow.s10l_open_market_applied"),
+    "sg.tp.income_uplift": ("flow.arms_length_value", "flow.arms_length_low", "flow.sg_related"),
+    "sg.tp.corresponding": ("flow.parties_treaty", "flow.corresponding_adjustment_granted"),
+    "sg.tp.income_surcharge": ("flow.arms_length_value", "flow.arms_length_low"),
     "sg.gain.base": ("flow.consideration", "flow.cost_basis"),
     "sg.service.base": ("flow.profit_margin",),
     "sg.p2.base": ("flow.p2_etr", "flow.p2_additional"),

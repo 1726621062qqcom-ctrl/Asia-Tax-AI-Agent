@@ -1,0 +1,3915 @@
+=== [p.1] ===
+Int Tax Public Finance (2018) 25:1277–1320
+https://doi.org/10.1007/s10797-018-9489-0
+Tax treaties and foreign direct investment: a network
+approach
+Sunghoon Hong1
+Published online: 9 April 2018
+© Springer Science+Business Media, LLC, part of Springer Nature 2018
+Abstract Multinational investors often reduce tax on dividends by using indirect
+investment routes. This paper constructs a tax rate matrix to represent a real-world
+network of tax treaties between 70 countries and develops a computation algorithm to
+study the structure of tax-minimizing (direct or indirect) investment routes in the tax
+treaty network. The treaty shopping rate, deﬁned as the difference between the foreign
+tax rates of the direct route and a tax-minimizing route, is about 3.66 percentage points
+on average. This paper also examines the relationship between FDI and the structure of
+tax-minimizing routes. Empirical results show that the existence of a tax-minimizing
+direct route is positively and signiﬁcantly related to FDI. The inward FDI stock via a
+tax-minimizing direct route is about 2.14 times larger than the inward FDI stock via
+a direct route that is not tax-minimizing. By making a direct route tax-minimizing,
+countries can encourage FDI via the direct route and reduce treaty shopping.
+Keywords Tax treaty network · Tax-minimizing route · Treaty shopping rate ·
+Foreign direct investment
+JEL Classiﬁcation F23 · H25 · H87
+1 Introduction
+The main purpose of tax treaties is to avoid, or at least to reduce, double taxation on
+cross-border economic activity, such as foreign direct investment (FDI). By reducing
+double taxation, tax treaties can help increase the net-of-tax return of investors, such as
+B Sunghoon Hong
+sunghoonhong@kipf.re.kr
+1
+Korea Institute of Public Finance, 336 Sicheong-daero, Sejong 30147, South Korea
+123
+=== [p.2] ===
+1278
+S. Hong
+multinational ﬁrms, and encourage FDI.1 Despite the expected relationship between
+tax treaties and FDI, empirical studies have found little evidence to support the rela-
+tionship. For instance, Blonigen and Davies (2004) use an indicator variable for the
+presence of a tax treaty and ﬁnd that the average treaty effect on FDI is insigniﬁcant.2
+Researchers take two different approaches to resolve the puzzling relationship
+between tax treaties and FDI. The ﬁrst approach is to use ﬁrm-level data to over-
+come the aggregate nature of FDI data.3 Davies et al. (2009) use data on the foreign
+activities of Swedish multinational ﬁrms and ﬁnd positive treaty effects on the proba-
+bility of FDI into a country. However, they ﬁnd no signiﬁcant treaty effect on the level
+of FDI.
+The second approach is to use network optimization techniques to understand
+the network effect of tax treaties on FDI. By using the Floyd–Warshall algorithm
+to ﬁnd shortest paths (i.e., tax-minimizing routes) between countries in a tax treaty
+network, van’t Riet and Lejour (2017) compute tax rates reduced by treaty shopping
+and centrality measures for conduit countries. These computed variables turn out to
+be signiﬁcantly related to FDI.
+In line with the “network” approach, I examine the structure of tax-minimizing
+investment routes in a network of tax treaties between 70 countries. This tax treaty
+network is represented as a tax rate matrix where each entry is deﬁned as the minimum
+withholding tax (WHT) rate on dividends and determined by relevant tax treaties
+and tax laws. In this tax treaty network, investors can minimize tax on dividends by
+choosing direct investment routes to 26 countries. These countries impose no WHT
+on dividends or have an imputation system under which no WHT may be imposed on
+dividends. However, investors may be able to minimize tax on dividends by choosing
+indirect investment routes to the rest of the 44 countries.
+Theconceptoftreatyshoppingreferstotheuseofindirectinvestmentroutesthrough
+countries with favorable tax treaties. Multinational investors can return after-tax proﬁts
+to their home countries through tax-minimizing indirect routes. OECD (2015) high-
+lights that treaty shopping is one of the most important sources of concerns regarding
+the Base Erosion and Proﬁt Shifting (BEPS) project.
+Here, I develop an algorithm to analyze the structure of tax-minimizing (direct
+or indirect) investment routes to the 44 countries. My algorithm works under the
+1 Foreign “direct” investment from country i to country j requires that an investor in country i should play
+an active role by owning a signiﬁcant proportion (e.g., at least 10%) of shares of a company in country j.
+Generally, FDI is distinguished from foreign “portfolio” investment that requires no minimum threshold
+on ownership. However, FDI can be made with indirect ownership structures using conduit companies in
+countries other than i and j. In this paper, the deﬁnition of indirect investment routes focuses on such
+indirect ownership structures.
+2 Louie and Rousslang (2008) also use a treaty dummy variable and ﬁnd no signiﬁcant treaty effect on
+the rate of return from FDI after controlling for the quality of governance in source countries. However,
+di Giovanni (2005) ﬁnds a positive treaty effect on cross-border mergers and acquisitions. For a survey of
+earlier studies, see Davies (2004).
+3 Weyzig (2013) uses Dutch data on special purpose entities and ﬁnds positive treaty effects on FDI.
+Blonigen et al. (2014) use the US BEA data on multinational company operations and ﬁnd differential
+effects of tax treaties on foreign afﬁliate activities, depending on the use of differentiated inputs across
+industry sectors. They ﬁnd positive treaty effects on foreign afﬁliate activities by ﬁrms in industries using
+more differentiated inputs.
+123
+=== [p.3] ===
+Tax treaties and foreign direct investment: a network approach
+1279
+constraint that every route passes through at most two countries. I consider two cases
+about CIT rates in pass-through countries. For brevity, I summarize the results in case
+(R), where pass-through countries impose CIT at reduced rates.
+The treaty shopping rate, deﬁned as the difference between the foreign tax rates
+of the direct route and a tax-minimizing route, is about 3.66 percentage points on
+average. In relative terms, the treaty shopping rate is about 29.07% of the WHT rate
+for the direct route. In other words, by using a tax-minimizing route, a multinational
+investor can reduce the tax rate on dividends by 3.66 percentage points or, in relative
+terms, can reduce 29.07% of the tax rate. Thus, the use of a tax-minimizing indirect
+route can substantially reduce tax on dividends incurred by a multinational investor.
+For 2954 pairs (61.2%) of residence and source countries, there is a tax-minimizing
+direct route.4 For 1876 pairs (38.8%) with no tax-minimizing direct route, on average,
+the treaty shopping rate is about 9.42 percentage points. In relative terms, the treaty
+shopping rate is about 74.83% of the WHT rate.
+Interestingly, for only 152 pairs (3.1%) of residence and source countries, there are
+tax-minimizing indirect routes with two pass-through countries. For the rest of country
+pairs (96.9%), even if it is possible for a route to pass through two countries, every tax-
+minimizing route passes through at most one country. This is probably because some
+countries play a central role as a unique pass-through country in a tax-minimizing
+indirect route. By using the pass-through rate, deﬁned as the relative frequency of
+being a pass-through country in tax-minimizing indirect routes, I ﬁnd that the United
+Kingdom (GB), Malta (MT), Estonia (EE), Slovakia (SK), Hungary (HU), and Cyprus
+(CY) are among the most common pass-through countries.
+In addition, I present examples of tax-minimizing routes with visual diagrams.
+Notably, from the United States to China, there are tax-minimizing indirect routes
+passing through Hong Kong or the Netherlands. This ﬁnding coincides with anecdotal
+evidence that American multinational ﬁrms, such as Starbucks and IBM, indirectly
+owned and operated Chinese subsidiaries through foreign equity-holding companies
+in Hong Kong and the Netherlands.
+Multinational ﬁrms can choose investment (ownership) structures that inﬂuence
+FDI between countries at an aggregate level. If such investors consider tax as an
+important factor when choosing investment structures, the results of the network anal-
+ysis will be consistent with FDI data. I investigate whether the network results help
+explain FDI patterns by using FDI data from the United Nations Conference on Trade
+and Development (UNCTAD) and by using standard estimation methods. I also use
+dummy variables for residence and source countries to control for country-speciﬁc
+factors.
+Inallrelevantregressions,theexistenceofatax-minimizingdirectrouteispositively
+and signiﬁcantly related to FDI. After controlling for country dummies, I ﬁnd that the
+inward FDI stock via a tax-minimizing direct route is about 2.14 times larger than
+the inward FDI stock via a direct route that is not tax-minimizing. Thus, by making a
+direct route tax-minimizing, countries can encourage FDI via the direct route.
+4 Given 70 countries, there are 4830 (= 70 ×69) pairs of residence and source countries. Here “residence”
+refers to a place where investors originally own their assets for investment and “source” refers to a place
+where investors earn income from their investment.
+123
+=== [p.4] ===
+1280
+S. Hong
+Furthermore, in all relevant regressions, the treaty shopping rate is negatively and
+signiﬁcantly related to FDI. Therefore, even if a direct route is not tax-minimizing, by
+reducing the treaty shopping rate, countries can encourage FDI via the direct route.
+In addition, I ﬁnd some evidence that the pass-through rate is positively related to
+FDI. Because increased FDI from pass-through countries may result partly from treaty
+shopping, source countries can use the pass-through rate as an index to monitor treaty
+shopping.
+This paper is closely related to van’t Riet and Lejour (2017). While van’t Riet
+and Lejour (2017) use the Floyd–Warshall algorithm to ﬁnd tax-minimizing routes
+between 108 countries, this paper uses a simple computation algorithm for 70 coun-
+tries. Compared with van’t Riet and Lejour (2017), this paper provides an original
+contribution in three ways. First, this paper proposes new network variables, which
+turn out to be signiﬁcantly related to FDI. Second, this paper provides examples and
+diagrams of tax-minimizing routes, which are consistent with ownership structures
+of some multinational ﬁrms. Third, this paper adopts regression models with country
+dummies to control for country-speciﬁc factors.
+From a broader perspective, this paper contributes to the literature on taxation and
+investment of multinational ﬁrms. A cental issue in this literature has been whether
+and how taxation affects FDI.5 More recently, researchers focus on how tax systems,
+together with nontax motives, inﬂuence location decisions and ownership structures of
+multinational ﬁrms. Barrios et al. (2012) ﬁnd that corporate taxation of foreign-source
+dividends in residence countries may deter entries into potential source countries.6
+Mintz and Weichenrieder (2010) ﬁnd that German multinational ﬁrms use indirect
+ownership structures through conduit countries and suggest that treaty shopping is
+a main reason for indirect structures. Lewellen and Robinson (2013) also discover
+that American multinational ﬁrms use indirect ownership structures for tax motives.
+Dyreng et al. (2015) ﬁnd that American multinational ﬁrms are more likely to use
+indirect ownership structures (i.e., foreign equity-holding companies) as the WHT
+rate on dividends paid from a source country to the United States increases. However,
+they ﬁnd no evidence that the existence of a tax treaty reduces the use of indirect
+structures.
+The rest of this paper is organized as follows. Section 2 constructs a tax rate matrix
+to represent a tax treaty network and develops a computation algorithm to ﬁnd tax-
+minimizing routes. Section 3 analyzes the structure of tax-minimizing routes in the
+network and calculates network variables such as the treaty shopping rate. Section 4
+studies the relationship between FDI and the network variables. Section 5 concludes.
+5 de Mooij and Ederveen (2003) provide a survey of empirical studies. For recent studies, see Blonigen
+et al. (2007), Becker et al. (2012a), and Becker and Riedel (2012b). Conversely, Chisik and Davies (2004)
+study the effects of FDI on tax treaties by using a bargaining model and show that asymmetry in FDI stocks
+may result in higher tax treaty rates.
+6 For related studies, see Huizinga and Voget (2009) and Voget (2011). Dischinger and Riedel (2011)
+examine location decisions for intangible assets.
+123
+=== [p.5] ===
+Tax treaties and foreign direct investment: a network approach
+1281
+2 Network approach
+A complete directed network is a network in which each pair of nodes is connected by
+two links with opposite directions. Countries i and j can be thought of as nodes i and
+j in a complete directed network where each link ij is given a weight tij representing
+a withholding tax (WHT) rate on dividends. This complete directed network can be
+thought of as a tax treaty network because tax treaties often determine WHT rates on
+dividends paid across countries.7 By constructing a matrix T = [tij] to represent a tax
+treaty network, and by developing a computation algorithm, I examine the structure
+of tax-minimizing investment routes in the tax treaty network.
+2.1 Investment routes
+An investor plans to invest in country s but lives in country h. From this investment,
+the investor will earn income m as dividends in country s and repatriate her income
+to country h. Country s is called the source country, while country h is called the
+residence (or home) country.
+The investor chooses an investment route to maximize her net-of-tax income in
+the residence country, i.e., to minimize tax when she remits her income to country h.
+Formally, an investment route, or simply a route, is deﬁned as a series of countries,
+h, i, . . . , j, s, from country h to country s. Let R(h, s) denote the set of all routes from
+h to s. Let r ∈R(h, s) denote a route. Given a route r = h, i, . . . , j, s, countries i
+through j are called pass-through countries. A route h, i, . . . , j, s is often written as
+h →i →· · · →j →s
+when it is necessary to highlight the direction of the route. The investor can choose
+an indirect route h, i, . . . , j, s to invest in country s by establishing conduit entities in
+countries i through j and making her investment indirectly through these entities. She
+can also choose the direct route h, s to invest in country s. When the investor remits her
+income from s to h, the remittance route follows the reverse order of the countries in the
+investment route. The investor leaves no retained earnings in pass-through countries.
+The investor’s net-of-tax income depends on tax relief rules in the home country. I
+assume that the home country has a deduction or an exemption system. The foreign
+tax rate f (r) of a route r is deﬁned as follows:
+f (r) =
+tsh
+if r = h, s
+1 −(1 −tsj)(1 −t j) · · · (1 −ti)(1 −tih) if r = h, i, . . . , j, s
+Here, ti denotes the corporate income tax (CIT) rate in country i and tij denotes the
+withholding tax (WHT) rate on dividends paid from country i to country j.
+If the investor chooses a route r, in the residence country, the investor’s net-of-tax
+income is m(1 −f (r))(1 −th). Because the residence country h, the source country
+7 Tax treaties also affect WHT rates on interest and royalties, which may inﬂuence cross-border investment
+in debt instruments and intellectual properties.
+123
+=== [p.6] ===
+1282
+S. Hong
+s, and the dividend income m are given and ﬁxed, the investor’s net-of-tax income
+is determined by the choice of a route r ∈R(h, s). A route r∗∈R(h, s) is called
+tax-minimizing if for every r ∈R(h, s), f (r∗) ≤f (r). The investor can maximize
+her net-of-tax income by choosing a tax-minimizing route r∗.
+Note that the taxation of the residence country is not included in the deﬁnitions
+of foreign tax rate and tax-minimizing route. Because the residence country is given
+and ﬁxed, if it has a deduction or an exemption system, the taxation of the residence
+country does not inﬂuence the structure of tax-minimizing routes.
+Alternatively, if the residence country has a foreign tax credit system, the investor’s
+net-of-tax income is determined by the greater of the foreign tax rate f (r) and the home
+CIT rate th. Thus, if the home CIT rate is sufﬁciently high under the credit system, the
+direct route can yield the same net-of-tax income as a tax-minimizing indirect route,
+and the investor may have no incentive to use an indirect route.8 However, the investor
+has such an incentive if the residence country has a deduction or an exemption system.
+2.2 Tax rate matrix
+A tax rate matrix T = [tij] shows WHT rates on dividends paid across national
+borders.9 Each WHT rate tij is applied for a pair of countries i and j. If an entity
+in country i remits dividends to an entity in country j, the tax agency in country i
+imposes WHT on dividends at the rate tij. Each WHT rate tij is determined by the tax
+treaty between countries i and j and by the national tax law of country i. For the sake
+of running an algorithm, each diagonal entry tii is assumed to be zero.
+I construct a tax rate matrix T = [tij] between 70 countries, as listed in Tables 1 and
+2, by using the information on tax treaties and tax laws from Deloitte International
+Tax Source and PwC Worldwide Tax Summaries.10 From these Web sites, I also ﬁnd
+the information on CIT rates. Tables 1 and 2 summarize notable WHT systems with
+minimum, median, and maximum WHT rates and CIT rates in the 70 countries, as of
+July 2015.
+Each WHT rate tij is determined as follows:
+First, if the European Union Parent-Subsidiary Directive (EU PSD) can be applied
+for countries i and j, then set tij = 0. The EU PSD requires the exemption of WHT
+on dividends paid across EU countries, Iceland, Norway, and Switzerland.11
+Second, if the EU PSD cannot be applied for at least one of countries i and j, then
+check if there is a tax treaty between countries i and j. If there is no tax treaty between
+i and j, then set tij equal to the WHT rate speciﬁed by the national tax law of country
+i.
+8 Notably,until2017,theUnitedStatesmaintainedaforeigntaxcreditsystemwithahighCITrate.However,
+by the Tax Cuts and Jobs Act of 2017, it adopts an exemption system for foreign-source dividends.
+9 Barrios et al. (2012, Table 2) provide a tax rate matrix of 33 European countries. Johannesen (2012, Table
+1) also presents a matrix of WHT rates on interest paid across 28 OECD countries.
+10 Accessed in July 2015 at dits.deloitte.com and taxsummaries.pwc.com.
+11 European Commission, Council Directive 2003/123/EC of 22 December 2003.
+123
+=== [p.7] ===
+Tax treaties and foreign direct investment: a network approach
+1283
+Table 1 Selected countries and tax systems (2015)
+Country
+Code
+WHT system
+Min
+Med
+Max
+CIT
+Argentina
+AR
+Single rate 10%
+10
+10
+10
+35
+Australia
+AU
+Imputation
+0
+0
+0
+30
+Austria
+AT
+0
+5
+25
+25
+Belgium
+BE
+0
+0
+25
+33
+Bermuda
+BM
+No WHT
+0
+0
+0
+0
+Brazil
+BR
+No WHT
+0
+0
+0
+34
+Bulgaria
+BG
+0
+5
+5
+10
+Canada
+CA
+5
+5
+25
+15
+Cayman
+KY
+No WHT
+0
+0
+0
+0
+Chile
+CL
+Imputation
+0
+0
+0
+22.5
+China
+CN
+5
+10
+10
+25
+Colombia
+CO
+Imputation
+0
+0
+0
+25
+Croatia
+HR
+0
+5
+12
+20
+Cyprus
+CY
+No WHT
+0
+0
+0
+12.5
+Czech Republic
+CZ
+0
+5
+15
+19
+Denmark
+DK
+0
+0
+27
+23.5
+Ecuador
+EC
+Imputation
+0
+0
+0
+22
+Egypt
+EG
+0
+10
+10
+22.5
+Estonia
+EE
+No WHT
+0
+0
+0
+20
+Finland
+FI
+0
+5
+20
+20
+France
+FR
+0
+0
+30
+33.3
+Germany
+DE
+0
+5
+25
+15
+Gibraltar
+GI
+No WHT
+0
+0
+0
+10
+Greece
+GR
+0
+5
+10
+29
+Guernsey
+GG
+No WHT
+0
+0
+0
+0
+Hong Kong
+HK
+No WHT
+0
+0
+0
+16.5
+Hungary
+HU
+No WHT
+0
+0
+0
+10
+Iceland
+IS
+0
+5
+18
+20
+India
+IN
+Single rate 15%
+15
+15
+15
+30
+Indonesia
+ID
+5
+12.5
+20
+25
+Ireland
+IE
+0
+0
+20
+12.5
+Israel
+IL
+0
+10
+25
+26.5
+Italy
+IT
+0
+5
+26
+27.5
+Japan
+JP
+0
+10
+20
+23.9
+Korea
+KR
+0
+7
+20
+22
+Third, if the EU PSD cannot be applied for at least one of countries i and j, but if
+there is a tax treaty between countries i and j, then set tij equal to the minimum of the
+rates speciﬁed by the tax treaty between countries i and j and by the national tax law
+of country i.
+123
+=== [p.8] ===
+1284
+S. Hong
+Table 2 Selected countries and tax systems (2015)
+Country
+Code
+WHT system
+Min
+Med
+Max
+CIT
+Latvia
+LV
+No WHT
+0
+0
+0
+15
+Lithuania
+LT
+0
+5
+15
+15
+Luxembourg
+LU
+0
+0
+15
+21
+Malaysia
+MY
+No WHT
+0
+0
+0
+25
+Malta
+MT
+No WHT
+0
+0
+0
+35
+Mauritius
+MU
+No WHT
+0
+0
+0
+15
+Mexico
+MX
+0
+5
+15
+30
+Netherlands
+NL
+0
+0
+15
+25
+New Zealand
+NZ
+Imputation
+0
+0
+0
+28
+Norway
+NO
+0
+5
+25
+27
+Panama
+PA
+0
+10
+10
+25
+Peru
+PE
+5
+6.8
+6.8
+28
+Philippines
+PH
+5
+15
+15
+30
+Poland
+PL
+0
+5
+19
+19
+Portugal
+PT
+0
+5
+25
+21
+Romania
+RO
+0
+5
+16
+16
+Russia
+RU
+5
+10
+15
+20
+Saudi Arabia
+SA
+0
+5
+5
+20
+Singapore
+SG
+No WHT
+0
+0
+0
+17
+Slovakia
+SK
+No WHT
+0
+0
+0
+22
+Slovenia
+SI
+0
+5
+15
+17
+South Africa
+ZA
+5
+5
+15
+28
+Spain
+ES
+0
+0
+20
+28
+Sweden
+SE
+0
+0
+30
+22
+Switzerland
+CH
+0
+0
+35
+8.5
+Taiwan
+TW
+5
+20
+20
+17
+Thailand
+TH
+5
+10
+10
+20
+Turkey
+TR
+5
+10
+15
+20
+Ukraine
+UA
+0
+5
+15
+18
+Arab Emirates
+AE
+No WHT
+0
+0
+0
+0
+United Kingdom
+GB
+No WHT
+0
+0
+0
+20
+United States
+US
+0
+5
+30
+35
+Uruguay
+UY
+5
+7
+7
+25
+Venezuela
+VE
+Imputation
+0
+0
+0
+34
+Vietnam
+VN
+No WHT
+0
+0
+0
+22
+A tax treaty may specify a system of WHT rates on dividends depending on the
+percentage of shares. Given a system of WHT rates, I assume that the minimum WHT
+rate is applied. For example, according to the tax treaty between China (CN) and the
+United Kingdom (GB), if a Chinese entity pays dividends to a British entity that holds
+123
+=== [p.9] ===
+Tax treaties and foreign direct investment: a network approach
+1285
+at least 25% of its shares, the WHT rate is 5%. Otherwise, the WHT rate is 10%. In this
+case, the minimum WHT rate of 5% is applied, i.e., for i = CN and j = GB, tij = 5.
+Moreover, a tax treaty may include the limitation on beneﬁts (LOB) clause, speci-
+fying additional residency requirements to obtain the beneﬁts of the tax treaty. If the
+LOB clause speciﬁes that the minimum WHT rate can only be applied to certain pen-
+sion funds, I take the next lowest WHT rate for the matrix. Otherwise, I assume that
+the minimum WHT rate is applied. For instance, according to the tax treaty (amended
+and signed in 2010) between the United States (US) and Hungary (HU), the minimum
+WHT rate is 0%, but this rate can only be applied to pension funds qualiﬁed by the
+LOB clause of the tax treaty. The next lowest rate is 5%, which can be applied to
+other corporate entities. So, for i = US and j = HU, it is assumed that tij = 5.
+However, according to the tax treaty between the United States (US) and Japan (JP),
+the minimum WHT rate is 0%, and this rate can be applied to pension funds as well
+as companies holding more than 50% of shares for a period longer than 12 months.
+So, for i = US and j = JP, it is assumed that tij = 0.
+In addition to the general rules explained so far, I consider the following speciﬁc
+cases to construct the tax rate matrix.
+Subnational (state, province, etc.) governments may also impose WHT on divi-
+dends. However, it is an onerous task to ﬁnd out the WHT systems of all the subnational
+governments in 70 countries. Even if a subnational government imposes WHT on div-
+idends, the rate is usually very low. Therefore, I only consider WHT imposed by
+national (federal) governments.
+There is no WHT on dividends in India. However, India imposes a dividend dis-
+tribution tax at the rate of 15%. Hence, it is realistic to assume that the WHT rate is
+15% in India.
+Australia and New Zealand have dividend imputation systems under which no
+WHT may be imposed on dividends distributed by companies that already pay CIT.
+Chile, Colombia, Ecuador, and Venezuela also have such systems. I assume that these
+countries impose no WHT on dividends.
+Belgium imposes no WHT on dividends paid to entities resident in a country with
+a tax treaty. Ireland has a similar rule for WHT exemption. In Denmark, the WHT rate
+is no greater than 15% if dividends are paid to shareholders resident in a country with
+a tax treaty.
+In the tax rate matrix as constructed above, even without using a computation
+algorithm, we can ﬁnd that the investor can minimize tax on dividends by investing
+directly to 26 countries among all the countries in Tables 1 and 2. In particular, 18
+countries impose no WHT on dividends and six countries have a dividend imputation
+system. No WHT may be imposed on dividends under a dividend imputation system.
+Also, two countries have a WHT system with a single rate for all countries.
+However, the investor may be able to minimize tax on dividends by investing indi-
+rectly to the rest of the 44 countries. With the information about tax rates at hand, the
+investor needs to develop a computation algorithm to ﬁnd tax-minimizing investment
+routes to these 44 countries.
+123
+=== [p.10] ===
+1286
+S. Hong
+2.3 Algorithm
+Given a tax rate matrix T = [tij] and a pair (h, s) of residence and source countries, the
+investor can ﬁnd tax-minimizing routes from country h to country s by using a com-
+putation algorithm. I propose a computation algorithm that works under a constraint
+on the number of pass-through countries. This algorithm repeats the following three
+steps for all pairs of residence and source countries. Let (h, s) be a pair of countries.
+Step 1. Build a list of all routes from country h to country s under the constraint that
+the number of pass-through countries in each route is at most two and compute
+the net-of-tax income for each route.
+Step 2. Find the maximum net-of-tax income among all routes in the list.
+Step 3. Find and list all the routes from h to s that achieve the maximum net-of-tax
+income.
+Given 70 countries, there are 4830 (= 70 × 69) pairs of residence and source
+countries. Because there are at most two pass-through countries in a route, the list of
+all routes includes an indirect route h →i →j →s with two pass-through countries
+i and j, an indirect route h →j →s with a pass-through country j, and the direct
+route h →s. Given 70 countries, for each pair of residence and source countries, there
+are 4625 (= 68 × 67 + 68 + 1) routes in the list of Step 1.
+As the maximum number of pass-through countries in a route increases, the number
+of routes in the list of Step 1 grows exponentially, and the computational burden (or
+running time) of the algorithm increases exponentially. To limit the computational
+burden, I assume that there are at most two pass-through countries in a route.12
+3 Network results
+For an indirect route, the net-of-tax income depends on corporate income tax (CIT)
+rates in pass-through countries. I consider two cases about CIT rates. In the ﬁrst case
+(R), every pass-through country imposes CIT at a reduced rate of 1%.13 In the second
+case (S), every pass-through country imposes CIT at the statutory rate. One can expect
+that tax-minimizing indirect routes tend to pass through countries with no WHT in
+case (R), and pass through countries with no CIT in case (S).
+To present the results, I introduce the following network variables. For a pair
+of countries i and j, if there is a tax-minimizing direct route i →j in case (R),
+12 This assumption may not be unrealistic. Mintz and Weichenrieder (2010, Table 4) ﬁnd that only 0.2%
+of German multinational ﬁrms use cross-border investment routes (ownership chains) with three or more
+pass-through countries.
+13 In a pass-through country, CIT can be reduced by a favorable tax system for conduit entities, such as
+foreign equity-holding companies. According to van’t Riet and Lejour (2017, Table 4), the average effective
+CIT rate in pass-through (or conduit) countries is about 0.3%. In case (R), every pass-through country is
+assumed to impose CIT at the reduced rate of 1%. This rate is chosen as the smallest positive integer, and it
+is also greater than the estimate of 0.3%. As far as the reduced CIT rate is small and positive, the structure
+of tax-minimizing routes presented in this section remains qualitatively unchanged. However, in a special
+case when the reduced CIT rate is zero, tax-minimizing routes tend to pass through more countries with no
+WHT, because there is no additional cost of adding such a pass-through country into an indirect route. This
+special case is less realistic and not reported in this section.
+123
+=== [p.11] ===
+Tax treaties and foreign direct investment: a network approach
+1287
+Table 3 Descriptive statistics for network variables
+Variable
+Description
+Obs
+Mean
+SD
+Min
+Max
+DIRECTij
+Existence of a tax-minimizing
+direct route from i to j
+4830
+0.61
+0.49
+0
+1
+DIRECTSij
+4830
+0.75
+0.43
+0
+1
+TSHOPij
+Treaty shopping rate among
+routes from i to j
+4830
+3.66
+6.27
+0
+34
+TSHOPSij
+4830
+2.29
+5.03
+0
+30
+PASSij
+Percentage of tax-minimizing
+indirect routes to j through i
+4830
+0.98
+4.15
+0
+100
+PASSSij
+4830
+2.51
+11.58
+0
+100
+DIRECTij = 1, and otherwise, DIRECTij = 0. Similarly, in case (S), let DIRECTSij
+denote the indicator variable for the existence of a tax-minimizing direct route i →j.
+For a pair of countries i and j, the treaty shopping rate among routes from i to j
+in case (R) is deﬁned as TSHOPij = t ji −f (r∗), where r∗is a tax-minimizing route
+from i to j in case (R). Similarly, let TSHOPSij denote the treaty shopping rate among
+routes from i to j in case (S).
+In words, the treaty shopping rate among routes between a pair of residence and
+source countries is deﬁned as the difference between the foreign tax rates of the
+direct route and a tax-minimizing route.14 An investor can reduce her foreign tax rate
+by the treaty shopping rate by using a tax-minimizing route. If the direct route is
+tax-minimizing, the treaty shopping rate is zero. If not, the treaty shopping rate is a
+positive number in percentage points.
+For a pair of countries i and j, the pass-through rate of i to j in case (R), denoted
+by PASSij, is deﬁned as the percentage of tax-minimizing indirect routes to j passing
+through i among all tax-minimizing indirect routes to j in case (R). If there is no
+tax-minimizing indirect route to j in case (R), let PASSij = 0. Similarly, let PASSSij
+denote the pass-through rate of i to j in case (S).
+The pass-through rate ofi to j shows the relative frequency ofi being a pass-through
+country in tax-minimizing indirect routes to j. The pass-through rate is comparable
+to the notion of betweenness centrality in van’t Riet and Lejour (2017). To see which
+countries are common pass-through countries in tax-minimizing indirect routes, I will
+rank the countries according to their pass-through rates and compare the rankings of
+pass-through (or conduit) countries with those in van’t Riet and Lejour (2017).
+Table 3 presents descriptive statistics for network variables. Note that DIRECTij
+and TSHOPij are deﬁned for a pair of residence country i and source country j whereas
+PASSij is deﬁned for a pair of pass-through country i and source country j.
+Table 3 shows that direct routes are tax-minimizing for more than the majority of
+country pairs. In case (R), for 2954 pairs (61.2%) of countries i and j, the direct route
+i →j is tax-minimizing. In case (S), for 3637 pairs (75.3%) of countries i and j, the
+direct route i →j is tax-minimizing.
+14 Note that the taxation of the residence country is not included in the deﬁnitions of foreign tax rate and
+tax-minimizing route. The absence of the residence country taxation may underestimate the magnitude of
+treaty shopping.
+123
+=== [p.12] ===
+1288
+S. Hong
+Table 3 also shows that the use of a tax-minimizing indirect route can substantially
+reduce tax on dividends incurred by a multinational investor. In case (R), on average,
+the treaty shopping rate is about 3.66 percentage points. In relative terms, the treaty
+shopping rate is about 29.07% of the WHT rate for the direct route. By using a tax-
+minimizing route, a multinational investor can reduce the tax rate on dividends by
+3.66 percentage points or, in relative terms, can reduce 29.07% of the tax rate.
+The treaty shopping rate is more substantial when the average is taken over the pairs
+of countries with no tax-minimizing direct route. In case (R), for 1876 pairs (38.8%)
+of countries i and j, the direct route i →j is not tax-minimizing. Among these 1876
+pairs with no tax-minimizing direct route, on average, the treaty shopping rate is about
+9.42 percentage points. In relative terms, the treaty shopping rate is about 74.83% of
+the WHT rate. In case (S), for 1193 pairs (24.7%) of countries i and j, the direct route
+i →j is not tax-minimizing. Among these 1193 pairs, on average, the treaty shopping
+rate is about 9.29 percentage points. In relative terms, the treaty shopping rate is about
+63.23% of the WHT rate.
+3.1 Reduced rates in pass-through countries
+As mentioned in Sect. 2.2, investors can minimize tax on dividends by investing
+directly to 26 countries (with no WHT, dividend imputation, or single-rate systems)
+among the 70 countries. However, investors may be able to minimize tax on dividends
+by investing indirectly to the rest of the 44 source countries.
+In case (R), when pass-through countries impose CIT at the reduced rate, for 1876
+pairs of countries i and j, the direct route i →j is not tax-minimizing. For a typical
+pair of countries with no tax-minimizing direct route, multiple tax-minimizing indirect
+routes exist. Mostly, such indirect routes pass through only one country. For 1724 pairs,
+out of the 1876 pairs with no tax-minimizing direct route, there are tax-minimizing
+indirect routes with one pass-through country. For 152 pairs, there are tax-minimizing
+indirect routes with two pass-through countries.
+Precisely, when Korea (KR), Peru (PE), the Philippines (PH), Saudi Arabia (SA),
+or Ukraine (UA) is the source country, there are tax-minimizing indirect routes with
+two pass-through countries. However, for the rest of the countries, even if it is possible
+for a route to pass through two countries, every tax-minimizing route passes through
+at most one country.
+Table4showsthetypesandnumbersoftax-minimizingroutestothe44sourcecoun-
+tries in case (R). Column “Direct route” shows the number of tax-minimizing direct
+routes to each source country.15 Because there is only one direct route between a pair
+of residence and source countries, this number coincides with the number of residence
+countries with tax-minimizing direct routes to each source country. Column “1 Indi-
+rect route” shows the number of tax-minimizing indirect routes with one pass-through
+country, and column “1 Indirect home” shows the number of residence countries with
+such routes. Column “2 Indirect route” shows the number of tax-minimizing indirect
+routes with two pass-through countries and column “2 Indirect home” shows the num-
+15 For country j, the number in column “Direct route” is calculated as 
+i̸= j DIRECTij.
+123
+=== [p.13] ===
+Tax treaties and foreign direct investment: a network approach
+1289
+ber of residence countries with such routes. Column “TSHOP” shows the average of
+treaty shopping rates for each source country.16
+For example, as Table 4 shows, when Austria (AT) is the source country, there are
+33 tax-minimizing direct routes from 33 residence countries to Austria. Moreover,
+there are 464 tax-minimizing indirect routes from 36 residence countries to Austria.
+There are no tax-minimizing indirect routes with two pass-through countries. Thus,
+every tax-minimizing indirect route to Austria passes though only one country. When
+Austria is the source country, the average treaty shopping rate is about 6.83 percentage
+points.
+Table 4 also shows that Belgium (BE), Ireland (IE), and Thailand (TH) have the
+largest numbers of tax-minimizing direct routes. There are 61 tax-minimizing direct
+routes to Belgium, 54 to Ireland, and 69 to Thailand. In contrast, Indonesia (ID), Korea
+(KR), Panama (PA), Peru (PE), and the Philippines (PH) have the smallest number of
+tax-minimizing direct routes. There is only 1 tax-minimizing direct route to each of
+these countries.
+The structure of tax-minimizing routes can be examined from the perspective of
+a residence country. Table 5 shows the types and numbers of tax-minimizing routes
+from capital-exporting residence countries in case (R).17 Column “Direct route” shows
+the number of tax-minimizing direct routes from each residence country.18 This
+number coincides with the number of source countries with tax-minimizing direct
+routes from each residence country. Column “1 Indirect route” shows the number of
+tax-minimizing indirect routes with 1 pass-through country, and column “1 Indirect
+source” shows the number of source countries with such routes. Column “2 Indirect
+route” shows the number of tax-minimizing indirect routes with two pass-through
+countries, and column “2 Indirect source” shows the number of source countries with
+such routes. Column “TSHOP” shows the average of treaty shopping rates for each
+residence country.19
+For instance, as Table 5 shows, when Austria (AT) is the residence country, there
+are 55 tax-minimizing direct routes from Austria to 55 source countries. Moreover,
+there are 90 tax-minimizing indirect routes with 1 pass-through country from Austria
+to 13 source countries. There are 16 tax-minimizing indirect routes with two pass-
+through countries from Austria to a source country, namely Korea. When Austria is
+the residence country, the average treaty shopping rate is about 1.18 percentage points.
+Among the capital-exporting residence countries listed in Table 5, France (FR),
+Sweden (SE), and Switzerland (CH) have the largest numbers of tax-minimizing direct
+routes. There are 61 tax-minimizing direct routes from France, 60 from Sweden, and
+60 from Switzerland. In contrast, Canada (CA), Japan (JP), and Korea (KR) have the
+smallest numbers of tax-minimizing direct routes. There are 32 tax-minimizing direct
+routes from Canada, 37 from Japan, and 35 from Korea.
+16 For country j, the number in column “TSHOP” is 
+i̸= j TSHOPij/(70 −1).
+17 Each of the 70 countries, as a residence country, has tax-minimizing indirect routes to some source
+countries. Table 5 shows the results for the 20 countries whose outward FDI stock is greater than the inward
+stock according to the FDI data of the UNCTAD.
+18 For country i, the number in column “Direct route” is calculated as 
+j̸=i DIRECTij.
+19 For country i, the number in column “TSHOP” is 
+j̸=i TSHOPij/(70 −1).
+123
+=== [p.14] ===
+1290
+S. Hong
+Table 4 Tax-minimizing routes to source countries in case (R)
+Source
+Direct
+route
+1
+Indirect
+route
+1
+Indirect
+home
+2
+Indirect
+route
+2
+Indirect
+home
+TSHOP
+AT
+33
+464
+36
+0
+0
+6.83
+BE
+61
+162
+8
+0
+0
+2.78
+BG
+30
+398
+39
+0
+0
+2.26
+CA
+40
+494
+29
+0
+0
+4.46
+CN
+31
+590
+38
+0
+0
+2.11
+HR
+31
+426
+38
+0
+0
+4.99
+CZ
+31
+387
+38
+0
+0
+4.81
+DK
+39
+410
+30
+0
+0
+7.41
+EG
+5
+232
+64
+0
+0
+7.84
+FI
+34
+415
+35
+0
+0
+6.01
+FR
+38
+391
+31
+0
+0
+5.78
+DE
+31
+386
+38
+0
+0
+6.62
+GR
+30
+398
+39
+0
+0
+4.51
+IS
+30
+398
+39
+0
+0
+8.06
+ID
+1
+68
+68
+0
+0
+8.24
+IE
+54
+245
+15
+0
+0
+4.13
+IL
+5
+220
+64
+0
+0
+12.71
+IT
+31
+386
+38
+0
+0
+7.35
+JP
+9
+318
+60
+0
+0
+10.62
+KR
+1
+18
+18
+610
+50
+7.38
+LT
+32
+411
+37
+0
+0
+6.13
+LU
+35
+438
+34
+0
+0
+4.14
+MX
+19
+610
+50
+0
+0
+5.04
+NL
+40
+391
+29
+0
+0
+4.07
+NO
+33
+433
+36
+0
+0
+7.59
+PA
+1
+68
+68
+0
+0
+8.28
+PE
+1
+38
+38
+445
+30
+0.63
+PH
+1
+31
+31
+378
+37
+7.04
+PL
+31
+421
+38
+0
+0
+6.36
+PT
+30
+398
+39
+0
+0
+8.06
+RO
+31
+421
+38
+0
+0
+6.41
+RU
+27
+562
+42
+0
+0
+3.91
+SA
+3
+121
+53
+514
+13
+3.64
+SI
+30
+398
+39
+0
+0
+6.29
+ZA
+40
+528
+29
+0
+0
+3.30
+ES
+38
+457
+31
+0
+0
+4.75
+SE
+36
+391
+33
+0
+0
+7.49
+123
+=== [p.15] ===
+Tax treaties and foreign direct investment: a network approach
+1291
+Table 4 continued
+Source
+Direct
+route
+1
+Indirect
+route
+1
+Indirect
+home
+2
+Indirect
+route
+2
+Indirect
+home
+TSHOP
+CH
+36
+458
+33
+0
+0
+6.36
+TW
+17
+218
+52
+0
+0
+6.60
+TH
+69
+0
+0
+0
+0
+0.00
+TR
+15
+446
+54
+0
+0
+5.20
+UA
+5
+160
+42
+1241
+22
+7.19
+US
+12
+393
+57
+0
+0
+11.97
+UY
+13
+350
+56
+0
+0
+0.85
+Table 5 Tax-minimizing routes from home countries in case (R)
+Home
+Direct
+route
+1
+Indirect
+route
+1
+Indirect
+source
+2
+Indirect
+route
+2
+Indirect
+source
+TSHOP
+AT
+55
+90
+13
+16
+1
+1.18
+CA
+32
+308
+35
+20
+2
+2.76
+DK
+57
+74
+12
+0
+0
+1.05
+FI
+59
+28
+10
+0
+0
+0.98
+FR
+61
+36
+8
+0
+0
+0.53
+DE
+59
+46
+9
+17
+1
+0.74
+GR
+55
+73
+13
+16
+1
+1.88
+IS
+53
+121
+15
+16
+1
+1.92
+IE
+55
+86
+13
+16
+1
+1.23
+IT
+53
+103
+15
+16
+1
+1.56
+JP
+37
+323
+30
+32
+2
+3.56
+KR
+35
+264
+31
+85
+3
+3.15
+LU
+57
+62
+11
+16
+1
+0.90
+NL
+59
+53
+9
+18
+1
+0.63
+NO
+54
+102
+15
+0
+0
+1.73
+ES
+57
+78
+11
+16
+1
+1.25
+SE
+60
+37
+9
+0
+0
+0.66
+CH
+60
+30
+9
+0
+0
+0.55
+GB
+58
+69
+11
+0
+0
+0.92
+US
+41
+316
+27
+21
+1
+2.55
+Table 6 shows the most common pass-through countries in case (R). Column
+“Treaty” shows the number of tax treaties that a country has with any one of the 70
+countries. Column “PASS” shows the total of pass-through rates for each pass-through
+country.20 Column “Rank” shows the ranking of a pass-through country based on the
+20 For country i, the number in column “PASS” is 
+j̸=i PASSij.
+123
+=== [p.16] ===
+1292
+S. Hong
+Table 6 Common pass-through countries in case (R)
+Country
+WHT system
+Treaty
+PASS
+Rank
+vRL rank
+GB
+No WHT
+60
+411.41
+1
+1
+MT
+No WHT
+51
+312.81
+2
+10
+EE
+No WHT
+43
+297.18
+3
+3
+SK
+No WHT
+49
+283.71
+4
+8
+HU
+No WHT
+56
+255.44
+5
+5
+LV
+No WHT
+41
+251.93
+6
+31
+CY
+No WHT
+39
+245.12
+7
+9
+BE
+61
+225.09
+8
+17
+HK
+No WHT
+27
+195.40
+9
+22
+ES
+62
+194.69
+10
+15
+total pass-through rate. For comparison, column “vRL Rank” shows the ranking of a
+pass-through (or conduit) country in van’t Riet and Lejour (2017).
+AsshowninTable6,theUnitedKingdom(GB),Malta(MT),Estonia(EE),Slovakia
+(SK),Hungary(HU),andCyprus(CY)arerankedinthe10mostcommonpass-through
+countries by the total pass-through rate as well as by the betweenness centrality in
+van’t Riet and Lejour (2017). As of July 2015, all these countries impose no WHT
+on dividends and belong to the European Union.21 Latvia (LV), also ranked in the
+top 10 by the total pass-through rate, has the same features of WHT exemption and
+EU membership. In addition, Belgium (BE), Hong Kong (HK), and Spain (ES) are
+among the most common pass-through countries. While generally imposing WHT on
+dividends, Belgium and Spain have the largest numbers of tax treaties within the 70
+countries and keep the WHT rates close to zero. Hong Kong is ranked highest among
+the non-EU countries. Outside the top ten countries, Ireland (11th), the Netherlands
+(17th), and Singapore (19th) are ranked high.
+In Appendix A, I present examples of tax-minimizing routes between selected
+pairs of residence and source countries. As in Table 15, when the United States (US)
+is the residence country and China (CN) is the source country, there are 18 tax-
+minimizing indirect routes that pass through either one of the following countries:
+Belgium (BE), Denmark (DK), Ecuador (EC), Estonia (EE), Finland (FI), France
+(FR), Germany (DE), Hong Kong (HK), Ireland (IE), Latvia (LV), Malta (MT), Mau-
+ritius (MU), Mexico (MX), the Netherlands (NL), Singapore (SG), Sweden (SE),
+the United Kingdom (GB), and Venezuela (VE). By deﬁnition, these tax-minimizing
+indirect routes must yield the same net-of-tax income. Table 15 shows that the treaty
+shopping rate among routes between the United States and China is 4.05 percentage
+points.
+21 Tax-minimizing indirect routes tend to pass through countries with WHT exemption and EU membership
+because entities in such countries can receive WHT-exempt dividends from other EU countries under the
+EU PSD, as mentioned in Sect. 2.2, and pay WHT-exempt dividends to any other countries under the WHT
+exemption rule.
+123
+=== [p.17] ===
+Tax treaties and foreign direct investment: a network approach
+1293
+Note: ■CN source; • countries with tax-minimizing direct routes;
+◦countries with no such routes
+Fig. 1 Tax-minimizing routes to China (CN)
+Interestingly, from the United States (US) to China (CN), there are tax-minimizing
+indirect routes that pass through Hong Kong (HK) or the Netherlands (NL) as follows:
+US →HK →CN
+US →NL →CN
+This ﬁnding is consistent with anecdotal evidence that Starbucks Corporation, an
+American multinational ﬁrm, indirectly owned and operated Starbucks (China) Com-
+pany Ltd., a Chinese subsidiary, through Starbucks Asia Paciﬁc Investment Holding
+II Ltd., a holding company in Hong Kong. IBM Corporation also indirectly owned
+and operated IBM China Company Ltd., a Chinese subsidiary, through IBM Holdings
+B.V., a Dutch holding company.
+The structure of tax-minimizing routes can be examined visually with network
+diagrams. To draw the network diagrams, I use NodeXL with the Harel–Koren layout,
+which places closely connected nodes (i.e., countries) in proximal locations.
+123
+=== [p.18] ===
+1294
+S. Hong
+Note: • US residence; ■countries with tax-minimizing direct routes;
+□countries with no such routes
+Fig. 2 Tax-minimizing routes from the United States (US)
+Figure 1 shows a network diagram of tax-minimizing routes to China (CN). Here,
+the solid square stands for the source country. Each solid circle stands for a residence
+country with a tax-minimizing direct route. Each empty circle stands for a residence
+country with a tax-minimizing indirect route. Each arrow shows the direction of a
+route.
+As shown in the row CN of Table 4 and in Fig. 1, there are 31 tax-minimizing direct
+routes from 31 residence countries to China. Moreover, there are 590 tax-minimizing
+indirect routes from 38 residence countries to China. There are no tax-minimizing
+indirect routes with two pass-through countries.
+Figure 2 shows a network diagram of tax-minimizing routes from the United States
+(US). Here, the solid circle stands for the residence country. Each solid square stands
+for a source country with a tax-minimizing direct route. Each empty square stands for
+a source country with a tax-minimizing indirect route. Each arrow shows the direction
+of a route.
+123
+=== [p.19] ===
+Tax treaties and foreign direct investment: a network approach
+1295
+As shown in the row US of Table 5 and in Fig. 2, there are 41 tax-minimizing direct
+routes from the United States to 41 source countries. Moreover, there are 316 tax-
+minimizing indirect routes with one pass-through country from the United States to
+27 source countries. There are 21 tax-minimizing indirect routes with two pass-through
+countries from the United States to a source country, namely, Peru.
+In Appendix B, Figs. 3, 4, 5 and 6 show network diagrams of tax-minimizing
+investment routes to Mexico, Indonesia, Poland, and Saudi Arabia, respectively, in
+case (R). These four countries and China are the countries with the largest net inward
+FDI stock according to the FDI data of the UNCTAD.
+Figures 7, 8, 9 and 10 show network diagrams of tax-minimizing investment routes
+fromJapan,France,Germany,andtheUnitedKingdom,respectively,incase(R).These
+four countries and the United States are the countries with the largest net outward FDI
+stock.
+3.2 Statutory rates in pass-through countries
+In case (S), when pass-through countries impose CIT at the statutory rates, for 1193
+pairs of countries i and j, the direct route i →j is not tax-minimizing.
+In case (S), all tax-minimizing indirect routes pass through only the following six
+countries:Bermuda(BM),Cayman(KY),Guernsey(GG),Hungary(HU),Switzerland
+(CH), and the United Arab Emirates (AE). All these countries except for Hungary and
+Switzerland impose no CIT. Hungary and Switzerland impose CIT at relatively low
+statutory rates, 10 and 8.5%, respectively.
+In case (S), because Bermuda, Cayman, Guernsey, and the United Arab Emirates
+impose no CIT and no WHT, by adding one of these countries into a tax-minimizing
+indirect route with one pass-through country, we can construct a tax-minimizing indi-
+rect route with two pass-through countries. Hence, there are more tax-minimizing
+indirect routes with two pass-through countries than those with one pass-through
+country. However, this sort of extension does not change the net-of-tax income.
+Table 7 shows the types and numbers of tax-minimizing routes to the 44 source
+countries in case (S). The columns are deﬁned similarly as in Table 4. For example, in
+Table 7, when Austria (AT) is the source country, there are 33 tax-minimizing direct
+routes from 33 residence countries to Austria. Moreover, there are 68 tax-minimizing
+indirect routes with one pass-through country from 68 residence countries to Austria.
+Also, there are 201 tax-minimizing indirect routes with two pass-through countries
+from 68 residence countries to Austria. When Austria is the source country, the average
+treaty shopping rate is about 7.35 percentage points.
+Table 7 also shows that Bulgaria (BG), Peru (PE), Saudi Arabia (SA), Thailand
+(TH), and Uruguay (UY) have the largest number of tax-minimizing direct routes.
+There are 69 tax-minimizing direct routes to each of these countries. In contrast, Egypt
+(EG), Mexico (MX), and Panama (PA) have the smallest numbers of tax-minimizing
+direct routes. There are ﬁve tax-minimizing direct routes to Egypt, 19 to Mexico, and
+nine to Panama.
+Table 8 shows the types and numbers of tax-minimizing routes from capital-
+exporting residence countries in case (S). The columns are deﬁned similarly as in
+123
+=== [p.20] ===
+1296
+S. Hong
+Table 7 Tax-minimizing routes to source countries in case (S)
+Source
+Direct
+route
+1
+Indirect
+route
+1
+Indirect
+home
+2
+Indirect
+route
+2
+Indirect
+home
+TSHOP
+AT
+33
+68
+68
+201
+68
+7.35
+BE
+61
+68
+68
+201
+68
+2.90
+BG
+69
+152
+39
+444
+39
+0.00
+CA
+40
+68
+68
+201
+68
+4.86
+CN
+33
+37
+37
+108
+37
+1.54
+HR
+43
+28
+28
+84
+22
+0.88
+CZ
+46
+37
+37
+108
+37
+2.61
+DK
+48
+27
+27
+88
+23
+3.80
+EG
+5
+68
+68
+201
+68
+8.77
+FI
+34
+68
+68
+201
+68
+6.52
+FR
+38
+68
+68
+201
+68
+6.23
+DE
+48
+37
+37
+108
+37
+4.42
+GR
+38
+38
+38
+111
+38
+2.25
+IS
+39
+32
+32
+104
+27
+3.59
+ID
+34
+67
+67
+201
+68
+4.25
+IE
+54
+68
+68
+201
+68
+4.35
+IL
+39
+30
+30
+72
+19
+4.07
+IT
+40
+37
+37
+108
+37
+5.14
+JP
+21
+59
+59
+177
+60
+7.14
+KR
+34
+67
+67
+198
+67
+4.16
+LT
+32
+68
+68
+201
+68
+6.67
+LU
+52
+66
+34
+192
+34
+2.17
+MX
+19
+68
+68
+201
+68
+5.77
+NL
+50
+28
+28
+81
+28
+2.39
+NO
+47
+26
+26
+92
+24
+3.67
+PA
+9
+66
+66
+195
+66
+4.35
+PE
+69
+268
+68
+792
+68
+0.00
+PH
+20
+67
+67
+198
+67
+3.55
+PL
+31
+68
+68
+201
+68
+6.91
+PT
+37
+38
+38
+111
+38
+5.80
+RO
+31
+68
+68
+201
+68
+6.96
+RU
+64
+61
+20
+156
+15
+0.14
+SA
+69
+260
+66
+768
+66
+0.00
+SI
+39
+38
+38
+111
+38
+4.03
+ZA
+47
+22
+22
+52
+14
+0.32
+ES
+46
+30
+30
+90
+31
+2.96
+SE
+52
+24
+24
+80
+21
+3.91
+CH
+50
+32
+32
+96
+33
+4.45
+TW
+21
+48
+48
+92
+24
+1.17
+123
+=== [p.21] ===
+Tax treaties and foreign direct investment: a network approach
+1297
+Table 7 continued
+Source
+Direct
+route
+1
+Indirect
+route
+1
+Indirect
+home
+2
+Indirect
+route
+2
+Indirect
+home
+TSHOP
+TH
+69
+268
+68
+792
+68
+0.00
+TR
+41
+53
+53
+159
+54
+2.03
+UA
+38
+63
+63
+189
+64
+3.80
+US
+44
+25
+25
+76
+20
+4.78
+UY
+69
+220
+56
+648
+56
+0.00
+Table 8 Tax-minimizing routes from home countries in case (S)
+Home
+Direct
+route
+1
+Indirect
+route
+1
+Indirect
+source
+2
+Indirect
+route
+2
+Indirect
+source
+TSHOP
+AT
+64
+134
+48
+387
+47
+0.54
+CA
+54
+148
+59
+434
+59
+1.15
+DK
+64
+134
+48
+390
+48
+0.51
+FI
+63
+128
+45
+369
+44
+0.47
+FR
+67
+127
+44
+369
+44
+0.14
+DE
+65
+128
+45
+372
+45
+0.36
+GR
+60
+136
+50
+390
+48
+1.15
+IS
+59
+137
+51
+390
+48
+1.03
+IE
+62
+129
+46
+372
+45
+0.54
+IT
+60
+136
+50
+393
+49
+0.80
+JP
+49
+152
+62
+429
+57
+2.05
+KR
+52
+148
+61
+436
+61
+1.42
+LU
+65
+129
+46
+375
+46
+0.41
+NL
+66
+132
+46
+384
+46
+0.22
+NO
+60
+137
+51
+390
+48
+0.79
+ES
+62
+123
+46
+354
+45
+0.57
+SE
+65
+132
+46
+384
+46
+0.29
+CH
+68
+128
+45
+372
+45
+0.07
+GB
+65
+129
+46
+372
+45
+0.32
+US
+54
+149
+59
+438
+59
+1.10
+Table 5. For instance, in Table 8, when Austria (AT) is the residence country, there are
+64 tax-minimizing direct routes from Austria to 64 source countries. Moreover, there
+are 134 tax-minimizing indirect routes with one pass-through country from Austria to
+48 source countries. Also, there are 387 tax-minimizing indirect routes with two pass-
+through countries from Austria to 47 source countries. When Austria is the residence
+country, the average treaty shopping rate is about 0.54 percentage points.
+Among the capital-exporting residence countries listed in Table 8, France (FR), the
+Netherlands (NL), and Switzerland (CH) have the largest numbers of tax-minimizing
+123
+=== [p.22] ===
+1298
+S. Hong
+Table 9 Common pass-through countries in case (S)
+Country
+WHT system
+Treaty
+PASS
+Rank
+vRL rank
+AE
+No WHT
+45
+4397.98
+1
+19
+GG
+No WHT
+7
+2294.41
+2
+46
+BM
+No WHT
+0
+2256.82
+3
+44
+KY
+No WHT
+0
+2256.82
+3
+45
+HU
+No WHT
+56
+839.22
+5
+5
+CH
+61
+63.08
+6
+18
+direct routes. There are 67 tax-minimizing direct routes from France, 66 from the
+Netherlands, and 68 from Switzerland. In contrast, Canada (CA), Japan (JP), Korea
+(KR), and the United States (US) have the smallest numbers of tax-minimizing direct
+routes. There are 54 tax-minimizing direct routes from Canada, 49 from Japan, 52
+from Korea, and 54 from the United States.
+Table9showstherankingsofthesixpass-throughcountriesincase(S).Thecolumns
+are deﬁned similarly as in Table 6. In case (S), all tax-minimizing indirect routes pass
+through only the 6 countries listed in Table 9. Except for Hungary (HU), the rankings
+in case (S) turn out to be very different from those in case (R) and in van’t Riet and
+Lejour (2017). Bermuda (BM), Cayman (KY), Guernsey (GG), and the United Arab
+Emirates (AE) are ranked high in case (S). These countries impose no CIT and no
+WHT on dividends. Moreover, except for the United Arab Emirates, they have few tax
+treaties. Bermuda and Cayman have no tax treaties within the 70 countries. Guernsey
+has only seven tax treaties. Thus, Bermuda, Cayman, and Guernsey appear to be pass-
+through countries in case (S), simply because they impose no CIT and no WHT on
+dividends. However, in case (R), common pass-through countries tend to have large
+numbers of tax treaties. For instance, as in Table 6, the United Kingdom (GB) has
+60 tax treaties within the 70 countries. Tax treaties tend to inﬂuence the structures of
+tax-minimizing routes more profoundly in case (R) than in case (S).
+Overall, tax-minimizing indirect routes tend to pass through countries with exten-
+sive treaty networks and no WHT in case (R), and pass through countries with no CIT
+and no WHT in case (S). Note that Luxembourg and the Netherlands are not listed as
+common pass-through countries in case (R) nor in case (S). This is probably because
+they can impose CIT and WHT at positive rates, as shown in Table 2. However, Luxem-
+bourg and the Netherlands may have favorable CIT systems for conduit entities, which
+are not considered in this paper. Moreover, Luxembourg and the Netherlands can have
+preferential tax treaties with certain countries. These features can make Luxembourg
+and the Netherlands attractive pass-through countries in real-world cases.
+4 Empirical application
+Multinational ﬁrms can choose investment (ownership) structures that inﬂuence for-
+eign direct investment (FDI) between countries at an aggregate level. If such investors
+consider tax as an important factor when choosing investment structures, the results
+of the network analysis in Sect. 3 will be consistent with FDI data. For instance, Mintz
+123
+=== [p.23] ===
+Tax treaties and foreign direct investment: a network approach
+1299
+and Weichenrieder (2010), Lewellen and Robinson (2013) and Dyreng et al. (2015)
+discover that multinational ﬁrms use indirect ownership structures for tax motives.
+Here, I investigate whether the network variables in Sect. 3 help explain the patterns
+of FDI by using Ordinary Least Squares (OLS) and Poisson Pseudo Maximum Like-
+lihood (PPML) estimation methods. Silva and Tenreyro (2006) propose the PPML
+estimation to deal with numerous zero values in trade data. Because FDI data also
+exhibit a similar pattern, I adopt the PPML estimation to complement the log-linear
+OLS estimation.22
+4.1 Data and variables
+For a pair of countries i and j, FDIij is deﬁned as the inward FDI stock from i to j in
+millions of US dollars. I use the bilateral FDI data of the UNCTAD that are compiled
+on the basis of immediate ownership relations.23 Because the network variables are
+calculated without time-series dimension, I focus on cross-sectional data for year 2012
+or the latest year available.24 For instance, I use the FDI data of Luxembourg for year
+2011 because the data for 2012 is unavailable. Because all the 70 countries except
+for Gibraltar (GI) and Guernsey (GG) are included in the bilateral FDI data, there are
+4556 (= 68 × 67) pairs of countries.
+Table 10 provides descriptive statistics for regression variables. Note that the min-
+imum value of FDIij is negative and there are 86 observations with negative FDIij in
+the data.25 Also, there are 2141 observations with zero FDIij. To keep the observations
+with zero FDIij, the natural logarithm of inward FDI stock, denoted by ln FDIij, is cal-
+culated as ln(FDIij + 1). Since the log-linear OLS and the PPML estimations exclude
+the observations with negative FDIij, there remain 4470 observations in regressions.
+Three groups of network variables, DIRECT, TSHOP, and PASS, are introduced
+and calculated in Sect. 3. These network variables are deﬁned for a pair of countries
+i and j in each case of (R) and (S).
+Firstly, each DIRECT variable is an indicator variable for the existence of a tax-
+minimizing direct route. In case (R), if there is a tax-minimizing direct route from i
+to j, DIRECTij = 1, and otherwise, DIRECTij = 0. Also, DIRECTSij indicates the
+existence of a tax-minimizing direct route from i to j in case (S).
+22 FDI into a country may depend on the FDI in proximate countries. To control for such spatial interde-
+pendence, Blonigen et al. (2007) use an autoregressive model of FDI with spatial lags and ﬁnd signiﬁcant
+spatial effects.
+23 According to UNCTAD (2009), inward FDI ﬂows (and stocks) should be classiﬁed by the residence
+country of immediate foreign direct investors. For instance, if an American parent ﬁrm invests in a Chinese
+subsidiary ﬁrm through an intermediate subsidiary ﬁrm in Hong Kong, this investment is classiﬁed as the
+FDI from the United States to Hong Kong and as the FDI from Hong Kong to China.
+24 It often takes considerable time (e.g., 10 years) to negotiate and pass a tax treaty. Once in force, a tax
+treaty often lasts for a long period of time (e.g., 30 years) without any amendment. There are limited changes
+in tax treaties during the period between 2012 and 2015. However, if there are any, changes in tax treaties
+during the period may weaken the analysis in this section. Later, for a robustness check, I use the FDI data
+for year 2015 from an alternative source and ﬁnd consistent results.
+25 Negative FDI may indicate reverse investment or disinvestment.
+123
+=== [p.24] ===
+1300
+S. Hong
+Table 10 Descriptive statistics for regression variables
+Variable
+Obs
+Mean
+SD
+Min
+Max
+FDIij
+4556
+4146.52
+23,234.57
+−12,850.94
+592,273.20
+DIRECTij
+4556
+0.61
+0.49
+0
+1
+DIRECTSij
+4556
+0.75
+0.43
+0
+1
+TSHOPij
+4556
+3.58
+6.09
+0
+34
+TSHOPSij
+4556
+2.21
+4.85
+0
+30
+PASSij
+4556
+1.04
+4.27
+0
+100
+PASSSij
+4556
+2.09
+11.06
+0
+100
+CONTIGij
+4556
+0.03
+0.18
+0
+1
+COMLANGij
+4556
+0.09
+0.29
+0
+1
+COMLEGij
+4556
+0.25
+0.43
+0
+1
+COLONYij
+4556
+0.03
+0.16
+0
+1
+DISTij
+4556
+7.45
+4.87
+0.16
+19.65
+RTAij
+4556
+0.48
+0.50
+0
+1
+CITi
+4556
+21.67
+7.86
+0
+35
+GDPi
+4556
+1,028,373.00
+2,312,482.00
+3410.10
+16,155,254.80
+FTCi
+4556
+0.46
+0.50
+0
+1
+SFTCij
+4556
+0.17
+0.38
+0
+1
+I expect that each DIRECT variable is positively related to inward FDI stock. When
+the direct route is tax-minimizing between a pair of residence and source countries,
+investors will consider the direct route more attractive than indirect routes, and thus,
+they will use the direct route more frequently. Hong (2014) develops a game-theoretic
+model of treaty shopping and tax auditing between an investor and a tax agency, where
+the existence of a tax-minimizing direct route increases the investor’s equilibrium
+probability to use the direct route. This equilibrium behavior leads to increased FDI
+between residence and source countries at an aggregate level.
+Secondly, each TSHOP variable is a continuous variable specifying the difference
+between the foreign tax rates of the direct route and a tax-minimizing route. In case (R),
+the treaty shopping rate among routes from i to j is deﬁned as TSHOPij = t ji −f (r∗),
+where r∗is a tax-minimizing route from i to j. Also, TSHOPSij denotes the treaty
+shopping rate among routes from i to j in case (S).
+I expect that each TSHOP variable is negatively related to inward FDI stock. When
+the direct route is not tax-minimizing between a pair of residence and source countries,
+a TSHOP variable takes a positive value. Moreover, as the TSHOP variable increases,
+by deﬁnition, the difference becomes larger between the foreign tax rates of the direct
+route and a tax-minimizing route. Thus, investors will consider the direct route less
+attractive than tax-minimizing indirect routes. This can reduce FDI between residence
+and source countries at an aggregate level.
+Thirdly, each PASS variable is a continuous variable specifying the relative fre-
+quency of being a pass-through country in tax-minimizing indirect routes. In case
+123
+=== [p.25] ===
+Tax treaties and foreign direct investment: a network approach
+1301
+(R), the pass-through rate of i to j, denoted by PASSij, is deﬁned as the percentage
+of tax-minimizing indirect routes to j passing through i among all tax-minimizing
+indirect routes to j. Also, PASSSij denotes the pass-through rate of i to j in case (S).
+I expect that each PASS variable is positively related to inward FDI stock. If there
+is a tax-minimizing indirect route between a pair of residence and source countries,
+investors will use the indirect route by funnelling their investments via a pass-through
+country. Thus, the use of an indirect route can increase FDI between a pass-through
+country and a source country. If there is more than one tax-minimizing indirect route,
+indirect investments can be distributed over possible pass-through countries. However,
+if a country is more likely to be a pass-through country in tax-minimizing indirect
+routes to a source country, the portion of indirect investments via the country can be
+larger than those via other countries.
+There are six bilateral (pair-speciﬁc) variables to describe the relationship between
+countries i and j. CONTIGij, COMLANGij, COMLEGij, and COLONYij are indica-
+tor variables for a shared border, a common ofﬁcial language, a common legal origin,
+and a colonial relationship, respectively. DISTij is deﬁned as the population-weighted
+distance between countries i and j in thousands of kilometers. Head et al. (2010) use
+these bilateral variables to examine the patterns of international trade. I obtain the data
+for these variables from the CEPII.26 In addition, RTAij is an indicator variable for
+the existence of a regional trade agreement (RTA) between countries i and j. Egger
+and Larch (2008) examine the determinants of a regional trade agreement. I obtain the
+RTA data from Mario Larch’s database.27
+Corporate income tax rates and gross domestic product are variables speciﬁc to a
+country, depending on whether it is a residence country or a source country. CITi and
+CIT j denote corporate income tax rates in residence country i and source country j,
+respectively. Each CIT rate is in percentage and from Deloitte International Tax Source
+and PwC Worldwide Tax Summaries. GDPi and GDP j denote gross domestic product
+at current prices in millions of US dollars in residence country i and source country
+j, respectively. Because I focus on a cross-sectional analysis, I use GDP data for year
+2012 from the United Nations Statistics Division.28 For my regression analysis I use
+the natural logarithm of GDP.29
+In addition, I consider two variables about foreign tax credit (FTC) systems to
+control for their effects on FDI. These FTC variables are constructed with the infor-
+mation on tax laws from Deloitte International Tax Source and PwC Worldwide Tax
+Summaries.
+First, FTCi is a country-speciﬁc indicator variable. In country i, if there is a for-
+eign tax credit system for dividends from foreign subsidiary ﬁrms, FTCi = 1, and
+FTCi = 0 otherwise. If country i has an exemption system for dividends from foreign
+subsidiaries, I assume that FTCi = 0. Notably, all the capital-exporting residence
+26 Accessed at cepii.fr/CEPII/en/bdd_modele/bdd.asp.
+27 Accessed at ewf.uni-bayreuth.de/en/research/RTA-data.
+28 Accessed at unstats.un.org/unsd/snaama/dnlList.asp.
+29 For residence country i, ln GDPi is calculated as ln(GDPi + 1), and similarly, for source country j.
+123
+=== [p.26] ===
+1302
+S. Hong
+countries in Table 5 except for Ireland (IE), Korea (KR), and the United States (US)
+have such exemption systems.
+Second, SFTCij is a pair-speciﬁc indicator variable. If there is a sufﬁcient FTC
+in country i for taxes paid in country j, SFTCij = 1, and SFTCij = 0 otherwise.
+Precisely, if FTCi = 1 and if CITi > CIT j + t ji(1 −CIT j/100), SFTCij = 1, and
+SFTCij = 0 otherwise. If SFTCij = 1, CIT and WHT paid in country j are fully
+creditable against tax liabilities in country i.30
+I also use home and source dummy variables to control for unobserved country-
+speciﬁc factors. When doing so, I replace country-speciﬁc variables, CIT, GDP, and
+FTC, with home and source dummy variables.
+4.2 Results
+Now, I present regression results with network variables. Table 11 provides the results
+of the OLS regressions with network variables DIRECTij, TSHOPij, and PASSij in
+case (R). In the OLS regressions, the dependent variable is ln FDIij, the natural loga-
+rithm of inward FDI stock. Each regression includes one of the three network variables
+as a main independent variable.31 Each regression also includes bilateral variables
+CONTIGij, COMLANGij, COMLEGij, COLONYij, DISTij, and RTAij to control for
+the relationship between countries i and j. In addition, to consider the effects of foreign
+tax credit systems, columns (1)–(3) include a home-speciﬁc indicator variable FTCi.
+Columns (4)–(6) include a pair-speciﬁc indicator variable SFTCij. Furthermore, to
+control for country-speciﬁc factors, columns (1)–(3) include CIT and log-scaled GDP
+in home country i and source country j. Columns (4)–(6) include dummy variables
+for home and source countries.
+Table 11 shows that each of the three network variables DIRECTij, TSHOPij, and
+PASSij is signiﬁcantly related to inward FDI stock.
+In columns (1) and (4), the coefﬁcients on DIRECTij are positive and signiﬁcant
+at the 1% level. Column (4) suggests that the inward FDI stock via a tax-minimizing
+direct route is 2.14 (= exp(0.76)) times larger than the inward FDI stock via a direct
+route that is not tax-minimizing.
+In columns (2) and (5), the coefﬁcients on TSHOPij are negative and signiﬁcant
+at the 1% level. Column (5) suggests that the inward FDI stock decreases by 3.92%
+(= exp(−0.04) −1) as the treaty shopping rate increases by one percentage point.
+In columns (3) and (6), the coefﬁcients on PASSij are positive and signiﬁcant at
+the 1% level. Column (6) suggests that the inward FDI stock increases by 3.05%
+(= exp(0.03) −1) as the pass-through rate increases by one percentage point.
+30 If SFTCij = 1, the direct routei →j yields the same net-of-tax income as a tax-minimizing indirect route,
+and the investor may have no incentive to use an indirect route. Thus, one might expect a positive relationship
+between FDIij and SFTCij. However, I could not ﬁnd a clear relationship between the two variables. In
+Tables 11, 12, 13 and 14, the coefﬁcients on SFTCij show mixed signs and become insigniﬁcant in most
+speciﬁcations.
+31 I ﬁnd that DIRECTij and TSHOPij are strongly and negatively correlated with each other. The Pearson
+correlation coefﬁcient between the two variables is about −0.73, while the Spearman coefﬁcient is −0.96.
+To avoid issues related to multicollinearity, I do not use DIRECTij and TSHOPij together in the regressions.
+123
+=== [p.27] ===
+Tax treaties and foreign direct investment: a network approach
+1303
+Table 12 provides the results of the OLS regressions with network variables
+DIRECTSij, TSHOPSij, and PASSSij in case (S). In columns (1) and (4), the coef-
+ﬁcients on DIRECTSij are positive and signiﬁcant at the 1% level. In columns (2)
+and (5), the coefﬁcients on TSHOPSij are negative and signiﬁcant at the 1% level.
+However, in columns (3) and (6), the coefﬁcients on PASSSij are insigniﬁcant.
+Tables 13 and 14 provide the results of the PPML regressions with network variables
+in cases (R) and (S), respectively. In the PPML regressions, FDIij is the dependent
+variable and the observations with negative FDIij are dropped. Tables 13 and 14 show
+that DIRECTij and DIRECTSij are positively and signiﬁcantly related to inward FDI
+stock. Moreover, TSHOPij and TSHOPSij are negatively and signiﬁcantly related to
+inward FDI stock. By using home and source dummies to control for country-speciﬁc
+factors, in column (6), I ﬁnd that PASSij and PASSSij are positively and signiﬁcantly
+related to inward FDI stock.
+The Coordinated Direct Investment Survey (CDIS) of the International Monetary
+Fund (IMF) provides an alternative source of bilateral FDI data. To check the robust-
+ness of my analysis, I use the FDI data for year 2015 or the latest year available from
+the CDIS and present the results of the OLS regressions in Appendix A. As before,
+the dependent variable is the natural logarithm of inward FDI stock. Each regression
+includes one of the network variables in cases (R) and (S) as a main independent vari-
+able. Each regression also includes bilateral control variables, together with home and
+source dummies.
+Table 16 shows that all the network variables except for PASSSij are signiﬁcantly
+related to inward FDI stock. The estimated coefﬁcients are positive for DIRECTij
+and DIRECTSij, negative for TSHOPij and TSHOPSij, and positive for PASSij and
+PASSSij. These results are consistent with those in Tables 11 and 12 based on the FDI
+data of the UNCTAD.
+Overall, I ﬁnd that the existence of a tax-minimizing direct route is positively and
+signiﬁcantly related to inward FDI stock.32 This observation is consistent with a game-
+theoretic model of treaty shopping (Hong 2014). Therefore, by making a direct route
+tax-minimizing, countries can encourage foreign investment via the direct route.
+I also ﬁnd that the treaty shopping rate is negatively and signiﬁcantly related to
+inward FDI stock. Therefore, even if a direct route is not tax-minimizing, by reducing
+the treaty shopping rate, countries can encourage foreign investment via the direct
+route. For instance, to reduce the treaty shopping rate, countries can unilaterally reduce
+withholding tax rates on dividends paid to foreign investors.
+In addition, I ﬁnd some evidence that the pass-through rate is positively related to
+inward FDI stock. This relationship tends to be statistically signiﬁcant in case (R),
+where pass-through countries are assumed to impose CIT at reduced rates. Increased
+FDI from pass-through countries may result partly from treaty shopping, i.e., the use
+32 I admit the possibility that an unobserved factor can affect both FDI and the structure of tax-minimizing
+routes. For instance, if there is a cost of treaty negotiation for low tax rates, countries may incur the cost only
+when they expect large FDI. This can also explain the positive relationship between FDI and the existence
+of a tax-minimizing direct route. However, in this paper, I used the bilateral variables of Head et al. (2010)
+that describe the relationship between countries to control for unobserved factors, such as treaty negotiation
+process and cost. In this context, I believe that a potential endogeneity problem (due to unobserved factors)
+is minimized.
+123
+=== [p.28] ===
+1304
+S. Hong
+Table 11 FDI and network variables in case (R)
+(1)
+(2)
+(3)
+(4)
+(5)
+(6)
+ln FDIij
+ln FDIij
+ln FDIij
+ln FDIij
+ln FDIij
+ln FDIij
+DIRECTij
+0.89***
+0.76***
+(0.09)
+(0.12)
+TSHOPij
+−0.05***
+−0.04***
+(0.01)
+(0.01)
+PASSij
+0.05***
+0.03***
+(0.01)
+(0.01)
+CONTIGij
+1.26***
+1.28***
+1.36***
+1.37***
+1.40***
+1.43***
+(0.26)
+(0.26)
+(0.26)
+(0.21)
+(0.21)
+(0.21)
+COMLANGij
+2.20***
+2.26***
+2.30***
+1.19***
+1.20***
+1.21***
+(0.20)
+(0.20)
+(0.20)
+(0.17)
+(0.17)
+(0.18)
+COMLEGij
+0.35***
+0.34***
+0.34***
+0.56***
+0.57***
+0.57***
+(0.11)
+(0.11)
+(0.11)
+(0.09)
+(0.09)
+(0.09)
+COLONYij
+0.46
+0.45
+0.44
+0.57**
+0.54*
+0.55**
+(0.34)
+(0.34)
+(0.34)
+(0.28)
+(0.28)
+(0.28)
+DISTij
+−0.15***
+−0.15***
+−0.16***
+−0.20***
+−0.20***
+−0.21***
+(0.01)
+(0.01)
+(0.01)
+(0.01)
+(0.01)
+(0.01)
+RTAij
+0.59***
+0.65***
+0.69***
+0.28***
+0.33***
+0.37***
+(0.10)
+(0.09)
+(0.09)
+(0.10)
+(0.10)
+(0.10)
+SFTCij
+−0.02
+−0.02
+0.07
+(0.13)
+(0.13)
+(0.13)
+CITi
+−0.04***
+−0.04***
+−0.05***
+(0.01)
+(0.01)
+(0.01)
+FTCi
+−1.15***
+−1.17***
+−1.16***
+(0.09)
+(0.09)
+(0.09)
+ln GDPi
+0.92***
+0.90***
+0.93***
+(0.03)
+(0.03)
+(0.03)
+CIT j
+0.02**
+0.01**
+0.01**
+(0.01)
+(0.01)
+(0.01)
+ln GDP j
+0.59***
+0.58***
+0.55***
+(0.03)
+(0.03)
+(0.03)
+Home dummy
+No
+No
+No
+Yes
+Yes
+Yes
+Source dummy
+No
+No
+No
+Yes
+Yes
+Yes
+Constant
+−14.70***
+−13.61***
+−13.69***
+2.99***
+3.49***
+3.10***
+(0.50)
+(0.50)
+(0.50)
+(0.36)
+(0.37)
+(0.36)
+Observations
+4470
+4470
+4470
+4470
+4470
+4470
+R-squared
+0.38
+0.37
+0.37
+0.66
+0.66
+0.66
+Robust standard errors in parentheses; *signiﬁcant at 10%; ** at 5%; *** at 1%
+123
+=== [p.29] ===
+Tax treaties and foreign direct investment: a network approach
+1305
+Table 12 FDI and network variables in case (S)
+(1)
+(2)
+(3)
+(4)
+(5)
+(6)
+ln FDIij
+ln FDIij
+ln FDIij
+ln FDIij
+ln FDIij
+ln FDIij
+DIRECTSij
+0.78***
+0.48***
+(0.10)
+(0.11)
+TSHOPSij
+−0.05***
+−0.04***
+(0.01)
+(0.01)
+PASSSij
+0.01
+0.01
+(0.01)
+(0.01)
+CONTIGij
+1.28***
+1.30***
+1.33***
+1.41***
+1.40***
+1.42***
+(0.26)
+(0.26)
+(0.26)
+(0.21)
+(0.21)
+(0.21)
+COMLANGij
+2.25***
+2.27***
+2.30***
+1.21***
+1.19***
+1.21***
+(0.20)
+(0.20)
+(0.20)
+(0.17)
+(0.17)
+(0.18)
+COMLEGij
+0.35***
+0.35***
+0.33***
+0.57***
+0.57***
+0.57***
+(0.11)
+(0.11)
+(0.11)
+(0.09)
+(0.09)
+(0.09)
+COLONYij
+0.48
+0.45
+0.47
+0.56**
+0.54*
+0.55**
+(0.34)
+(0.34)
+(0.34)
+(0.28)
+(0.28)
+(0.28)
+DISTij
+−0.15***
+−0.15***
+−0.16***
+−0.20***
+−0.20***
+−0.21***
+(0.01)
+(0.01)
+(0.01)
+(0.01)
+(0.01)
+(0.01)
+RTAij
+0.67***
+0.70***
+0.71***
+0.33***
+0.35***
+0.38***
+(0.09)
+(0.09)
+(0.09)
+(0.10)
+(0.10)
+(0.10)
+SFTCij
+0.002
+−0.01
+0.10
+(0.13)
+(0.13)
+(0.13)
+CITi
+−0.04***
+−0.04***
+−0.04***
+(0.01)
+(0.01)
+(0.01)
+FTCi
+−1.16***
+−1.18***
+−1.21***
+(0.09)
+(0.09)
+(0.09)
+ln GDPi
+0.91***
+0.91***
+0.93***
+(0.03)
+(0.03)
+(0.03)
+CIT j
+0.01**
+0.01**
+0.01**
+(0.01)
+(0.01)
+(0.01)
+ln GDP j
+0.58***
+0.57***
+0.55***
+(0.03)
+(0.03)
+(0.03)
+Home dummy
+No
+No
+No
+Yes
+Yes
+Yes
+Source dummy
+No
+No
+No
+Yes
+Yes
+Yes
+Constant
+−14.46***
+−13.62***
+−13.77***
+2.95***
+3.38***
+3.29***
+(0.50)
+(0.50)
+(0.50)
+(0.36)
+(0.37)
+(0.56)
+Observations
+4470
+4470
+4470
+4470
+4470
+4470
+R-squared
+0.37
+0.37
+0.36
+0.66
+0.66
+0.66
+Robust standard errors in parentheses; *signiﬁcant at 10%; ** at 5%; *** at 1%
+123
+=== [p.30] ===
+1306
+S. Hong
+Table 13 PPML estimation for FDI and network variables in case (R)
+(1)
+(2)
+(3)
+(4)
+(5)
+(6)
+FDIij
+FDIij
+FDIij
+FDIij
+FDIij
+FDIij
+DIRECTij
+1.18***
+0.59***
+(0.14)
+(0.18)
+TSHOPij
+−0.15***
+−0.08***
+(0.02)
+(0.01)
+PASSij
+0.01
+0.01**
+(0.01)
+(0.01)
+CONTIGij
+0.37*
+0.38*
+0.46**
+0.62***
+0.58***
+0.65***
+(0.21)
+(0.22)
+(0.22)
+(0.13)
+(0.13)
+(0.14)
+COMLANGij
+1.36***
+1.37***
+1.45***
+0.54***
+0.59***
+0.56***
+(0.18)
+(0.19)
+(0.18)
+(0.14)
+(0.13)
+(0.13)
+COMLEGij
+0.06
+0.07
+0.05
+0.12
+0.13
+0.09
+(0.19)
+(0.20)
+(0.19)
+(0.10)
+(0.10)
+(0.10)
+COLONYij
+0.12
+0.14
+0.21
+0.40***
+0.33***
+0.43***
+(0.19)
+(0.19)
+(0.20)
+(0.11)
+(0.12)
+(0.12)
+DISTij
+−0.13***
+−0.12***
+−0.13***
+−0.14***
+−0.14***
+−0.15***
+(0.02)
+(0.02)
+(0.02)
+(0.02)
+(0.02)
+(0.02)
+RTAij
+−0.05
+−0.01
+0.12
+0.28**
+0.29**
+0.33***
+(0.16)
+(0.16)
+(0.15)
+(0.12)
+(0.12)
+(0.13)
+SFTCij
+0.24
+0.20
+0.36*
+(0.21)
+(0.21)
+(0.20)
+CITi
+−0.01
+−0.004
+−0.001
+(0.01)
+(0.01)
+(0.01)
+FTCi
+−0.75***
+−0.78***
+−0.87***
+(0.11)
+(0.11)
+(0.12)
+ln GDPi
+0.65***
+0.64***
+0.66***
+(0.06)
+(0.06)
+(0.06)
+CIT j
+0.01
+0.01
+0.005
+(0.01)
+(0.01)
+(0.01)
+ln GDP j
+0.61***
+0.60***
+0.58***
+(0.06)
+(0.06)
+(0.06)
+Home dummy
+No
+No
+No
+Yes
+Yes
+Yes
+Source dummy
+No
+No
+No
+Yes
+Yes
+Yes
+Constant
+−8.48***
+−7.29***
+−7.65***
+4.55***
+9.24***
+9.06***
+(1.03)
+(1.02)
+(1.08)
+(0.54)
+(0.23)
+(0.24)
+Observations
+4470
+4470
+4470
+4470
+4470
+4470
+R-squared
+0.42
+0.43
+0.39
+0.77
+0.78
+0.76
+Robust standard errors in parentheses; *signiﬁcant at 10%; ** at 5%; *** at 1%
+123
+=== [p.31] ===
+Tax treaties and foreign direct investment: a network approach
+1307
+Table 14 PPML estimation for FDI and network variables in case (S)
+(1)
+(2)
+(3)
+(4)
+(5)
+(6)
+FDIij
+FDIij
+FDIij
+FDIij
+FDIij
+FDIij
+DIRECTSij
+1.32***
+0.78***
+(0.15)
+(0.17)
+TSHOPSij
+−0.17***
+−0.11***
+(0.02)
+(0.02)
+PASSSij
+0.003
+0.04***
+(0.004)
+(0.01)
+CONTIGij
+0.37*
+0.40*
+0.45**
+0.57***
+0.56***
+0.62***
+(0.22)
+(0.22)
+(0.22)
+(0.13)
+(0.13)
+(0.14)
+COMLANGij
+1.43***
+1.40***
+1.46***
+0.61***
+0.62***
+0.59***
+(0.19)
+(0.19)
+(0.18)
+(0.13)
+(0.13)
+(0.13)
+COMLEGij
+0.03
+0.06
+0.05
+0.10
+0.12
+0.09
+(0.20)
+(0.20)
+(0.19)
+(0.10)
+(0.10)
+(0.10)
+COLONYij
+0.19
+0.20
+0.23
+0.39***
+0.34***
+0.41***
+(0.19)
+(0.19)
+(0.20)
+(0.12)
+(0.12)
+(0.12)
+DISTij
+−0.12***
+−0.12***
+−0.13***
+−0.14***
+−0.14***
+−0.15***
+(0.02)
+(0.02)
+(0.02)
+(0.02)
+(0.02)
+(0.02)
+RTAij
+0.05
+0.08
+0.13
+0.28**
+0.29**
+0.31**
+(0.16)
+(0.15)
+(0.15)
+(0.12)
+(0.12)
+(0.13)
+SFTCij
+0.26
+0.27
+0.37*
+(0.22)
+(0.22)
+(0.20)
+CITi
+−0.0002
+−0.0008
+−0.00002
+(0.01)
+(0.01)
+(0.01)
+FTCi
+−0.82***
+−0.83***
+−0.89***
+(0.11)
+(0.11)
+(0.12)
+ln GDPi
+0.65***
+0.64***
+0.66***
+(0.06)
+(0.06)
+(0.06)
+CIT j
+0.005
+0.005
+0.01
+(0.01)
+(0.01)
+(0.01)
+ln GDP j
+0.60***
+0.59***
+0.58***
+(0.06)
+(0.06)
+(0.06)
+Home dummy
+No
+No
+No
+Yes
+Yes
+Yes
+Source dummy
+No
+No
+No
+Yes
+Yes
+Yes
+Constant
+−8.77***
+−7.32***
+−7.73***
+3.99***
+6.60***
+4.77***
+(1.05)
+(1.05)
+(1.09)
+(0.58)
+(0.36)
+(0.53)
+Observations
+4470
+4470
+4470
+4470
+4470
+4470
+R-squared
+0.41
+0.40
+0.38
+0.78
+0.78
+0.76
+Robust standard errors in parentheses; *signiﬁcant at 10%; ** at 5%; *** at 1%
+123
+=== [p.32] ===
+1308
+S. Hong
+of indirect routes via the pass-through countries. Therefore, source countries can use
+the pass-through rate as an index to monitor treaty shopping.
+5 Conclusion
+In this paper, I construct a tax rate matrix to represent a tax treaty network and
+develop a computation algorithm to examine the structure of tax-minimizing routes.
+I ﬁnd that the use of a tax-minimizing indirect route can substantially reduce tax
+on dividends incurred by a multinational investor. I also ﬁnd that the existence of a
+tax-minimizing direct route is positively related to foreign investment via the direct
+route.
+When a direct route is not tax-minimizing, to prevent the use of a tax-minimizing
+indirect route, i.e., to prevent treaty shopping, countries need to consider negotiating
+a new tax treaty to make the direct route tax-minimizing. These countries may not
+necessarily experience tax revenue loss, as the new treaty makes the direct route tax-
+minimizing and attracts more foreign investment.
+For future studies, it will be interesting to study the relationship between tax treaties
+and ownership structures of multinational ﬁrms. In this paper, I focused on FDI data
+to see the plausibility of the treaty network analysis. However, the aggregate FDI data
+do not reveal the actual ownership structures (i.e., investment routes) of multinational
+ﬁrms. Hence, to check the plausibility of the network analysis, it is important to
+examine whether and how multinational ﬁrms organize indirect ownership structures
+when direct ownership structures are not tax-minimizing.
+It will also be interesting to study the network effect of LOB (limitation on beneﬁts)
+provisions in tax treaties on the structure of tax-minimizing investment routes. In this
+paper, when constructing the tax rate matrix, I considered a restrictive version of LOB
+provisions that only allow certain pension funds to obtain the beneﬁt of the lowest
+withholding tax rate. However, in real-world tax treaties, LOB provisions can impose
+various residency requirements. Thus, it is important to examine how LOB provisions
+with various residency requirements affect the structure of tax-minimizing investment
+routes in tax treaty networks.
+Lastly, it will be interesting to study indirect structures that reduce tax on interest
+and royalties. In this paper, I concentrated on withholding tax rates on dividends to
+describe a tax treaty network. However, tax treaties also affect withholding tax rates on
+interest and royalties. Moreover, FDI can take the form of debt as well as equity. FDI
+with debt instruments may be inﬂuenced by tax rates on interest as FDI with equity
+instruments may be inﬂuenced by tax rates on dividends. Therefore, it is important
+to examine how tax treaties affect indirect structures to reduce tax on interest and
+royalties and how such indirect structures affect FDI patterns.
+123
+=== [p.33] ===
+Tax treaties and foreign direct investment: a network approach
+1309
+Acknowledgements Author would like to thank Ron Davies, Woo-Hyung Hong, Maarten van’t Riet,
+Hyun Young You, and two anonymous referees for insightful comments. An earlier draft of this paper was
+presented at IIPF 2016 Lake Tahoe, NTA 2016 Baltimore, and Vanderbilt University. Author appreciates
+comments from the participants.
+Appendix A: Tables
+Table 15 provides examples of tax-minimizing routes between selected pairs of home
+and source countries. According to the FDI data of the UNCTAD, the United States
+(US), Japan (JP), France (FR), Germany (DE), and the United Kingdom (GB) are
+the countries with the largest net outward FDI stock, and selected as home countries.
+China (CN), Mexico (MX), Indonesia (ID), Poland (PL), and Saudi Arabia (SA) are
+the countries with the largest net inward FDI stock, and selected as source countries.
+It is worthwhile to note that every tax-minimizing route passes through at most one
+country between the pairs of home and source countries in Table 15.
+Table 16 provides the results of the OLS regressions with the FDI data from the
+CDIS. Overall, these results are consistent with those in Tables 11 and 12 based on
+the FDI data of the UNCTAD.
+123
+=== [p.34] ===
+1310
+S. Hong
+Table 15 Examples of tax-minimizing routes in case (R)
+Home
+Pass-through
+Source
+TSHOP
+US
+→
+BE, DK, EC, EE, FI,
+FR, DE, HK, IE, LV,
+MT, MU, MX, NL,
+SG, SE, GB, VE
+→
+CN
+4.05
+US
+→
+MX
+0
+US
+→
+HK
+→
+ID
+4.05
+US
+→
+BE, CY, DK, EE, FI,
+FR, DE, HU, IE,
+IT,LV, MT, NL, SK,
+SE, AE, GB
+→
+PL
+4.00
+US
+→
+FR, IE
+→
+SA
+4.00
+JP
+→
+BE, EC, EE, FR, HK,
+IE, LV, MT, MU,
+MX,NL, SG, SE,
+CH, GB, VE
+→
+CN
+4.05
+JP
+→
+MX
+0
+JP
+→
+HK
+→
+ID
+4.05
+JP
+→
+BE, CY, EE, FR, HU,
+IE, LV, MT, NL,
+SK,SE, CH, AE, GB
+→
+PL
+9.00
+JP
+→
+FR, IE
+→
+SA
+4.00
+FR
+→
+CN
+0
+FR
+→
+MX
+0
+FR
+→
+HK
+→
+ID
+4.05
+FR
+→
+PL
+0
+FR
+→
+SA
+0
+DE
+→
+CN
+0
+DE
+→
+AU, CO, DK, EE, FI,
+FR, HK, LT, MT,
+NO,SG, SK, SE,
+CH, AE, GB, US
+→
+MX
+4.00
+DE
+→
+HK
+→
+ID
+4.05
+DE
+→
+PL
+0
+DE
+→
+FR, IE, ES
+→
+SA
+4.00
+GB
+→
+CN
+0
+GB
+→
+MX
+0
+GB
+→
+HK
+→
+ID
+4.05
+GB
+→
+PL
+0
+GB
+→
+FR, IE, ES
+→
+SA
+4.00
+123
+=== [p.35] ===
+Tax treaties and foreign direct investment: a network approach
+1311
+Table 16 OLS estimation with FDI data from CDIS
+(1)
+(2)
+(3)
+(4)
+(5)
+(6)
+ln FDIij
+ln FDIij
+ln FDIij
+ln FDIij
+ln FDIij
+ln FDIij
+DIRECTij
+1.01***
+(0.13)
+TSHOPij
+−0.07***
+(0.01)
+PASSij
+0.02*
+(0.01)
+DIRECTSij
+0.72***
+(0.11)
+TSHOPSij
+−0.07***
+(0.01)
+PASSSij
+0.01
+(0.01)
+CONTIGij
+1.35***
+1.39***
+1.43***
+1.41***
+1.39***
+1.42***
+(0.19)
+(0.20)
+(0.20)
+(0.20)
+(0.20)
+(0.20)
+COMLANGij
+0.89***
+0.90***
+0.92***
+0.91***
+0.89***
+0.91***
+(0.16)
+(0.16)
+(0.17)
+(0.16)
+(0.16)
+(0.17)
+COMLEGij
+0.37***
+0.38***
+0.39***
+0.38***
+0.39***
+0.39***
+(0.09)
+(0.09)
+(0.09)
+(0.09)
+(0.09)
+(0.09)
+COLONYij
+1.13***
+1.09***
+1.10***
+1.13***
+1.10***
+1.11***
+(0.26)
+(0.26)
+(0.27)
+(0.26)
+(0.26)
+(0.27)
+DISTij
+−0.16***
+−0.16***
+−0.17***
+−0.16***
+−0.16***
+−0.17***
+(0.01)
+(0.01)
+(0.01)
+(0.01)
+(0.01)
+(0.01)
+RTAij
+0.35***
+0.39***
+0.47***
+0.41***
+0.43***
+0.48***
+(0.10)
+(0.10)
+(0.10)
+(0.10)
+(0.10)
+(0.10)
+SFTCij
+0.00003
+−0.04
+0.14
+0.01
+−0.01
+0.16
+(0.13)
+(0.13)
+(0.13)
+(0.13)
+(0.13)
+(0.13)
+Home dummy
+Yes
+Yes
+Yes
+Yes
+Yes
+Yes
+Source dummy
+Yes
+Yes
+Yes
+Yes
+Yes
+Yes
+Constant
+5.58***
+6.61***
+6.17***
+5.75***
+6.56***
+5.83***
+(0.53)
+(0.52)
+(0.54)
+(0.53)
+(0.51)
+(0.66)
+Observations
+4227
+4227
+4227
+4227
+4227
+4227
+R-squared
+0.67
+0.67
+0.67
+0.67
+0.67
+0.67
+Robust standard errors in parentheses; *signiﬁcant at 10%; ** at 5%; *** at 1%
+123
+=== [p.36] ===
+1312
+S. Hong
+Appendix B: Network diagrams
+Note: ■MX source; • countries with tax-minimizing direct routes;
+◦countries with no such routes
+Fig. 3 Tax-minimizing routes to Mexico (MX)
+123
+=== [p.37] ===
+Tax treaties and foreign direct investment: a network approach
+1313
+Note: ■ID source; • countries with tax-minimizing direct routes;
+◦countries with no such routes
+Fig. 4 Tax-minimizing routes to Indonesia (ID)
+123
+=== [p.38] ===
+1314
+S. Hong
+Note: ■PL source; • countries with tax-minimizing direct routes;
+◦countries with no such routes
+Fig. 5 Tax-minimizing routes to Poland (PL)
+123
+=== [p.39] ===
+Tax treaties and foreign direct investment: a network approach
+1315
+Note: ■SA source; • countries with tax-minimizing direct routes;
+◦countries with no such routes
+Fig. 6 Tax-minimizing routes to Saudi Arabia (SA)
+123
+=== [p.40] ===
+1316
+S. Hong
+Note: • JP residence; ■countries with tax-minimizing direct routes;
+□ countries with no such routes
+Fig. 7 Tax-minimizing routes from Japan (JP)
+123
+=== [p.41] ===
+Tax treaties and foreign direct investment: a network approach
+1317
+Note: • FR residence; ■countries with tax-minimizing direct routes;
+□countries with no such routes
+Fig. 8 Tax-minimizing routes from France (FR)
+123
+=== [p.42] ===
+1318
+S. Hong
+Note: • DE residence; ■countries with tax-minimizing direct routes;
+□countries with no such routes
+Fig. 9 Tax-minimizing routes from Germany (DE)
+123
+=== [p.43] ===
+Tax treaties and foreign direct investment: a network approach
+1319
+Note: • GB residence; ■countries with tax-minimizing direct routes;
+□countries with no such routes
+Fig. 10 Tax-minimizing routes from the United Kingdom (GB)
+123
+=== [p.44] ===
+1320
+S. Hong
+References
+Barrios, S., Huizinga, H., Laeven, L., & Nicodème, G. (2012). International taxation and multinational ﬁrm
+location decisions. Journal of Public Economics, 96(11–12), 946–958.
+Becker, J., Fuest, C., & Riedel, N. (2012). Corporate tax effects on the quality and quantity of FDI. European
+Economic Review, 56(8), 1495–1511.
+Becker, J., & Riedel, N. (2012). Cross-border tax effects on afﬁliate investment—Evidence from european
+multinationals. European Economic Review, 56(3), 436–450.
+Blonigen, B. A., & Davies, R. B. (2004). The effects of bilateral tax treaties on U.S. FDI activity. Interna-
+tional Tax and Public Finance, 11(5), 601–622.
+Blonigen, B. A., Davies, R. B., Waddell, G. R., & Naughton, H. T. (2007). FDI in space: Spatial autore-
+gressive relationships in foreign direct investment. European Economic Review, 51(5), 1303–1325.
+Blonigen, B. A., Oldenski, L., & Sly, N. (2014). The differential effects of bilateral tax treaties. American
+Economic Journal: Economic Policy, 6(2), 1–18.
+Chisik, R., & Davies, R. B. (2004). Asymmetric FDI and tax-treaty bargaining: Theory and evidence.
+Journal of Public Economics, 88(6), 1119–1148.
+Davies, R. B. (2004). Tax treaties and foreign direct investment: Potential versus performance. International
+Tax and Public Finance, 11(6), 775–802.
+Davies, R. B., Norbäck, P.-J., & Tekin-Koru, A. (2009). The effect of tax treaties on multinational ﬁrms:
+New evidence from microdata. World Economy, 32(1), 77–110.
+de Mooij, R. A., & Ederveen, S. (2003). Taxation and foreign direct investment: A synthesis of empirical
+research. International Tax and Public Finance, 10(6), 673–693.
+di Giovanni, J. (2005). What drives capital ﬂows? The case of cross-border M&A activity and ﬁnancial
+deepening. Journal of International Economics, 65(1), 127–149.
+Dischinger, M., & Riedel, N. (2011). Corporate taxes and the location of intangible assets within multina-
+tional ﬁrms. Journal of Public Economics, 95(7–8), 691–707.
+Dyreng, S. D., Lindsey, B. P., Markle, K. S., & Shackelford, D. A. (2015). The effect of tax and nontax
+country characteristics on the global equity supply chains of U.S. multinationals. Journal of Accounting
+and Economics, 59(2–3), 182–202.
+Egger, P. H., & Larch, M. (2008). Interdependent preferential trade agreement memberships: An empirical
+analysis. Journal of International Economics, 76(2), 384–399.
+Head, K., Mayer, T., & Ries, J. (2010). The erosion of colonial trade linkages after independence. Journal
+of International Economics, 81(1), 1–14.
+Hong, S. (2014). Strategic treaty shopping. Working paper.
+Huizinga, H., & Voget, J. (2009). International taxation and the direction and volume of cross-border M&As.
+Journal of Finance, 64(3), 1217–1249.
+Johannesen, N. (2012). Optimal ﬁscal barriers to international economic integration in the presence of tax
+havens. Journal of Public Economics, 96(3–4), 400–416.
+Lewellen, K., & Robinson, L. (2013). Internal ownership structures of U.S. multinational ﬁrms. Working
+paper.
+Louie, H. J., & Rousslang, D. J. (2008). Host-country governance, tax treaties and US direct investment
+abroad. International Tax and Public Finance, 15(3), 256–273.
+Mintz, J. M., & Weichenrieder, A. J. (2010). The indirect side of direct investment. Cambridge, MA: MIT
+Press.
+OECD. (2015). Preventing the granting of treaty beneﬁts in inappropriate circumstances, Action 6—2015
+ﬁnal report, OECD/G20 Base Erosion and Proﬁt Shifting Project. OECD Publishing.
+Silva, S., & Tenreyro, S. (2006). The log of gravity. Review of Economics and Statistics, 88(4), 641–658.
+UNCTAD. (2009). UNCTAD training manual on statistics for FDI and the operations of TNCs, Volume I,
+FDI Flows and Stocks. United Nations Publication.
+van’t Riet, M., & Lejour, A. (2017). Optimal tax routing: Network analysis of FDI diversion. Working
+paper.
+Voget, J. (2011). Relocation of headquarters and international taxation. Journal of Public Economics, 95(9–
+10), 1067–1081.
+Weyzig, F. (2013). Tax treaty shopping: Structural determinants of foreign direct investment routed through
+the Netherlands. International Tax and Public Finance, 20(6), 910–937.
+123

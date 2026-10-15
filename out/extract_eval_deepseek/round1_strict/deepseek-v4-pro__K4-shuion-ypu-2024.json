@@ -1,0 +1,395 @@
+{
+ "model": "deepseek-v4-pro",
+ "case": "K4-shuion-ypu-2024",
+ "rows": [
+  {
+   "path": "roles.ULT.loc",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "quote": "“Bright Continental” Bright Continental Limited, a company incorporated in Hong Kong and an indirect non-wholly owned subsidiary of the Company;",
+   "rejected": []
+  },
+  {
+   "path": "roles.ULT.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "quote": "Bright Continental Limited, a company incorporated in Hong Kong and an indirect non-wholly owned subsidiary of the Company;",
+   "rejected": []
+  },
+  {
+   "path": "roles.OP.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "quote": "“YPU” Shanghai Yang Pu Centre Development Co., Ltd.* (上海楊浦中央社區發展有限公司), a company incorporated in the PRC with limited liability and a non-wholly owned subsidiary of the Company as at the the Latest Practicable Date;",
+   "rejected": []
+  },
+  {
+   "path": "roles.OP.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "quote": "“YPU” Shanghai Yang Pu Centre Development Co., Ltd.* (上海楊浦中央社區發展有限公司), a company incorporated in the PRC with limited liability and a non-wholly owned subsidiary of the Company as at the the Latest Practicable Date;",
+   "rejected": []
+  },
+  {
+   "path": "roles.BUYER.loc",
+   "kind": "derived",
+   "gold": "CN",
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "kind": "disclosed",
+   "gold": 86.8,
+   "value": 86.8,
+   "status": "correct",
+   "quote": "YPU is directly owned as to 86.8% by Bright Continental and 13.2% by Yangpu Knowledge Innovation.",
+   "rejected": []
+  },
+  {
+   "path": "holds.ULT>OP.since",
+   "kind": "disclosed",
+   "gold": "2003-08-26",
+   "value": "2003-08-26",
+   "status": "correct",
+   "quote": "Shanghai Yang Pu Centre Development Co., Ltd. (formerly known as Shanghai Yang Pu University Town Centre Development Co., Ltd.* (上海楊浦大學城中央社區發展有限公司)), established on 26 August 2003 with a registered capital of US$30,000,000, which was jointly contributed by Shanghai Yangpu Knowledge Innovation Zone I",
+   "rejected": []
+  },
+  {
+   "path": "holds.ULT>OP.cost",
+   "kind": "missing",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "flows.exit.immovable_ratio",
+   "kind": "derived",
+   "gold": 96.86,
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "flows.exit.listed_market_trade",
+   "kind": "derived",
+   "gold": false,
+   "value": false,
+   "status": "correct",
+   "quote": "“YPU Equity Transfer” the transfer of the 86.8% equity interests in YPU from Bright Continental to Limited Partnership;",
+   "rejected": []
+  },
+  {
+   "path": "present.HOLD",
+   "kind": "derived",
+   "gold": "NONE",
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "present.exit_route",
+   "kind": "disclosed",
+   "gold": "DIRECT",
+   "value": "DIRECT",
+   "status": "correct",
+   "quote": "“YPU Equity Transfer” the transfer of the 86.8% equity interests in YPU from Bright Continental to Limited Partnership;",
+   "rejected": []
+  },
+  {
+   "path": "event.exit",
+   "kind": "disclosed",
+   "gold": 4706000000.0,
+   "value": 86.8,
+   "status": "wrong",
+   "quote": "the 86.8% equity interests in YPU will be transferred from Bright Continental to the Limited Partnership at the consideration of approximately RMB4,706,000,000 (equivalent to approximately HK$5,159,000,000); and",
+   "rejected": []
+  },
+  {
+   "path": "event.on",
+   "kind": "derived",
+   "gold": "2024-11-27",
+   "value": "2024-11-27",
+   "status": "correct",
+   "quote": "On 27 November 2024, the Equity Transfer Agreements were entered into by the relevant parties.",
+   "rejected": []
+  }
+ ],
+ "usage": {
+  "calls": 14,
+  "prompt_tokens": 81296,
+  "completion_tokens": 29892,
+  "cache_hit_tokens": 0,
+  "seconds": 327.8434841632843
+ },
+ "wall": 328.4,
+ "error": null,
+ "log": [
+  {
+   "prompt_head": "For each field below, list the passages of the documents that bear on it. Answer with JSON only:\n{\"<field key>\": [{\"doc\": \"<doc id>\", \"quote\": \"<verbatim passage>\"}], ...}. Quote verbatim; an empty li",
+   "reply": "{\n  \"roles.ULT.loc\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"“Bright Continental” Bright Continental Limited, a company incorporated in Hong Kong and an indirect non-wholly owned subsidiary of the Company;\"\n    },\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"Each of Bright Continental and Top Victory is an indirect non-wholly owned subsidiary of the Company as at the Latest Practicable Date. They were incorporated in Hong Kong and are principally engaged in investment holding.\"\n    }\n  ],\n  \"roles.ULT.attrs.incorporated_in\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"“Bright Continental” Bright Continental Limited, a company incorporated in Hong Kong and an indirect non-wholly owned subsidiary of the Company;\"\n    },\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"Each of Bright Continental and Top Victory is an indirect non-wholly owned subsidiary of the Company as at the Latest Practicable Date. They were incorporated in Hong Kong and are principally engaged in investment holding.\"\n    }\n  ],\n  \"roles.OP.loc\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"“YPU” Shanghai Yang Pu Centre Development Co., Ltd.* (上海楊浦中央社區發展有限公司), a company incorporated in the PRC with limited liability and a non-wholly owned subsidiary of the Company as at the the Latest Practicable Date;\"\n    },\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"At the Latest Practicable Date, YPU, one of the Project Companies, is a company incorporated in the PRC with limited liability and is principally engaged in property investment and operation.\"\n    }\n  ],\n  \"roles.OP.attrs.incorporated_in\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"“YPU” Shanghai Yang Pu Centre Development Co., Ltd.* (上海楊浦中央社區發展有限公司), a company incorporated in the PRC with limited liability and a non-wholly owned subsidiary of the Company as at the the Latest Practicable Date;\"\n    },\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"At the Latest Practicable Date, YPU, one of the Project Companies, is a company incorporated in the PRC with limited liability and is principally engaged in property investment and operation.\"\n    }\n  ],\n  \"roles.BUYER.loc\": [],\n  \"holds.ULT>OP.ratio\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"“YPU Equity Transfer” the transfer of the 86.8% equity interests in YPU from Bright Continental to Limited Partnership;\"\n    },\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"the 86.8% equity interests in YPU will be transferred from Bright Continental to the Limited Partnership at the consideration of approximately RMB4,706,000,000 (equivalent to approximately HK$5,159,000,000); and\"\n    },\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"YPU is directly owned as to 86.8% by Bright Continental and 13.2% by Yangpu Knowledge Innovation.\"\n    }\n  ],\n  \"holds.ULT>OP.since\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"Shanghai Yang Pu Centre Development Co., Ltd. (formerly known as Shanghai Yang Pu University Town Centre Development Co., Ltd.* (上海楊浦大學城中央社區發展有限公司)), established on 26 August 2003 with a registered capital of US$30,000,000, which was jointly contributed by Shanghai Yangpu Knowledge Innovation Zone Investment and Development Co., Ltd. and Bright Continental Limited, accounting for 100.00% of the total registered capital. Following the capital contributions from shareholders, shareholders of the Company and their shareholding percentage were as follows:\"\n    }\n  ],\n  \"holds.ULT>OP.cost\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"Shanghai Yang Pu Centre Development Co., Ltd. (formerly known as Shanghai Yang Pu University Town Centre Development Co., Ltd.* (上海楊浦大學城中央社區發展有限公司)), established on 26 August 2003 with a registered capital of US$30,000,000, which was jointly contributed by Shanghai Yangpu Knowledge Innovation Zone Investment and Development Co., Ltd. and Bright Continental Limited, accounting for 100.00% of the total registered capital. Following the capital contributions from shareholders, shareholders of the Company and their shareholding percentage were as follows:\"\n    },\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"On 29 March 2004, according to the Amendment to the Articles of Association, the registered capital of the Company was increased from US$30,000,000 to US$60,500,000, of which the increased capital of US$13,250,000 was contributed by Bright Continental Limited (with a total capital contribution of US$42,350,000), accounting for 70% of the total registered capital, and the increased capital of US$17,250,000 was contributed by Shanghai Yangpu Knowledge Innovation Zone Investment and Development Co., Ltd. (with a total capital contribution of US$18,150,000), accounting for 30% of the total registered capital.\"\n    },\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"On 7 May 2009, according to the Resolution of the Board of Directors and the provisions of the Amended Articles of Association of the Company, Shanghai Yang Pu Centre Development Co., Ltd. increased its registered capital by US$77,000,000, which was fully contributed by Bright Continental Limited. The changed registered capital was US$137,500,000.\"\n    }\n  ],\n  \"flows.exit.immovable_ratio\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"The valuation object was the entire shareholders’ equity of Shanghai Yang Pu Centre Development Co., Ltd., and the scope of valuation covered all the assets and liabilities of Shanghai Yang Pu Centre Development Co., Ltd., including current assets, long-term equity investment, fixed assets, construction in progress, intangible assets, long-term deferred expenses and liabilities.\"\n    },\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"As valuated, on the Valuation Benchmark Date, i.e. 31 May 2024, the carrying amount of the total assets of Shanghai Yang Pu Centre Development Co., Ltd. was RMB1,869,762,198.51, with an appraised value of RMB6,272,213,222.40, representing an ap",
+   "usage": {
+    "prompt_tokens": 76429,
+    "completion_tokens": 16338,
+    "total_tokens": 92767,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 13790
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 76429
+   },
+   "seconds": 150.8
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"HK\", \"doc\": \"K4-shuion-2024\", \"quote\": \"“Bright Continental” Bright Continental Limited, a company incorporated in Hong Kong and an indirect non-wholly owned subsidiary of the Company;\"}",
+   "usage": {
+    "prompt_tokens": 337,
+    "completion_tokens": 125,
+    "total_tokens": 462,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 73
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 337
+   },
+   "seconds": 3.5
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"HK\", \"doc\": \"K4-shuion-2024\", \"quote\": \"Bright Continental Limited, a company incorporated in Hong Kong and an indirect non-wholly owned subsidiary of the Company;\"}",
+   "usage": {
+    "prompt_tokens": 341,
+    "completion_tokens": 151,
+    "total_tokens": 492,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 103
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 341
+   },
+   "seconds": 4.6
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"CN\", \"doc\": \"K4-shuion-2024\", \"quote\": \"“YPU” Shanghai Yang Pu Centre Development Co., Ltd.* (上海楊浦中央社區發展有限公司), a company incorporated in the PRC with limited liability and a non-wholly owned subsidiary of the Company as at the the Latest Practicable Date;\"}",
+   "usage": {
+    "prompt_tokens": 358,
+    "completion_tokens": 248,
+    "total_tokens": 606,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 171
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 358
+   },
+   "seconds": 5.5
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"CN\", \"doc\": \"K4-shuion-2024\", \"quote\": \"“YPU” Shanghai Yang Pu Centre Development Co., Ltd.* (上海楊浦中央社區發展有限公司), a company incorporated in the PRC with limited liability and a non-wholly owned subsidiary of the Company as at the the Latest Practicable Date;\"}",
+   "usage": {
+    "prompt_tokens": 362,
+    "completion_tokens": 147,
+    "total_tokens": 509,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 70
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 362
+   },
+   "seconds": 4.3
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\": 86.8, \"doc\": \"K4-shuion-2024\", \"quote\": \"YPU is directly owned as to 86.8% by Bright Continental and 13.2% by Yangpu Knowledge Innovation.\"}",
+   "usage": {
+    "prompt_tokens": 393,
+    "completion_tokens": 261,
+    "total_tokens": 654,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 207
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 393
+   },
+   "seconds": 5.1
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <an ISO date YYYY-MM-DD>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if",
+   "reply": "{\"value\": \"2003-08-26\", \"doc\": \"K4-shuion-2024\", \"quote\": \"Shanghai Yang Pu Centre Development Co., Ltd. (formerly known as Shanghai Yang Pu University Town Centre Development Co., Ltd.* (上海楊浦大學城中央社區發展有限公司)), established on 26 August 2003 with a registered capital of US$30,000,000, which was jointly contributed by Shanghai Yangpu Knowledge Innovation Zone Investment and Development Co., Ltd. and Bright Continental Limited, accounting for 100.00% of the total registered capital.\"}",
+   "usage": {
+    "prompt_tokens": 373,
+    "completion_tokens": 679,
+    "total_tokens": 1052,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 556
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 373
+   },
+   "seconds": 8.9
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\": null}",
+   "usage": {
+    "prompt_tokens": 465,
+    "completion_tokens": 4353,
+    "total_tokens": 4818,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 4347
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 465
+   },
+   "seconds": 51.5
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\": null}",
+   "usage": {
+    "prompt_tokens": 458,
+    "completion_tokens": 523,
+    "total_tokens": 981,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 517
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 458
+   },
+   "seconds": 7.4
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <true or false>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if the pass",
+   "reply": "{\"value\": false, \"doc\": \"K4-shuion-2024\", \"quote\": \"“YPU Equity Transfer” the transfer of the 86.8% equity interests in YPU from Bright Continental to Limited Partnership;\"}",
+   "usage": {
+    "prompt_tokens": 384,
+    "completion_tokens": 1526,
+    "total_tokens": 1910,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 1475
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 384
+   },
+   "seconds": 18.6
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER/NONE>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null",
+   "reply": "{\"value\": null}",
+   "usage": {
+    "prompt_tokens": 324,
+    "completion_tokens": 4338,
+    "total_tokens": 4662,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 4332
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 324
+   },
+   "seconds": 48.3
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of DIRECT/INDIRECT>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if",
+   "reply": "{\"value\": \"DIRECT\", \"doc\": \"K4-shuion-2024\", \"quote\": \"“YPU Equity Transfer” the transfer of the 86.8% equity interests in YPU from Bright Continental to Limited Partnership;\"}",
+   "usage": {
+    "prompt_tokens": 414,
+    "completion_tokens": 687,
+    "total_tokens": 1101,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 634
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 414
+   },
+   "seconds": 9.7
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\": 86.8, \"doc\": \"K4-shuion-2024\", \"quote\": \"the 86.8% equity interests in YPU will be transferred from Bright Continental to the Limited Partnership at the consideration of approximately RMB4,706,000,000 (equivalent to approximately HK$5,159,000,000); and\"}",
+   "usage": {
+    "prompt_tokens": 382,
+    "completion_tokens": 321,
+    "total_tokens": 703,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 245
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 382
+   },
+   "seconds": 5.7
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <an ISO date YYYY-MM-DD>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if",
+   "reply": "{\"value\": \"2024-11-27\", \"doc\": \"K4-shuion-2024\", \"quote\": \"On 27 November 2024, the Equity Transfer Agreements were entered into by the relevant parties.\"}",
+   "usage": {
+    "prompt_tokens": 276,
+    "completion_tokens": 195,
+    "total_tokens": 471,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 145
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 276
+   },
+   "seconds": 3.9
+  }
+ ]
+}

@@ -1,0 +1,341 @@
+{
+ "model": "deepseek-flash",
+ "case": "K3-sunsine-2026",
+ "rows": [
+  {
+   "path": "roles.ULT.loc",
+   "kind": "disclosed",
+   "gold": "SG",
+   "value": "SG",
+   "status": "correct",
+   "quote": "China Sunsine Chemical Holdings Ltd. (the “Company”) is listed on the Singapore Exchange and incorporated and domiciled in Singapore.",
+   "rejected": []
+  },
+  {
+   "path": "roles.ULT.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "SG",
+   "value": "SG",
+   "status": "correct",
+   "quote": "(Incorporated in the Republic of Singapore on 28 June 2006)",
+   "rejected": []
+  },
+  {
+   "path": "roles.OP.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "quote": "China Main Offices\nShandong Sunsine Chemical Co., Ltd.\nShandong Shanxian Economic Development Zone\nShandong Province\nPost Code: 274300\nThe People’s Republic of China",
+   "rejected": []
+  },
+  {
+   "path": "roles.OP.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "quote": "Shandong Sunsine Chemical \nCo.,Ltd (a),(b)\nManufacturing and sale \nof rubber chemicals, \ncomprising rubber \naccelerators, anti-oxidant \nagents, anti-scorching \nagents and insoluble \nsulphur\nPeople’s Republic \nof China",
+   "rejected": []
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "kind": "disclosed",
+   "gold": 100.0,
+   "value": 100.0,
+   "status": "correct",
+   "quote": "Held by the Company \nShandong Sunsine Chemical \nCo.,Ltd (a),(b)\nManufacturing and sale \nof rubber chemicals, \ncomprising rubber \naccelerators, anti-oxidant \nagents, anti-scorching \nagents and insoluble \nsulphur\nPeople’s Republic \nof China\n100\n100",
+   "rejected": []
+  },
+  {
+   "path": "holds.ULT>OP.since",
+   "kind": "derived",
+   "gold": "2023-12-31",
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "holds.ULT>OP.cost",
+   "kind": "derived",
+   "gold": 350010000.0,
+   "value": 350010000.0,
+   "status": "correct",
+   "quote": "Equity investments at cost\nBeginning and end of the financial year\n350,010\n350,010",
+   "rejected": []
+  },
+  {
+   "path": "flows.up1.foreign_taxed",
+   "kind": "derived",
+   "gold": true,
+   "value": true,
+   "status": "correct",
+   "quote": "withholding tax on foreign dividend income\n9,038\n10,215",
+   "rejected": []
+  },
+  {
+   "path": "flows.up1.foreign_headline_rate",
+   "kind": "disclosed",
+   "gold": 25,
+   "value": 25.0,
+   "status": "correct",
+   "quote": "As such, the subsidiary corporation has accrued and paid its income tax for the financial year ended 31 December 2024 at the corporate headline tax rate of 25%.",
+   "rejected": []
+  },
+  {
+   "path": "flows.up1.deductible_at_payer",
+   "kind": "derived",
+   "gold": false,
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "present.HOLD",
+   "kind": "derived",
+   "gold": "NONE",
+   "value": "SG",
+   "status": "wrong",
+   "quote": "CHINA SUNSINE CHEMICAL HOLDINGS LTD.\n(Singapore)",
+   "rejected": []
+  },
+  {
+   "path": "present.financing",
+   "kind": "derived",
+   "gold": "EQUITY",
+   "value": "EQUITY",
+   "status": "correct",
+   "quote": "Equity investments at cost",
+   "rejected": []
+  },
+  {
+   "path": "event.on",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "event.dividend",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "quote": null,
+   "rejected": []
+  }
+ ],
+ "usage": {
+  "calls": 11,
+  "prompt_tokens": 77466,
+  "completion_tokens": 26752,
+  "cache_hit_tokens": 74880,
+  "seconds": 150.24815392494202
+ },
+ "wall": 151.1,
+ "error": null,
+ "log": [
+  {
+   "prompt_head": "For each field below, list the passages of the documents that bear on it. Answer with JSON only:\n{\"<field key>\": [{\"doc\": \"<doc id>\", \"quote\": \"<verbatim passage>\"}], ...}. Quote verbatim; an empty li",
+   "reply": "{\n  \"roles.ULT.loc\": [\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"China Sunsine Chemical Holdings Ltd. (the “Company”) is listed on the Singapore Exchange and incorporated and domiciled in Singapore. The registered office and the principal place of business is located at 16 Raffles Quay #15-08 Hong Leong Building, Singapore 048581.\"\n    },\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"(Incorporated in the Republic of Singapore on 28 June 2006)\"\n    },\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"CHINA SUNSINE CHEMICAL HOLDINGS LTD.\\n(Singapore)\\nGROUP STRUCTURE\"\n    }\n  ],\n  \"roles.ULT.attrs.incorporated_in\": [\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"China Sunsine Chemical Holdings Ltd. (the “Company”) is listed on the Singapore Exchange and incorporated and domiciled in Singapore. The registered office and the principal place of business is located at 16 Raffles Quay #15-08 Hong Leong Building, Singapore 048581.\"\n    },\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"(Incorporated in the Republic of Singapore on 28 June 2006)\"\n    }\n  ],\n  \"roles.OP.loc\": [\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"China Main Offices\\nShandong Sunsine Chemical Co., Ltd.\\nShandong Shanxian Economic Development Zone\\nShandong Province\\nPost Code: 274300\\nThe People’s Republic of China\"\n    },\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"Shandong\\nSunsine Chemical\\nCo., Ltd.\\n(Shanxian,\\nShandong, PRC)\"\n    },\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"Name of the entities\\nPrincipal activities\\nCountry of \\nbusiness/\\nincorporation\\nProportion of \\nordinary shares \\ndirectly held by \\nparent and the \\nGroup\\n2024\\n2023\\n%\\n%\\nHeld by the Company \\nShandong Sunsine Chemical \\nCo.,Ltd (a),(b)\\nManufacturing and sale \\nof rubber chemicals, \\ncomprising rubber \\naccelerators, anti-oxidant \\nagents, anti-scorching \\nagents and insoluble \\nsulphur\\nPeople’s Republic \\nof China\\n100\\n100\"\n    }\n  ],\n  \"roles.OP.attrs.incorporated_in\": [\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"Name of the entities\\nPrincipal activities\\nCountry of \\nbusiness/\\nincorporation\\nProportion of \\nordinary shares \\ndirectly held by \\nparent and the \\nGroup\\n2024\\n2023\\n%\\n%\\nHeld by the Company \\nShandong Sunsine Chemical \\nCo.,Ltd (a),(b)\\nManufacturing and sale \\nof rubber chemicals, \\ncomprising rubber \\naccelerators, anti-oxidant \\nagents, anti-scorching \\nagents and insoluble \\nsulphur\\nPeople’s Republic \\nof China\\n100\\n100\"\n    }\n  ],\n  \"holds.ULT>OP.ratio\": [\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"100%\\nShandong\\nSunsine Chemical\\nCo., Ltd.\\n(Shanxian,\\nShandong, PRC)\"\n    },\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"Name of the entities\\nPrincipal activities\\nCountry of \\nbusiness/\\nincorporation\\nProportion of \\nordinary shares \\ndirectly held by \\nparent and the \\nGroup\\n2024\\n2023\\n%\\n%\\nHeld by the Company \\nShandong Sunsine Chemical \\nCo.,Ltd (a),(b)\\nManufacturing and sale \\nof rubber chemicals, \\ncomprising rubber \\naccelerators, anti-oxidant \\nagents, anti-scorching \\nagents and insoluble \\nsulphur\\nPeople’s Republic \\nof China\\n100\\n100\"\n    },\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"China Sunsine’s wholly-owned subsidiary, Shandong Sunsine Chemical was listed in the first batch of Champion Manufacturing Enterprise by the Ministry of Industry and Information Technology of China in January 2017.\"\n    }\n  ],\n  \"holds.ULT>OP.since\": [],\n  \"holds.ULT>OP.cost\": [\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"Investments in subsidiary corporations\\nCompany\\n2024\\n2023\\nRMB’000\\nRMB’000\\nEquity investments at cost\\nBeginning and end of the financial year\\n350,010\\n350,010\"\n    },\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"Investments in subsidiary \\ncorporations\\n14\\n–\\n–\\n350,010\\n350,010\"\n    },\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"Name of the entities\\nPrincipal activities\\nCountry of \\nbusiness/\\nincorporation\\nProportion of \\nordinary shares \\ndirectly held by \\nparent and the \\nGroup\\n2024\\n2023\\n%\\n%\\nHeld by the Company \\nShandong Sunsine Chemical \\nCo.,Ltd (a),(b)\\nManufacturing and sale \\nof rubber chemicals, \\ncomprising rubber \\naccelerators, anti-oxidant \\nagents, anti-scorching \\nagents and insoluble \\nsulphur\\nPeople’s Republic \\nof China\\n100\\n100\"\n    }\n  ],\n  \"flows.up1.foreign_taxed\": [\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"withholding tax on foreign dividend income\\n9,038\\n10,215\"\n    },\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"Deferred income tax liabilities of approximately RMB139,599,000 (2023: RMB131,382,000) have not been recognised for withholding taxes that would be payable on unremitted earnings of the Group’s subsidiary corporations (established in People’s Republic of China) as the Group is in a position to control the timing of the remittance of earning and it is not probable that these subsidiary corporations will distribute such earnings in the foreseeable future.\"\n    }\n  ],\n  \"flows.up1.foreign_headline_rate\": [\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"As such, Shandong Sunsine has recognised and paid its income tax at the standard rate of 25%.\"\n    },\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"Tax calculated at tax rate of 25% (2023: 25%)\"\n    },\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"As such, the subsidiary corporation has accrued and paid its income tax for the financial year ended 31 December 2024 at the corporate headline tax rate of 25%.\"\n    }\n  ],\n  \"flows.up1.deductible_at_payer\": [],\n  \"present.HOLD\": [\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"CHINA SUNSINE CHEMICAL HOLDINGS LTD.\\n(Singapore)\\nGROUP STRUCTURE\\n100%\\nShandong\\nSunsine Chemical\\nCo., Ltd.\\n(Shanxian,\\nShandong, PRC)\"\n    },\n    {\n      \"doc\": \"K3-sunsine-2024\",\n      \"quote\": \"Name of the entities\\nPrincipal activities\\nCountry of \\nbusiness/\\nincorporation\\nProportion ",
+   "usage": {
+    "prompt_tokens": 73872,
+    "completion_tokens": 15412,
+    "total_tokens": 89284,
+    "prompt_tokens_details": {
+     "cached_tokens": 73728
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 13094
+    },
+    "prompt_cache_hit_tokens": 73728,
+    "prompt_cache_miss_tokens": 144
+   },
+   "seconds": 71.5
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"SG\", \"doc\": \"K3-sunsine-2024\", \"quote\": \"China Sunsine Chemical Holdings Ltd. (the “Company”) is listed on the Singapore Exchange and incorporated and domiciled in Singapore.\"}",
+   "usage": {
+    "prompt_tokens": 313,
+    "completion_tokens": 227,
+    "total_tokens": 540,
+    "prompt_tokens_details": {
+     "cached_tokens": 128
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 175
+    },
+    "prompt_cache_hit_tokens": 128,
+    "prompt_cache_miss_tokens": 185
+   },
+   "seconds": 3.1
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"SG\", \"doc\": \"K3-sunsine-2024\", \"quote\": \"(Incorporated in the Republic of Singapore on 28 June 2006)\"}",
+   "usage": {
+    "prompt_tokens": 287,
+    "completion_tokens": 272,
+    "total_tokens": 559,
+    "prompt_tokens_details": {
+     "cached_tokens": 128
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 232
+    },
+    "prompt_cache_hit_tokens": 128,
+    "prompt_cache_miss_tokens": 159
+   },
+   "seconds": 3.7
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\":\"CN\",\"doc\":\"K3-sunsine-2024\",\"quote\":\"China Main Offices\\nShandong Sunsine Chemical Co., Ltd.\\nShandong Shanxian Economic Development Zone\\nShandong Province\\nPost Code: 274300\\nThe People’s Republic of China\"}",
+   "usage": {
+    "prompt_tokens": 397,
+    "completion_tokens": 536,
+    "total_tokens": 933,
+    "prompt_tokens_details": {
+     "cached_tokens": 128
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 475
+    },
+    "prompt_cache_hit_tokens": 128,
+    "prompt_cache_miss_tokens": 269
+   },
+   "seconds": 4.3
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\":\"CN\",\"doc\":\"K3-sunsine-2024\",\"quote\":\"Shandong Sunsine Chemical \\nCo.,Ltd (a),(b)\\nManufacturing and sale \\nof rubber chemicals, \\ncomprising rubber \\naccelerators, anti-oxidant \\nagents, anti-scorching \\nagents and insoluble \\nsulphur\\nPeople’s Republic \\nof China\"}",
+   "usage": {
+    "prompt_tokens": 313,
+    "completion_tokens": 534,
+    "total_tokens": 847,
+    "prompt_tokens_details": {
+     "cached_tokens": 128
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 446
+    },
+    "prompt_cache_hit_tokens": 128,
+    "prompt_cache_miss_tokens": 185
+   },
+   "seconds": 4.3
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\":100,\"doc\":\"K3-sunsine-2024\",\"quote\":\"Held by the Company \\nShandong Sunsine Chemical \\nCo.,Ltd (a),(b)\\nManufacturing and sale \\nof rubber chemicals, \\ncomprising rubber \\naccelerators, anti-oxidant \\nagents, anti-scorching \\nagents and insoluble \\nsulphur\\nPeople’s Republic \\nof China\\n100\\n100\"}",
+   "usage": {
+    "prompt_tokens": 410,
+    "completion_tokens": 888,
+    "total_tokens": 1298,
+    "prompt_tokens_details": {
+     "cached_tokens": 128
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 789
+    },
+    "prompt_cache_hit_tokens": 128,
+    "prompt_cache_miss_tokens": 282
+   },
+   "seconds": 7.7
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\": 350010000, \"doc\": \"K3-sunsine-2024\", \"quote\": \"Equity investments at cost\\nBeginning and end of the financial year\\n350,010\\n350,010\"}",
+   "usage": {
+    "prompt_tokens": 404,
+    "completion_tokens": 837,
+    "total_tokens": 1241,
+    "prompt_tokens_details": {
+     "cached_tokens": 128
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 789
+    },
+    "prompt_cache_hit_tokens": 128,
+    "prompt_cache_miss_tokens": 276
+   },
+   "seconds": 5.6
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <true or false>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if the pass",
+   "reply": "{\"value\": true, \"doc\": \"K3-sunsine-2024\", \"quote\": \"withholding tax on foreign dividend income\\n9,038\\n10,215\"}",
+   "usage": {
+    "prompt_tokens": 313,
+    "completion_tokens": 1717,
+    "total_tokens": 2030,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 1678
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 313
+   },
+   "seconds": 10.7
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\": 25, \"doc\": \"K3-sunsine-2024\", \"quote\": \"As such, the subsidiary corporation has accrued and paid its income tax for the financial year ended 31 December 2024 at the corporate headline tax rate of 25%.\"}",
+   "usage": {
+    "prompt_tokens": 302,
+    "completion_tokens": 296,
+    "total_tokens": 598,
+    "prompt_tokens_details": {
+     "cached_tokens": 128
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 236
+    },
+    "prompt_cache_hit_tokens": 128,
+    "prompt_cache_miss_tokens": 174
+   },
+   "seconds": 4.4
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER/NONE>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null",
+   "reply": "{\"value\":\"SG\",\"doc\":\"K3-sunsine-2024\",\"quote\":\"CHINA SUNSINE CHEMICAL HOLDINGS LTD.\\n(Singapore)\"}",
+   "usage": {
+    "prompt_tokens": 421,
+    "completion_tokens": 2682,
+    "total_tokens": 3103,
+    "prompt_tokens_details": {
+     "cached_tokens": 128
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 2645
+    },
+    "prompt_cache_hit_tokens": 128,
+    "prompt_cache_miss_tokens": 293
+   },
+   "seconds": 15.2
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of EQUITY/DEBT>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if the",
+   "reply": "{\"value\":\"EQUITY\",\"doc\":\"K3-sunsine-2024\",\"quote\":\"Equity investments at cost\"}",
+   "usage": {
+    "prompt_tokens": 434,
+    "completion_tokens": 3351,
+    "total_tokens": 3785,
+    "prompt_tokens_details": {
+     "cached_tokens": 128
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 3325
+    },
+    "prompt_cache_hit_tokens": 128,
+    "prompt_cache_miss_tokens": 306
+   },
+   "seconds": 19.7
+  }
+ ]
+}

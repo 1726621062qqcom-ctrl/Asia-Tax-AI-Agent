@@ -1,0 +1,126 @@
+%%
+% This is an Overleaf template for scientific posters
+% using the TUM Corporate Desing https://www.tum.de/cd
+%
+% For further details on how to use the template, take a look at our
+% GitLab repository and browse through our test documents
+% https://gitlab.lrz.de/latex4ei/tum-templates.
+%
+% The tumposter class is based on the KOMA-Script class scrartcl and the
+% poster framework of the package tcolorbox.
+% If you need further customization please consult the KOMA-Script guide
+% https://ctan.org/pkg/koma-script
+% and the tcolorbox user guide (especially the poster section)
+% https://ctan.org/pkg/tcolorbox.
+% Additional class options are passed down to the base class.
+%
+% If you encounter any bugs or undesired behaviour, please raise an issue
+% in our GitLab repository
+% https://gitlab.lrz.de/latex4ei/tum-templates/issues
+% and provide a description and minimal working example of your problem.
+%%
+
+
+\documentclass[
+  a0paper,    % poster size (a0paper, a1paper, a2paper, a3paper, a4paper)
+  portrait,   % poster orientation (portrait, landscape)
+  english,    % define the document language (english, german)
+]{tumposter}
+
+
+% load additional packages
+\usepackage{tummath}
+\usepackage{lipsum}
+
+
+% poster metadata
+\title{Poster title}
+\subtitle{Subtitle of the poster}
+
+\author[affil=1]{First Author}
+\author[affil=2]{Second Author}
+\author[affil=1]{Last Author}
+
+\affil[mark=1]{\theSchoolName, \theUniversityName}
+\affil[mark=2]{Another affiliation}
+
+
+% macro to configure the style of the poster
+\TUMpostersetup{
+  columns = 3,            % number of columns of the poster
+  rows = 6,               % number of rows of the poster
+  background = white,     % background color (white, blue, shaded)
+  boxes = TUMBox,         % default box style (TUMBox, TUMBoxVariant, TUMBoxInverse, TUMBoxBlank)
+  headline = threeliner,  % choose headline (tumlogo, oneliner, twoliner, threeliner)
+  printaffil = false,     % disable affiliation in title area (in case you print it in a footer)
+  fontsize = 28pt,        % choose larger base font size if necessary
+  % showframe = true,       % print poster row and column grid (for draft versions)
+}
+
+
+\begin{document}
+
+\maketitle
+
+\begin{tcbposter}
+
+  % footer with some contact information
+  \posterbox[TUMBox=TUMGray, fontupper=\small, height=5cm,
+    enlarge top initially by = \TUMposterboxsep, equal height group=A
+  ]{
+    name=contact, column=1, span=1.5, above=bottom
+  }{
+    \theAffil
+  }
+
+  % footer with acknowledgement
+  \posterbox[TUMBox=TUMGray, fontupper=\small,
+    enlarge top initially by = \TUMposterboxsep, equal height group=A
+  ]{
+    name=acknowledgement, column*=3, span=1.5, above=bottom
+  }{
+    This footer box could be used for the acknowledgement.
+  }
+
+  % separator line between footer and content posterboxes
+  \draw[TUMBlue, line width = \TUMposterrulewidth, line cap = round,
+      dashed, dash pattern = on 0pt off 2\TUMposterrulewidth
+    ] ([xshift=.5\TUMposterrulewidth]TCBPOSTER@contact.north west)
+    -- +(\tcbposterwidth, 0);
+
+  % Motivation box
+  \posterbox[adjusted title=Motivation]{name=motivation,
+    below=top, span=1, rowspan=3
+  }{
+    Here we motivate our work
+  }
+
+  % Results box
+  \posterbox[adjusted title=Results]{name=results,
+    column=1, between=motivation and contact
+  }{
+    \lipsum[5]
+    \vspace{\baselineskip}
+
+    \includegraphics[width=\textwidth, height=10cm]{example-image-b}
+    \captionof{figure}{The figure caption.}
+  }
+
+  % Method and Model description
+  \posterbox[adjusted title=Method and Model]{name=method,
+    column=2, span=2, between=top and contact
+  }{
+    \lipsum[1]
+
+    \begin{figure}
+      \centering
+      \includegraphics[width=.9\textwidth]{example-image-a}
+      \caption{This is a figure caption.}
+    \end{figure}
+
+    \lipsum[2-3]
+  }
+
+\end{tcbposter}
+
+\end{document}

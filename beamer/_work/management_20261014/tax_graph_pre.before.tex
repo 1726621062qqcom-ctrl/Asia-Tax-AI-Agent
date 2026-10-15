@@ -1,0 +1,429 @@
+% 编译(XeLaTeX,两遍;当前目录的本地 tumfonts.sty 把本机缺的 New CM 换成 Latin Modern):
+%   T='.;tum-templates-main/beamer;tum-templates-main/commons;tum-templates-main/commons/resources;'
+%   TEXINPUTS="$T" xelatex -interaction=nonstopmode -halt-on-error tax_graph_pre.tex
+\documentclass[english, sectionpage=false]{tumbeamer}
+
+\usepackage{xeCJK}
+\setCJKmainfont[BoldFont={Microsoft YaHei Bold}]{Microsoft YaHei}
+\setCJKsansfont[BoldFont={Microsoft YaHei Bold}]{Microsoft YaHei}
+\xeCJKsetup{CJKecglue={\hskip 0.15em plus 0.05em}}
+
+\usepackage{tumboxes}
+\usepackage{pifont}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, calc, fit}
+
+\provideName{\theGroupName}{Self-defined Project Study}{Self-defined Project Study}
+\provideName{\theSchoolName}{Cross-Border Tax Graph}{Cross-Border Tax Graph}
+
+\TUMbeamersetup{
+  title page = TUM tower,
+  content page = TUM more space,
+  headline = TUM threeliner,
+  footline = TUM default,
+  headline on = {every page},
+  footline on = {content page},
+}
+
+\title{跨境税务图}
+\subtitle{从官方条文到可执行的集团税务方案}
+\author{Project Study}
+\date{2026 年 10 月}
+\footline{跨境税务图~|~Project Study~|~2026}
+
+\setbeamerfont{itemize/enumerate body}{size=\small}
+\setbeamerfont{itemize/enumerate subbody}{size=\footnotesize}
+\setlength{\tabcolsep}{4pt}
+\tcbset{fontupper=\small, fonttitle=\small\bfseries, before skip=2pt, after skip=2pt}
+\renewcommand{\arraystretch}{1.05}
+
+\newcommand{\subnote}[1]{{\footnotesize\color{TUMGrayDark} #1}}
+\newcommand{\src}[1]{{\scriptsize\color{TUMGray}[#1]}}
+\newcommand{\num}[1]{\ding{\numexpr191+#1\relax}}
+
+\setbeamertemplate{section in toc}{%
+  {\usebeamercolor[fg]{section in toc}\ding{118}}\hspace{0.7em}%
+  {\usebeamerfont{section in toc}\usebeamercolor[fg]{section in toc}\inserttocsection}\\[0.85em]}
+
+\newenvironment{specialframe}{\begingroup
+  \setbeamertemplate{background canvas}[TUM flags]
+  \setbeamertemplate{background}[TUM logo]
+  \setbeamercolor{section in toc}{fg=TUMWhite}
+  \setbeamercolor{frametitle}{fg=TUMWhite}}{\endgroup}
+
+\tikzset{
+  box/.style={draw=TUMBlue, fill=TUMBlueLighter!35, rounded corners=2pt, align=center,
+              font=\footnotesize, inner sep=3pt, minimum height=0.85cm},
+  key/.style={box, fill=TUMBlue, text=white, draw=TUMBlue},
+  res/.style={box, fill=TUMOrange!18, draw=TUMOrange},
+  arr/.style={-{Latex[length=2mm]}, thick, TUMBlueDark},
+  lay/.style={draw=TUMBlue, rounded corners=2pt, minimum width=3.0cm, minimum height=0.78cm,
+              font=\footnotesize\bfseries, align=center, text=white, fill=TUMBlue},
+  laytxt/.style={font=\footnotesize, anchor=west, align=left},
+}
+
+\begin{document}
+
+\maketitle
+
+% ---------------------------------------------------------------- 目录
+\begin{specialframe}
+\begin{frame}
+  \vspace*{0.12\textheight}
+  {\color{TUMWhite}\Large\bfseries 内容}\par\vspace{1.2em}
+  \tableofcontents
+\end{frame}
+\end{specialframe}
+
+% ================================================================ 1
+\section{问题与目标}
+
+\begin{frame}
+  \frametitle{问题与目标}
+  \framesubtitle{输入一个集团，输出一个可执行的方案}
+  \begin{columns}[T]
+    \begin{column}{0.47\textwidth}
+      \begin{TUMBox}{输入与输出}
+        \textbf{输入}\quad 企业集团的结构化案例\\
+        \subnote{公司、持股、交易、已缴税、日期}\\[0.4em]
+        \textbf{输出}\quad 一个具体方案，或一张补问单\\
+        \subnote{结构、动作、各法域税额、期限、待裁量条件}
+      \end{TUMBox}
+      \vspace{0.6em}
+      \textcolor{TUMBlue}{\textbf{范围}}\\[0.2em]
+      {\small \textbf{v1}\quad 中国内地、香港、新加坡，公司\\
+      \textbf{v2}\quad 加越南、个人、第三地节点}
+    \end{column}
+    \begin{column}{0.49\textwidth}
+      \begin{TUMBox}[TUMOrange]{四条设计约束}
+        \num{1}\ \textbf{单一目标}\quad 集团总税最小\\
+        \subnote{事后：可追回最大}\\[0.15em]
+        \num{2}\ \textbf{不做假设}\quad 缺失是一个值\\
+        \subnote{缺数据就问，不知道就按最不利}\\[0.15em]
+        \num{3}\ \textbf{全由程序计算}\\
+        \subnote{求值、比较、选择的循环里没有语言模型}\\[0.15em]
+        \num{4}\ \textbf{人只核可行性}\\
+        \subnote{能否做到；不替税务机关作裁量}
+      \end{TUMBox}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ================================================================ 2
+\section{流程}
+
+\begin{frame}
+  \frametitle{流程}
+  \framesubtitle{主链路}
+  \centering
+  \begin{tikzpicture}[x=1cm, y=1cm]
+    \node[box, fill=TUMGray!15, draw=TUMGray] (doc) at (0,0) {文档\\\scriptsize 可选};
+    \node[box] (case)  at (2.0,0)  {结构化案例\\\scriptsize JSON};
+    \node[box] (graph) at (4.4,0)  {图构建\\\scriptsize 模板 × 候选结构};
+    \node[key] (eng)   at (6.9,0)  {引擎\\\scriptsize 每个结构两个界};
+    \node[key] (plan)  at (9.4,0)  {规划器\\\scriptsize 选方案、选问题};
+    \node[res] (sol)   at (11.8,0) {方案报告};
+    \node[box] (lib)   at (2.0,1.45)  {官方文本库\\\scriptsize 条文、参数、口径};
+    \node[box] (cmp)   at (4.4,1.45)  {规则编译\\\scriptsize 引文逐字核对};
+    \node[key] (rules) at (6.9,1.45)  {规则对象};
+    \node[box] (claims) at (9.4,1.45) {已缴税项\\\scriptsize 可追回、补税风险};
+    \node[res] (sheet) at (9.4,-1.45) {问题单};
+
+    \draw[arr] (lib) -- (cmp);
+    \draw[arr] (cmp) -- (rules);
+    \draw[arr] (rules) -- (eng);
+    \draw[arr] (eng) -- (claims);
+    \draw[arr] (claims) -| (sol);
+    \draw[arr, dashed, TUMGray] (doc) -- (case);
+    \draw[arr] (case) -- (graph);
+    \draw[arr] (graph) -- (eng);
+    \draw[arr] (eng) -- (plan);
+    \draw[arr] (plan) -- (sol);
+    \draw[arr] (plan) -- (sheet);
+    \draw[arr, TUMOrange] (sheet.west) -| node[pos=0.25, below, font=\scriptsize, text=TUMOrange]{答复：数据 / 是否 / 不知道} (case.south);
+  \end{tikzpicture}\\[0.8em]
+  \subnote{补问与重算是一个循环，没有问题可问时才出方案；事前规划与事后追回共用同一个引擎}
+\end{frame}
+
+\begin{frame}
+  \frametitle{流程}
+  \framesubtitle{规划器的一轮}
+  \begin{columns}[T]
+    \begin{column}{0.53\textwidth}
+      \textcolor{TUMBlue}{\textbf{求值}}\quad 每个候选结构的下界与上界\\[0.15em]
+      \textcolor{TUMBlue}{\textbf{选择}}\quad 保证税额最低的结构\\
+      \subnote{保证税额：所有裁量与未知都取不利时的税}\\[0.4em]
+      \textcolor{TUMBlue}{\textbf{按序检查，命中即出问题单}}
+      \begin{enumerate}
+        \item 阻断性缺口：缺了税额无界
+        \item 有信息价值的数据：可能换方案或降税
+        \item 方案依赖、尚未确认的动作
+        \item 一纸裁定就能改变方案的裁量
+      \end{enumerate}
+      \textcolor{TUMBlue}{\textbf{都没有}}\quad 输出方案
+    \end{column}
+    \begin{column}{0.43\textwidth}
+      \begin{TUMBox}[TUMOrange]{答复只有三种值}
+        实际数据，带出处\quad 是 / 否\quad 不知道\\
+        \subnote{不知道按最不利处理，程序从不补值}
+      \end{TUMBox}
+      \vspace{0.5em}
+      \begin{TUMBox}{方案按法域区编排}
+        CN、HK、SG 及其交集，共七个区\\
+        \subnote{计算对集团整体统一做，结果再切分；各区交给对应背景的人核对}
+      \end{TUMBox}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ================================================================ 3
+\section{核心组件}
+
+\begin{frame}
+  \frametitle{核心组件}
+  \framesubtitle{五层}
+  \centering
+  \begin{tikzpicture}[node distance=0.16cm]
+    \node[lay] (k) {知识层};
+    \node[lay, below=of k] (r) {规则层};
+    \node[lay, below=of r] (g) {图层};
+    \node[lay, below=of g] (e) {推理层};
+    \node[lay, below=of e, fill=TUMOrange, draw=TUMOrange] (v) {验证层};
+    \node[laytxt, right=0.3cm of k] {472 份官方文件，11769 条款片，551 个参数，48 条口径决定，45 张判例卡\\\scriptsize\color{TUMGrayDark} 检索、引文核对、影响分析、时点查询};
+    \node[laytxt, right=0.3cm of r] {250 条规则，三值条件树，按效果分阶段叠加\\\scriptsize\color{TUMGrayDark} 编译期逐条对回条文，规则文件里没有数字};
+    \node[laytxt, right=0.3cm of g] {法域、实体、持股边、交易流；模板定义可放置的角色与结构变量\\\scriptsize\color{TUMGrayDark} 从图上派生事实：持股比例、持有期、居民身份};
+    \node[laytxt, right=0.3cm of e] {引擎算两个界与待定组代价；规划器选方案与问题；已缴税项算追回\\\scriptsize\color{TUMGrayDark} 判例模块判断裁量能否被判例决定};
+    \node[laytxt, right=0.3cm of v] {13 个检查模块、案例电池、变异测试、依据溯源、回归指纹\\\scriptsize\color{TUMGrayDark} 只认官方文本与官方算例为标准};
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}
+  \frametitle{核心组件}
+  \framesubtitle{规则层}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \textcolor{TUMBlue}{\textbf{一条规则写五项}}
+      \begin{itemize}
+        \item \textbf{范围}\quad 来源地 → 居民地，收入类型
+        \item \textbf{效果}\quad 征税、限率、免税、抵免、递延等
+        \item \textbf{值}\quad 参数编号，数字只在参数表
+        \item \textbf{条件}\quad 三值条件树
+        \item \textbf{覆盖}\quad 被哪条规则压制
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \begin{TUMBox}[TUMOrange]{编译期检查，不过即拒绝}
+        参数值逐字出现在所引条文中\\
+        所引条款在库中，且在施行期内\\
+        同一范围内不可交换的规则须声明覆盖\\
+        每条反滥用条款都被规则引用\\
+        算术求值器登记其所依条款
+      \end{TUMBox}
+      \vspace{0.6em}
+      \textcolor{TUMBlue}{\textbf{求值顺序固定}}\quad\subnote{阶段内可交换}\\[0.2em]
+      {\small 流转税 → 征税 → 税基 → 限率\\ → 免税 → 抵免 → 递延 → 扣除}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{核心组件}
+  \framesubtitle{图层与推理层}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{TUMBox}{图}
+        \textbf{节点}\quad 法域、公司、分支机构\\
+        \textbf{持股边}\quad 比例、取得日、成本\\
+        \textbf{交易流}\quad 股息、利息、特许权、服务费、股权转让、货物、不动产、清算\\[0.3em]
+        \textbf{模板}\quad 固定角色 + 可放置角色 + 结构变量\\
+        \subnote{枚举全部候选结构，只剪掉不构成图的组合}
+      \end{TUMBox}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{TUMBox}{引擎}
+        每笔流 × 每个法域 → 税项\\
+        \textbf{下界}\quad 待定项全部有利\\
+        \textbf{上界}\quad 待定项全部不利\\[0.3em]
+        \textbf{待定组代价}\quad 一组条件翻转带来的税额差\\
+        \subnote{整组补齐才起作用，代价不可相加}\\[0.3em]
+        \textbf{跨流不动点}\quad 抵免、受控外国企业、补足税\\
+        \subnote{循环至不再变化，不收敛即报缺陷}
+      \end{TUMBox}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+% ================================================================ 4
+\section{理论与方法}
+
+\begin{frame}
+  \frametitle{理论与方法}
+  \framesubtitle{不完全信息：三值逻辑与区间}
+  \begin{itemize}
+    \item \textbf{Kleene 强三值逻辑}\quad 条件取 真 / 假 / 未知，已知值短路未知 \src{Libkin 2016}\\
+      \subnote{且(假, 未知) = 假，所以只追问真正影响结果的事实}
+    \item \textbf{未知的三种来源，同一种处理}\\
+      \subnote{缺数据，计划动作，税务机关裁量}
+    \item \textbf{确定答案与可能答案} \src{Libkin 2014}\\
+      \subnote{上界在所有补全下成立；已确认可追回 = 已缴 − 上界，潜在可追回 = 已缴 − 下界}
+    \item \textbf{区间是上近似} \src{Cousot \& Cousot 1977}\\
+      \subnote{不能按乐观端排序，这决定了下一页的选择规则}
+    \item \textbf{只有两种停止}\quad 入口字段不全被拒，内部断言不过报缺陷\\
+      \subnote{其余一切未知都是值，计算照常进行}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{理论与方法}
+  \framesubtitle{决策：选哪个方案，问哪个问题}
+  \begin{itemize}
+    \item \textbf{$\Gamma$-maximin} \src{Troffaes 2007}\\
+      \subnote{取最坏情形税额最低的结构；按下界排序是 $\Gamma$-maximax，最不稳健，已废除}
+    \item \textbf{支配}\quad 两个界都不劣于他者的候选被标为支配\\
+      \subnote{平局依次比：下界、未决裁量数、公司数}
+    \item \textbf{信息价值}\quad 只问答案可能改变方案或其保证税额的数据
+    \item \textbf{裁量归机关} \src{Arias et al.\ 2021, 2024}\\
+      \subnote{人只能勾“不可行”，不能替机关勾“认可”；只问是否已取得裁定}
+    \item \textbf{先例约束} \src{Horty; Prakken}\\
+      \subnote{有约束力的判例与新事实无相关差异时，强制裁量结论；未知因素按不利计}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{理论与方法}
+  \framesubtitle{规则表示：法律即代码}
+  \begin{columns}[T]
+    \begin{column}{0.54\textwidth}
+      \begin{itemize}
+        \item \textbf{与条文同构} \src{Sergot 1986; Merigoux 2021}\\
+          \subnote{一条规则对应一处条文，改法只改一处}
+        \item \textbf{默认与例外} \src{Reiter 1980; Lawsky 2017}\\
+          \subnote{例外显式声明覆盖，没有全局优先序}
+        \item \textbf{时间是一等维度}\\
+          \subnote{规则、参数、条款都带施行区间；早于法律施行日的交易在库外}
+        \item \textbf{条文歧义两种读法都算} \src{Goutagny 2025}\\
+          \subnote{差额进入区间，不可归因于歧义的冲突才报缺陷}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{TUMBox}[TUMOrange]{四层分离}
+        \textbf{文本层}\quad 官方原文，逐字可引\\[0.25em]
+        \textbf{编码层}\quad 规则对象\\[0.25em]
+        \textbf{期望层}\quad 官方标签与算例\\[0.25em]
+        \textbf{解释层}\quad 口径决定，含锚点原文\\
+        \subnote{期望不得来自引擎自身输出}
+      \end{TUMBox}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{理论与方法}
+  \framesubtitle{知识库与检索}
+  \begin{itemize}
+    \item \textbf{作品与表现分层} \src{FRBR; Akoma Ntoso, OASIS 2018}\\
+      \subnote{文书是作品，语言版本与合并文本是表现；库里只保留现行表现}
+    \item \textbf{交叉引用成边} \src{Sannier 2017}\\
+      \subnote{一处条文改动，沿引用边与规则匹配找出受影响的规则和案例}
+    \item \textbf{混合检索} \src{Cormack 2009; Chen 2024}\\
+      \subnote{精确编号 + BM25 + 稠密向量 BGE-M3 + 图邻居，用倒数排名融合 RRF 合并}
+    \item \textbf{可归因} \src{Rashkin 2023; Gao 2023}\\
+      \subnote{每个参数、每条口径的引文必须在条文中逐字找到，否则不入库}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{理论与方法}
+  \framesubtitle{验证：没有真值预言时怎么测}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \textcolor{TUMBlue}{\textbf{预言分层}} \src{Barr 2015}\\[0.2em]
+      \begin{tikzpicture}[every node/.style={font=\footnotesize, align=center, text=white,
+                          minimum height=0.55cm, inner sep=2pt}]
+        \node[fill=TUMBlueDark, minimum width=2.4cm] (a) at (0,0) {官方计算器};
+        \node[fill=TUMBlue, minimum width=3.2cm] (b) at (0,-0.6) {官方算例};
+        \node[fill=TUMBlueLight, minimum width=4.0cm] (c) at (0,-1.2) {蜕变关系};
+        \node[fill=TUMGray, minimum width=4.8cm] (d) at (0,-1.8) {快照，只测变化};
+      \end{tikzpicture}\\[0.3em]
+      \subnote{上层可信度高，快照不证明正确}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \begin{itemize}
+        \item \textbf{蜕变测试} \src{Segura 2016}
+        \item \textbf{边界值与组合覆盖} \src{NIST SP 800-142}
+        \item \textbf{变异测试} \src{Inozemtseva 2014}\\
+          \subnote{变异分数代替规则触发率}
+        \item \textbf{性质测试与缩减} \src{QuickCheck; Hypothesis}
+        \item \textbf{依据溯源}\\
+          \subnote{方案每一步对回条文与口径}
+        \item \textbf{增量重算} \src{Mokhov 2020}\\
+          \subnote{按值作键的缓存}
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{理论与方法}
+  \framesubtitle{用到的模型一览}
+  \centering
+  \small
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{@{}lll@{}}
+    \toprule
+    \textbf{模型} & \textbf{形式} & \textbf{作用}\\
+    \midrule
+    图模型 & 带类型的多重图：法域、实体、持股、交易 & 描述一个结构\\
+    规则模型 & 三值条件 + 效果 + 参数，分阶段叠加 & 法律的编码\\
+    税额模型 & 区间 [下界, 上界] + 待定组代价 & 不完全信息下的税\\
+    决策模型 & $\Gamma$-maximin + 信息价值 & 选方案、选问题\\
+    先例模型 & 因素与判例，Horty / Prakken & 判例能否决定裁量\\
+    检索模型 & BM25 + BGE-M3 + RRF & 找条文与引文\\
+    语言模型 & 可替换的参数，只用于抽取 & 文档到事实，引文须逐字命中\\
+    \bottomrule
+  \end{tabular}
+  \par\vspace{0.4em}
+  \subnote{语言模型只在边界：不进入求值、比较、选择}
+\end{frame}
+
+% ================================================================ 5
+\section{现状}
+
+\begin{frame}
+  \frametitle{现状}
+  \framesubtitle{规模与验证结果}
+  \begin{columns}[T]
+    \begin{column}{0.31\textwidth}
+      \centering
+      {\fontsize{22}{24}\selectfont\color{TUMBlue}\textbf{472}}\\ \footnotesize 份官方文件\\[0.6em]
+      {\fontsize{22}{24}\selectfont\color{TUMBlue}\textbf{250}}\\ \footnotesize 条编译规则
+    \end{column}
+    \begin{column}{0.31\textwidth}
+      \centering
+      {\fontsize{22}{24}\selectfont\color{TUMBlue}\textbf{961 / 0}}\\ \footnotesize 电池案例 / 失败\\[0.6em]
+      {\fontsize{22}{24}\selectfont\color{TUMBlue}\textbf{102 / 102}}\\ \footnotesize 规划器契约对照
+    \end{column}
+    \begin{column}{0.31\textwidth}
+      \centering
+      {\fontsize{22}{24}\selectfont\color{TUMBlue}\textbf{48}}\\ \footnotesize 条口径决定\\[0.6em]
+      {\fontsize{22}{24}\selectfont\color{TUMBlue}\textbf{0}}\\ \footnotesize 依据溯源失败
+    \end{column}
+  \end{columns}
+  \vspace{0.9em}
+  \begin{itemize}
+    \item \textbf{进行中}\quad 13 类模型扩展，已完成货物贸易、集团内转让宽免、转增股本、分支机构、不动产转让；下一项不动产租金
+    \item \textbf{未纳入}\quad 香港 UTPR 生效日未定；v2 越南与个人
+  \end{itemize}
+\end{frame}
+
+% ---------------------------------------------------------------- 结尾
+\begin{specialframe}
+\begin{frame}
+  \vspace*{0.30\textheight}
+  {\color{TUMWhite}\Huge\bfseries 谢谢}\par\vspace{0.6em}
+  {\color{TUMWhite}\large 问题与讨论}
+\end{frame}
+\end{specialframe}
+
+\end{document}

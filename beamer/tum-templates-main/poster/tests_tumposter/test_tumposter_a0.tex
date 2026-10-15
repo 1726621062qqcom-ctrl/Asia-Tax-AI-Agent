@@ -1,0 +1,504 @@
+\documentclass[a0paper,english]{tumposter}
+
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{lipsum}
+
+\title{Very important science}
+\subtitle{A promising new approach to beautiful \LaTeX\ posters}
+\subject{Conference of stylish posters - Poster \#42}
+
+\author[affil=1]{First Author}
+\author[affil=2]{Second Author}
+\author[affil=1]{Last Author}
+\affil[mark=1]{\theSchoolName, \theUniversityName}
+\affil[mark=2]{School of Applied \LaTeX, University of \TeX nology}
+
+% You can configure your poster style globally, here in the preamble
+% or you execute this command inside the document, directly before your
+% poster content (if you want multiple posters in one document)
+\TUMpostersetup{
+  columns = 4,
+  rows = 6,
+  boxes = TUMBoxBlank,
+  printaffil = true,
+  showframe = true,
+}
+
+
+\begin{document}
+
+
+% .:: Example poster with 4 columns
+% ----------------------------------------------------------------------------
+
+\TUMpostersetup{
+  columns = 4,
+  rows = 6,
+  boxes = TUMBoxBlank,
+  printaffil = true,
+  showframe = true,
+}
+\maketitle
+\begin{tcbposter}
+  % footer with some contact information
+  \posterbox[fontupper=\small, height=5cm,
+    enlarge top initially by = .5\TUMposterboxsep
+  ]{
+    name=footer, column=1, span=4, above=bottom
+  }{
+    \textbf{\theUniversityName}\\
+    This footer box could be used to place contact information.\\
+    Setting a fixed height and insert additional spacing\\
+    to separate the footer from the main content is possible.
+  }
+
+  % figure on the top right
+  \posterbox{name=fig1, column=4, below=top}{
+    \includegraphics[width=\columnwidth, height=30cm]{example-image-a}
+    \captionof{figure}{This is a figure caption. The figure contains a
+      placeholder to test the layout.}
+  }
+
+  % figure on the bottom left
+  \posterbox{name=fig2, column=1, above=footer}{
+    \includegraphics[width=\columnwidth, height=20cm]{example-image-b}
+    \captionof{figure}{This is another figure placeholder.}
+  }
+
+  % main text box is a sequence over the rest of the page
+  \posterbox{name=text, column=1,
+    sequence = 1 between top and fig2 then
+    2 between top and footer then
+    3 between top and footer then
+    4 between fig1 and footer
+  }{
+    \lipsum[1-15]
+  }
+\end{tcbposter}
+
+
+% .:: Example poster with 3 columns
+% ----------------------------------------------------------------------------
+
+\clearpage
+\TUMpostersetup{
+  columns = 3,
+  rows = 6,
+  boxes = TUMBoxBlank,
+  printaffil = true,
+  showframe = false,
+}
+\maketitle
+\begin{tcbposter}
+  % footer with some contact information
+  \posterbox[fontupper=\small]{name=footer, column=1, span=3, above=bottom}{
+    \begin{tabularx}{\textwidth}{p{.3\textwidth}XXX}
+      \textbf{\theUniversityName}\newline\theSchoolName
+       &
+      \textbf{First Author}\newline Some contact information\newline
+      E-mail: \href{mailto:first.author@tum.de}{first.author@tum.de}
+       &
+      \textbf{Dr. Second Author}\newline Don't contact me!
+       &
+      \textbf{Prof. Dr. Last Author}\newline Arcisstr. 21, 80333 Munich (D)
+      \newline E-mail: \href{mailto:last.author@tum.de}{last.author@tum.de}
+      \newline \href{www.ei.tum.de}{www.ei.tum.de}
+    \end{tabularx}
+  }
+
+  % figure on the top right
+  \posterbox{name=fig1, column=3, below=top}{
+    \includegraphics[width=\columnwidth, height=25cm]{example-image-a}
+    \captionof{figure}{This is a figure caption. The figure contains a
+      placeholder to test the layout.}
+  }
+
+  % main text box is a sequence over the rest of the page
+  \posterbox{name=text,
+    sequence = 1 between top and footer then
+    2 between top and footer then
+    3 between fig1 and footer
+  }{
+    \lipsum[1-16]
+  }
+\end{tcbposter}
+
+
+% .:: Example poster with 2 columns
+% ----------------------------------------------------------------------------
+
+\clearpage
+\TUMpostersetup{
+  columns = 2,
+  rows = 6,
+  boxes = TUMBoxBlank,
+  printaffil = false,
+  showframe = false,
+  fontsize = 28pt,
+  headline = twoliner
+}
+\maketitle
+\begin{tcbposter}
+  % footer with some contact information
+  \posterbox[fontupper=\small]{name=footer, column=1, span=2, above=bottom}{
+    \begin{tabularx}{\textwidth}{p{.3\textwidth}XXX}
+      \textbf{\theUniversityName}\newline\theSchoolName
+       &
+      \textbf{First Author}\newline Some contact information\newline
+      E-mail: \href{mailto:first.author@tum.de}{first.author@tum.de}
+       &
+      \textbf{Dr. Second Author}\newline Don't contact me!
+       &
+      \textbf{Prof. Dr. Last Author}\newline Arcisstr. 21, 80333 Munich (D)
+      \newline E-mail: \href{mailto:last.author@tum.de}{last.author@tum.de}
+      \newline \href{www.ei.tum.de}{www.ei.tum.de}
+    \end{tabularx}
+  }
+
+  % figure on the top right
+  \posterbox{name=fig1, column=2, below=top}{
+    \includegraphics[width=\columnwidth, height=25cm]{example-image-a}
+    \captionof{figure}{This is a figure caption. The figure contains a
+      placeholder to test the layout.}
+  }
+
+  % main text box is a sequence over the rest of the page
+  \posterbox{name=text,
+    sequence = 1 between top and footer then
+    2 between fig1 and footer
+  }{
+    \lipsum[1-13]
+  }
+\end{tcbposter}
+
+
+% .:: Example poster with single column
+% ----------------------------------------------------------------------------
+
+\clearpage
+\TUMpostersetup{
+  columns = 1,
+  rows = 6,
+  boxes = TUMBoxBlank,
+  printaffil = false,
+  showframe = false,
+  fontsize = 28pt,
+  headline = tumlogo,
+}
+\maketitle
+\begin{tcbposter}
+  % footer with some contact information
+  \posterbox[fontupper=\small, height=5cm,
+    enlarge top initially by = .5\TUMposterboxsep
+  ]{
+    name=footer, above=bottom
+  }{
+    \textbf{\theUniversityName}\\
+    This footer box could be used to place contact information.\\
+    Setting a fixed height and insert additional spacing\\
+    to separate the footer from the main content is possible.
+  }
+
+  % main text box
+  \posterbox[fontupper=\usekomafont{TUM.H2}, colback=TUMGrayLight]{
+    name=text, between=top and footer
+  }{
+    \vspace{5cm}
+    For posters without much text you should choose a larger font.
+
+    \vspace{5cm}
+    It is recommended to have good and self-explaining graphs and only short
+    additional explanations on posters!
+  }
+\end{tcbposter}
+
+
+% .:: Example poster with boxes (3 columns asymmetric)
+% ----------------------------------------------------------------------------
+
+\clearpage
+\TUMpostersetup{
+  columns = 3,
+  rows = 6,
+  boxes = TUMBox,
+  printaffil = true,
+  showframe = false,
+  fontsize = 28pt,
+  headline = threeliner,
+}
+\maketitle
+\begin{tcbposter}
+  % footer with some contact information
+  \posterbox[TUMBox=TUMGray, fontupper=\small,
+    enlarge top initially by = \TUMposterboxsep,
+    equal height group=A
+  ]{
+    name=contact, column=1, span=1.5, above=bottom
+  }{
+    \textbf{\theUniversityName}\\
+    This footer box could be used to place contact information.\\
+    Setting a fixed height and insert additional spacing\\
+    to separate the footer from the main content is possible.
+  }
+
+  % footer with acknowledgement
+  \posterbox[TUMBox=TUMGray, fontupper=\small,
+    enlarge top by = \TUMposterboxsep,
+    equal height group=A
+  ]{
+    name=acknowledgement, column*=3, span=1.5, above=bottom
+  }{
+    \begin{minipage}[t]{.45\textwidth}
+      \vspace{0pt}
+      We would like to thank our sponsors\\
+      Sponsor 1, Sponsor 2, and Sponsor 3, \\
+      as well as the Institute of applied \LaTeX.
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{.54\textwidth}
+      \vspace{0pt}
+      \includegraphics[width=.3\textwidth, height=4cm]{example-image}
+      \hfill
+      \includegraphics[width=.3\textwidth, height=4cm]{example-image}
+      \hfill
+      \includegraphics[width=.3\textwidth, height=4cm]{example-image}
+    \end{minipage}
+  }
+
+  % separator line between footer and content posterboxes
+  \draw[TUMBlue, line width = \TUMposterrulewidth, line cap = round,
+      dashed, dash pattern = on 0pt off 2\TUMposterrulewidth
+    ] ([xshift=.5\TUMposterrulewidth]TCBPOSTER@contact.north west)
+    -- +(\tcbposterwidth, 0);
+
+  % Motivation box
+  \posterbox[adjusted title=Motivation]{name=motivation,
+    below=top, span=1, rowspan=3
+  }{
+    Here we motivate our work
+  }
+
+  % Results box
+  \posterbox[adjusted title=Results]{name=results,
+    column=1, between=motivation and contact
+  }{
+    \lipsum[5]
+    \vspace{\baselineskip}
+
+    \includegraphics[width=\textwidth, height=10cm]{example-image-b}
+    \captionof{figure}{The figure caption.}
+  }
+
+  % Method and Model description
+  \posterbox[adjusted title=Method and Model]{name=method,
+    column=2, span=2, between=top and contact
+  }{
+    \lipsum[1]
+
+    \begin{figure}
+      \centering
+      \includegraphics[width=.9\textwidth]{example-image-a}
+      \caption{This is a figure caption.}
+    \end{figure}
+
+    \lipsum[2-3]
+  }
+\end{tcbposter}
+
+
+% .:: Example poster with boxes (3 columns equal width)
+% ----------------------------------------------------------------------------
+
+\clearpage
+\TUMpostersetup{
+  columns = 3,
+  rows = 12,
+  boxes = TUMBox,
+  printaffil = true,
+  showframe = false,
+  fontsize = 28pt,
+}
+\maketitle
+\begin{tcbposter}
+  % footer boxes and separator
+  \posterbox[TUMBox=TUMGray, fontupper=\small,
+    enlarge top initially by = \TUMposterboxsep,
+  ]{
+    name=contact, column=1, span=1.5, above=bottom, rowspan=1
+  }{
+    \textbf{\theUniversityName}\\
+    This footer box could be used to place contact information.\\
+    Setting a fixed height and insert additional spacing\\
+    to separate the footer from the main content is possible.
+  }
+  \posterbox[TUMBox=TUMGray, fontupper=\small,
+    enlarge top initially by = \TUMposterboxsep,
+  ]{
+    name=acknowledgement, column*=3, span=1.5, above=bottom, rowspan=1
+  }{
+    Acknowledgement
+  }
+  \draw[TUMBlue, line width = \TUMposterrulewidth, line cap = round,
+      dashed, dash pattern = on 0pt off 2\TUMposterrulewidth
+    ] ([xshift=.5\TUMposterrulewidth]TCBPOSTER@contact.north west)
+    -- +(\tcbposterwidth, 0);
+
+  % main content boxes
+  \posterbox[adjusted title=Box 1]{name=box1, column=1, row=1, rowspan=6}{
+    Content
+  }
+  \posterbox[adjusted title=Box 2]{name=box2, column=1,
+    between=box1 and contact
+  }{
+    Content
+  }
+  \posterbox[adjusted title=Box 3]{name=box3, column=2,
+    between=top and contact
+  }{
+    Content
+  }
+  \posterbox[adjusted title=Box 4]{name=box4, column=3, row=1, rowspan=4}{
+    Content
+  }
+  \posterbox[adjusted title=Box 5]{name=box5, column=3, row=5, rowspan=4}{
+    Content
+  }
+  \posterbox[TUMBox=TUMOrange, adjusted title=References
+  ]{
+    name=box1, column=3, between=box5 and contact
+  }{
+    \renewcommand{\section}[2]{}% don't print header
+    \nocite{*}% insert all publications (even if they are not cited)
+    \bibliographystyle{unsrt}
+    \bibliography{sample}
+  }
+\end{tcbposter}
+
+
+% .:: Example poster with boxes (blue background)
+% ----------------------------------------------------------------------------
+
+\clearpage
+\TUMpostersetup{
+  background = blue,
+  columns = 3,
+  rows = 12,
+  boxes = TUMBoxInverse,
+  printaffil = true,
+  showframe = false,
+  fontsize = 28pt,
+}
+\maketitle
+\begin{tcbposter}
+  % footer boxes and separator
+  \posterbox[fontupper=\small, enlarge top initially by = \TUMposterboxsep]{
+    name=contact, column=1, span=1.5, above=bottom, rowspan=1
+  }{
+    \textbf{\theUniversityName}\\
+    This footer box could be used to place contact information.\\
+    Setting a fixed height and insert additional spacing\\
+    to separate the footer from the main content is possible.
+  }
+  \posterbox[fontupper=\small, enlarge top initially by = \TUMposterboxsep]{
+    name=acknowledgement, column*=3, span=1.5, above=bottom, rowspan=1
+  }{
+    Acknowledgement
+  }
+  \draw[TUMWhite, line width = \TUMposterrulewidth, line cap = round,
+      dashed, dash pattern = on 0pt off 2\TUMposterrulewidth
+    ] ([xshift=.5\TUMposterrulewidth]TCBPOSTER@contact.north west)
+    -- +(\tcbposterwidth, 0);
+
+  % main content boxes
+  \posterbox[adjusted title=Box 1]{name=box1, column=1, row=1, rowspan=6}{
+    Content
+  }
+  \posterbox[adjusted title=Box 2]{name=box2, column=1,
+    between=box1 and contact
+  }{
+    Content
+  }
+  \posterbox[adjusted title=Box 3]{name=box3, column=2,
+    between=top and contact
+  }{
+    Content
+  }
+  \posterbox[adjusted title=Box 4]{name=box4, column=3, row=1, rowspan=4}{
+    Content
+  }
+  \posterbox[adjusted title=Box 5]{name=box5, column=3, row=5, rowspan=4}{
+    Content
+  }
+  \posterbox[TUMBoxInverse=TUMOrange, adjusted title=Box 6]{
+    name=box1, column=3, between=box5 and contact
+  }{
+    Content
+  }
+\end{tcbposter}
+
+
+% .:: Example poster with boxes (shaded background)
+% ----------------------------------------------------------------------------
+
+\clearpage
+\TUMpostersetup{
+  background = shaded,
+  columns = 7,
+  rows = 7,
+  boxes = TUMBoxInverse,
+  printaffil = false,
+  showframe = false,
+  fontsize = 28pt,
+  headline = oneliner,
+}
+\maketitle
+\begin{tcbposter}
+  \posterbox[TUMBox=TUMGreen, adjusted title=Background]{name=background,
+    column=1, span=7, row=1, rowspan=1
+  }{
+    Content
+  }
+  \posterbox[adjusted title=Box1]{name=box1,
+    column=1, span=2, row=2, rowspan=3
+  }{
+    Content
+  }
+  \posterbox[adjusted title=Box2]{name=box2,
+    column=1, span=2, row=5, rowspan=2
+  }{
+    Content
+  }
+  \posterbox[TUMBox=TUMBlueLighter, coltitle=TUMBlue, adjusted title=Outlook
+  ]{
+    name=outlook, column=1, span=7, row=7, rowspan=1
+  }{
+    Content
+  }
+  \posterbox[adjusted title=Box3]{name=box3,
+    column=6, span=2, row=2, rowspan=3
+  }{
+    Content
+  }
+  \posterbox[adjusted title=Box4]{name=box4,
+    column=6, span=2, row=5, rowspan=2
+  }{
+    Content
+  }
+  \posterbox[adjusted title=Box5]{name=box5,
+    column=3, span=3, row=5, rowspan=2
+  }{
+    Content
+  }
+  \posterbox[adjusted title=Box6]{name=box6,
+    column=3, span=3, row=4, rowspan=1
+  }{
+    Content
+  }
+  \posterbox[blankest]{name=fig1, column=3, span=3, row=2, rowspan=2}{
+    \includegraphics[
+      width=\tcbtextwidth, height=\tcbtextheight]{example-image}
+  }
+\end{tcbposter}
+
+\end{document}

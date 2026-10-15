@@ -1,0 +1,169 @@
+{
+ "case_id": "K3-sunsine-2026",
+ "kind": "K3",
+ "template": "holding",
+ "subject": "GROUP",
+ "members": [
+  "ULT",
+  "OP"
+ ],
+ "roles": {
+  "ULT": {
+   "loc": "SG",
+   "attrs": {
+    "incorporated_in": "SG",
+    "group_revenue_eur": 467136346.12
+   }
+  },
+  "OP": {
+   "loc": "CN",
+   "attrs": {
+    "incorporated_in": "CN"
+   }
+  }
+ },
+ "holds": [
+  {
+   "holder": "ULT",
+   "held": "OP",
+   "ratio": 100.0,
+   "since": "2023-12-31",
+   "cost": 350010000.0
+  }
+ ],
+ "flows": {
+  "up1": {
+   "foreign_taxed": true,
+   "foreign_headline_rate": 25,
+   "deductible_at_payer": false
+  }
+ },
+ "present": {
+  "HOLD": null,
+  "financing": "EQUITY",
+  "payment": true
+ },
+ "settled": {},
+ "event": {
+  "on": "2026-06-30",
+  "years": 1,
+  "dividend": 180000000.0
+ },
+ "synthetic_share": 0.24,
+ "provenance": {
+  "roles.ULT.loc": {
+   "kind": "disclosed",
+   "source": "K3-sunsine-2024",
+   "page": "pdf 65",
+   "quote": "is listed on the Singapore Exchange and incorporated and domiciled in Singapore"
+  },
+  "roles.ULT.attrs.incorporated_in": {
+   "kind": "disclosed",
+   "source": "K3-sunsine-2024",
+   "page": "pdf 65",
+   "quote": "incorporated and domiciled in Singapore"
+  },
+  "roles.ULT.attrs.group_revenue_eur": {
+   "kind": "synthetic",
+   "source": "K3-sunsine-2024",
+   "page": "pdf 57",
+   "quote": "the Group recognised total revenue of RMB3,515,528,000",
+   "basis": "2024 revenue RMB3,515,528,000 ÷ EUR/CNY central parity on 2024-12-31 of 7.5257 (official/fx/cny_central_parity.csv) = EUR467,136,346.12; kept after re-dating to 2026 (the threshold looks at the four preceding years; 2022 and 2025 are not disclosed)"
+  },
+  "roles.OP.loc": {
+   "kind": "disclosed",
+   "source": "K3-sunsine-2024",
+   "page": "pdf 27",
+   "quote": "Shandong Sunsine Chemical Co., Ltd. (Shanxian, Shandong, PRC)"
+  },
+  "roles.OP.attrs.incorporated_in": {
+   "kind": "disclosed",
+   "source": "K3-sunsine-2024",
+   "page": "pdf 84",
+   "quote": "Shandong Sunsine Chemical Co.,Ltd (a),(b) Manufacturing and sale of rubber chemicals, comprising rubber accelerators, anti-oxidant agents, anti-scorching agents and insoluble sulphur People’s Republic of China"
+  },
+  "holds.ULT>OP.ratio": {
+   "kind": "disclosed",
+   "source": "K3-sunsine-2024",
+   "page": "pdf 84",
+   "quote": "Held by the Company Shandong Sunsine Chemical Co.,Ltd (a),(b)"
+  },
+  "holds.ULT>OP.since": {
+   "kind": "derived",
+   "source": "K3-sunsine-2024",
+   "quote": "Equity investments at cost Beginning and end of the financial year 350,010 350,010",
+   "formula": "note 14: 100% held at both end-2023 and end-2024, and the 2024 investment cost is unchanged between opening and closing (pdf 83–84) — held continuously since 2023-12-31 at the latest; only a lower bound for the holding period, the real acquisition date is earlier and not disclosed"
+  },
+  "holds.ULT>OP.cost": {
+   "kind": "derived",
+   "source": "K3-sunsine-2024",
+   "quote": "Equity investments at cost Beginning and end of the financial year 350,010",
+   "formula": "note 14, the Company's investment cost in subsidiaries 350,010 (RMB'000) × 1,000 = RMB350,010,000; the only subsidiary the Company holds directly is Shandong Sunsine (pdf 84)"
+  },
+  "flows.up1.foreign_taxed": {
+   "kind": "derived",
+   "source": "K3-sunsine-2024",
+   "page": "pdf 79",
+   "quote": "withholding tax on foreign dividend income 9,038",
+   "formula": "the Mainland levies withholding tax on dividends paid to a non-resident enterprise (Enterprise Income Tax Law Article 3(3), Article 37); the group expensed 9,038 thousand for this item in 2024"
+  },
+  "flows.up1.foreign_headline_rate": {
+   "kind": "disclosed",
+   "source": "K3-sunsine-2024",
+   "page": "pdf 79",
+   "quote": "Tax calculated at tax rate of 25% (2023: 25%)"
+  },
+  "flows.up1.deductible_at_payer": {
+   "kind": "derived",
+   "formula": "a dividend is a distribution of after-tax profit, not deductible by the payer (Enterprise Income Tax Law Article 10(1))"
+  },
+  "present.HOLD": {
+   "kind": "derived",
+   "source": "K3-sunsine-2024",
+   "formula": "group structure chart: the Singapore company holds 100% of Shandong Sunsine directly (pdf 27, 84), with no intermediate holding company in between"
+  },
+  "present.financing": {
+   "kind": "derived",
+   "source": "K3-sunsine-2024",
+   "formula": "the Company's funding of the subsidiary is recorded as the cost of an equity investment (note 14), and profits come up as dividends (note 11, dividends receivable from subsidiaries)"
+  },
+  "present.payment": {
+   "kind": "derived",
+   "source": "K3-sunsine-2024",
+   "page": "pdf 81",
+   "quote": "the non-trade receivables from subsidiary corporations included dividends receivables of RMB210,000,000 (2023: RMB180,000,000)",
+   "formula": "both year-ends show subsidiary dividends declared but unpaid — unpaid in the year of declaration, paid the following year"
+  },
+  "event.on": {
+   "kind": "synthetic",
+   "basis": "re-dated: the real year is 2024, the library holds only current law (decision D30), moved to 2026-06-30"
+  },
+  "event.years": {
+   "kind": "synthetic",
+   "basis": "one year only"
+  },
+  "event.dividend": {
+   "kind": "synthetic",
+   "source": "K3-sunsine-2024",
+   "page": "pdf 81",
+   "quote": "dividends receivables of RMB210,000,000 (2023: RMB180,000,000)",
+   "basis": "the subsidiary's annual dividend to the parent is not disclosed separately; the dividend receivable from subsidiaries at end-2023, RMB180,000,000, is taken — close to the RMB180,760,000 implied by the 2024 withholding tax of 9,038 thousand at 5% (RMB90,380,000 at 10%)"
+  }
+ },
+ "company_estimate": {
+  "CN": 9038000.0,
+  "page": "pdf 79",
+  "quote": "withholding tax on foreign dividend income 9,038",
+  "use": "for comparison only: the dividend withholding tax expensed by the group in 2024; the corresponding dividend amount is not disclosed, so it is not the reference answer for this case's dividend — if the engine takes 5% on RMB180,000,000 it gets 9,000,000, the same order of magnitude"
+ },
+ "notes": [
+  "Source: China Sunsine Chemical Holdings Ltd. (SGX) annual report 2024 (cases/sources/K3-sunsine-2024/source.pdf). K3 semi-synthetic: structure and ratios come from the annual report; the dividend amount and date are synthetic values (see provenance).",
+  "Only the part within the three jurisdictions is modelled: the Singapore listed company is recorded as ULT, its BVI parent Success More is out of scope; Shandong Sunsine (Mainland) is OP, and its own Mainland subsidiaries are not listed separately.",
+  "Amounts are in RMB. Not disclosed in the annual report: the Singapore tax residence certificate, whether the dividend is remitted to Singapore, the facts needed for the beneficial-owner determination — left for the program to ask.",
+  "names: each party's defined term / full name in the document (aliases separated by /), individuals written as in the document, used for locating extraction patterns, search queries and registry look-ups (抽取改造.md §2, §7)"
+ ],
+ "names": {
+  "ULT": "China Sunsine Chemical Holdings Ltd. / the Company",
+  "OP": "Shandong Sunsine Chemical Co., Ltd. / Shandong Sunsine"
+ }
+}

@@ -2,7 +2,7 @@
 
 只收国家与官方公开的法规、协定、公告、指引、表单和官方工具结果；只保留现行有效的内容；每个数字都带逐字原文引语并在构建时核对；库内没有任何生成的文字。案例事实与标准答案不在这里。
 
-规模（2026-10-09）：文件 396 份（其中 70 份是分段下载的原件片），条款片 8,438 片（另有 317 片因被取代或废止而不保留），参数 390 个，口径 31 条，公式图片转写 15 条，表单栏位映射 458 条，字典缺口核证 73 条，假期日历 102 行；知识层有检索单元 34,299 个、关系 14,243 条（其中显式交叉引用 8,980 条，解析到条款 8,453 条）、定义词 4,719 个、引文锚点 608 个。当前清单见 [STATUS.md](STATUS.md)，知识层统计与构建检查见 [INDEX.md](INDEX.md)，检索评测见 [SEARCH_EVAL.md](SEARCH_EVAL.md)，待办见 [TODO.md](TODO.md)。
+规模（2026-10-14）：文件 474 份（其中 70 份是分段下载的原件片），条款片 11,782 片（另有 396 片因被取代或废止而不保留），参数 609 个，口径 51 条，公式图片转写 20 条，表单栏位映射 458 条，字典缺口核证 73 条，假期日历 102 行；先例卡 45 份、因素 105 个、判断事项 16 个（`labels/precedents.csv`、`labels/factors.csv`，案例采集.md §5）；官方算例标签 122 个、引文 434 条（`labels/k2_examples.csv`、`labels/k2_quotes.csv`，测试系统.md §8c）；知识层有检索单元 40,123 个、关系 16,283 条（其中显式交叉引用 10,127 条，解析到条款 9,436 条）、定义词 4,753 个、引文锚点 1,001 个。当前清单见 [STATUS.md](STATUS.md)，知识层统计与构建检查见 [INDEX.md](INDEX.md)，检索评测见 [SEARCH_EVAL.md](SEARCH_EVAL.md)，待办见 [TODO.md](TODO.md)。
 
 目录
 
@@ -96,15 +96,12 @@ seed_params.py ──► params.csv   │   decisions.csv  gaps.csv  form_fields
 
 ### 3.1 命令
 
-在包含 `official/` 和 `tax_graph/` 的项目根目录执行以下命令，命令中的路径均相对于该目录。§2 的目录表和各节中的库内文件路径相对于 `official/`。不要求特定的本地 conda 环境；完整构建在 Python 3.9.23 下验证，引擎和案例在 Python 3.12.7 下验证，运行说明见 [tax_graph/README.md](../tax_graph/README.md)。
-
-基础构建依赖安装命令为 `python -m pip install -r official/requirements.txt`。LibreOffice 用于未缓存的旧版 Office 文件转换，程序从 `PATH`、`SOFFICE` 环境变量或系统安装目录查找。重建缺失的稠密向量或运行稠密检索时，还需安装 `official/requirements-dense.txt` 中的依赖及对应模型。仅重建词面检索与关系图时可加 `--no-dense`，该方式不生成向量表；发布的数据库包含完整向量表。
-
 ```bash
-python official/tools/fetch.py --id ... --jur ... --title ... --url ...   # 取件并登记（§10.1）
-python official/tools/seed_params.py      # 参数有改动时
-python official/tools/build.py            # 全量构建，最后自动运行 graph.py
-python official/tools/graph.py [--dense[=MODEL]]   # 只重建知识层
+# Python 一律用 conda 环境 pytorch（Python 3.9）
+/c/Coding/Anaconda/envs/pytorch/python.exe official/tools/fetch.py --id ... --jur ... --title ... --url ...   # 取件并登记（§10.1）
+/c/Coding/Anaconda/envs/pytorch/python.exe official/tools/seed_params.py      # 参数有改动时
+/c/Coding/Anaconda/envs/pytorch/python.exe official/tools/build.py            # 全量构建，最后自动运行 graph.py
+/c/Coding/Anaconda/envs/pytorch/python.exe official/tools/graph.py [--dense[=MODEL]]   # 只重建知识层
 ```
 
 `build.py` 删除并重建 `official.sqlite`，再调用 `graph.main()`。有错误时退出码非 0，问题列在输出与 `INDEX.md`"检查"一节。转换与向量都有缓存：没有新文件时全量构建约 30 秒；新加文件只转换、只向量化新的部分；首次为 29,640 个单元算 BGE-M3 向量在 GPU 上约 14 分钟。
@@ -265,7 +262,7 @@ unit   数值型：% days months years tiers ratio CNY HKD SGD EUR persons；另
 
 ### 5.10 formulas.csv
 
-新加坡法规在线把部分公式印成 GIF 图片（如最低税法第 16(2) 条 A × B / C、第 17(1) 条 A / B × 100%），抽文本时图片会丢。每张图片一行：`image, doc_ids, where, url, file, sha256, bytes, fetched_at, transcription, read_on, note`。原件存 `raw/sg/img/<image>.gif`，构建时像清单文件一样核对存在与 sha256；切条款时（`slice_sso`）图片原位替换为 `[formula: <transcription>]`，口径与参数可以逐字引用它。没有登记的图片替换为 `[formula image <id>: not transcribed]`，由约束 W07 报出——该处公式在文本层缺失，不得据此推算。已登记 15 张：最低税法第 8、15、16、17 条，最低税条例第 94 条，所得税法第 10、10L、14 条（规则层引用的条文里的全部公式）；其余 58 处（主要是印花税法附表一的税率分数）未读。
+新加坡法规在线把部分公式印成 GIF 图片（如最低税法第 16(2) 条 A × B / C、第 17(1) 条 A / B × 100%），抽文本时图片会丢。每张图片一行：`image, doc_ids, where, url, file, sha256, bytes, fetched_at, transcription, read_on, note`。原件存 `raw/sg/img/<image>.gif`，构建时像清单文件一样核对存在与 sha256；切条款时（`slice_sso`）图片原位替换为 `[formula: <transcription>]`，口径与参数可以逐字引用它。没有登记的图片替换为 `[formula image <id>: not transcribed]`，由约束 W07 报出——该处公式在文本层缺失，不得据此推算。已登记 20 张：最低税法第 8、15、16、17 条，最低税条例第 94 条，所得税法第 10、10L、14、37B 条，印花税法附表一第 8(aa) 条（规则层引用的条文里的全部公式）；其余部分（主要是印花税法附表一的税率分数）未读。
 
 ### 5.7 aliases.csv
 
@@ -603,7 +600,7 @@ Removed     id, title, reason, ends, replaced_by
 | D02 | 新加坡补足税不受所得税法第 14 部分的抵免 |
 | D03 | 已结税项：对它有利的一端反转为使应缴额更高的一端 |
 | D04 | 间接抵免中本层税额是其自己抵免之后的实缴数 |
-| D05 | 间接抵免逐层、最多五层、单一上层直接 ≥20% 且合计 ≥20% |
+| D05 | 间接抵免逐层、最多五层、单一上层直接 ≥20% 且合计 ≥20%，计入合计的每笔单一持股都 ≥20% |
 | D06 | 本层税额含其收款被扣缴的税与间接负担的下层税 |
 | D07 | 股息负担的是所分配利润所属年度的税 |
 | D08 | 间接抵免只对外国企业的境外来源股息 |

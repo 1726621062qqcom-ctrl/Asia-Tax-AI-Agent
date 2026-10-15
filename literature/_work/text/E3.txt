@@ -1,0 +1,1731 @@
+=== [p.1] ===
+1
+SQL’s Three-Valued Logic and Certain Answers
+LEONID LIBKIN, School of Informatics, University of Edinburgh
+The goal of the article is to bridge the difference between theoretical and practical approaches to answering
+queries over databases with nulls. Theoretical research has long ago identiﬁed the notion of correctness
+of query answering over incomplete data: one needs to ﬁnd certain answers, which are true regardless of
+how incomplete information is interpreted. This serves as the notion of correctness of query answering,
+but carries a huge complexity tag. In practice, on the other hand, query answering must be very efﬁcient,
+and to achieve this, SQL uses three-valued logic for evaluating queries on databases with nulls. Due to the
+complexity mismatch, the two approaches cannot coincide, but perhaps they are related in some way. For
+instance, does SQL always produce answers we can be certain about?
+This is not so: SQL’s and certain answers semantics could be totally unrelated. We show, however, that
+a slight modiﬁcation of the three-valued semantics for relational calculus queries can provide the required
+certainty guarantees. The key point of the new scheme is to fully utilize the three-valued semantics, and
+classify answers not into certain or noncertain, as was done before, but rather into certainly true, certainly
+false, or unknown. This yields relatively small changes to the evaluation procedure, which we consider at
+the level of both declarative (relational calculus) and procedural (relational algebra) queries. These new
+evaluation procedures give us certainty guarantees even for queries returning tuples with null values.
+Categories and Subject Descriptors: H.2.1 [Database Management]: Logical Design—Data models;
+Languages—Query languages; H.2.4 [Database Management]: Systems—Query processing
+General Terms: Algorithms, Languages
+Additional Key Words and Phrases: Null values, incomplete information, query evaluation, three-valued
+logic, certain answers
+ACM Reference Format:
+Leonid Libkin. 2016. SQL’s three-valued logic and certain answers. ACM Trans. Database Syst. 41, 1,
+Article 1 (March 2016), 28 pages.
+DOI: http://dx.doi.org/10.1145/2877206
+1. INTRODUCTION
+SQL’s query evaluation uses three-valued logic when it comes to handling incomplete
+information: comparisons involving null values have the truth value unknown [Date
+and Darwen 1996]. The design of these features of SQL has been heavily criticized
+[Date 2005; Date and Darwen 1996] and in fact leads to a number of well known
+paradoxes. Consider, for instance, a relation S with a single numerical attribute A, and
+assume that S contains a single row with a null value in it. Then
+select S.A from S where S.A = 0 or S.A <> 0
+(1)
+This work is partially supported by EPSRC grants J015377 and M025268.
+Authors’ address: School of Informatics, University of Edinburgh, Informatics Forum, 10 Crichton Street,
+Edinburgh EH8 9AB, United Kingdom; email: libkin@inf.ed.ac.uk.
+Permission to make digital or hard copies of part or all of this work for personal or classroom use is granted
+without fee provided that copies are not made or distributed for proﬁt or commercial advantage and that
+copies show this notice on the ﬁrst page or initial screen of a display along with the full citation. Copyrights for
+components of this work owned by others than ACM must be honored. Abstracting with credit is permitted.
+To copy otherwise, to republish, to post on servers, to redistribute to lists, or to use any component of this
+work in other works requires prior speciﬁc permission and/or a fee. Permissions may be requested from
+Publications Dept., ACM, Inc., 2 Penn Plaza, Suite 701, New York, NY 10121-0701 USA, fax +1 (212)
+869-0481, or permissions@acm.org.
+c⃝2016 ACM 0362-5915/2016/03-ART1 $15.00
+DOI: http://dx.doi.org/10.1145/2877206
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.2] ===
+1:2
+L. Libkin
+returns no tuple. However, if we view nulls as missing values (and this is the interpre-
+tation we shall concentrate on), the condition in the where clause is a tautology, and
+the answer looks intuitively wrong. The reason this happens is that both null = 0
+and null <> 0 evaluate to unknown and so does their disjunction. If we have another
+relation R with the same numerical attribute A, then for the same reason the query
+computing R −S:
+select R.A from R where R.A not in (select S.A from S)
+(2)
+returns nothing if S contains a single null, no matter what R is, telling us that we
+might well have |R| > |S| and R −S = ∅at the same time.
+These do seem rather counterintuitive, and a number of attempts were made to
+overcome the problem, from ﬁxing the underlying many-valued logic [Gessert 1990;
+Yue 1991] to getting rid of nulls altogether [Darwen and Date 1995]. However, to
+understand why, and whether, these query answers are wrong, and to state correctness
+guarantees, we must have some yardstick to measure query evaluation procedures
+against. Such a yardstick was produced by the theory community a long time ago. Since
+the foundational papers [Lipski 1979; Imielinski and Lipski 1984], it has been accepted
+that the right way of evaluating queries on incomplete databases is by computing
+certain answers to them. Each incomplete database D has an associated semantics [[D]]
+that we can think of as the set of possible complete databases that D can represent, for
+example, all databases obtained by substituting values for nulls, if those are interpreted
+as missing information. Then certain answers contain tuples that will be in the answer
+to Q over all possible complete databases represented by D:
+cert(Q, D) =
+
+{Q(D′) | D′ ∈[[D]]}.
+(3)
+In other words, cert(Q, D) contains tuples that will be in the answer regardless of the
+interpretation of the missing information in D.
+Taking certain answers as the correct way of answering queries, there could be two
+ways in which a speciﬁc evaluation procedure (e.g., the one implemented in SQL) differs
+from it. It can produce one of the following.
+False negatives. In this case the evaluation procedure fails to produce some of the
+certain answers (i.e., it says that a tuple is not the answer when it should be).
+False positives. In this case the evaluation procedure produces an answer that is
+not certain.
+We can think of false negatives as hiding some of the truth, while false positives are
+an outright lie.
+Can SQL query evaluation avoid those? The ﬁrst observation, based on what we
+know about incomplete databases, is this:
+SQL query evaluation must produce either false negatives or false positives.
+The reason is that certain answers, while providing us with the notion of correctness,
+are not easy to ﬁnd: in fact, for full relational calculus they are CONP-hard for most
+reasonable semantics [Abiteboul et al. 1991]. And yet, SQL evaluation is in DLOGSPACE
+(in fact, even in the low parallel complexity class AC0, which is properly contained in
+CONP). This complexity mismatch tells us that SQL cannot compute certain answers
+precisely.
+Example (1) is an example of false negatives: we miss a certain answer but at least
+we do not produce false ones. Example (2) actually computes the certain answer, but
+could easily be modiﬁed to generate false negatives. So it seems from those typical
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.3] ===
+SQL’s Three-Valued Logic and Certain Answers
+1:3
+cases used to criticize SQL’s handling of nulls that at least we do not produce false
+positives.
+This, however, is not so. Consider the query:
+select R.A from R
+where R.A not in (select R1.A from R R1
+(4)
+where R1.A not in (select * from S))
+expressing R −(R −S). Now look at a database in which R = {1} and S = {null}.
+SQL’s evaluation results in {1}. At the same time the certain answer is empty: if null
+is interpreted as any value other than 1, the result of R −(R −S) is ∅. Even avoiding
+double negation, the query
+(select * from R) except (select * from S)
+outputs {1}, while the certain answer is empty.
+Thus, SQL’s evaluation rules may result in both false positives and false negatives,
+and we cannot eliminate both. So the best we can hope for is an evaluation scheme
+that eliminates one kind of error. We take the view here that the outright lie (false
+positives) is worse than hiding some of the truth (false negatives).
+This leads to the main question of the article: Can we devise an evaluation strategy of
+SQL’s queries that completely eliminates false positives? The idea of such a sound eval-
+uation is not new. It was considered as early as Reiter [1986], even before complexity
+bounds for certain answers were known. And yet, despite some partial attempts (e.g.,
+for ﬁxing the null semantics of SQL queries with any or all subquery comparisons
+[Klein 1994]) there is currently no answer to this question.
+Our goal is to provide this answer, and to present an evaluation strategy that
+—ﬁnds query answers fast, without a signiﬁcant modiﬁcation of the existing evaluation
+techniques, and at the same time
+—guarantees that no false positives occur, that is, every returned tuple is a certain
+answer.
+We achieve this by providing a small modiﬁcation to the three-valued logic approach
+of SQL that restores correctness guarantees: query evaluation no longer produces false
+positives, and all returned results are guaranteed to be certain answers.
+To understand the idea of the modiﬁcation, notice that SQL’s query evaluation actu-
+ally mixes three- and two-valued logic. Three-valued logic is used to evaluate conditions,
+but then query results return only those tuples for which conditions evaluate to true,
+effectively collapsing unknown and false. This works ﬁne for positive queries, but once
+negation, especially negation in subqueries (e.g., not in or not exists) enters the
+picture, we have a problem, as it ﬂips truth values. Now true ﬂips to false, but both
+unknown and false (which were collapsed to one value when a subquery was evaluated)
+ﬂip to true! This is exactly how false positives occur in query answers.
+So to get correctness guarantees, we just need to be faithful to the three-valued
+approach. This means that there will be three possible outcomes for each candidate
+answer tuple: it can be either
+—certainly in the answer (truth value true); or
+—certainly not in the answer (truth value false); or
+—possibly in the answer, or possibly not (truth value unknown).
+We provide procedures with correctness guarantees for the evaluation of relational
+calculus and relational algebra queries. In terms of the SQL fragment, this covers
+the usual select-from-where queries, with subqueries, but without grouping and
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.4] ===
+1:4
+L. Libkin
+aggregation. Note that we do not work directly on SQL queries, rather on those they
+get translated into (in particular, the procedural relational algebra queries, although
+for understanding what exactly needs to be repaired, it is best to do it ﬁrst with the
+declarative calculus queries).
+As for the model of incompleteness, we choose here to work with marked, or na¨ıve
+nulls [Abiteboul et al. 1995; Imielinski and Lipski 1984; Lipski 1984] in tables. They
+are more general than SQL’s nulls: they can appear multiple times in tables. Marked
+nulls are often required by applications such as data integration and exchange [Arenas
+et al. 2014; Lenzerini 2002]. In fact, they have already been implemented in connection
+with such applications [Haas et al. 2005; Marnette et al. 2011]. SQL’s assumption
+(for instance, for attribute comparisons) is that different appearances of nulls are
+distinct. Thus, SQL’s nulls can be modeled with na¨ıve nulls, simply by forbidding repet-
+ition.
+The reason we need marked nulls is twofold. First, we want to produce more gen-
+eral results. Secondly, we need to overcome an additional (and quite unreasonable)
+deﬁciency of SQL’s handling of nulls: even checking whether a null value equals itself
+produces truth value unknown. Indeed, consider a table T(A,B) with a single tuple
+(1,null) and a query select T.A from T where T.B=T.B, that is, πA(σB=B(T )). In-
+stead of the expected 1, it gives the empty result, as comparing a value with itself does
+not evaluate to true.
+The plan of the article is as follows. In Section 2, we present basic deﬁnitions. Sec-
+tion 3 describes the evaluation procedure for relational calculus and SQL’s three-valued
+approach in the presence of nulls. Section 4 presents the modiﬁed evaluation procedure
+and states its correctness. In Section 5, we prove a generalization of that result, relying
+on a new notion of certain answers with nulls. This generalization properly accounts
+for all three possible outcomes of query evaluation (certainly true, certainly false, un-
+known). This notion is also useful in that it allows us to have tuples with nulls in query
+answers, something that the standard certain answers do not allow. In Section 6, we
+look at certainty guarantees at the procedural language, that is, for relational algebra
+queries. Section 7 delves deeper into some bizarre behavior of SQL for nested queries
+on databases with nulls, and shows that our new evaluation techniques overcome those
+instances of unexpected behavior. Concluding remarks are in Section 8.
+In the article, we assume the textbook version of relational algebra and calculus, that
+is, the version based on the set semantics. SQL, of course, uses the multiset semantics.
+Understanding how to extend results to the multiset semantics is a project for future
+work. We do not, at this time, have a proper analog of certain answers and relational
+theory of incompleteness for databases with multisets, and thus do not have the same
+yardstick as the deﬁnition (3) to base the notion of correctness on. This needs to be
+done ﬁrst, before our results can be extended to SQL’s features going beyond relational
+calculus/algebra.
+2. PRELIMINARIES
+Incomplete Databases. We begin with some standard deﬁnitions [Abiteboul et al. 1995;
+Imielinski and Lipski 1984]. Incomplete databases are populated by constants and
+nulls. The sets of constants and nulls are countably inﬁnite sets denoted by Const and
+Null, respectively. Nulls are denoted by ⊥, sometimes with sub- or superscripts.
+A relational schema (vocabulary) is a set of relation names with associated arities.
+An incomplete relational instance D assigns to each k-ary relation symbol S from the
+vocabulary a k-ary relation SD over Const∪Null, that is, a ﬁnite subset of (Const∪Null)k.
+When the instance is clear from the context we shall write S, rather than SD, for the
+relation itself.
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.5] ===
+SQL’s Three-Valued Logic and Certain Answers
+1:5
+The sets of constants and nulls that occur in D are denoted by Const(D) and Null(D).
+If Null(D) is empty, we refer to D as complete. That is, complete databases are those
+without nulls. The active domain of D is adom(D) = Const(D) ∪Null(D).
+Homomorphisms, Valuations, and Semantics. Given two relational structures D and
+D′, a homomorphism h : D →D′ is a map from the active domain of D to the active
+domain of D′ such that
+(1) for every relation symbol S, if a tuple ¯u is in relation S in D, then the tuple h(¯u) is
+in the relation S in D′; and
+(2) h(c) = c for every c ∈Const(D).
+By h(D) we denote the image of D, that is, the set of all tuples S(h(¯u)) where S(¯u) is
+in D. If h : D →D′ is a homomorphism, then h(D) is a subinstance of D′.
+A homomorphism h : D →D′ is called a valuation if h(x) is a constant for every
+x ∈adom(D); in other words, it provides a valuation of nulls as constant values. If
+h is a valuation, then h(D) is complete. We now deﬁne the semantics of incomplete
+databases by means of valuations:
+[[D]] = {h(D) | h is a valuation}.
+This is often referred to as the closed-world assumption, or CWA semantics of incom-
+pleteness [Imielinski and Lipski 1984; Reiter 1977]. Another common semantics uses
+the open-world assumption, or OWA, and allows adding complete tuples to h(D). In the
+study of incompleteness, the closed-world semantics is a bit more common [Abiteboul
+et al. 1991, 1995; Imielinski and Lipski 1984] since it is better behaved. We shall also
+consider evaluation under the OWA semantics in Section 5.2.
+Query Languages. As our basic query languages we consider relational calculus and
+its fragments. Relational calculus has exactly the power of ﬁrst-order logic, or FO. Its
+formulas are built from relational atoms R(¯x) and equality atoms x = y, by closing
+them under conjunction ∧, disjunction ∨, negation ¬, existential ∃quantiﬁers, and
+universal ∀quantiﬁers. If ¯x is the list of free variables of a formula ϕ, we write ϕ(¯x) to
+indicate this. We write |¯x| for the length of ¯x.
+Conjunctive queries (CQs, also known as select-project-join queries) are deﬁned as
+queries expressed in the ∃, ∧-fragment of FO. The class UCQ of unions of conjunctive
+queries is the class of formulas of the form ϕ1 ∨. . . ∨ϕm, where each ϕi is a conjunctive
+query. In terms of its expressive power, this is the existential-positive fragment of FO,
+that is, the ∃, ∨, ∧-fragment.
+We shall use relational algebra, the procedural language equivalent to FO, that
+has the operations of selection σ, projection π, Cartesian product ×, union ∪, and differ-
+ence −. We use the unnamed perspective of relational algebra, which does not require
+the renaming operator [Abiteboul et al. 1995] (more on this in Section 6, where we shall
+add explicit intersection to relational algebra). The fragment without the difference
+operator is referred to as positive relational algebra; it has the same expressiveness as
+existential positive formulas (and thus unions of conjunctive queries).
+3. EVALUATION PROCEDURES FOR FO QUERIES
+We shall look at different query evaluation procedures. An evaluation procedure has
+as its inputs a database D, a query ϕ(¯x), and a tuple ¯a of free variables of the query; it
+has to say whether ϕ(¯a) is true in D.
+Thus, formally an evaluation procedure Eval will take a query (an FO formula)
+ϕ(¯x), a database D, and an assignment ν of values to the free variables ¯x. The output
+Eval(ϕ, D, ν) is a truth value. For the standard Boolean logic, the domain of truth values
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.6] ===
+1:6
+L. Libkin
+is {0, 1}, with 0 meaning false and 1 meaning true. For the three-valued logic, used by
+SQL, the domain is {0, 1
+2, 1}, with 1
+2 interpreted as unknown.
+An assignment ν maps each free variable to an element of adom(D). Note that such
+an element could be a constant or a null; hence assignments are not valuations. We
+write ν[a/x] for the assignment that changes ν by mapping x to a. Also, given a tuple ¯x =
+(x1, . . . , xn) of free variables, and a tuple ¯a = (a1, . . . , an), we write simply Eval(ϕ, D, ¯a)
+if the assignment ν is such that ν(xi) = ai for all i ≤n.
+Given an evaluation procedure Eval, the outcome of query evaluation for ϕ(¯x) with
+|¯x| = k is
+Eval(ϕ, D) = {¯a ∈adom(D)k | Eval(ϕ, D, ¯a) = 1}.
+As we said earlier, the goal is to make modiﬁcations to the standard evaluation
+absolutely minimal and still achieve correctness. In particular, we do not want to
+modify the completely standard evaluation of the Boolean connectives and quantiﬁers:
+Eval(ϕ ∨ψ, D, ν) = max(Eval(ϕ, D, ν), Eval(ψ, D, ν)),
+Eval(ϕ ∧ψ, D, ν) = min(Eval(ϕ, D, ν), Eval(ψ, D, ν)),
+Eval(¬ϕ, D, ν) = 1 −Eval(ϕ, D, ν),
+Eval(∃xϕ, D, ν) = max{Eval(ϕ, D, ν[a/x]) | a ∈adom(D)},
+Eval(∀xϕ, D, ν) = min{Eval(ϕ, D, ν[a/x]) | a ∈adom(D)}.
+(5)
+Thus, from now on, we only explain the valuation of atomic formulas R(¯x) and equal-
+ities x = y. The classical FO evaluation gives us the procedure EvalFO with the range
+{0, 1} deﬁned by (5) and
+EvalFO(R(¯x), D, ν) =
+
+1
+if ν(¯x) ∈RD
+0
+if ν(¯x) ̸∈RD,
+EvalFO(x = y, D, ν) =
+
+1
+if ν(x) = ν(y)
+0
+if ν(x) ̸= ν(y).
+SQL’s evaluation has {0, 1
+2, 1} as the range of values. Again it uses rules (5), and the
+rule for EvalSQL(R(¯x), D, ν) is exactly the same as for EvalFO, but for equality atoms the
+rule differs:
+EvalSQL(x = y, D, ν) =
+⎧
+⎨
+⎩
+1
+if ν(x) = ν(y) and ν(x), ν(y) ∈Const
+0
+if ν(x) ̸= ν(y) and ν(x), ν(y) ∈Const
+1
+2
+if ν(x) ∈Null or ν(y) ∈Null.
+Indeed, SQL’s approach is to declare every comparison as unknown if a null is in-
+volved. Note that over complete databases, EvalFO and EvalSQL coincide. Over incom-
+plete databases, EvalFO is usually referred to as na¨ıve evaluation [Abiteboul et al. 1995;
+Imielinski and Lipski 1984].
+How do these relate to certain answers? We now examine FO and SQL evaluation.
+But ﬁrst note that the deﬁnition (3) ensures that only tuples of constants are present in
+certain answers. There is no such restriction on the standard evaluation procedures. So
+to do a fair comparison we only compare sets of constant tuples returned by evaluation
+procedures (this will be relaxed later in the article, when we provide a new deﬁnition
+of certain answers with nulls).
+Deﬁnition 3.1. Given a class Q of queries, an evaluation procedure Eval has certainty
+guarantees for Q if for every query ϕ(¯x) ∈Q, every database D, and every tuple ¯a of
+constants with |¯a| = |¯x|, we have
+¯a ∈Eval(ϕ, D)
+⇒
+¯a ∈cert(ϕ, D).
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.7] ===
+SQL’s Three-Valued Logic and Certain Answers
+1:7
+In other words,
+Eval(ϕ, D) ∩Const|¯x|
+⊆
+cert(ϕ, D).
+Certain Answers and EvalFO
+The ﬁrst observation is immediate:
+cert(ϕ, D) ⊆EvalFO(ϕ, D).
+The converse in general is not true; we can have EvalFO(ϕ(¯x), D) ∩Const|¯x| ̸⊆cert(ϕ, D).
+Consider, for instance, ϕ(x) = R(x) ∧¬S(x) expressing the difference of R and S. Let D
+contain RD = {1} and SD = {⊥}; then Eval(ϕ, D) = {1} while cert(ϕ, D) = ∅.
+However, sometimes certainty guarantees can be established. It has long been known
+[Imielinski and Lipski 1984] that we get them by excluding universal quantiﬁcation
+and negation from ﬁrst-order logic: EvalFO has certainty guarantees for the class UCQ.
+This was recently extended in Gheerbrant et al. [2014], which showed that the same
+is true for queries from a rather signiﬁcant expansion of the class UCQ, by adding
+universal quantiﬁcation and a limited form of implication. More precisely, we look at
+the class Qcert
+FO deﬁned as follows:
+—atomic formulas R(¯x) and x = y are in Qcert
+FO ;
+—if ϕ, ψ ∈Qcert
+FO , then so are ϕ ∨ψ and ϕ ∧ψ;
+—if ϕ ∈Qcert
+FO , then so are ∃xϕ and ∀xϕ;
+—if ϕ(¯x, ¯y) is in Qcert
+FO , then so is ∀¯x (R(¯x) →ϕ(¯x, ¯y)), where R is a relation symbol in the
+schema, and ¯x does not have a repetition of variables.
+This class extends unions of conjunctive queries with a rather common class of queries
+involving negation and/or universal conditions, such as “ﬁnd students that take all
+courses.” The EvalFO procedure has certainty guarantees for Qcert
+FO queries [Gheerbrant
+et al. 2014]. From the point of view of relational algebra, the class Qcert
+FO corresponds
+to operations σ, π, ∪, × and the division operation Q ÷ Q′, where Q′ is written in the
+π, ∪, ×-fragment of relational algebra (see Libkin [2014b]).
+Certain Answers and EvalSQL
+How does SQL change things? Actually, it changes them for the worse: now there is no
+connection between EvalSQL(ϕ, D) and cert(ϕ, D) whatsoever. Indeed, we saw that for
+the query ϕ(x) = R(x) ∧¬(R(x) ∧¬S(x)) and database D with RD = {1} and SD = {⊥},
+the certain answer is empty, while EvalSQL(ϕ, D) = {1}, and for the relation T = {(1, ⊥)}
+and the query ψ(x) = ∃y (T (x, y) ∧(x = 1 ∨¬(x = 1))), the certain answer is {1}, while
+EvalSQL produces the empty set.
+In a restricted case, we provide correctness guarantees:
+PROPOSITION 3.2. EvalSQL has certainty guarantees for unions of conjunctive queries.
+PROOF. The result is an immediate consequence of the following observation.If ϕ(¯x)
+is a union of conjunctive queries (i.e., an existential positive formula), then
+EvalSQL(ϕ, D, ν) = 1
+⇒
+EvalFO(ϕ, D, ν) = 1.
+(6)
+Indeed, this implies the result since EvalFO has certainty guarantees for unions of
+conjunctive queries [Imielinski and Lipski 1984]. To show (6), we note that it trivially
+holds for relational atoms (since the rules are the same) and for equality atoms, by
+deﬁnition. Then a straightforward induction shows that (6) propagates through the
+rules for ∨, ∧, and ∃.
+2
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.8] ===
+1:8
+L. Libkin
+4. EVALUATION PROCEDURES WITH CERTAINTY GUARANTEES
+We now introduce an evaluation procedure that comes with certainty guarantees for
+all relational calculus queries. For that, we have to explain what is wrong with the
+FO and SQL evaluation procedures shown previously, particularly for the evaluation
+of atomic formulas.
+Problems with Atomic Relational FormulasR(¯x). For both SQL and FO, one simply
+checks, for a given assignment ν, whether ν(¯x) belongs to R. However, returning 0 if
+ν(¯x) ̸∈R is too strong if we view 0 as saying that the tuple certainly cannot belong to
+relation R.
+Indeed, consider R = {(⊥1, 1), (2, ⊥2)} and let ν be the identity (recall that the range
+of ν is the whole active domain). Consider a tuple ¯x = (⊥1, ⊥2). It is not in R, but can
+it be in R under some valuation h? Of course it can: if h(⊥1) = 2 and h(⊥2) = 1, then
+h(¯x) = (2, 1) and h(R) = {(2, 1)}, that is, h(¯x) ∈h(R). On the other hand, if h′(⊥1) = 1
+and h′(⊥2) = 2, then h′(¯x) = (1, 2) and h′(R) = {(1, 1), (2, 2)}, so h′(¯x) ̸∈h′(R). Thus, the
+correct value for evaluating the membership of ¯x in R seems to be 1
+2, not 0. Value 0
+should be reserved for cases when no valuation h makes h(¯x) ∈h(R) possible.
+The EvalFO and EvalSQL procedures return 0 too eagerly, and this becomes a problem
+when negation is applied to a formula, as 0 becomes a 1, and suddenly we have a false
+positive answer that, in fact, is not certain at all. If the value is kept at 1
+2, applying
+negation still results in 1 −1
+2 = 1
+2, and thus no false “certain answers” appear.
+Problems with Equality Formulas x = y. FO evaluation results in 0 if ν(x) and ν(y)
+are different nulls, but they could still be mapped to the same constant, so the right
+value should be 1
+2, not 0. On the other hand, SQL evaluation produces 1
+2 if one of ν(x)
+or ν(y) is a null. But if we know ν(x) = ν(y), then for every valuation h we will have
+h(ν(x)) = h(ν(y)), so the evaluation procedure must return 1 and not 1
+2 in this case, or
+else it will miss some certain answers.
+Now with this in mind, we introduce a proper three-valued evaluation procedure
+Eval3v. For this, we need one additional concept. Given two tuples ¯t and ¯s of the same
+length over Const∪Null, we say that they unify if there is a homomorphism h such that
+h(¯t) = h(¯s). We then write ¯t ⇑¯s.
+For instance, tuples ¯t = (1, 2, ⊥, 2) and ¯s = (1, ⊥′, 3, ⊥′′) unify, since for the map h
+that sends ⊥to 3 and both ⊥′ and ⊥′′ to 2 we have h(¯t) = h(¯s). On the other hand, ¯t and
+¯u = (⊥′, ⊥′, 3, ⊥′′) do not unify, since the ﬁrst two null components of ¯u are the same,
+but the ﬁrst two constant components of ¯t are different.
+It is easy to see that we can deﬁne ¯t ⇑¯s by asking for a valuation h so that h(¯t) = h(¯s).
+By classical results on uniﬁcation, it is known that ¯t ⇑¯s can be tested in linear time
+[Paterson and Wegman 1978].
+The evaluation procedure is as follows. It uses rules (5) and the following rules for
+atomic formulas, that overcome the issues outlined in the beginning of the section:
+Eval3v(R(¯x), D, ν) =
+⎧
+⎨
+⎩
+1
+if ν(¯x) ∈RD
+0
+if there is no ¯t ∈RD such that ν(¯x) ⇑¯t
+1
+2
+otherwise,
+Eval3v(x = y, D, ν) =
+⎧
+⎨
+⎩
+1
+if ν(x) = ν(y)
+0
+if ν(x), ν(y) ∈Const and ν(x) ̸= ν(y)
+1
+2
+otherwise.
+Coming back to the example in the beginning of the section, if we have a database
+D with RD = {(⊥1, 1), (2, ⊥2)} and ν : (x, y) →(⊥1, ⊥2), then Eval3v(R(x, y), D, ν) = 1
+2.
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.9] ===
+SQL’s Three-Valued Logic and Certain Answers
+1:9
+Indeed, even though (⊥1, ⊥2) is not in RD, there are valuations h so that h(⊥1, ⊥2) ∈
+h(RD). On the other hand, no valuation h makes (1, 2) ∈h(RD) possible, so for ν′ :
+(x, y) →(1, 2) we have Eval3v(R(x, y), D, ν′) = 0.
+These modiﬁcations turn out to be sufﬁcient to ensure certainty guarantees for all
+relational calculus queries.
+THEOREM 4.1. Eval3v has certainty guarantees for all FO queries.
+As an example, consider again query (4), or ϕ(x) = R(x) ∧¬(R(x) ∧¬S(x)) over D
+with RD = {1} and SD = {⊥}. It produced a false positive since EvalSQL(ϕ, D) = {1}
+but the certain answer is empty. But now we have Eval3v(ϕ, D) = ∅. Indeed, we had
+EvalSQL(R(x) ∧¬S(x), D, 1) = 0, and thus EvalSQL(ϕ, D, 1) = 1, but now Eval3v(R(x) ∧
+¬S(x), D, 1) = 1
+2 and hence Eval3v(ϕ, D, 1) = 1
+2.
+As another remark, note that the result of Eval3v need not be contained in the result
+of EvalSQL, that is, Eval3v can produce results that SQL evaluation misses. For instance,
+given a database D with RD = {(⊥, ⊥)} and a query ψ = ∃x, y R(x, y) ∧x = y, one can
+easily check that Eval3v(ψ, D, ν) = 1 (for the only possible valuation over a singleton
+active domain), while EvalSQL(ψ, D, ν) = 1
+2.
+Theorem 4.1 will be a consequence of a more general result (Theorem 5.3) that does
+not restrict us to constant tuples. But for this we ﬁrst need to deﬁne certain answers
+with nulls.
+5. CERTAIN ANSWERS WITH NULLS
+While the deﬁnition of certain answers (3) has been by far the most common in use,
+it has a number of deﬁciencies (see Libkin [2014a, 2014b] for discussion). One of the
+problems is that it only returns tuples containing constants. Consider a database Dwith
+a relation RD = {(1, 2), (3, ⊥)} and a query ψ(x, y) = R(x, y). Then cert(ψ, D) = {(1, 2)}
+but intuitively we should return the entire relation RD since we are certain its tuples
+are in the answer. The reason we are certain about it is that for every valuation h, the
+tuple (3, h(⊥)) is in h(D).
+These considerations led to a slight extension of the notion of certain answers [Lipski
+1984] that, despite being very natural, is not as commonly used as the deﬁnition (3).
+Note that certain answers (3) can be deﬁned as the set of constant tuples ¯u (i.e., tuples
+without nulls) such that for all valuations h, the tuple ¯u = h(¯u) is in Q(h(D)). The
+extended deﬁnition of Lipski [1984] simply removes the condition that query answers
+should not contain nulls.
+Deﬁnition 5.1. Given an incomplete database D and a k-ary query Q deﬁned over
+complete databases, certain answers with nulls cert⊥(Q, D) is deﬁned as the set of all
+tuples ¯u ∈adom(D)k such that h(¯u) ∈Q(h(D)) for all valuations h.
+For instance, if a query is given by an FO formula with k free variables, then
+cert⊥(ϕ, D) = {¯u ∈adom(D)k | EvalFO(ϕ, h(D), h(¯u)) = 1 for every valuation h}.
+Returning to the preceding example, we have cert⊥(ψ, D) = {(1, 2), (3, ⊥)}, so the tuple
+(3, ⊥) is no longer omitted. We remark that Lipski [1984] did not actually provide a
+name for this concept, and it appeared under other names, for example, sure unianswer
+in Klein [1999]. We prefer the term “certain answers with nulls” as it conveys the nature
+of the concept.
+We now summarize properties of certain answers with nulls. The usual certain an-
+swers can be obtained from certain answers with nulls by dropping tuples containing
+nulls, and certain answers with nulls are always contained in the result of the simple
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.10] ===
+1:10
+L. Libkin
+FO evaluation of formulas. Sometimes, but not always, they may coincide with the
+result of such an evaluation.
+Formally, we have the following.
+PROPOSITION 5.2. The following hold:
+—cert(ϕ(¯x), D) = cert⊥(ϕ, D) ∩Const|¯x|.
+—cert⊥(ϕ, D) ⊆EvalFO(ϕ, D) for every FO query ϕ.
+—If ϕ ∈Qcert
+FO , then cert⊥(ϕ, D) = EvalFO(ϕ, D).
+—There exist FO queries ϕ so that cert⊥(ϕ, D) ̸= EvalFO(ϕ, D).
+PROOF. We ﬁrst show a useful auxiliary result that ¯u ∈cert⊥(ϕ, D) if and only if
+EvalFO(ϕ, h(D), h(¯u)) = 1 for every homomorphism h (rather than every evaluation h).
+To see this, we show that the following conditions are equivalent: EvalFO(ϕ, h(D), h(¯u)) =
+1 for each homomorphism h, and EvalFO(ϕ, g(D), g(¯u)) = 1 for each valuation g are
+equivalent.
+Of course if the statement EvalFO(ϕ, h(D), h(¯u)) = 1 is true for every homomorphism,
+then it also true for every valuation. Conversely, assume that EvalFO(ϕ, g(D), g(¯u)) = 1
+holds for every valuation g. Let h be a homomorphism deﬁned on Null(D). Let N0
+be the set of nulls in the image of h, and let N = N0 ∪Null(D). Consider a set C
+of constants that do not occur in adom(D), or in the image of h, so that |C| = |N|,
+and let f : N →C be a bijection. Deﬁne a valuation g as f ◦h. By the assump-
+tion, we have EvalFO(ϕ, g(D), g(¯u)) = 1, and by the genericity of FO queries we have
+EvalFO(ϕ, f −1(g(D)), f −1(g(¯u))) = 1. Since g◦f −1 = h, this means EvalFO(ϕ, h(D), h(¯u)) =
+1 as required. This proves our claim.
+We now prove all the items of the proposition. Given ϕ(¯x), if ¯a ∈cert(ϕ, D), then ¯a
+is a tuple of constants and ¯a ∈cert⊥(ϕ, D) and thus cert(ϕ, D) ⊆cert⊥(ϕ, D) ∩Const|¯x|.
+Conversely, if ¯a is a tuple of constants in cert⊥(ϕ, D), then for every valuation h we have
+h(¯a) = ¯a and thus EvalFO(ϕ, h(D), ¯a) = 1, that is, ¯a ∈ϕ(h(D)), implying ¯a ∈cert(ϕ, D).
+Hence, cert⊥(ϕ, D) ∩Const|¯x| ⊆cert(ϕ, D).
+For the second item, let ¯u ∈cert⊥(ϕ, D). By the observation made earlier, for ev-
+ery homomorphism h we have EvalFO(ϕ, h(¯u), h(D)) = 1. Applying this to the identity
+homomorphism h we have ¯u ∈EvalFO(ϕ, D).
+For the third item, let ϕ belong to Qcert
+FO . It is known that in this case ϕ is preserved
+under strong onto homomorphisms [Compton 1983; Gheerbrant et al. 2014]. That is, if
+EvalFO(ϕ, D, ¯u) = 1 and his a homomorphism, then EvalFO(ϕ, h(D), h(¯u)) = 1. We already
+know that cert⊥(ϕ, D) ⊆EvalFO(ϕ, D). So now conversely assume ¯u ∈EvalFO(ϕ, D). Let
+h be an arbitrary homomorphism. By preservation, we have EvalFO(ϕ, h(D), h(¯u)) = 1,
+which implies ¯u ∈cert⊥(ϕ, D).
+Finally, consider a schema with two unary relations R and S, a database D with
+RD = {1} and SD = {⊥}, and ϕ(x) = R(x) ∧¬S(x). Then EvalFO(ϕ, D) = {1} but 1 ̸∈
+cert⊥(ϕ, D) as witnessed by the valuation ⊥→1.
+2
+We can now state a more general description of the evaluation procedure Eval3v: the
+output value 1 guarantees that a tuple belongs to certain answers with nulls for query
+ϕ, the output value 0 guarantees that it belongs to certain answers with nulls for the
+negation ¬ϕ, and output value 1
+2 comes with no guarantees.
+THEOREM 5.3. For every FO query ϕ(¯x) and every database D,
+Eval3v(ϕ, D) ⊆cert⊥(ϕ, D).
+Moreover, if ¯a ∈adom(D)|¯x| and Eval3v(ϕ, D, ¯a) = 0, then ¯a ∈cert⊥(¬ϕ, D).
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.11] ===
+SQL’s Three-Valued Logic and Certain Answers
+1:11
+Theorem 4.1 is now an immediate corollary: if ¯a is a tuple of constants and
+Eval3v(ϕ, D, ¯a) = 1, then by Theorem 5.3, ¯a ∈cert⊥(ϕ, D), and by Proposition 5.2,
+¯a ∈cert(ϕ, D).
+PROOF. Recall that we use the convention that instead of Eval(ϕ(¯x), D, ν) we may
+write Eval(ϕ, D, ¯u) where ¯u = ν(¯x). To prove the theorem, in view of the observation
+made at the beginning of the proof of Proposition 5.2 (which showed that we can use
+homomorphisms and valuations interchangeably), we need to show the following for
+each formula ϕ(¯x) with |¯x| = k and each assignment ν:
+Eval3v(ϕ, D, ν) = 1 ⇒∀homomorphism h : EvalFO(ϕ, h(D), h(ν(¯x))) = 1,
+(∗)
+Eval3v(ϕ, D, ν) = 0 ⇒∀homomorphism h : EvalFO(ϕ, h(D), h(ν(¯x))) = 0.
+(∗∗)
+We now do this by induction of FO formulas ϕ(¯x).
+Case 1: ϕ(¯x) is a relational atom R(¯x).
+(*) If Eval3v(ϕ, D, ν) = 1, then ν(¯x) ∈RD; in particular, h(ν(¯x)) ∈h(RD) for every
+homomorphism h, showing h(ν(¯x)) ∈EvalFO(ϕ, h(D)).
+(**) If Eval3v(ϕ, D, ν) = 0, then for each tuple ¯t ∈RD we have that ν(¯x) ⇑¯t
+does not hold. Thus for each homomorphism h, and each tuple ¯t ∈RD, we have
+h(ν(¯x)) ̸= h(¯t). This means that h(¯x) ̸∈h(RD), and thus for each homomorphism h
+we have EvalFO(ϕ, h(D), h(ν(¯x))) = 0.
+Case 2: ϕ(x, y) is an equality atom x = y.
+(*) If Eval3v(x = y, D, ν) = 1, then ν(x) = ν(y), and thus for every homomorphism
+h, we have h(ν(x)) = h(ν(y)); in particular, EvalFO(x = y, h(D), h ◦ν) = 1.
+(**) If Eval3v(x = y, D, ν) = 0, then both ν(x) and ν(y) are constants and ν(x) ̸= ν(y).
+Since they are constants, every homomorphism leaves them intact, and thus
+EvalFO(x = y, h(D), h ◦ν) = 0.
+Case 3: ϕ(¯x) is ϕ1(¯x1) ∧ϕ2(¯x2) (where ¯x contains all the variables in ¯x1 and ¯x2).
+(*) If Eval3v(ϕ(¯x), D, ν) = 1, then Eval3v(ϕi(¯xi), D, ν) = 1 for i = 1, 2, which, by
+the induction hypothesis, implies that for each homomorphism h, we have that
+EvalFO(ϕi(¯xi), h(D), h(ν(¯x))) = 1 for i = 1, 2. This in turn implies that for every
+homomorphism h, the value of EvalFO(ϕ(¯x), h(D), h(ν(¯x))) is 1.
+(**) If Eval3v(ϕ(¯x), D, ν) = 0, then Eval3v(ϕi(¯xi), D, ν) = 0 for at least one of i =
+1, 2; assume that Eval3v(ϕ1(¯x1), D, ν) = 0 (the other case is, of course, analogous).
+By the induction hypothesis, this implies that for each homomorphism h, we
+have EvalFO(ϕ1(¯x1), h(D), h(ν(¯x1))) = 0 and thus EvalFO(ϕ(¯x), h(D), h(ν(¯x))) = 0, as
+required.
+Case 4: ϕ(¯x) = ϕ1(¯x1) ∨ϕ2(¯x2) is completely analogous.
+Case 5: ϕ(¯x) is ¬ψ(¯x).
+(*) If Eval3v(ϕ(¯x), D, ν) = 1, then Eval3v(ψ(¯x), D, ν) = 0, and by the induction
+hypothesis we have EvalFO(ψ, h(D), h(ν(¯x))) = 0 for every homomorphism h. This,
+by FO rules, implies EvalFO(ϕ, h(D), h(ν(¯x))) = 1 for every homomorphism h.
+(**) is analogous to the proof for (*).
+Case 6: ϕ(¯x) is ∃y ψ(¯x, y).
+(*) If Eval3v(ϕ(¯x), D, ν) = 1, then we can ﬁnd u0 ∈adom(D) such that the result
+of Eval3v(ψ(¯x, y), D, ν[u0/y]) is 1. Now take an arbitrary homomorphism h deﬁned
+on Null(D). We know, by the induction hypothesis, that
+EvalFO(ψ(¯x, y), h(D), (h(ν(¯x)), h(u0))) = 1
+and hence EvalFO(ϕ, h(D), h(ν(¯x))) = 1.
+(**) If Eval3v(ϕ(¯x), D, ν) = 0, then for each u0 ∈adom(D) we know that the result of
+Eval3v(ψ(¯x, y), D, ν[u0/y]) is 0. Thus, by the induction hypothesis, for an arbitrary
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.12] ===
+1:12
+L. Libkin
+homomorphism h deﬁned on Null(D) we have
+EvalFO(ψ(¯x, y), h(D), (h(ν(¯x)), h(u0))) = 0
+and hence, since u0 was chosen arbitrarily, we see that EvalFO(ϕ, h(D), h(ν(¯x))) = 0
+for each such homomorphism.
+Case 7: ϕ(¯x) is ∀y ψ(¯x, y) is analogous to Case 6 (or can be obtained by combining
+Cases 5 and 6).
+This concludes the proof.
+So far, we dealt only with underapproximations of certain answers, that is, evaluation
+procedures without false positives. One can adopt an alternative point of view and try
+to eliminate false negatives. In that case, one would look for overapproximations, that
+is, procedures that return all certain answers, and perhaps something else. It turns out
+that Eval3v can be used to give overapproximations, simply by taking the complement
+of the result on the negation of the query.
+COROLLARY 5.4. For every FO query ϕ(¯x) we have
+cert⊥(ϕ, D) ⊆adom(D)|¯x| −Eval3v(¬ϕ, D).
+The procedure Eval3v is faithful to the usual FO evaluation on complete databases:
+in this case, the values of Eval3v are only 0 and 1, and the value 1 is achieved exactly
+for tuples in query results. That is, we have the following.
+PROPOSITION 5.5. If D is a complete database, then the values of Eval3v(ϕ, D, ν) are
+only 0 and 1, and Eval3v(ϕ, D) = EvalFO(ϕ, D) for every FO query ϕ.
+PROOF. The ﬁrst statement is immediate by the inspection of the rules: only the
+presence of nulls introduces the truth value 1
+2. Since for databases D and assignments
+ν over Const the rules of Eval3v for atomic formulas R(¯x) and x = y become identical to
+those of EvalFO (again, as seen by a simple inspection of them), the result follows.
+2
+As for the complexity of the procedure, one can easily show the following.
+PROPOSITION 5.6. For each relational vocabulary σ and α ∈{0, 1
+2, 1}, from every FO
+query ϕ(¯x) one can compute FO queries ϕα(¯x) in the vocabulary that extends σ with a
+unary predicate const(·) interpreted as the set of constants, such that, for every database
+D,
+{¯a ∈adom(D)|¯x| | Eval3v(ϕ, D, ¯a) = α}
+=
+EvalFO(ϕα, D).
+Consequently, data complexity of computing Eval3v(ϕ, D) is in AC0 .
+PROOF. The proof is straightforward in all the cases except one as, by simple inspection
+of the rules for Eval3v, one sees that each case is deﬁnable in FO. The only case requiring
+proof is that of Eval3v returning 0 for relational atoms. We must show that, for a relation
+symbol R of arity k, there is a formula ϕ(¯x) with |¯x| = k so that ϕ(¯a) is true in RD if and
+only if ¯a ⇑¯t does not hold for every tuple ¯t in RD. This in turn follows since one can
+express, in the vocabulary expanded with const, a formula ψ⇑(¯x, ¯y) so that ψ⇑(¯a, ¯b) is
+true if and only if ¯a ⇑¯b; then ϕ(¯x) is simply ∀¯y R( ¯y) →¬ψ⇑(¯x, ¯y).
+To show that ψ⇑is expressible, we deﬁne patterns of pairs of k-tuples as pairs
+π = (¯u, E) where ¯u is a Boolean tuple of length 2k, and E is an equivalence relation on
+the set {1, . . . , 2k}. Given two tuples ¯a = (a1, . . . , ak) and ¯b = (b1, . . . , bk) over Const ∪Null,
+they conform to π if in the 2k-tuple (c1, . . . , c2k) obtained by concatenating ¯a and ¯b, the
+following is true:
+—the ith position in ¯u is 1 if and only if ci is a constant; and
+—ci = c j if and only if (i, j) ∈E.
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.13] ===
+SQL’s Three-Valued Logic and Certain Answers
+1:13
+Note that for each pattern π, either all pairs conforming to it unify, or none uniﬁes.
+Hence, we can express ψ⇑as the disjunction over all patterns π guaranteeing uniﬁ-
+cation of formulas stating that ¯x, ¯y conform to π. The latter can be straightforwardly
+expressed in FO. Since the number of patterns depends only on k, the formula ψ⇑is
+expressible in FO.
+2
+This gives us a complexity argument showing that there are cases when Eval3v fails
+to produce all certain answers. A concrete example of strict containment of Eval3v in
+cert⊥will be shown next in Section 5.1.
+5.1. CQs and UCQs with Inequalities
+A common extension of conjunctive queries and their unions is by adding inequalities
+[Abiteboul et al. 1995]. This is a very mild form of negation; essentially, we only allow
+negation to be applied to equality atoms. Instead of writing them as ¬(x = y), it is
+common to use x ̸= y in formulas, and refer to them as inequality atoms. Then the
+∃, ∧-closure of relational, equality, and inequality atoms is referred to as CQs with
+inequalities, and the ∃, ∧, ∨-closure as UCQs with inequalities. This class of queries is
+denoted by UCQ̸=.
+We now present a particularly easy evaluation procedure that correctly accounts
+for Eval3v producing value 1 for UCQs with inequalities, and thus gives us correct-
+ness guarantees for those queries. This procedure uses two-valued, rather than three-
+valued, logic and only one rule that separates it from EvalFO. To understand it, note for
+an inequality atom x ̸= y, FO evaluation returns true if x and y are assigned different
+values—even if they are different nulls. But actually the evaluation of conditions such
+as ⊥1 ̸= ⊥2 must be false, since ⊥1 and ⊥2 can be mapped, by a valuation, to the same
+element. For UCQ̸=, there is no risk with assigning false rather than unknown, since
+negation will never be applied further on. This lets us deﬁne the evaluation procedure
+for UCQ̸= by adding the following explicit rule for ̸= formulas to the EvalFO rules:
+EvalUCQ̸=(x ̸= y, D, ν) =
+
+1
+if ν(x), ν(y) ∈Const and ν(x) ̸= ν(y)
+0
+otherwise.
+This evaluation is particularly easy to implement in SQL with the usual is not null
+conditions in the where clause. And it has the desired correctness guarantees.
+THEOREM 5.7. For every UCQ̸= query ϕ, we have
+EvalUCQ̸=(ϕ, D) = Eval3v(ϕ, D) ⊆cert⊥(ϕ, D).
+In particular, EvalUCQ̸= has certainty guarantees for UCQ̸= queries.
+PROOF. We will show that for a UCQ̸= query ϕ, we have
+EvalUCQ̸=(ϕ, D, ν) = 1
+⇔
+Eval3v(ϕ, D, ν) = 1
+(7)
+for every database D and assignment ν.
+(⇒) Since a UCQ̸= query ϕ is a disjunction of CQs with inequalities ϕ1 ∨. . . ∨ϕm,
+it sufﬁces to prove (7) for CQs: if EvalUCQ̸=(ϕ, D, ν) = 1, then EvalUCQ̸=(ϕi, D, ν) = 1 for
+some i ≤m, and thus Eval3v(ϕi, D, ν) = 1 would imply Eval3v(ϕ, D, ν) = 1. We show this
+by induction on the formula.
+—If ϕ is an atomic formula R(¯x), then EvalUCQ̸=(R(¯x), D, ν) = 1 means that ν(¯x) ∈RD
+and hence Eval3v(R(¯x), D, ν) = 1.
+—If ϕ is an equality atom x = y, then EvalUCQ̸=(x = y, D, ν) = 1 means that ν(x) = ν(y)
+and hence Eval3v(x = y, D, ν) = 1.
+—If ϕ is x ̸= y, then EvalUCQ̸=(x = y, D, ν) = 1 means that ν(x) ̸= ν(y) and both ν(x) and
+ν(y) are constants. Thus, Eval3v(x = y, D, ν) = 0 and Eval3v(¬(x = y), D, ϕ) = 1.
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.14] ===
+1:14
+L. Libkin
+—If ϕ = ϕ1 ∧ϕ2 and EvalUCQ̸=(ϕ, D, ν) = 1, then EvalUCQ̸=(ϕi, D, ν) = 1 for i = 1, 2, and
+the induction hypothesis implies Eval3v(ϕ, D, ν) = 1.
+—The case of ϕ = ∃xψ similarly immediately follows by induction.
+(⇐) As for the (⇒) case, it sufﬁces to provide the proof for CQs with inequalities.
+Assume that ϕ(¯x) = ∃¯y ψ(¯x, ¯y), where
+ψ(¯x, ¯y) =
+
+i
+Ri(¯ui) ∧
+
+j
+(zj = z′
+j) ∧
+
+k
+(wk ̸= w′
+k),
+(8)
+and the variables in the ¯ui’s, as well as the zj, z′
+j, wk, w′
+k’s are all among ¯x, ¯y and all the
+Ri’s are relation symbols in the schema. If Eval3v(ϕ, D, ν) = 1, then for some assignment
+ν′ extending ν to variables ¯y we have Eval3v(ψ, D, ν′) = 1, that is, each conjunct in (8)
+evaluates to 1 under Eval3v. We now look at those conjuncts.
+—If Eval3v(Ri(¯ui), D, ν′) = 1, then ν′(¯ui) ∈RD
+i and thus EvalUCQ̸=(Ri(¯ui), D, ν′) = 1.
+—If Eval3v(zj = z′
+j, D, ν′) = 1, then ν′(zj) = ν′(z′
+j) and thus EvalUCQ̸=(zj = z′
+j, D, ν′) = 1.
+—If Eval3v(wk ̸= w′
+k, D, ν′) = 1, then Eval3v(wk = w′
+k, D, ν′) = 0 and thus ν′(wk) ̸= ν′(w′
+k)
+and both ν′(wk) and ν′(w′
+k) are constants. This implies EvalUCQ̸=(wk ̸= w′
+k, D, ν′) = 1.
+Hence, each conjunct evaluates to 1 under EvalUCQ̸=, and therefore EvalUCQ̸=(ψ,
+D, ν′) = 1. Hence, Eval3v(ϕ, D, ν) = 1 by using the rule for existential quantiﬁcation.
+This completes the proof of (⇐).
+One cannot capture cert⊥(ϕ, D) precisely with the UCQ̸= evaluation procedure.
+Indeed, consider the query ψ = ∃x∃y R(x, y) ∧x ̸= y and a database D with
+RD = {(⊥, 1), (⊥, 2)}. One easily checks cert⊥(ψ, D) = cert(ψ, D) = true but at the
+same time EvalUCQ̸=(ψ, D) = 0. By Theorem 5.7, this also means that Eval3v(ψ, D) fails
+to capture cert⊥(ϕ, D); this is the example promised at the end of the last section.
+In fact, there could be no polynomial-time evaluation procedure for ﬁnding certain
+answers for UCQ̸= queries since they have CONP-complete data complexity, even with-
+out free variables. Indeed, suppose we have a graph G = ⟨V, E⟩where the set of ver-
+tices is {a1, . . . , an}. Create a binary relation DG with adom(DG) = {⊥1, . . . , ⊥n} and pairs
+(⊥i, ⊥j) for every edge (ai, aj) ∈E. Let ϕ ∈UCQ̸= be given by ∃x DG(x, x)∨∃x, y, z, u (x ̸=
+y ∧x ̸= z ∧x ̸= u∧y ̸= z ∧y ̸= u∧z ̸= u). Then cert(ϕ, DG) is true if and only if G is not
+3-colorable.
+5.2. Open-World Semantics
+Another semantics of incompleteness is based on the open-world assumption, or OWA
+[Abiteboul et al. 1995; Imielinski and Lipski 1984; Reiter 1977]. Under this assump-
+tion, an incomplete database can be extended with extra tuples. This semantics is
+prominent in several actively studied applications of incompleteness. It is the basic se-
+mantics in ontology based query answering, when a database comes with an ontology,
+and query answering is deﬁned as certain answers with respect to all extensions of
+the database that satisfy the ontology constraints [Calvanese et al. 2007; Cal`ı et al.
+2012]. In other applications, such as data integration and exchange, both OWA and CWA
+semantics are used [Abiteboul and Duschka 1998; Arenas et al. 2014; Lenzerini 2002].
+We now explain how our approach can be extended to OWA. Note that due to the higher
+complexity of query answering under OWA (to be explained shortly), it is harder to get
+good approximations.
+The OWA semantics state that after applying a valuation h to a database, ﬁnitely
+many complete tuples can be added to it. That is,
+[[D]]OWA = {h(D) ∪D′ | h is a valuation and D′ is complete}.
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.15] ===
+SQL’s Three-Valued Logic and Certain Answers
+1:15
+Certain answers under OWA are deﬁned as certOWA(Q, D) = {Q(D′) | D′ ∈[[D]]OWA}.
+The evaluation procedure Eval3v no longer has certainty guarantees under OWA. To see
+this, consider D with relations RD = {(1, 2)} and SD = {(⊥1, 1), (2, ⊥2)}. Let ϕ(x, y) =
+R(x, y) ∧¬S(x, y). Since the tuple (1, 2) does not unify with either tuple in SD, we
+have (1, 2) ∈Eval3v(ϕ, D). However, under OWA, it is not a certain answer: for instance,
+the database D′ with RD′ = {(1, 2)} and SD′ = {(1, 1), (2, 2), (1, 2)} is in [[D]]OWA, and
+EvalFO(ϕ, D′) is empty.
+Thus, our question is whether the approach of Eval3v, guaranteeing correctness for
+all FO queries under CWA, can be extended to OWA. Of course, there is always a trivial
+positive answer: the evaluation procedure that always returns 0 vacuously has correct-
+ness guarantees. Since [[D]]CWA ⊆[[D]]OWA, certain answers under OWA will be included in
+certain answers under CWA, so the question really is how much we eliminate from the
+latter so that the result is still meaningful, and provides certainty guarantees under
+OWA. Note also that ﬁnding certain answers under OWA is undecidable [Abiteboul et al.
+1991] (even for data complexity [Gheerbrant et al. 2012]), which ties our hands even
+more in terms of ﬁnding suitable approximations.
+To understand the changes that need to be made under OWA, consider again relational
+atoms. For them, there is no way to assert with certainty that a tuple does not belong
+to a relation, since each relation can be expanded under OWA. Hence, the case when
+evaluation produces 0 must go.
+Next, look at existential formulas. Again, we cannot state with certainty that the
+result of evaluation of those is 0, as perhaps in some extension of the database there
+is a witness for the existential formula, so the lowest value for evaluating such a
+formula is 1
+2, not 0. Likewise, for universal formulas, one cannot state with certainty
+that the result of evaluation is 1, as it requires checking the universal conditions in all
+extensions of the database, which is an undecidable problem. Hence, the highest value
+in this case is 1
+2 and not 1.
+This explains the three changes that we make for the evaluation procedure. In
+particular, to achieve correctness, evaluation for quantiﬁers cannot follow the standard
+rules (5). Indeed, this simply reﬂects the fact that under OWA, quantiﬁcation is not
+equivalent to conjunction or disjunction over all elements of the active domain.
+The procedure Eval
+OWA
+3v has the range {0, 1
+2, 1} and differs from Eval3v in three rules:
+Eval
+OWA
+3v (R(¯x), D, ν) =
+1
+if ν(¯x) ∈RD
+1
+2
+otherwise,
+Eval
+OWA
+3v (∃xϕ, D, ν)
+= max
+	 1
+2, max{Eval
+OWA
+3v (ϕ, D, ν[a/x]) | a ∈adom(D)}
+
+,
+Eval
+OWA
+3v (∀xϕ, D, ν) = min
+	 1
+2, min{Eval
+OWA
+3v (ϕ, D, ν[a/x]) | a ∈adom(D)}
+
+.
+These modiﬁcations are sufﬁcient for correctness under OWA.
+PROPOSITION 5.8. The evaluation algorithm Eval
+OWA
+3v has correctness guarantees under
+OWA.
+PROOF. We follow the proof of Theorem 5.3; the difference is that now we need to show
+the following to establish a connection with OWA certain answers:
+Eval
+OWA
+3v (ϕ, D, ν) = 1 ⇒∀homomorphism h : D →D′ EvalFO(ϕ, D′, h(ν(¯x))) = 1,
+(∗′)
+Eval
+OWA
+3v (ϕ, D, ν) = 0 ⇒∀homomorphism h : D →D′ EvalFO(ϕ, D′, h(ν(¯x))) = 0.
+(∗∗′)
+The proof proceeds exactly as for Theorem 5.3: the cases of equality atoms and Boolean
+connectives are identical. For relational atoms, the case for (∗′) is the same as before,
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.16] ===
+1:16
+L. Libkin
+and the case for (∗∗′) disappears, since Eval
+OWA
+3v
+never returns 0 for relational atoms.
+For existential quantiﬁcation, the case for (∗′) is again the same as before (since the
+witness is found within the active domain), and the case for (∗∗′) similarly disappears,
+since the minimum possible return value is 1
+2. Likewise, for universal quantiﬁcation,
+the case for (∗′) disappears since the maximum return value is 1
+2, and the case for (∗∗′)
+is the same as before.
+2
+Returning to the example from the beginning of the subsection, note that the value
+of Eval
+OWA
+3v (S(x, y), D, (1, 2)) is 1
+2 (for Eval3v it would have been 0), and thus the result
+Eval
+OWA
+3v (R(x, y)∧¬S(x, y), D, (1, 2)) is 1
+2 as well; in particular, (1, 2) ̸∈Eval
+OWA
+3v (ϕ, D) while
+we had (1, 2) ∈Eval3v(ϕ, D).
+6. EVALUATION PROCEDURE FOR RELATIONAL ALGEBRA
+Queries that get executed in a Database Management System (DBMS) are procedural
+queries; in particular, in the relational case, they are written in relational algebra, or
+some of its extensions. We now present an algorithm that provides an evaluation with
+correctness guarantees for relational algebra expressions. Even though from the point
+of view of expressiveness, relational algebra is equivalent to FO, the equivalence itself,
+established under the standard two-valued semantics, is not yet a guarantee that it
+will provide us with a desired evaluation procedure in the three-valued world.
+To expand on this, note that by Proposition 5.6, for every FO query ϕ(¯x) we have a
+relational algebra expression eϕ, which has access to the extra predicate const(·) so that
+eϕ faithfully implements Eval3v(ϕ, ·). So it seems that starting with a relational algebra
+query Q, we could ﬁnd an equivalent FO query ϕQ and then consider eϕQ to evaluate Q.
+Reasoning of this sort, however, mixes the equivalence of FO and relational algebra
+(that is true with respect to the usual two-valued FO evaluation) with the three-valued
+evaluation. However, equivalences under the two-valued FO evaluation need not be
+true under Eval3v. Consider, for instance, ϕ(x) = ∃y
+
+R(x, y) ∧(y = 1 ∨y ̸= 1)
+
+. Under
+the two-valued semantics, it is equivalent to ϕ′(x) = ∃yR(x, y), but with respect to
+three values, it is not. Indeed, if RD = {(1, ⊥)} and ν : x →1, then EvalFO(ϕ, D, ν) =
+EvalFO(ϕ′, D, ν) = 1 = Eval3v(ϕ′, D, ν), but Eval3v(ϕ, D, ν) = 1
+2.
+Still, from the equivalence of EvalFO(ϕQ, ·) and Q one can easily derive eϕQ(D) =
+Eval3v(ϕQ, D) ⊆cert⊥(Q, D), so we do in fact get correctness guarantees with this ap-
+proach. Nonetheless, it is not satisfactory for two reasons. First, the detour via transla-
+tion into FO and back to algebra may produce unnecessarily complicated expressions.
+Second, this approach assumes a particular translation between relational algebra and
+FO (which of course is not unique), and the quality of the resulting query depends on
+that translation. For instance, we view expressions R and σA=1(R) ∪σA̸=1(R) as equiva-
+lent, but using the latter in eϕQ can miss some answers with certainty guarantees due
+to the presence of nulls.
+The bottom line is that it is better to have a direct evaluation procedure for relational
+algebra that gives us correctness guarantees without going through both algebra-to-FO
+and FO-to-algebra translations.
+In the two-valued world sound translations for relational algebra have been consid-
+ered in the past [Reiter 1986]. Our goal is a bit different though as we have to provide
+speciﬁc correctness guarantees, and relate them to SQL’s way of evaluating queries; in
+fact, we shall produce approximations for sets of tuples on which Eval3v returns 1 and 0.
+We now explain the procedure for correct evaluation of relational algebra queries.
+First, recall the operations of the relational algebra. These are selection σ, projection
+π, Cartesian product ×, union ∪, intersection ∩, and difference −. To avoid the clutter,
+and in particular to avoid renaming, we use the unnamed perspective for presenting
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.17] ===
+SQL’s Three-Valued Logic and Certain Answers
+1:17
+relational algebra [Abiteboul et al. 1995]; that is, for each expression returning an m-
+attribute relation, we simply assume that the names of those attributes are ♯1, . . . , ♯m.
+As conditions θ in selections, we use positive Boolean combinations of equalities and
+inequalities between attribute values and constants. For instance, (♯1 ̸= ♯2) ∨(♯3 = 1)
+is a condition that can be used in selections. Note that such conditions are closed under
+negation, simply by propagating it all the way to (in)equalities, so we shall also refer
+sometimes to conditions ¬θ, meaning the result of such a propagation. We refer to this
+standard relational algebra as RA.
+We also consider an extension called RAnull. In this extension, conditions θ are positive
+Boolean combinations of
+—equalities and inequalities between attributes, and
+—conditions const(♯n) and null(♯n) stating that the value of attribute ♯n is a constant or
+a null, respectively.
+Our goal is to provide a translation RA →RAnull that associates with each query Q of
+RA a query Q+ of RAnull such that Q+(D) ⊆cert⊥(Q, D). Recall that cert⊥(Q, D) refers
+to certain answers with nulls (see Deﬁnition 5.1).
+As noticed already, due to CONP-data complexity of cert⊥(Q, D), we cannot hope for
+equality, so this correctness guarantee is the best we can count on.
+We shall actually produce more. Let ¯Q be the query that computes the complement
+of Q, that is, for an n-ary Q, the result of ¯Q(D) is adom(D)n −Q(D). Then, we actually
+provide a translation
+Q →(Q+, Q−)
+of RA queries into a pair of RAnull queries such that
+Q+(D) ⊆cert⊥(Q, D)
+and
+Q−(D) ⊆cert⊥( ¯Q, D).
+When this happens, we say that the translation Q →(Q+, Q−) provides correctness
+guarantees.
+Since cert⊥(Q, D) ∩cert⊥( ¯Q, D) = ∅, this also means that Q+(D) ∩Q−(D) = ∅. One
+can think of Q+ and Q−as analogs of ﬁnding tuples for which Eval3v produces 0 or 1.
+Everything that does not fall into the results of these two, is essentially “unknowns.”
+We now provide the translations. We need three auxiliary elements: a translation
+θ →θ∗from RA conditions to RAnull conditions, one RA query, and one RAnull query.
+These are given as follows.
+The Translation θ →θ∗. It is deﬁned inductively. We assume that in conditions
+♯n = ♯m or ♯n ̸= ♯m, attributes ♯n and ♯m are different (otherwise they are easily
+eliminated).
+—If θ is (♯n = ♯m) or (♯n = c), where c is a constant, then θ∗= θ.
+—(♯n ̸= ♯m)∗= (♯n ̸= ♯m) ∧const(♯n) ∧const(♯m).
+—(♯n ̸= c)∗= (♯n ̸= c) ∧const(♯n).
+—(θ1 ∨θ2)∗= θ∗
+1 ∨θ∗
+2.
+—(θ1 ∧θ2)∗= θ∗
+1 ∧θ∗
+2.
+The Active Domain Query. We use adom as an RA query that returns the active
+domain of a database; clearly it can be written as a π, ∪-query, that takes the union of
+all projections of all relations in the database.
+The Relative Complement Query. The relative complement of a k-ary relation R in
+database D is
+R⊖= {¯u ∈adom(D)k | ¬∃¯t ∈R : ¯u ⇑¯t }.
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.18] ===
+1:18
+L. Libkin
+Fig. 1.
+Relational algebra translations.
+It is not hard to see that R⊖is expressible in RAnull. We show this formally in the proof
+of Theorem 6.1. In fact, this is the only expression where conditions null(♯n) are used
+in selections.
+With these, translations of relational algebra are given by inductive rules presented
+in Figure 1. We use abbreviation ar(Q) for the arity of Q, and α refers to a list of
+attributes.
+THEOREM 6.1.
+The translation Q
+→
+(Q+, Q−) in Figure 1 provides correctness
+guarantees.
+PROOF. As the ﬁrst step, we need to show that the relative complement query R⊖
+is expressible in RAnull. Note that in the proof of Proposition 5.6, we showed the exis-
+tence of an FO formula ψ⇑(¯x, ¯y) that holds if and only if ¯x and ¯y unify. Such a formula
+uses the extra unary predicate const checking for constants. Then R⊖can be expressed
+by ∀¯y R( ¯y) →¬ψ⇑(¯x, ¯y). Translating this into relational algebra using the standard
+translation [Abiteboul et al. 1995], we get an expression that can use arbitrary Boolean
+combinations of equalities and const(x) in selections. Then, propagating negations in
+such conditions, we end up with positive Boolean combinations of equalities, inequali-
+ties, const(x), and null(x), that is, an RAnull expression.
+Now we show correctness guarantees. To do so, we shall need to show that, for every
+database D, a tuple ¯u ∈adom(D)k, and a k-ary relational algebra query Q,
+¯u ∈Q+(D) ⇒∀homomorphism h : h(¯u) ∈Q(h(D)),
+(✓)
+¯u ∈Q−(D) ⇒∀homomorphism h : h(¯u) ̸∈Q(h(D)).
+(✓✓)
+We now prove these by induction on the structure of relational algebra queries Q.
+We shall adopt the convention that a k-tuple ¯u is (u1, . . . , uk); in particular, the value of
+attribute ♯n in ¯u is un.
+Case 1: Q is R, where R is a base relation.
+(✓) Since Q+ is R itself, this is immediate.
+(✓✓) In this case Q−= R⊖. Assume ¯u ∈R⊖and let h be a homomorphism. By
+deﬁnition, ¯u does not unify with any of ¯t ∈R; in particular, h(¯u) cannot equal h(¯t),
+thus implying h(¯u) ̸∈h(R).
+Case 2: Q = σθ(Q1).
+(✓) In this case Q+ = σθ∗(Q+
+1 ). We prove (✓) by (sub)induction on the selection
+condition.
+—Let θ = (♯n = ♯m). Suppose ¯u ∈σθ∗(Q1(D)) (in this case, θ∗= θ), and let h
+be a homomorphism. We have ¯u ∈Q+
+1 (D), which, by the induction hypothesis,
+means h(¯u) ∈Q1(h(D)). Furthermore, un = um, and thus h(un) = h(um), proving
+h(¯u) ∈σθ(Q1(h(D))), which is the condition (✓) in this case.
+—If θ = (♯n = c) for a constant c, the proof is the same.
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.19] ===
+SQL’s Three-Valued Logic and Certain Answers
+1:19
+—Let θ = (♯n ̸= ♯m). Suppose ¯u ∈σθ∗(Q1(D)), and let h be a homomorphism. As
+previously, we see, by the hypothesis, that h(¯u) ∈Q+
+1 (h(D)). Furthermore, since
+θ∗holds, we know un ̸= um and both un and um are constants. In particular, this
+means h(un) ̸= h(um), proving h(¯u) ∈σθ(Q1(h(D))).
+—The case ♯n ̸= c for a constant c is completely analogous.
+—Let θ = θ1 ∧θ2. Then (σθ(Q1))+ = σθ∗(Q+
+1 ) = σθ∗
+1∧θ∗
+2 (Q+
+1 ). Let ¯u ∈(σθ(Q1))+, and
+let h be a homomorphism. We have ¯u ∈σθ∗
+i (Q+
+1 ) = (σθi(Q1))+ for each i = 1, 2,
+and thus by the hypothesis (of the induction on the selection condition) we have
+h(¯u) ∈σθi(Q1(h(D))) for i = 1, 2, and hence h(¯u) ∈σθ1∧θ2(Q1(h(D))) = σθ(Q1(h(D))),
+as required.
+—Let θ = θ1 ∨θ2. Then (σθ(Q1))+ = σθ∗(Q+
+1 ) = σθ∗
+1 (Q+
+1 ) ∪σθ∗
+2 (Q+
+1 ). Let ¯u ∈(σθ(Q1))+,
+and let h be a homomorphism. We have ¯u ∈σθ∗
+i (Q+
+1 ) = (σθi(Q1))+ for one of
+i = 1, 2, and thus by the induction hypothesis on the selection condition, we
+have h(¯u) ∈σθi(Q1(h(D))) for i = 1 or i = 2, implying h(¯u) ∈σθ(Q1(h(D))).
+(✓✓) In this case, Q−= Q−
+1 ∪σ(¬θ)∗(adomk) where k is the arity of Q. First assume
+that a tuple ¯u is in Q−
+1 (D). Then, by the induction hypothesis, h(¯u) ̸∈Q1(h(D)) for
+every homomorphism h, and thus h(¯u) ̸∈σθ(Q1(h(D))).
+Thus, we only need to consider the case when ¯u ∈σ(¬θ)∗(adomk). Recall that by
+¬θ we mean the negation of θ in which negation has been propagated to the atomic
+conditions, that is, it is still a positive Boolean combination of equalities, inequal-
+ities, and statements const(x) and null(x). We prove this case by a (sub)induction
+on the selection conditions.
+—Let θ = (♯n = ♯m). Then ¬θ is ♯n ̸= ♯m and thus (¬θ)∗is (♯m ̸= ♯m) ∧const(♯n) ∧
+const(♯m). Hence, if ¯u satisﬁes (¬θ)∗, then un and um are distinct constants, and
+the same is true for h(un) and h(um) for every homomorphism h; in particular,
+h(¯u) cannot satisfy θ and thus h(¯u) ̸∈σθ(Q1(h(D))).
+—The case when θ = (♯n = c) is analogous.
+—Let θ = (♯n ̸= ♯m). Then ¬θ is ♯n = ♯mand thus (¬θ)∗is the same condition. So if
+¯u satisﬁes (¬θ)∗, then un = um and thus h(un) = h(um) for every homomorphism.
+In particular, h(¯u) cannot satisfy θ and thus h(¯u) ̸∈σθ(Q1(h(D))).
+Again, the case when one attribute is replaced by a constant value is completely
+analogous.
+—Let θ = θ1 ∧θ2. Then ¬θ is ¬θ1 ∨¬θ2 and thus (¬θ)∗is (¬θ1)∗∨(¬θ2)∗. Assume ¯u
+satisﬁes (¬θ)∗; then it satisﬁes one of these conditions, say (¬θ1)∗. By the induc-
+tion hypothesis (on the selection condition), we then have h(¯u) ̸∈σθ1(Q1(h(D)))
+for every homomorphism h, which implies h(¯u) ̸∈σθ1∧θ2(Q1(h(D))) = σθ(Q1(h(D))).
+—Let θ = θ1∨θ2. Then ¬θ is ¬θ1∧¬θ2 and thus (¬θ)∗is (¬θ1)∗∧(¬θ2)∗. Assume ¯usat-
+isﬁes (¬θ)∗; then it satisﬁes (¬θ1)∗and (¬θ2)∗. By the induction hypothesis on the
+selection condition, we then have h(¯u) ̸∈σθi(Q1(h(D))) for every homomorphism h
+and for i = 1, 2, which implies h(¯u) ̸∈σθ1(Q1(h(D)))∪σθ2(Q1(h(D))) = σθ(Q1(h(D))).
+This completes the proof of the subinduction on the selection condition and thus
+the proof of (✓✓) for selection.
+Case 3: Q = πα(Q1).
+(✓) In this case, Q+ = πα(Q+
+1 ). Let ¯u ∈πα(Q+
+1 ) and let h be a homomorphism. There
+is a tuple ¯w ∈Q+
+1 so that ¯u = πα( ¯w). By the induction hypothesis, h( ¯w) ∈Q1(h(D))
+and thus h(¯u) = πα(h( ¯w)) ∈πα(Q1(h(D))).
+(✓✓) In this case, Q−= πα(Q−
+1 ) −πα(adomar(Q1) −Q−
+1 ). Suppose ¯u ∈Q−(D) and
+let h be a homomorphism. Since ¯u ∈πα(Q−
+1 ), there is a tuple ¯w, corresponding to
+attributes not in α, such that (¯u, ¯w) ∈Q−
+1 (D). This implies (h(¯u), h( ¯w)) ̸∈Q1(h(D)).
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.20] ===
+1:20
+L. Libkin
+So the only way h(¯u) could be in Q(h(D)) is if for some tuple
+¯w′, we have
+(h(¯u), h( ¯w′)) ∈Q1(h(D)). Suppose this is so. Then clearly (¯u, ¯w′) ̸∈Q−
+1 for otherwise
+we would have (h(¯u), h( ¯w′)) ̸∈Q1(h(D)) by the induction hypothesis. Therefore,
+(¯u, ¯w′) ∈adomar(Q1) −Q1(D), but this implies ¯u ∈πα(adomar(Q1) −Q1)(D) which con-
+tradicts the assumption ¯u ∈Q−(D). Thus, no such ¯w′ can exist, and this implies
+h(¯u) ̸∈Q(h(D)).
+Case 4: Q = Q1 ∪Q2.
+(✓) In this case, Q+ = Q+
+1 ∪Q+
+2 . Assume ¯u ∈Q+(D), then ¯u ∈Q+
+i (D) for at least
+one of i = 1, 2 and by the hypothesis h(¯u) ∈Qi(h(D)) for each homomorphism h;
+hence h(¯u) ∈Q(h(D)).
+(✓✓) In this case, Q−= Q−
+1 ∩Q−
+2 . Let ¯u ∈Q(D) and let h be a homomorphism.
+By the induction hypothesis, we know h(¯u) ̸∈Qi(h(D)) for both i = 1, 2, and hence
+h(¯u) ̸∈Q(h(D)).
+Case 5: Q = Q1 ∩Q2.
+(✓) In this case, Q+ = Q+
+1 ∩Q+
+2 . Assume ¯u ∈Q+(D), then ¯u ∈Q+
+i (D) for i = 1, 2
+and thus h(¯u) ∈Qi(h(D)) for each homomorphism h; hence h(¯u) ∈Q(h(D)).
+(✓✓) In this case, Q−= Q−
+1 ∪Q−
+2 . Let ¯u ∈Q(D) and let h be a homomorphism. By
+the induction hypothesis we know that for one of i = 1, 2 we have h(¯u) ̸∈Qi(h(D)),
+and hence h(¯u) ̸∈Q(h(D)).
+Case 6: Q = Q1 −Q2.
+(✓) In this case, Q+ = Q+
+1 ∩Q−
+2 . Assume ¯u ∈Q+(D) and let h be a homomorphism.
+By the induction hypothesis, we have h(¯u) ∈Q1(h(D)) and h(¯u) ̸∈Q2(h(D)) and
+thus h(¯u) ∈Q(h(D)) as required.
+(✓✓) In this case, Q−= Q−
+1 ∪Q+
+2 . Assume ¯u ∈Q+(D) and let hbe a homomorphism.
+If ¯u ∈Q−
+1 (D), then h(¯u) ̸∈Q1(h(D)) and hence h(¯u) ̸∈Q(h(D)). If ¯u ∈Q+
+2 (D), then
+h(¯u) ∈Q2(h(D)) and again h(¯u) ̸∈Q(h(D)).
+Case 7: Q = Q1 × Q2.
+(✓) In this case, Q+ = Q+
+1 × Q+
+2 . Assume ¯u ∈Q+(D); then ¯u is the concatenation of
+tuples ¯u1 and ¯u2 in Q+
+1 (D) and Q+
+2 (D). Hence, for each homomorphism h we have
+h(¯ui) ∈Qi(h(D)) and thus h(¯u) ∈Q(h(D)).
+(✓✓) In this case, Q−= Q−
+1 ×adomar(Q2)∪adomar(Q1)×Q−
+2 . Let ¯u ∈Q(D). The tuple ¯u
+is the concatenation of tuples ¯u1 and ¯u2 of lengths ar(Q1) and ar(Q2), respectively.
+Consider the case when ¯u1 ∈Q−
+1 and ¯u2 is an arbitrary tuple over the active
+domain (the other case is analogous). Then, by the hypothesis, h(¯u1) ̸∈Q1(h(D)),
+and thus (h(¯u1), h(¯u2)) ̸∈Q1(h(D)) × Q2(h(D)), that is, h(¯u) ̸∈Q(h(D)).
+This concludes the proof.
+2
+Like in the case of Eval3v, these translations are faithful to the usual interpretation
+of relational algebra on complete databases. For a k-ary relational algebra query Q, by
+Q we mean its complement, that is, the query that for a database D returns Q(D) =
+adom(D)k −Q(D).
+PROPOSITION 6.2. If D is a complete database, and Q is a relational algebra query,
+then
+Q+(D) = Q(D) and Q−(D) = Q(D).
+PROOF. First, observe that if no nulls occur in the database, the translated condition θ∗
+is equivalent to θ, and thus the rules for selection are (σθ(Q))+ = σθ(Q+) and (σθ(Q))−=
+Q−∪σ¬θ(adomar(Q)).
+With these, we proceed by induction. It is immediate from the deﬁnition that R⊖= R
+for complete relations R. The rules for the Boolean connectives are immediate from
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.21] ===
+SQL’s Three-Valued Logic and Certain Answers
+1:21
+De Morgan laws. For selection, we have (σθ(Q))+(D) = σθ(Q+(D)) = σθ(Q(D)) and
+(σθ(Q))−(D) = Q−(D) ∪σ¬θ(adomar(Q)) = Q(D) ∪σ¬θ(adomar(Q)) = σθ(Q)(D).
+For Cartesian product, the positive case is immediate from the induction hypothesis,
+and for the negative case we have, again by the hypothesis, (Q1 × Q2)−(D) = Q1(D) ×
+adomar(Q2) ∪adomar(Q1) × Q2(D) = Q1 × Q2(D).
+Finally, for the projection case, (πα(Q))+(D) = πα(Q+(D)) = πα(Q(D)) by the induc-
+tion hypothesis. Next, (πα(Q))−(D) = πα(Q(D)) −πα(adomar(Q) −Q(D)). Since Q(D) =
+adomar(Q) −Q(D), we have
+(πα(Q))−(D) = πα(Q(D)) −πα(Q(D))
+= πα(adomar(Q) −Q(D)) −πα(Q(D))
+= πα(adomar(Q)) −πα(Q(D))
+= adomar(πα(Q)) −πα(Q(D))
+= πα(Q)(D)
+by the induction hypothesis and the usual relational algebra equivalences. Speciﬁcally,
+to go from line 2 to line 3, we use the following, which can be easily veriﬁed: if R ⊆S,
+then πα(S −R) −πα(R) = πα(S) −πα(R). This completes the proof.
+2
+6.1. The Flexibility of the Translation
+The translation in Figure 1 provides correctness guarantees, but some of the queries
+look rather inefﬁcient. Consider, for instance, the rule for (Q1 × Q2)−, which gives us
+Q−
+1 × adomar(Q2) ∪adomar(Q1) × Q−
+2 . This is a rather inefﬁcient query, involving an
+expensive Cartesian product. Can we replace it by a more efﬁcient query, say, Q−
+1 × Q−
+2 ,
+which immediately comes to mind?
+As another example, consider the rule for (σθ(Q))−giving us Q−∪σ(¬θ)∗(adomar(Q)).
+Again, the query involves an expensive Cartesian product, and one possible way to deal
+with it is simply to replace this query by Q−.
+Can we always do this? And are there other possible queries we can use? The answer
+to these questions is positive. Note that in both cases we replaced a query from the
+translation in Figure 1 by a query contained in it. It turns out that any such replacement
+preserves correctness guarantees.
+To be more precise, the translation in Figure 1 can be viewed as not just one trans-
+lation but a family of translations, due to the following observation. A translation can
+be seen as a mapping F that assigns to each relational algebra operation ω (including
+nullary operations for base relations) two queries F+
+ω and F−
+ω . These queries are simply
+the queries that appear on the right in the translation; for instance, for the translation
+scheme we used, F+
+∩is the intersection (since the result of (Q1 ∩Q2)+ is the intersection
+of Q+
+1 and Q+
+2 ) and F−
+∩is the union (since the result of (Q1 ∩Q2)−is the union of Q−
+1
+and Q−
+2 ).
+Such a mapping F results in a translation Q →F+
+Q, F−
+Q, where F+
+Q and F−
+Q are
+queries of the same type as Q (i.e., they operate on databases of the same schema and
+have the same arity). Intuitively, these are analogs of Q+ and Q−that we had for the
+translation in Figure 1.
+Formally, they are deﬁned as follows.
+—If ω is a base relation R, then F+
+R and F−
+R take no arguments and F+
+R = F+
+R and
+F−
+R = F−
+R .
+That is, F+
+R and F−
+R are queries that give us certainly positive and certainly negative
+information about R.
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.22] ===
+1:22
+L. Libkin
+—If ω is a unary operation (σ or π), then F+
+ω and F−
+ω take two arguments and F+
+ω(Q) =
+F+
+ω (F+
+Q, F−
+Q) and F−
+ω(Q) = F−
+ω (F+
+Q, F−
+Q).
+That is, if we already have queries F+
+Q and F−
+Q describing certainly positive and
+certainly negative answers for Q, the queries describing such answers for ω(Q) are
+obtained by applying F+
+ω and F−
+ω to those.
+—If ω is a binary operation (∪, ∩, −, ×), then F+
+ω and F−
+ω take four arguments and
+F+
+ω(Q1,Q2) = F+
+ω (F+
+Q1, F+
+Q2, F−
+Q1, F−
+Q2) and F−
+ω(Q1,Q2) = F−
+ω (F+
+Q1, F+
+Q2, F−
+Q1, F−
+Q2).
+That is, if we already have queries F+
+Qi and F−
+Qi describing certainly positive and
+certainly negative answers for Qi, with i = 1, 2, the queries describing such answers
+for ω(Q1, Q2) are again obtained by applying F+
+ω and F−
+ω to those.
+Given a translation F and another translation G that assigns to each operation ω
+queries G+
+ω and G−
+ω, we say that F is contained in G if F+
+ω ⊆G+
+ω and F−
+ω ⊆G−
+ω, where ⊆
+refers to the usual query containment.
+PROPOSITION 6.3. Every translation that is contained in the translation of Figure 1
+provides correctness guarantees.
+PROOF. It is the same as the proof of Theorem 6.1: one just follows the proof, and
+notices that as long as we take a query contained in the query used on the right-hand
+side of the translation, the correctness guarantees of the induction hypothesis continue
+to hold.
+2
+This lets us adjust translations for the sake of efﬁciency without having to worry
+about correctness guarantees. Indeed, in the rule for (Q1 × Q2)−we can use Q−
+1 × Q−
+2 ,
+and in the rule for (σθ(Q))−we can just use Q−, as suggested earlier. These result in
+more efﬁcient queries still giving us correctness guarantees. There is a price to pay for
+the efﬁciency though: we can get fewer answers in the result. Hence, one should decide
+how to resolve the efﬁciency versus the quality of approximation trade-off.
+Another corollary concerns positive relational algebra, even extended with inequali-
+ties, and it just follows from examining the basic translation of Figure 1. Deﬁne PosRA̸=
+as the positive fragment of RA (i.e., σ, π, ×, ∪) where conditions in selections are al-
+lowed to use inequalities. In terms of its expressiveness, this fragment corresponds to
+UCQ̸=.
+COROLLARY 6.4. Let Q be a PosRA̸= query, and let Q∗be obtained from it by changing
+each selection condition θ to θ∗. Then, for every database D, we have Q∗(D) ⊆cert⊥(Q, D).
+7. NESTED QUERIES AND EXTENDED ALGEBRA OPERATIONS
+We have seen that nested SQL queries tend to cause problems when they are evaluated
+on databases with nulls. In fact, even some equivalences one would expect to hold are
+broken, and this is in fact written into the speciﬁcation of the SQL semantics. The goal
+of this section is to illustrate that some of this unpleasant and unwanted behavior of
+SQL can be eliminated by using adjusted three-valued evaluation techniques presented
+in the earlier sections. We recall one more time that in this article, we use set semantics,
+that is, in all of the following examples and results we assume that relations contain
+no duplicates.
+To illustrate additional issues one can have with nested queries, consider again the
+difference query (2) from the Introduction, that is,
+select R.A from R where R.A not in (select S.A from S),
+(2)
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.23] ===
+SQL’s Three-Valued Logic and Certain Answers
+1:23
+where R and S have one attribute Aeach. We normally expect this query to correspond
+to relational algebra difference operation, that is, R−S. The difference of two relations
+can be expressed in another way in SQL, namely,
+(select * from R) except (select * from S).
+(9)
+In fact, one can often see statements that these are two equivalent ways of expressing
+the difference query, but in fact they are not, if nulls are present. To see this, assume
+that R = {1, 2} and S = {⊥}. Then query (2) returns the empty set, but query (9) returns
+{1, 2}. Thus, the queries are not the same after all in the presence of nulls.1
+To explain what is going on here, we need to delve a bit deeper into the meaning of
+such queries and their implementation. We shall use R−S for the usual set difference,
+implemented by (9), and R \ S for the result of the nested query (2). Of course, if no
+nulls are present we have R −S = R \ S.
+7.1. Relational Calculus
+Let us now look at how these queries are deﬁned in relational calculus. If R and S have
+the same attributes, then R −S is deﬁned by the query ϕ(¯x) = R(¯x) ∧¬S(¯x). On the
+other hand, R \ S checks for each element of R whether it belongs to S, so the formula
+deﬁning it is
+ψ(¯x) = R(¯x) ∧¬∃¯y (S( ¯y) ∧¯y = ¯x),
+(10)
+where for tuples ¯x = (x1, . . . , xn) and ¯y = (y1, . . . , yn), we use the abbreviation ¯y = ¯x for
+(x1 = y1) ∧. . . ∧(xn = yn). At ﬁrst one may think that ∃¯y (S( ¯y) ∧¯x = ¯y) is equivalent to
+S(¯x) but this is not the case for the three-valued semantics. The following table shows
+what the truth values are for the database D with RD = {1} and SD = {⊥} (in the
+previous example, we used R = {1, 2} but the situation for values 1 and 2 is completely
+symmetric). Note that the certain answer in this case is empty.
+ϕ(x) = R(x) ∧¬S(x)
+ψ(x) = R(x) ∧¬∃y (S(y) ∧¯y = x)
+EvalFO(·, D, 1)
+1
+1
+EvalFO(·, D, ⊥)
+0
+0
+EvalSQL(·, D, 1)
+1
+1/2
+EvalSQL(·, D, ⊥)
+0
+0
+Eval3v(·, D, 1)
+1/2
+1/2
+Eval3v(·, D, ⊥)
+0
+0
+Thus, both FO and SQL evaluation produce a false positive for the difference query
+ϕ(x). Furthermore, under the FO evaluation, formulas ϕ and ψ are equivalent, so FO
+produces a false positive for ψ as well. On the other hand, SQL evaluation returns the
+correct value 1
+2 for ψ. Then Eval3v ﬁxes these issues, returning the correct—and the
+same—value 1
+2 for both formulas.
+The equivalence of R(¯x) ∧¬S(¯x) and (10) boils down to the equivalence of S(¯x) and
+of tuple-by-tuple deﬁnition of S. That is, for a database D, we deﬁne
+SD(¯x) =
+
+{¯x = ¯t | ¯t ∈SD}.
+1The behavior of query (9) is for the majority of DBMSs that have the except operator, or minus for Oracle.
+For those without (e.g., MySQL), the same result is achieved with the outerjoin query select R.A from R
+left outer join S on (S.A is null).
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.24] ===
+1:24
+L. Libkin
+Then we expect, in the case of the usual two-valued logic, that S(¯x) ↔SD(¯x) in D. In
+general, if this equivalence holds, then R(¯x) ∧¬S(¯x) and (10) are equivalent.
+However, in the case of SQL, the formulas S(¯x) and SD(¯x) can be completely
+unrelated.
+PROPOSITION 7.1. There is a database D with a unary relation S in it and two assign-
+ments ν, ν′ such that
+EvalSQL(S(x), D, ν) < EvalSQL(SD(x), D, ν),
+EvalSQL(S(x), D, ν′) > EvalSQL(SD(x), D, ν′).
+PROOF. Consider a database D with two relations RD = {⊥2} and SD = {⊥1}. Let
+ν : x →⊥2 and ν′ : x →⊥1. Then
+—EvalSQL(S(x), D, ν) = 0;
+—EvalSQL(SD(x), D, ν) = 1
+2;
+—EvalSQL(S(x), D, ν′) = 1;
+—EvalSQL(SD(x), D, ν′) = 1
+2.
+2
+For Eval3v, on the other hand, we can establish a clear connection between the two
+deﬁnitions of a relation by formulas. In fact, for SQL’s model of nulls (i.e., nonrepeating
+nulls), the two are equivalent under Eval3v, that is, Eval3v restores the equivalence
+S(¯x) ↔SD(¯x).
+PROPOSITION 7.2. Given a database D with a relation S in it, for every assignment ν
+we have
+Eval3v(S(¯x), D, ν) ≤Eval3v(SD(¯x), D, ν).
+Moreover, the equality is achieved if nulls in SD do not repeat.
+PROOF. Consider a database D with a relation S in it and an assignment ν : ¯x →¯a.
+First assume Eval3v(S(¯x), D, ν) = 1. Then ¯a ∈SD, that is, ¯a = ¯t for some ¯t ∈SD.
+Hence, Eval3v(¯x = ¯t, D, ν) = 1 and thus Eval3v(SD(¯x), D, ν) = 1.
+Next assume Eval3v(S(¯x), D, ν) = 1
+2. Then ¯a is not a tuple in SD but there is a tuple
+¯t ∈SD such that ¯a ⇑¯t. Let ¯a = (a1, . . . , am) and ¯t = (t1, . . . , tm). Since ¯a and ¯t unify, there
+is no position i such that ai and ti are different constants. Hence, Eval3v(xi = ti, D, ν) ̸= 0
+for every i ≤m. Thus, Eval3v(¯x = ¯t, D, ν) ≥1
+2 and hence Eval3v(SD(¯x), D, ν) ≥1
+2. If, on the
+other hand, Eval3v(SD(¯x), D, ν) = 1, then we have a tuple ¯t such that Eval3v(¯x = ¯t, D, ν) =
+1, and hence Eval3v(xi = ti, D, ν) = 1 for each i ≤m. But this means ν(xi) = ai = ti for
+all i ≤m, and thus ¯a = ¯t ∈SD, contradicting Eval3v(S(¯x), D, ν) =
+1
+2. This implies
+Eval3v(SD(¯x), D, ν) = 1
+2.
+The preceding proves Eval3v(S(¯x), D, ν) ≤Eval3v(SD(¯x), D, ν). To show equality for
+databases without repeating nulls, it sufﬁces to show that for them, Eval3v(S(¯x), D, ν) =
+0 implies Eval3v(SD(¯x), D, ν) = 0. Consider an arbitrary tuple ¯t ∈SD. We know that it
+does not unify with ¯a, since Eval3v(S(¯x), D, ν) = 0. Since in ¯t nulls do not repeat, the
+only way for it to not unify with ¯a is if ai and ti are distinct constants for some position i
+(otherwise, we just deﬁne a homomorphism that sends each ti that is a null to ai, which
+is well deﬁned due to nonrepetition of nulls, and the tuples unify). But in this case,
+Eval3v(xi = ti, D, ν) = 0 and thus Eval3v(¯x = ¯t, D, ν) = 0. Since this is true for every
+tuple in SD, we have Eval3v(SD(¯x), D, ν) = 0, as required. This completes the proof.
+Note that the condition that nulls do not repeat is necessary for equality in Proposi-
+tion 7.2. Indeed, consider a database D with a binary relation SD = {(1, 2)} and assume
+adom(D) contains a null ⊥. Then, for the assignment ν : (x, y) →(⊥, ⊥), we have
+Eval3v(S(¯x), D, ν) = 0, while Eval3v(SD(¯x), D, ν) = 1
+2.
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.25] ===
+SQL’s Three-Valued Logic and Certain Answers
+1:25
+To sum up, Eval3v behaves in a much more reasonable way compared with EvalSQL
+and, in addition to providing correctness guarantees, eliminates some of the bizarre
+types of behavior of SQL when it comes to processing nested queries.
+7.2. Relational Algebra
+We now look at the procedural implementation of queries that cause issues with
+databases with nulls. The except query, or R(¯x) ∧¬S(¯x) is of course the relational
+algebra difference, that is, R −S. But what about nested queries?
+Those using in and not in conditions are implemented with semijoins and antijoins
+operators. Given a relation R and a list α of its attributes, and a relation S and a list
+β of its attributes so that |α| = |β|, the semijoin R ▷<α,β S is deﬁned as the set of
+tuples ¯t in R that match a tuple ¯s in S, that is, πα(¯t) = πβ(¯s). The antijoin is simply the
+complement R ▷<α,β S = R −(R ▷<α,β S). It consists of all the tuples in R that do not
+match any tuple in S.
+When α and β are the sets of all attributes of R and S, we drop the subscript α,β.
+Note that for complete relations we have R ▷< S = R ∩S and R ▷< S = R −S. The
+connection with nested queries is as follows. The query
+select * from R where R.α in (select S.β from S)
+is R ▷<α,β S, while the query
+select * from R where R.α not in (select S.β from S)
+is R ▷<α,β S.
+We now extend the translation of Theorem 6.1 to handle semi- and antijoins. We
+then see that queries Q+ are identical for the difference query implemented as R −S
+or as R ▷< S over databases with nulls, thus providing a procedural ﬁx to the problem
+outlined earlier in the section.
+We need one bit of notation. Recall that we use the unnamed perspective of relational
+algebra, that is, n attributes of a relation are ♯1, . . . , ♯n. Now let R be a relation of arity
+m < n, and S a relation of arity n −m, and let β be a list of m attributes among
+♯1, . . . , ♯n. Then R ×β S returns tuples in the Cartesian product R × S rearranged so
+that the components of tuples from R occupy the positions given by β. That is,
+R ×β S = {(a1, . . . , an) | (ai)i∈β ∈R and (ai)i̸∈β ∈S}.
+Here (ai)i∈β is the subtuple (ai1, . . . , aik) of (a1, . . . , an), where β consists of ♯i1, . . . , ♯ik
+and i1 < . . . < ik (and likewise for (ai)i̸∈β). For instance, if R = {(1, 2)}, S = {(3)}, and
+β = {♯1, ♯3}, then R ×β S = {(1, 3, 2)}.
+Now we are ready to deﬁne translations for semijoins and antijoins.
+(Q1 ▷<α,β Q2)+ = Q+
+1 ▷<α,β Q+
+2 ,
+(Q1 ▷<α,β Q2)−= Q−
+1 ∪
+
+(πβ(Q2))−×β adomar(Q2)−|β|
+,
+(Q1 ▷<α,β Q2)+ = Q+
+1 ∩
+
+(πβ(Q2))−×β adomar(Q2)−|β|
+,
+(Q1 ▷<α,β Q2)−= Q−
+1 ∪Q+
+1 ▷<α,β Q+
+2 .
+(11)
+THEOREM 7.3. Extending translations of Theorem 6.1 with rules (11) for semijoins
+and antijoins preserves correctness guarantees.
+PROOF. The equations for antijoins follow from those for semijoins and the equations
+for difference from the table in Figure 1, so we only need to prove correctness guarantees
+for (Q1 ▷<α,β Q2)+ and (Q1 ▷<α,β Q2)−. For this, we simply extend the inductive proof
+of Theorem 6.1 with these rules. The positive case is immediate (as in fact semijoin is
+a positive query and for positive queries the + operation propagates).
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.26] ===
+1:26
+L. Libkin
+For the negative case, we need to show that for every database D and every ¯u ∈
+(Q1 ▷<α,β Q2)−(D) we have h(¯u) ̸∈Q1(h(D)) ▷<α,β Q2(h(D)) for every homomorphism h.
+If ¯u ∈Q−
+1 (D) then, by the induction hypothesis, h(¯u) ̸∈Q1(h(D)) for every homomorphism
+h, and thus it cannot be in the result of the semijoin. If ¯u is a tuple whose projection
+on the β-attributes is in (πβ(Q))−(D), then we know that for every homomorphism
+h, the tuple πβ(¯u) is not in πβ(Q(h(D))), by the hypothesis. Thus, h(¯u) cannot be in
+Q1(h(D)) ▷< Q2(h(D)), as the join condition cannot be satisﬁed. This concludes the
+proof.
+2
+When α is the set of all attributes of Q1 and β is the set of all attributes of Q2, (11)
+gives us
+(Q1 ▷< Q2)+ = Q+
+1 ▷< Q+
+2 ,
+(Q1 ▷< Q2)−= Q−
+1 ∪Q−
+2 ,
+(Q1 ▷< Q2)+ = Q+
+1 ∩Q−
+2 ,
+(Q1 ▷< Q2)−= Q−
+1 ∪Q+
+1 ▷< Q+
+2 .
+(12)
+In particular, we have the following.
+COROLLARY 7.4. (Q1 ▷< Q2)+ = (Q1 −Q2)+.
+Thus, if we adopt the view that in the case of databases with nulls, the correct im-
+plementation of a relational algebra query Q is Q+, then the antijoin and set difference
+become the same, unlike in SQL’s implementation. In particular, there is no longer any
+difference between queries (2) and (9). Thus, our approach ﬁxes this inconsistency in
+SQL at both the declarative level (with the help of Eval3v) and the procedural level
+(with the help of queries Q+).
+8. CONCLUSIONS AND PRACTICAL CONSIDERATIONS
+We have shown that small changes to the three-valued query evaluation used in SQL
+produce sound query answers, that is, answers without false positives. We have pre-
+sented such evaluation procedures at the levels of both relational calculus and algebra.
+Our goal was to address the often criticized aspects of SQL’s handling of nulls. Clearly,
+the next step after showing that correctness can in principle be restored, is to show
+how to do this in practice. We now outline the next steps that need to be done in this
+direction.
+How Bad the Problem Is. Do we often have the problem of false positives in SQL query
+answers? We know there are some classes of queries (e.g., positive queries extended
+with the division by a base relation) where the problem does not occur. On the other
+hand, having the except operator is an easy way to get false positives, as is double
+negation, which is common in nested queries expressing universal conditions. We need
+an experimental study showing how common the problem actually is. A starting point
+could be a set of benchmark queries on randomly generated data; the main challenge
+is comparing with real certain answers that are computationally very costly.
+Efﬁciency. The theoretical complexity of the procedures we proposed is very low; in
+fact, it is as low as evaluating relational calculus and algebra themselves, in terms of
+data complexity. The next obvious step is to implement these algorithms to study their
+real-life applicability. It is clear that some adjustments will need to be made. First
+of all, we assumed a single domain for all attributes (which is a standard theoretical
+simpliﬁcation) while in reality all columns have their own types. This is easy to deal
+with; a more challenging problem is handling fairly large Cartesian products that the
+translation produces. While not increasing theoretical complexity (it is still AC0), they
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.27] ===
+SQL’s Three-Valued Logic and Certain Answers
+1:27
+deﬁnitely increase practical complexity of query answering. It is worth remembering
+though that our translations at the procedural level are really families of algorithms.
+This gives plenty to play with, to ﬁnd good quality approximations of certain answers
+that are real-world efﬁcient.
+Duplicates and Multiset Semantics. Another natural question is to consider the mul-
+tiset (bag) semantics of SQL. As explained in the Introduction, everything we have
+done here assumes the textbook set semantics, but SQL evaluation, by default, does
+not eliminate duplicates. We need to understand the right notion of correctness, simi-
+lar to certain answers, in the case of databases with bags. Such a notion can then be
+used as a basis for obtaining correctness guarantees of evaluation procedures in the
+presence of duplicates.
+Quality of Approximations. How good are our approximations of certain answers?
+Propositions 5.5 and 6.2 say that they do not needlessly miss answers. But there is
+much more to be done, both in terms of their experimental evaluation, and theoretical
+analysis (as we are producing polynomial time approximations of a CONP-complete
+problem).
+Query Optimization. With the change to the evaluation procedure, we must also con-
+sider the usual optimization rules: do they continue to be valid? On the positive side, we
+know that queries Q+ do provide correctness guarantees, and thus standard optimiza-
+tions can be applied to them, but we also would like to know whether optimizations
+can be applied to Q itself ﬁrst before producing the Q+ translation.
+ACKNOWLEDGMENTS
+I thank Chris Date, Hugh Darwen, Ron Fagin, and Cristina Sirangelo for discussions, comments and sug-
+gestions. I am also very grateful to the referees of both this article and its earlier conference version for their
+careful reading of the article and numerous helpful suggestions.
+REFERENCES
+Serge Abiteboul and Oliver Duschka. 1998. Complexity of answering queries using materialized views. In
+Proceedings of the ACM Symposium on Principles of Database Systems (PODS). 254–263.
+Serge Abiteboul, Richard Hull, and Victor Vianu. 1995. Foundations of Databases. Addison-Wesley.
+Serge Abiteboul, P. Kanellakis, and G. Grahne. 1991. On the representation and querying of sets of possible
+worlds. Theoretical Computer Science 78, 1 (1991), 158–187.
+Marcelo Arenas, Pablo Barcel´o, Leonid Libkin, and Filip Murlak. 2014. Foundations of Data Exchange.
+Cambridge University Press.
+Andrea Cal`ı, Georg Gottlob, and Thomas Lukasiewicz. 2012. A general datalog-based framework for tractable
+query answering over ontologies. Journal of Web Semantics 14 (2012), 57–83.
+Diego Calvanese, Giuseppe De Giacomo, Domenico Lembo, Maurizio Lenzerini, and Riccardo Rosati. 2007.
+Tractable reasoning and efﬁcient query answering in description logics: The DL-Lite family. Journal of
+Automated Reasoning 39, 3 (2007), 385–429.
+Kevin Compton. 1983. Some useful preservation theorems. Journal of Symbolic Logic 48, 2 (1983), 427–440.
+Hugh Darwen and Chris J. Date. 1995. The third manifesto. SIGMOD Record 24, 1 (1995), 39–49.
+Chris J. Date. 2005. Database in Depth: Relational Theory for Practitioners. O’Reilly. I–XVIII, 1–208.
+Chris J. Date and Hugh Darwen. 1996. A Guide to the SQL Standard. Addison-Wesley.
+G. H. Gessert. 1990. Four valued logic for relational database systems. SIGMOD Record 19, 1 (1990), 29–35.
+Am´elie Gheerbrant, Leonid Libkin, and Cristina Sirangelo. 2014. Na¨ıve evaluation of queries over incomplete
+databases. ACM Transactions on Database Systems 39, 4 (2014), 31:1–31:42.
+Am´elie Gheerbrant, Leonid Libkin, and Tony Tan. 2012. On the complexity of query answering over in-
+complete XML documents. In Proceedings of the International Conference on Database Theory (ICDT).
+169–181.
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.
+=== [p.28] ===
+1:28
+L. Libkin
+Laura M. Haas, Mauricio A. Hern´andez, Howard Ho, Lucian Popa, and Mary Roth. 2005. Clio grows up:
+From research prototype to industrial tool. In SIGMOD. 805–810.
+Tomasz Imielinski and Witold Lipski. 1984. Incomplete information in relational databases. Journal of the
+ACM 31, 4 (1984), 761–791.
+Hans-Joachim Klein. 1994. How to modify SQL queries in order to guarantee sure answers. SIGMOD Record
+23, 3 (1994), 14–20.
+Hans-Joachim Klein. 1999. On the use of marked nulls for the evaluation of queries against incomplete
+relational databases. In Fundamentals of Information Systems, Torsten Polle, Torsten Ripke, and Klaus-
+Dieter Schewe (Eds.). Kluwer, 81–98.
+Maurizio Lenzerini. 2002. Data integration: A theoretical perspective. In Proceedings of the ACM Symposium
+on Principles of Database Systems (PODS). 233–246.
+Leonid Libkin. 2014a. Certain answers as objects and knowledge. In Principles of Knowledge Representation
+and Reasoning (KR). 328–337.
+Leonid Libkin. 2014b. Incomplete information: What went wrong and how to ﬁx it. In Proceedings of the
+ACM Symposium on Principles of Database Systems (PODS). 1–13.
+W. Lipski. 1979. On semantic issues connected with incomplete information databases. ACM Transactions
+on Database Systems 4, 3 (1979), 262–296.
+Witold Lipski. 1984. On relational algebra with marked nulls. In Proceedings of the ACM Symposium on
+Principles of Database Systems (PODS). 201–203.
+Bruno Marnette, Giansalvatore Mecca, Paolo Papotti, Salvatore Raunich, and Donatello Santoro. 2011.
+++Spicy: An opensource tool for second-generation schema mapping and data exchange. PVLDB 4, 12
+(2011), 1438–1441.
+Mike Paterson and Mark N. Wegman. 1978. Linear uniﬁcation. Journal of Computer and System Sciences
+16, 2 (1978), 158–167.
+R. Reiter. 1977. On closed world data bases. In Logic and Data Bases. 55–76.
+R. Reiter. 1986. A sound and sometimes complete query evaluation algorithm for relational databases with
+null values. Journal of the ACM 33, 2 (1986), 349–347.
+Kwok-bun Yue. 1991. A more general model for handling missing information in relational databases using
+a 3-valued logic. SIGMOD Record 20, 3 (1991), 43–49.
+Received April 2015; revised September 2015; accepted October 2015
+ACM Transactions on Database Systems, Vol. 41, No. 1, Article 1, Publication date: March 2016.

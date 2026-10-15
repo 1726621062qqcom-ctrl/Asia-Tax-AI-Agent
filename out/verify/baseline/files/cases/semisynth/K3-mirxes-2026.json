@@ -1,0 +1,61 @@
+{
+ "case_id": "K3-mirxes-2026",
+ "kind": "K3",
+ "template": "holding",
+ "subject": "GROUP",
+ "members": ["ULT", "HOLD", "OP"],
+ "roles": {
+  "ULT": {"loc": "SG", "attrs": {"incorporated_in": "SG", "group_revenue_eur": 19373610.56}},
+  "HOLD": {"loc": "CN", "attrs": {"incorporated_in": "CN"}},
+  "OP": {"loc": "CN", "attrs": {"incorporated_in": "CN"}}
+ },
+ "holds": [
+  {"holder": "ULT", "held": "OP", "ratio": 100.0, "since": "2020-12-11"},
+  {"holder": "ULT", "held": "HOLD", "ratio": 100.0, "since": "2023-05-05"}
+ ],
+ "flows": {
+  "reorg": {"amount": 83463359.41, "reorg_equity_payment_share": 100.0},
+  "up1": {"foreign_taxed": true, "foreign_headline_rate": 25, "deductible_at_payer": false},
+  "up2": {"foreign_taxed": true, "foreign_headline_rate": 25, "deductible_at_payer": false}
+ },
+ "present": {"HOLD": null, "financing": "EQUITY", "payment": false},
+ "settled": {},
+ "event": {"on": "2026-06-14", "years": 1, "dividend": 10000000.0, "onward": 10000000.0},
+ "synthetic_share": 0.19,
+ "provenance": {
+  "roles.ULT.loc": {"kind": "disclosed", "source": "K3-mirxes-2025", "page": "pdf 277", "quote": "On November 4, 2020, MiRXEA Pte. Ltd. was incorporated in Singapore as a private company limited by shares with MiRXES Holding Singapore as the sole shareholder."},
+  "roles.ULT.attrs.incorporated_in": {"kind": "disclosed", "source": "K3-mirxes-2025", "page": "pdf 277", "quote": "MiRXEA Pte. Ltd. was incorporated in Singapore as a private company limited by shares"},
+  "roles.ULT.attrs.group_revenue_eur": {"kind": "derived", "source": "K3-mirxes-2025", "page": "pdf 627", "quote": "Years ended December 31, Note 2022 2023 2024 US$ US$ US$ Revenue . . . . . . . . . . . . . . . . . . . . . . . 22 17,758,971 24,185,013 20,282,675", "formula": "2024 年集团收入 US$20,282,675 × 2024-12-31 美元兑人民币中间价 7.1884 ÷ 欧元兑人民币中间价 7.5257（official/fx/cny_central_parity.csv）= EUR19,373,610.56；2022、2023 年收入更低，四年内都远低于 7.5 亿欧元"},
+  "roles.HOLD.loc": {"kind": "disclosed", "source": "K3-mirxes-2025", "page": "pdf 288", "quote": "Our subsidiary, Huzhou Mirui, was incorporated in the PRC on May 5, 2023 as a limited liability company, with an initial registered capital of US$30 million, which was wholly subscribed by MiRXEA Pte. Ltd."},
+  "roles.HOLD.attrs.incorporated_in": {"kind": "disclosed", "source": "K3-mirxes-2025", "page": "pdf 52", "quote": "a wholly foreign-owned enterprise incorporated in PRC on May 5, 2023"},
+  "roles.OP.loc": {"kind": "disclosed", "source": "K3-mirxes-2025", "page": "pdf 279", "quote": "Our subsidiary, Hangzhou Miwei, was incorporated in the PRC on December 11, 2020 as a limited liability company with an initial registered capital of US$10,000,000, and was wholly subscribed by MiRXEA Pte. Ltd."},
+  "roles.OP.attrs.incorporated_in": {"kind": "disclosed", "source": "K3-mirxes-2025", "page": "pdf 49", "quote": "a wholly foreign-owned enterprise incorporated in PRC on December 11, 2020"},
+  "holds.ULT>OP.ratio": {"kind": "disclosed", "source": "K3-mirxes-2025", "page": "pdf 279", "quote": "with an initial registered capital of US$10,000,000, and was wholly subscribed by MiRXEA Pte. Ltd."},
+  "holds.ULT>OP.since": {"kind": "derived", "source": "K3-mirxes-2025", "page": "pdf 279", "quote": "Our subsidiary, Hangzhou Miwei, was incorporated in the PRC on December 11, 2020 as a limited liability company with an initial registered capital of US$10,000,000, and was wholly subscribed by MiRXEA Pte. Ltd.", "formula": "设立时由 MiRXEA 全额认缴——持有自设立日 2020-12-11 起，至 2023-06-14 转让前未变"},
+  "holds.ULT>OP.cost": {"kind": "missing", "source": "K3-mirxes-2025", "page": "pdf 279", "note": "只知初始注册资本 US$10,000,000 由 MiRXEA 认缴（pdf 279）；2023-08-10 前股本为 RMB130,668,856.19（pdf 737），二者关系与 MiRXEA 的实缴额未披露——计税成本由程序提问"},
+  "holds.ULT>HOLD.ratio": {"kind": "disclosed", "source": "K3-mirxes-2025", "page": "pdf 288", "quote": "As of the Latest Practicable Date, Huzhou Mirui was wholly owned by MiRXEA Pte. Ltd."},
+  "holds.ULT>HOLD.since": {"kind": "derived", "source": "K3-mirxes-2025", "page": "pdf 288", "quote": "Our subsidiary, Huzhou Mirui, was incorporated in the PRC on May 5, 2023 as a limited liability company, with an initial registered capital of US$30 million, which was wholly subscribed by MiRXEA Pte. Ltd.", "formula": "设立时由 MiRXEA 全额认缴——持有自设立日 2023-05-05 起"},
+  "holds.ULT>HOLD.cost": {"kind": "missing", "source": "K3-mirxes-2025", "page": "pdf 288", "note": "注册资本 US$30,000,000 由 MiRXEA 认缴，其中 US$11,662,432 以杭州觅未股权实缴（pdf 288），其余是否实缴未披露"},
+  "flows.reorg.amount": {"kind": "disclosed", "source": "K3-mirxes-2025", "page": "pdf 288", "quote": "MiRXEA Pte. Ltd. and Huzhou Mirui dated June 14, 2023, MiRXEA Pte. Ltd. transferred 100% equity interests in Hangzhou Miwei to Huzhou Mirui at an aggregate consideration of RMB83,463,359.41,"},
+  "flows.reorg.reorg_equity_payment_share": {"kind": "derived", "source": "K3-mirxes-2025", "page": "pdf 288", "quote": "whereby MiRXEA Pte. Ltd. has completed the paid-in obligation to Huzhou Mirui’s registered capital of US$11,662,432. Following such share swap, Hangzhou Miwei was wholly owned by Huzhou Mirui, which was in turn wholly owned by MiRXEA Pte. Ltd.", "formula": "对价抵作 MiRXEA 对湖州觅瑞注册资本的实缴，即湖州觅瑞以本企业股权支付（财税〔2009〕59号第二条）；未提现金——股权支付占 100%"},
+  "flows.up1.foreign_taxed": {"kind": "derived", "source": "K3-mirxes-2025", "page": "pdf 536", "quote": "The EIT Law and its relevant regulations also impose a withholding tax at 10% on the foreign investors with respect to dividend distributions made out of the PRC entities from earnings accumulated from January 1, 2008,", "formula": "内地对付给境外投资者的股息征预提所得税"},
+  "flows.up1.foreign_headline_rate": {"kind": "disclosed", "source": "K3-mirxes-2025", "page": "pdf 536", "quote": "Under the Law of the PRC on Enterprise Income Tax (the “EIT Law”) and implementation regulations of the EIT Law, the basic tax rate of the Company’s PRC subsidiaries is 25%."},
+  "flows.up1.deductible_at_payer": {"kind": "derived", "formula": "股息是税后利润分配，支付方不得扣除（企业所得税法第十条第一项）"},
+  "flows.up2.foreign_taxed": {"kind": "derived", "source": "K3-mirxes-2025", "page": "pdf 536", "quote": "The EIT Law and its relevant regulations also impose a withholding tax at 10% on the foreign investors with respect to dividend distributions made out of the PRC entities from earnings accumulated from January 1, 2008,", "formula": "湖州觅瑞（内地）付给 MiRXEA（新加坡）的股息同样征预提所得税"},
+  "flows.up2.foreign_headline_rate": {"kind": "disclosed", "source": "K3-mirxes-2025", "page": "pdf 536", "quote": "the basic tax rate of the Company’s PRC subsidiaries is 25%."},
+  "flows.up2.deductible_at_payer": {"kind": "derived", "formula": "股息是税后利润分配，支付方不得扣除（企业所得税法第十条第一项）"},
+  "present.HOLD": {"kind": "derived", "source": "K3-mirxes-2025", "page": "pdf 279", "quote": "with an initial registered capital of US$10,000,000, and was wholly subscribed by MiRXEA Pte. Ltd.", "formula": "重组前（2023-06-14 前）MiRXEA 直接持有杭州觅未，其间没有中间控股公司；湖州觅瑞已设立但尚未持有杭州觅未"},
+  "present.financing": {"kind": "derived", "source": "K3-mirxes-2025", "page": "pdf 279", "quote": "with an initial registered capital of US$10,000,000, and was wholly subscribed by MiRXEA Pte. Ltd.", "formula": "以注册资本出资（权益），未披露股东借款"},
+  "present.payment": {"kind": "synthetic", "basis": "股息是否跨年支付未披露（迄今未分配股息，pdf 40、574），取当年支付"},
+  "event.on": {"kind": "synthetic", "basis": "改期：真实重组日 2023-06-14，文库只存现行法（口径 D30），整体挪到 2026-06-14"},
+  "event.years": {"kind": "synthetic", "basis": "只算一年"},
+  "event.dividend": {"kind": "synthetic", "source": "K3-mirxes-2025", "page": "pdf 675", "quote": "the Group’s unutilized tax losses incurred by its subsidiaries in the PRC of US$19,594,884, US$30,734,686 and US$37,305,694 respectively will expire within five years from the year in which the tax losses originated.", "basis": "内地子公司有未弥补亏损、迄今未分配股息，未分配利润未披露；取 RMB10,000,000 的一次股息，仅作测试"},
+  "event.onward": {"kind": "synthetic", "basis": "中间公司收到的股息全部转付给新加坡母公司"}
+ },
+ "notes": [
+  "来源：Mirxes Holding Company Limited（2629.HK，开曼注册）招股书 2025-05-15（cases/sources/K3-mirxes-2025/source.pdf）。K3 半合成：结构、比例、日期与重组对价来自招股书，股息额、日期、年数是合成值（见 provenance）。",
+  "只截取三地内的部分：ULT 为 MiRXEA Pte. Ltd.（新加坡投资控股），HOLD 为湖州觅瑞（内地外商独资，2023-05-05 设立），OP 为杭州觅未；其上的 MiRXES Holding Pte. Ltd.（新加坡）与开曼上市公司不在本例。",
+  "现状取重组前：MiRXEA 直接持有杭州觅未。实际所选是 HOLD=CN：2023-06-14 MiRXEA 把杭州觅未 100% 以 RMB83,463,359.41 转给湖州觅瑞，抵作其对湖州觅瑞注册资本 US$11,662,432 的实缴（pdf 288），属财税〔2009〕59号第七条第（二）项情形（口径 D35）；招股书未提特殊性税务处理、备案或纳税。重组日改到 2026-06-14。",
+  "未披露：MiRXEA 对杭州觅未的实缴额与计税基础、对价的定价依据、完成登记日——由程序提问。金额单位为人民币元。"
+ ]
+}

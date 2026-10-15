@@ -1,0 +1,393 @@
+\documentclass[a0paper, landscape]{tumposter}
+
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+
+\usepackage[shortlabels]{enumitem}
+\setlist{topsep=0.8ex, itemsep=0.3ex, parsep=0.1ex}
+
+\usepackage{lipsum}
+
+\title{A promising new approach to beautiful \LaTeX\ posters}
+\author[affil=1]{First Author}
+\author[affil=2]{Second Author}
+\author[affil=1]{Last Author}
+
+\affil[mark=1]{\theSchoolName, \theUniversityName}
+\affil[mark=2]{School of Applied \LaTeX, University of \TeX nology}
+
+% You can configure your poster style globally, here in the preamble
+% or you execute this command inside the document, directly before your
+% poster content (if you want multiple posters in one document)
+\TUMpostersetup{
+  columns = 5,
+  rows = 5,
+  boxes = TUMBoxBlank,
+  printaffil = true,
+  showframe = true,
+  fontsize = 25pt,
+}
+
+
+\begin{document}
+
+
+% .:: Example poster with 5 columns
+% ----------------------------------------------------------------------------
+
+\TUMpostersetup{
+  columns = 5,
+  rows = 5,
+  boxes = TUMBoxBlank,
+  printaffil = true,
+  showframe = true,
+  fontsize = 25pt,
+}
+\maketitle
+\begin{tcbposter}
+  % footer with some contact information
+  \posterbox[fontupper=\small, height=5cm,
+    enlarge top initially by = .5\TUMposterboxsep
+  ]{
+    name=footer, column=1, span=5, above=bottom
+  }{
+    \textbf{\theUniversityName}\\
+    This footer box could be used to place contact information.\\
+    Setting a fixed height and insert additional spacing\\
+    to separate the footer from the main content is possible.
+  }
+
+  % figure on the top right
+  \posterbox{name=fig1, column=4, below=top}{
+    \includegraphics[width=\columnwidth, height=25cm]{example-image-a}
+    \captionof{figure}{This is a figure caption. The figure contains a
+      placeholder to test the layout.}
+  }
+
+  % figure on the bottom left
+  \posterbox{name=fig2, column=1, above=footer}{
+    \includegraphics[width=\columnwidth, height=15cm]{example-image-b}
+    \captionof{figure}{This is another figure placeholder.}
+  }
+
+  % main text box is a sequence over the rest of the page
+  \posterbox{name=text, column=1,
+    sequence = 1 between top and fig2 then
+    2 between top and footer then
+    3 between top and footer then
+    4 between fig1 and footer then
+    5 between top and footer
+  }{
+    \lipsum[1-12]
+  }
+\end{tcbposter}
+
+
+% .:: Example poster with 3 columns
+% ----------------------------------------------------------------------------
+
+\clearpage
+\TUMpostersetup{
+  columns = 3,
+  rows = 8,
+  boxes = TUMBoxBlank,
+  printaffil = false,
+  showframe = false,
+  fontsize = 25pt,
+}
+\maketitle
+\begin{tcbposter}
+  % footer with some contact information
+  \posterbox[fontupper=\small]{name=footer, column=1, span=3, above=bottom}{
+    \begin{tabularx}{\textwidth}{p{.3\textwidth}XXX}
+      \textbf{\theUniversityName}\newline\theSchoolName
+       &
+      \textbf{First Author}\newline Some contact information\newline
+      E-mail: \href{mailto:first.author@tum.de}{first.author@tum.de}
+       &
+      \textbf{Dr. Second Author}\newline Don't contact me!
+       &
+      \textbf{Prof. Dr. Last Author}\newline Arcisstr. 21, 80333 Munich (D)
+      \newline E-mail: \href{mailto:last.author@tum.de}{last.author@tum.de}
+      \newline \href{www.ei.tum.de}{www.ei.tum.de}
+    \end{tabularx}
+  }
+
+  % figure on the top right
+  \posterbox{name=fig1, column=2, below=top}{
+    \includegraphics[width=\columnwidth, height=25cm]{example-image-a}
+    \captionof{figure}{This is a figure caption. The figure contains a
+      placeholder to test the layout.}
+  }
+
+  % main text box is a sequence over the rest of the page
+  \posterbox[title=The One and Only box]{name=text,
+    sequence = 1 between top and footer then
+    2 between fig1 and footer then
+    3 between top and footer
+  }{
+    \lipsum[1-12]
+  }
+\end{tcbposter}
+
+
+% .:: Example poster with 2 columns
+% ----------------------------------------------------------------------------
+
+\clearpage
+\TUMpostersetup{
+  columns = 2,
+  rows = 2,
+  boxes = TUMBoxBlank,
+  printaffil = true,
+  showframe = false,
+  fontsize = 28pt,
+}
+\maketitle
+\begin{tcbposter}
+  \newcommand{\figheight}{0.9\dimexpr\tcbtextheight\relax}
+
+  % figure on the top right
+  \posterbox{name=fig1, column=2, row=1}{
+    \centering
+    \includegraphics[width=\tcbtextwidth, height=\figheight]{example-image-a}
+    \captionof{figure}{This is a figure caption. The figure contains a
+      placeholder to test the layout.}
+  }
+
+  % figure on the bottom left
+  \posterbox{name=fig2, column=1, row=2}{
+    \centering
+    \includegraphics[width=\tcbtextwidth, height=\figheight]{example-image-b}
+    \captionof{figure}{This is another figure caption.}
+  }
+
+  % main text box is a sequence over the rest of the page
+  \posterbox[fontupper=\large]{name=text,
+    sequence = 1 between top and fig2 then 2 between fig1 and bottom
+  }{
+    \lipsum[1-4]
+  }
+\end{tcbposter}
+
+
+% .:: Example poster with 4 columns and mixed boxes
+% ----------------------------------------------------------------------------
+
+\clearpage
+\TUMpostersetup{
+  columns = 4,
+  rows = 8,
+  boxes = TUMBoxInverse,
+  printaffil = false,
+  showframe = false,
+  fontsize = 28pt,
+}
+\maketitle
+\begin{tcbposter}
+  % objectives
+  \posterbox[TUMBox=TUMBlue, adjusted title=Objectives]{
+    name=objectives, column=1
+  }{
+    Lorem ipsum dolor sit amet, consectetur, nunc tellus pulvinar tortor,
+    commodo eleifend risus arcu sed odio:
+    \begin{itemize}
+      \item Mollis dignissim, magna augue tincidunt dolor, interdum
+        vestibulum urna
+      \item Sed aliquet luctus lectus, eget aliquet leo ullamcorper consequat.
+        Vivamus eros sem, iaculis ut euismod non, sollicitudin vel orci.
+      \item Nascetur ridiculus mus.
+      \item Euismod non erat. Nam ultricies pellentesque nunc, ultrices
+        volutpat nisl ultrices a.
+    \end{itemize}
+  }
+
+  % introduction
+  \posterbox[TUMBoxInverse, adjusted title=Introduction]{
+    name=intro, column=1, below=objectives
+  }{
+    Lorem ipsum dolor \textbf{sit amet}, consectetur adipiscing elit. Sed
+    commodo molestie porta. Sed ultrices scelerisque sapien ac commodo. Donec
+    ut volutpat elit. Sed laoreet accumsan mattis. Integer sapien tellus,
+    auctor ac blandit eget, sollicitudin vitae lorem. Praesent dictum tempor
+    pulvinar. Suspendisse potenti. Sed tincidunt varius ipsum, et porta nulla
+    suscipit et. Etiam congue bibendum felis, ac dictum augue cursus a.
+    \textbf{Donec} magna eros, iaculis sit amet placerat quis, laoreet id est.
+    In ut orci purus, interdum ornare nibh. Pellentesque pulvinar, nibh ac
+    malesuada accumsan, urna nunc convallis tortor, ac vehicula nulla tellus
+    eget nulla. Nullam lectus tortor, \textit{consequat tempor hendrerit}
+    quis, vestibulum in diam. Maecenas sed diam augue.
+
+    This statement requires citation \cite{einstein1905elektrodynamik}.
+  }
+
+  % figure 1
+  \newcommand{\figheight}{0.8\dimexpr\tcbtextheight\relax}
+  \posterbox[blankest]{name=fig1, column=1, between=intro and bottom}{
+    \centering
+    \includegraphics[width=\tcbtextwidth, height=\figheight]{example-image-a}
+    \captionof{figure}{This is a figure caption. The figure contains a
+      placeholder to test the layout.}
+  }
+
+  % materials
+  \posterbox[TUMBoxInverse, adjusted title=Materials]{
+    name=materials, column=2
+  }{
+    The following materials were required to complete the research:
+    \begin{itemize}
+      \item Curabitur pellentesque dignissim
+      \item Eu facilisis est tempus quis
+      \item Duis porta consequat lorem
+      \item Eu facilisis est tempus quis
+    \end{itemize}
+    The materials were prepared according to the steps outlined below:
+    \begin{enumerate}
+      \item Curabitur pellentesque dignissim
+      \item Eu facilisis est tempus quis
+      \item Duis porta consequat lorem
+      \item Curabitur pellentesque dignissim
+    \end{enumerate}
+  }
+
+  % important results
+  \posterbox[TUMBox=TUMBlue, adjusted title=Important Results]{
+    name=important, column=2, span=2, below=materials
+  }{
+    Lorem ipsum dolor \textbf{sit amet}, consectetur adipiscing elit. Sed
+    commodo molestie porta. Sed ultrices scelerisque sapien ac commodo.
+    Donec ut volutpat elit.
+  }
+
+  % methods
+  \posterbox[TUMBoxInverse, adjusted title=Methods]{
+    name=methods, column=3, between=top and important
+  }{
+    Lorem ipsum dolor \textbf{sit amet}, consectetur adipiscing elit. Sed
+    laoreet accumsan mattis. Integer sapien tellus, auctor ac blandit eget,
+    sollicitudin vitae lorem. Praesent dictum tempor pulvinar. Suspendisse
+    potenti. Sed tincidunt varius ipsum, et porta nulla suscipit et. Etiam
+    congue bibendum felis, ac dictum augue cursus a. \textbf{Donec} magna
+    eros, iaculis sit amet placerat quis, laoreet id est. In ut orci purus,
+    interdum ornare nibh. Pellentesque pulvinar, nibh ac malesuada accumsan,
+    urna nunc convallis tortor, ac vehicula nulla tellus eget nulla. Nullam
+    lectus tortor, \textit{consequat tempor hendrerit} quis, vestibulum in
+    diam. Maecenas sed diam augue.
+  }
+
+  % mathematical section
+  \posterbox[TUMBoxInverse, adjusted title=Mathematical Section]{
+    name=math, column=2, between=important and bottom
+  }{
+    Nam quis odio enim, in molestie libero. Vivamus cursus mi at nulla
+    elementum sollicitudin. Nam quis odio enim, in molestie libero. Vivamus
+    cursus mi at nulla elementum sollicitudin.
+
+    \begin{equation}
+      E = mc^{2}
+      \label{eqn:Einstein}
+    \end{equation}
+
+    Nam quis odio enim, in molestie libero. Vivamus cursus mi at nulla
+    elementum sollicitudin. Nam quis odio enim, in molestie libero. Vivamus
+    cursus mi at nulla elementum sollicitudin.
+
+    \begin{equation}
+      \cos^3 \theta =\frac{1}{4}\cos\theta+\frac{3}{4}\cos 3\theta
+      \label{eq:refname}
+    \end{equation}
+
+    Nam quis odio enim, in molestie libero. Vivamus cursus mi at nulla
+    elementum sollicitudin. Nam quis odio enim, in molestie libero. Vivamus
+    cursus mi at nulla elementum sollicitudin.
+
+    \begin{equation}
+      \kappa =\frac{\xi}{E_{\mathrm{max}}} %\mathbb{ZNR}
+    \end{equation}
+  }
+
+  % results
+  \posterbox[TUMBoxInverse, adjusted title=Results]{
+    name=results, column=3, between=important and bottom
+  }{
+    \begin{figure}
+      \centering
+      \includegraphics[width=.7\columnwidth, height=8cm]{example-image-b}
+      \caption{Figure caption}
+    \end{figure}
+
+    Nunc tempus venenatis facilisis. Curabitur suscipit consequat eros non
+    porttitor. Sed a massa dolor, id ornare enim:
+
+    \begin{table}
+      \centering
+      \caption{Table caption}
+      \begin{tabular}{lll}
+        \toprule
+        \textbf{Treatments} & \textbf{Response 1} & \textbf{Response 2} \\
+        \midrule
+        Treatment 1         & 0.0003262           & 0.562               \\
+        Treatment 2         & 0.0015681           & 0.910               \\
+        Treatment 3         & 0.0009271           & 0.296               \\
+        \bottomrule
+      \end{tabular}
+    \end{table}
+  }
+
+  % conclusion
+  \posterbox[TUMBoxInverse, adjusted title=Conclusion]{
+    name=conclusion, column=4
+  }{
+    Nunc tempus venenatis facilisis. \textbf{Curabitur suscipit} consequat
+    eros non porttitor. Sed a massa dolor, id ornare enim. Fusce quis massa
+    dictum tortor \textbf{tincidunt mattis}. Donec quam est, lobortis quis
+    pretium at, laoreet scelerisque lacus. Nam quis odio enim, in molestie
+    libero. Vivamus cursus mi at \textit{nulla elementum sollicitudin}.
+  }
+
+  % additional information
+  \posterbox[TUMBoxInverse, adjusted title=Additional Information]{
+    name=addons, column=4, below=conclusion
+  }{
+    Maecenas ultricies feugiat velit non mattis. Fusce tempus arcu id ligula
+    varius dictum.
+    \begin{itemize}
+      \item Curabitur pellentesque dignissim
+      \item Eu facilisis est tempus quis
+      \item Duis porta consequat lorem
+    \end{itemize}
+  }
+
+  % contact information
+  \posterbox[TUMBox=TUMOrange, adjusted title=Contact Information,
+    fontupper=\small
+  ]{
+    name=contact, column=4, above=bottom
+  }{
+    \textbf{First Author}\\\theSchoolName\\\theUniversityName\\
+    E-mail: \href{mailto:first.author@tum.de}{first.author@tum.de}
+    \vspace{2ex}
+
+    \textbf{Dr. Second Author}\newline Don't contact me!
+    \vspace{2ex}
+
+    \textbf{Prof. Dr. Last Author}\\\theSchoolName\\\theUniversityName\\
+    Arcisstr. 21, 80333 Munich (D)\\
+    E-mail: \href{mailto:last.author@tum.de}{last.author@tum.de}\\
+    \href{www.ei.tum.de}{www.ei.tum.de}
+  }
+
+  % references
+  \posterbox[TUMBox=TUMGreen, adjusted title=References]{
+    name=refs, column=4, above=contact
+  }{
+    \renewcommand{\section}[2]{}% don't print header
+    \nocite{*}% insert all publications (even if they are not cited)
+    \small
+    \bibliographystyle{unsrt}
+    \bibliography{sample}
+  }
+\end{tcbposter}
+
+\end{document}

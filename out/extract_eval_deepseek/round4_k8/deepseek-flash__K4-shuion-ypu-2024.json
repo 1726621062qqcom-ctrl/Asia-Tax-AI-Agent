@@ -1,0 +1,324 @@
+{
+ "model": "deepseek-flash",
+ "case": "K4-shuion-ypu-2024",
+ "samples": 2,
+ "k": 8,
+ "locate": "retrieval",
+ "patterns": true,
+ "dense": true,
+ "temperature": 0.7,
+ "prompt_version": "2026-10-14c",
+ "rows": [
+  {
+   "path": "roles.ULT.loc",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "“Bright Continental”\nBright Continental Limited, a company incorporated in Hong\nKong and an indirect non-wholly owned subsidiary of the\nCompany;",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 1,
+    "pattern_values": 1
+   },
+   "gold_rank": 2
+  },
+  {
+   "path": "roles.ULT.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "“Bright Continental”\nBright Continental Limited, a company incorporated in Hong\nKong and an indirect non-wholly owned subsidiary of the\nCompany;",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 1,
+    "pattern_values": 1
+   },
+   "gold_rank": 2
+  },
+  {
+   "path": "roles.OP.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "“YPU”\nShanghai Yang Pu Centre Development Co., Ltd.* (上海楊浦\n中央社區發展有限公司), a company incorporated in the PRC\nwith limited liability and a non-wholly owned subsidiary of\nthe Company as at the the Latest Practicable Date;",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 2,
+    "pattern_values": 1
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "roles.OP.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "“YPU”\nShanghai Yang Pu Centre Development Co., Ltd.* (上海楊浦\n中央社區發展有限公司), a company incorporated in the PRC\nwith limited liability and a non-wholly owned subsidiary of\nthe Company as at the the Latest Practicable Date;",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 2,
+    "pattern_values": 1
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "roles.BUYER.loc",
+   "kind": "derived",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "“Ningbo Fund”\nNingbo\nMeishan\nGuo\nYang\nGuo\nSheng\nInvestment\nManagement Partnership (Limited Partnership)* (寧波梅山保\n稅港區國揚果晟投資管理合夥企業（有限合夥）),\na\nlimited\npartnership established under the laws of the PRC;",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 3,
+    "pattern_values": 1
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "kind": "disclosed",
+   "gold": 86.8,
+   "value": null,
+   "status": "conflict",
+   "means": "pattern",
+   "quote": null,
+   "rejected": [
+    "conflict: 100.0 / 86.8"
+   ],
+   "conflict": [
+    {
+     "value": 100.0,
+     "doc": "K4-shuion-2024",
+     "quote": "IMPACTS OF THE TRANSACTIONS\nThe interests of the Group in the Project Companies as at the Latest Practicable Date are held\nthrough its 51% equity interests in Bright Power and Merry Wave (which in turn (directly or\nindirectly) hold 100% of the shares of Bright Continental and Top Victory respectively which in turn\nhold 86.8% and 99% of the equity interests in YPU and KIC respectively).",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    },
+    {
+     "value": 86.8,
+     "doc": "K4-shuion-2024",
+     "quote": "IMPACTS OF THE TRANSACTIONS\nThe interests of the Group in the Project Companies as at the Latest Practicable Date are held\nthrough its 51% equity interests in Bright Power and Merry Wave (which in turn (directly or\nindirectly) hold 100% of the shares of Bright Continental and Top Victory respectively which in turn\nhold 86.8% and 99% of the equity interests in YPU and KIC respectively).",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    }
+   ],
+   "features": {
+    "pattern_hits": 3,
+    "pattern_values": 2
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "holds.ULT>OP.since",
+   "kind": "disclosed",
+   "gold": "2003-08-26",
+   "value": null,
+   "status": "conflict",
+   "means": "model",
+   "quote": null,
+   "rejected": [
+    "conflict: 2009-05-07 / 2003-08-26"
+   ],
+   "conflict": [
+    {
+     "value": "2009-05-07",
+     "doc": "K4-shuion-2024",
+     "quote": "On 7 May 2009, according to the Resolution of the Board of Directors and the provisions of the Amended Articles of Association of the Company, Shanghai Yang Pu Centre Development Co., Ltd. increased its registered capital by US$77,000,000, which was fully contributed by Bright Continental Limited.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "date",
+     "explicit": true
+    },
+    {
+     "value": "2003-08-26",
+     "doc": "K4-shuion-2024",
+     "quote": "Shanghai Yang Pu Centre Development Co., Ltd. (formerly known as Shanghai Yang Pu University Town Centre Development Co., Ltd.* (上海楊浦大學城中央社區發展有限公司)), established on 26 August 2003 with a registered capital of US$30,000,000, which was jointly contributed by Shanghai Yangpu Knowledge Innovation Zone Investment and Development Co., Ltd. and Bright Continental Limited, accounting for 100.00% of the total registered capital.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "date",
+     "explicit": true
+    }
+   ],
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 2,
+    "nulls": 6,
+    "rejects": 0,
+    "agree": 0.125
+   },
+   "gold_rank": 4
+  },
+  {
+   "path": "holds.ULT>OP.cost",
+   "kind": "missing",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 0,
+    "nulls": 8,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "flows.exit.immovable_ratio",
+   "kind": "derived",
+   "gold": 96.86,
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 0,
+    "nulls": 8,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "flows.exit.listed_market_trade",
+   "kind": "derived",
+   "gold": false,
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 0,
+    "nulls": 8,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "present.HOLD",
+   "kind": "derived",
+   "gold": "NONE",
+   "value": "NONE",
+   "status": "correct",
+   "means": "model",
+   "quote": "The interests of the Group in the Project Companies as at the Latest Practicable Date are held through its 51% equity interests in Bright Power and Merry Wave (which in turn (directly or indirectly) hold 100% of the shares of Bright Continental and Top Victory respectively which in turn hold 86.8% a",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 1,
+    "nulls": 7,
+    "rejects": 0,
+    "agree": 0.125,
+    "quote_len": 360,
+    "figures_in_quote": 4,
+    "score": 0.03075
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "present.exit_route",
+   "kind": "disclosed",
+   "gold": "DIRECT",
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 0,
+    "nulls": 8,
+    "rejects": 0
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "event.exit",
+   "kind": "disclosed",
+   "gold": 4706000000.0,
+   "value": 4706000000.0,
+   "status": "correct",
+   "means": "model",
+   "quote": "the 86.8% equity interests in YPU will be transferred from Bright Continental to the\nLimited Partnership at the consideration of approximately RMB4,706,000,000 (equivalent\nto approximately HK$5,159,000,000); and",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 2,
+    "nulls": 6,
+    "rejects": 0,
+    "agree": 0.25,
+    "quote_len": 211,
+    "figures_in_quote": 3,
+    "score": 0.03
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "event.on",
+   "kind": "derived",
+   "gold": "2024-11-27",
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 0,
+    "nulls": 8,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  }
+ ],
+ "usage": {
+  "calls": 24,
+  "prompt_tokens": 13861,
+  "completion_tokens": 8981,
+  "cache_hit_tokens": 3200,
+  "seconds": 107.00016784667969,
+  "retries": 0,
+  "cached": 40
+ },
+ "wall": 42.7,
+ "error": null,
+ "notes": []
+}

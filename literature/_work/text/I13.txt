@@ -1,0 +1,3636 @@
+=== [p.1] ===
+RAG vs. GraphRAG: A Systematic Evaluation and Key Insights
+Haoyu Han
+Michigan State University
+East Lansing, MI, USA
+Li Ma
+Michigan State University
+East Lansing, MI, USA
+Yu Wang
+University of Oregon
+Eugene, OR, USA
+Harry Shomer
+University of Texas at Arlington
+Arlington, TX, USA
+Yongjia Lei
+University of Oregon
+Eugene, OR, USA
+Zhisheng Qi
+University of Oregon
+Eugene, OR, USA
+Kai Guo
+Michigan State University
+East Lansing, MI, USA
+Zhigang Hua
+Meta Platforms, Inc.
+Menlo Park, CA, USA
+Bo Long
+Meta Platforms, Inc.
+Menlo Park, CA, USA
+Hui Liu
+Michigan State University
+East Lansing, MI, USA
+Charu C. Aggarwal
+IBM T.J. Watson Research Center
+Yorktown Heights, NY, USA
+Jiliang Tang
+Michigan State University
+East Lansing, MI, USA
+Abstract
+Retrieval-Augmented Generation (RAG) improves large language
+models (LLMs) by retrieving relevant information from external
+sources and has been widely adopted for text-based tasks. For struc-
+tured data, such as knowledge graphs, Graph Retrieval-Augmented
+Generation (GraphRAG) retrieves and aggregates information along
+graph structures. More recently, GraphRAG has been extended to
+general text settings by organizing unstructured text into graph
+representations, showing promise for reasoning and grounding.
+Despite these advances, existing GraphRAG systems for text data
+are often tailored to specific tasks, datasets, and system designs,
+resulting in heterogeneous evaluation protocols. Consequently, a
+systematic understanding of the relative strengths, limitations, and
+trade-offs between RAG and GraphRAG on widely used text bench-
+marks remains limited. In this paper, we present a comprehensive
+benchmark study comparing RAG and GraphRAG on established
+text-based tasks, including question answering and query-based
+summarization. We introduce a unified evaluation protocol that
+standardizes data preprocessing, retrieval configurations, and gen-
+eration settings, enabling fair and reproducible comparisons. Our re-
+sults highlight the distinct strengths of RAG and GraphRAG across
+different tasks and evaluation perspectives. Building on these find-
+ings, we explore selection and integration strategies that combine
+the strengths of both paradigms, leading to consistent performance
+improvements. We further analyze failure modes, efficiency trade-
+offs, and evaluation biases, and highlight key considerations for
+designing and evaluating retrieval-augmented generation systems.
+Permission to make digital or hard copies of all or part of this work for personal or
+classroom use is granted without fee provided that copies are not made or distributed
+for profit or commercial advantage and that copies bear this notice and the full citation
+on the first page. Copyrights for components of this work owned by others than the
+author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or
+republish, to post on servers or to redistribute to lists, requires prior specific permission
+and/or a fee. Request permissions from permissions@acm.org.
+Conference acronym ’XX, Woodstock, NY
+© 2018 Copyright held by the owner/author(s). Publication rights licensed to ACM.
+ACM ISBN 978-1-4503-XXXX-X/2018/06
+https://doi.org/XXXXXXX.XXXXXXX
+Keywords
+Retrieval-Augmented Generation, GraphRAG, Large Language Mod-
+els, Question Answering, Summarization
+ACM Reference Format:
+Haoyu Han, Li Ma, Yu Wang, Harry Shomer, Yongjia Lei, Zhisheng Qi, Kai
+Guo, Zhigang Hua, Bo Long, Hui Liu, Charu C. Aggarwal, and Jiliang Tang.
+2018. RAG vs. GraphRAG: A Systematic Evaluation and Key Insights. In
+Proceedings of Make sure to enter the correct conference title from your rights
+confirmation email (Conference acronym ’XX). ACM, New York, NY, USA,
+20 pages. https://doi.org/XXXXXXX.XXXXXXX
+1
+Introduction
+Retrieval-Augmented Generation (RAG) has emerged as a practical
+paradigm for improving downstream tasks by retrieving relevant
+knowledge from external data sources. It has been successfully
+deployed in a wide range of real-world applications, including
+healthcare [47], law [41], finance [53], and education [27]. With
+the advent of Large Language Models (LLMs), integrating retrieval
+into generation further improves faithfulness by mitigating halluci-
+nations and enhancing robustness [13, 55]. In most existing RAG
+systems, retrieval is performed over text corpora.
+Graphs provide an explicit representation of relational struc-
+ture and have long been used across domains such as knowledge
+representation, social networks, and biomedical discovery [26, 42,
+43]. Graph Retrieval-Augmented Generation (GraphRAG) has re-
+cently gained attention for retrieving and aggregating information
+from graph-structured data, including knowledge graphs (KGs) and
+molecular graphs [11, 29]. Beyond leveraging existing graphs, an
+emerging line of work extends GraphRAG to text-based tasks by
+constructing graphs from unstructured documents, with reported
+benefits for global summarization [5], planning [23], and reason-
+ing [12]. However, most GraphRAG studies for text are conducted
+under task- and system-specific settings, using bespoke datasets,
+graph construction heuristics, and evaluation protocols. This het-
+erogeneity makes it difficult to draw principled conclusions about
+when and why explicit graph structures help (or hurt) retrieval-
+augmented generation, and obscures practical trade-offs such as
+construction cost, retrieval latency, and storage footprint.
+arXiv:2502.11371v3  [cs.IR]  4 Mar 2026
+=== [p.2] ===
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+Han et al.
+To address this gap, we conduct a controlled and systematic
+benchmark of RAG and GraphRAG on widely used text-based tasks,
+focusing on Question Answering (QA) and Query-based Summa-
+rization. We consider four representative categories of GraphRAG
+systems: (1) KG-based GraphRAG [24], which extracts a KG from
+text and performs retrieval over the KG; (2) Community-based
+GraphRAG [5], which performs retrieval over community struc-
+tures and hierarchical abstractions; (3) Text-centric graph-guided
+RAG [16], which retrieves original text chunks with the assistance
+of a constructed knowledge graph; and (4) Hierarchical summary-
+based GraphRAG [32], which builds hierarchical summaries to en-
+able multi-granular retrieval without relying on explicit KGs. For
+QA, we evaluate both single-hop and multi-hop settings; for sum-
+marization, we consider both single-document and multi-document
+scenarios. Crucially, we introduce a unified evaluation protocol that
+standardizes data preprocessing, retrieval, and generation settings,
+enabling fair and reproducible comparisons across paradigms.
+Our analysis results lead to several key findings. First, RAG and
+GraphRAG exhibit complementary behaviors rather than a
+consistent winner. In QA, RAG performs better on single-hop and
+detail-oriented factual queries, whereas GraphRAG is more effective
+on multi-hop, reasoning-intensive questions. Second, GraphRAG
+design choices matter: for example, community-based global
+search can sacrifice query-specific details, hurting detail-oriented
+QA, while providing more corpus-level aggregation that benefits
+broad or diverse summarization outputs. Third, evaluation pro-
+tocol can change conclusions: we show that LLM-as-a-Judge
+evaluation for summarization can be highly sensitive to the presen-
+tation order of candidate summaries, introducing strong position
+effects that may confound comparisons. Finally, GraphRAG is
+not free: it often incurs higher construction cost, retrieval latency,
+and storage footprint, and its performance can be sensitive to the
+quality (and cost) of graph construction. These findings suggest
+that effective retrieval-augmented generation should not treat RAG
+and GraphRAG as mutually exclusive choices. Motivated by this,
+we study two practical hybrid strategies: Selection, which routes
+queries to RAG or GraphRAG based on query type for efficiency,
+and Integration, which combines evidence from both paradigms to
+maximize performance. Across benchmarks, these strategies yield
+consistent improvements. Our main contributions are as follows:
+• Systematic Benchmark: We present a controlled benchmark
+comparing RAG and multiple GraphRAG variants across QA and
+query-based summarization under a unified evaluation protocol
+(consistent preprocessing, retrieval, and generation settings) for
+fair and reproducible comparison.
+• Strong, Task-Level Findings: We identify clear complemen-
+tarities: RAG is stronger for factual/detail-oriented QA, while
+GraphRAG benefits reasoning-intensive QA and produces more
+corpus-level, diverse summaries, with outcomes strongly affected
+by GraphRAG design choices (e.g., local vs. global search).
+• Hybrid Strategies: We study Selection and Integration strate-
+gies that combine RAG and GraphRAG, achieving consistent im-
+provements and illustrating effectiveness–efficiency trade-offs.
+• Evaluation and Efficiency Analyses: We analyze failure modes,
+construction/retrieval/storage costs, sensitivity to graph con-
+struction quality, and demonstrate strong position effects in LLM-
+as-a-Judge summarization evaluation, highlighting practical con-
+siderations for reliable (Graph)RAG assessment.
+2
+Related Works
+2.1
+Retrieval-Augmented Generation
+Retrieval-Augmented Generation (RAG) has been widely applied
+to enhance Large Language Models (LLMs) by retrieving relevant
+information from external sources, addressing restricted context
+windows, improving factuality, and mitigating hallucinations [7, 9].
+Most RAG systems process text corpora by splitting documents
+into chunks [8]. Given a query, relevant chunks can be retrieved
+via lexical search [30] or semantic similarity search [17]. Beyond
+vanilla retrieval, pre-retrieval processing [25, 56], post-retrieval
+processing [2, 46], and fine-tuning strategies [20] further improve
+effectiveness across tasks such as question answering [48], dialogue
+generation [14], and summarization [15]. Many systems also em-
+ploy reranking and iterative retrieval to refine evidence selection
+and improve answer quality under a fixed context budget. Several
+studies benchmark RAG pipelines and evaluation tools across tasks
+and domains [1, 6, 51]. However, existing work rarely provides a
+controlled comparison between standard RAG and GraphRAG un-
+der unified experimental settings on widely used text benchmarks.
+2.2
+Graph Retrieval-Augmented Generation
+Many real-world scenarios involve graph-structured data, such as
+knowledge graphs (KGs), social graphs, and molecular graphs [26,
+44]. GraphRAG incorporates graph structures into retrieval to ex-
+ploit relational signals among connected nodes [11, 29]. Early work
+primarily studies retrieval over existing KGs for downstream tasks
+such as KG-based QA [35, 50] and fact checking [18]. Graph struc-
+tures can also benefit text-centric retrieval; for example, hyperlink
+graphs between documents can improve retrieval for question an-
+swering [21]. Recent works further explore constructing graphs
+from text to support text-based tasks [11]. One direction builds
+document- or chunk-level graphs to guide retrieval over textual
+units [2, 21]. Another direction constructs entity–relation graphs
+from documents (often with LLM assistance) and retrieves infor-
+mation at multiple abstraction levels, such as local neighborhoods
+or community-level summaries [5, 12]. More recently, text-centric
+and hierarchical approaches use graph-inspired structures with-
+out fully specified entity–relation semantics: RAPTOR constructs
+hierarchical summary structures for multi-granular retrieval [32],
+while HippoRAG and its extensions build entity-linked graphs to
+guide chunk retrieval [10, 16].
+Despite rapid progress, GraphRAG systems for text are often
+evaluated under heterogeneous protocols, with varying graph con-
+struction methods, retrieval configurations, and even evaluation
+criteria. Moreover, graph construction introduces additional costs
+(indexing time, retrieval latency, and storage footprint) and can be
+sensitive to the quality of the construction model, yet these trade-
+offs are not consistently characterized across studies. As a result,
+it remains unclear how GraphRAG compares with standard RAG
+on general text-based benchmarks and what practical trade-offs it
+=== [p.3] ===
+RAG vs. GraphRAG: A Systematic Evaluation and Key Insights
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+entails. This motivates our systematic benchmark evaluation under
+unified experimental settings.
+3
+Evaluation Framework
+In this section, we describe our evaluation framework1 and ex-
+perimental protocol. To ensure fair comparison, we evaluate RAG
+and GraphRAG under identical settings whenever applicable, and
+otherwise follow the default configurations of each method while
+matching key budgets. We decouple retrieval from generation by
+first saving retrieved evidence for each method and then using a
+unified generation script to produce outputs conditioned on the
+saved retrieval results.
+3.1
+RAG Pipeline
+We adopt a standard dense-retrieval RAG pipeline [17]. Given a
+corpus, we segment documents into textual chunks and build an
+index by embedding each chunk into a shared vector space. At
+inference time, we embed the query, retrieve top-ranked chunks
+based on similarity.
+3.2
+GraphRAG Implementations
+GraphRAG designs differ in how structures are constructed and
+how structural information is used during retrieval. In this work,
+we group GraphRAG approaches into four representative classes
+and select representative implementations for each class:
+KG-based GraphRAG. In KG-based GraphRAG [24], a knowl-
+edge graph is constructed from text. Given a query, relevant en-
+tities are identified and aligned to nodes in the KG, and retrieval
+traverses multi-hop neighborhoods to collect relational triplets
+(head, relation, tail) as evidence. We consider two variants: (1) KG-
+GraphRAG (Triplets), which retrieves only triplets, and (2) KG-
+GraphRAG (Triplets+Text), which retrieves both triplets and their
+associated source text. We implement KG-GraphRAG using Lla-
+maIndex [24].2
+Community-based GraphRAG. Community-based GraphRAG [5]
+further organizes the constructed KG into hierarchical communi-
+ties using graph clustering algorithms. Each community is asso-
+ciated with a textual summary/report, where lower-level commu-
+nities capture fine-grained information and higher-level commu-
+nities provide increasingly abstract representations. We evaluate
+two retrieval modes: Local Search retrieves entity neighborhoods
+and lower-level community reports via entity matching, denoted
+as Community-GraphRAG (Local); Global Search retrieves high-
+level community summaries by semantic similarity, denoted as
+Community-GraphRAG (Global). We adopt the implementation of
+Edge et al. [5].3
+Text-centric graph-guided RAG. Text-centric graph-guided meth-
+ods retain original text chunks as the primary retrieval units while
+leveraging graph structures to guide scoring or traversal. We select
+HippoRAG2 [10] as a representative method. HippoRAG2 builds an
+entity-linked graph over chunks and retrieves query-relevant enti-
+ties first, followed by the connected text chunks. Here, the graph
+1https://github.com/haoyuhan1/RAGvsGraphRAG
+2https://www.llamaindex.ai/
+3https://microsoft.github.io/graphrag
+acts as an auxiliary structure guiding chunk retrieval rather than
+the primary retrieval target.
+Hierarchical summary-based GraphRAG. Hierarchical summary-
+based methods construct multi-level hierarchical structures over
+text, where higher-level nodes represent progressively more ab-
+stract summaries of lower-level content. We adopt RAPTOR [32] as
+a representative method. RAPTOR recursively clusters text chunks
+and generates summaries at each level, enabling coarse-to-fine,
+multi-granular retrieval without relying on explicit KGs.
+3.3
+Tasks
+We evaluate all methods on two representative text-based tasks:
+Question Answering and Query-based Summarization, covering
+both single-hop and multi-hop QA, as well as single-document
+and multi-document summarization. For single-document tasks,
+retrieval is restricted to the corresponding document, while for
+multi-document tasks, retrieval is performed over an index con-
+structed from all documents.
+3.4
+Unified Experimental Settings
+To ensure fair comparison across RAG and GraphRAG methods, we
+standardize core settings whenever applicable.
+Graph construction. For GraphRAG methods that require graph
+construction from text (e.g., KG-GraphRAG, Community-GraphRAG,
+and HippoRAG2), graphs are constructed using GPT-4o-mini; re-
+sults with GPT-4o are reported in Appendix L.
+Chunking. We segment documents into chunks of approximately
+256 tokens for all methods.
+Embedding model and retrieval budget. We embed queries,
+chunks, and graph information into a shared vector space using
+OpenAI’s text-embedding-ada-002 model [28], and retrieve top-
+𝑘candidates by semantic similarity, where 𝑘=10 by default.
+Reranking. When reranking is enabled, we apply a cross-encoder
+reranker to reorder retrieved candidates and select the final top-
+𝑘evidence units. We use BAAI/bge-reranker-large [45] as the
+reranker for all methods that support reranking, ensuring consistent
+reranking behavior across systems.
+Iterative retrieval. When iterative retrieval is enabled, we adopt
+IRCoT [36], which interleaves retrieval with intermediate reasoning
+steps.
+Generation backbones. To control for generation capacity, we
+use two open-source instruction-tuned LLMs of different sizes as
+generators: Llama-3.1-8B-Instruct and Llama-3.1-70B-Instruct [4].
+4
+Question Answering
+QA is one of the most widely used tasks for evaluating the perfor-
+mance of RAG systems. To systematically assess the effectiveness
+of RAG and GraphRAG on general QA settings, we evaluate rep-
+resentative methods on widely used datasets and follow standard
+metrics used in prior work.
+4.1
+Datasets and Evaluation Metrics
+To comprehensively evaluate the performance of GraphRAG on
+general QA tasks, we select four widely used datasets that cover
+different perspectives. For the single-hop QA task, we select the
+Natural Questions (NQ) dataset [19]. For the multi-hop QA task,
+=== [p.4] ===
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+Han et al.
+we select HotPotQA [49] and MultiHop-RAG [34] datasets. The
+MultiHop-RAG dataset categorizes queries into four types: Infer-
+ence, Comparison, Temporal, and Null queries. To further analyze
+the performance of RAG and GraphRAG at a finer granularity, we
+also include NovelQA [38], which contains 21 different types of
+queries. For more details, please refer to Appendix A.1. We use Pre-
+cision (P), Recall (R), and F1-score as evaluation metrics for the NQ
+and HotPotQA datasets, while accuracy is used for the MultiHop-
+RAG and NovelQA datasets following their original papers.
+Table 1: Performance comparison (%) on NQ and Hotpot.
+Method
+NQ
+Hotpot
+P
+R
+F1
+P
+R
+F1
+RAG
+71.70
+63.93
+64.78
+62.32
+60.47
+60.04
+RaptorRAG
+66.06
+59.56
+60.04
+63.81
+61.46
+61.31
+KG-GraphRAG (Triplets only)
+40.09
+33.56
+34.28
+26.88
+24.81
+25.02
+KG-GraphRAG (Triplets+Text)
+58.36
+48.93
+50.27
+45.22
+42.85
+42.60
+Community-GraphRAG (Local)
+69.48
+62.54
+63.01
+64.14
+62.08
+61.66
+Community-GraphRAG (Global)
+60.76
+54.99
+54.48
+45.72
+47.60
+45.16
+HippoRAG2
+67.25
+60.42
+61.03
+65.31
+63.26
+63.01
+Table 2: Performance comparison (%) on the MultiHop-RAG.
+Method
+Inference
+Comparison
+Null
+Temporal
+Overall
+RAG
+92.16
+57.59
+96.01
+30.70
+67.02
+RaptorRAG
+91.91
+55.26
+90.03
+45.28
+68.78
+KG-GraphRAG (Triplets only)
+55.76
+22.55
+98.67
+18.70
+41.24
+KG-GraphRAG (Triplets+Text)
+67.40
+34.70
+97.34
+17.15
+48.51
+Community-GraphRAG (Local)
+86.89
+60.63
+80.07
+50.60
+69.01
+Community-GraphRAG (Global)
+89.34
+64.02
+19.27
+53.34
+64.40
+HippoRAG2
+91.54
+58.41
+85.71
+49.91
+70.27
+4.2
+QA Main Results
+We first compare the vanilla versions of RAG and GraphRAG vari-
+ants. Unless otherwise specified, we report main-paper results using
+Llama-3.1-8B-Instruct. Results using Llama-3.1-70B-Instruct are de-
+ferred to the Appendix B. Results on NQ and HotPotQA are shown
+in Table 1, and results on MultiHop-RAG are shown in Table 2.
+Due to space constraints, we report partial results on NovelQA
+in Table 3, with the full breakdown provided in Appendix B. We
+summarize key observations below:
+(1) RAG excels on detailed single-hop queries. RAG achieves
+strong performance on the single-hop benchmark NQ and on
+the single-hop (sh) and detail-oriented (dtl) subsets of NovelQA
+(Tables 1 and 3).
+(2) GraphRAG methods (e.g., HippoRAG2 and Community-
+GraphRAG (Local)) excel on multi-hop queries. They per-
+form best on multi-hop QA benchmarks (HotPotQA and MultiHop-
+RAG) and remain competitive on the multi-hop (mh) subset of
+NovelQA (Tables 1, 2, and 3).
+(3) Community-GraphRAG (Global) often struggles on QA.
+Global search retrieves high-level community summaries, which
+can lose fine-grained evidence and hurt detail-centric QA, as
+reflected on detail-oriented subsets in NovelQA. It also performs
+poorly on Null queries in MultiHop-RAG (ideally answered as
+insufficient information), suggesting increased hallucina-
+tion risk. However, summary-level retrieval can be beneficial
+for Comparison and Temporal queries in MultiHop-RAG which
+require global information.
+(4) KG-based GraphRAG generally underperforms on QA
+due to limited graph coverage. KG-GraphRAG retrieves ev-
+idence primarily from extracted entities and relations, which
+can be incomplete and omit answer-critical information. In
+Appendix C, we show that only about 65.8% of answer enti-
+ties appear in the constructed KG for HotPotQA and 65.5% for
+NQ, highlighting the sensitivity of KG-based retrieval to graph
+construction quality.
+We further provide case studies in Appendix D.
+Rerank
+Vanilla
+IRCoT
+60
+62
+64
+66
+Overall F1 (%)
+NQ (Single-hop QA)
+Rerank
+Vanilla
+IRCoT
+68
+70
+72
+MultiHop-RAG (Multi-hop QA)
+RAG
+RaptorRAG
+Community-GraphRAG (Local)
+HippoRAG2
+Figure 1: Overall QA performance (F1) under different infer-
+ence strategies on NQ and MultiHop-RAG.
+4.3
+QA with Reranking and Iterative Retrieval
+In addition to vanilla retrieval, we examine the impact of rerank-
+ing and iterative retrieval on QA performance. We conduct experi-
+ments on NQ and MultiHop-RAG, representing single-hop and
+multi-hop QA scenarios, respectively. Figure 1 summarizes overall
+performance under different inference strategies.
+Across both datasets, reranking and iterative retrieval generally
+improve performance for all methods compared to vanilla infer-
+ence, indicating that inference-time enhancements provide gains
+beyond the underlying retrieval architecture. On NQ, both rerank-
+ing and iterative retrieval (IRCoT) yield consistent improvements,
+suggesting that such refinements can be beneficial even for predom-
+inantly single-hop QA. Importantly, our earlier conclusion remains
+unchanged: RAG still performs better on single-hop, detail-oriented
+questions, even when equipped with reranking or iterative retrieval.
+On the MultiHop-RAG benchmark, the gains from inference-time
+strategies are more pronounced. Both reranking and IRCoT lead to
+larger absolute improvements than on NQ, highlighting the value
+of progressive evidence refinement in multi-hop settings. Under
+these enhanced inference strategies, GraphRAG methods also typi-
+cally outperform RAG. One exception is Community-GraphRAG
+(Local) with IRCoT, which exhibits notably low performance on
+NULL queries, despite improvements on other categories. This ob-
+servation remains consistent with our main findings.
+Overall, reranking and iterative retrieval are complementary
+to both RAG and GraphRAG, and are particularly important for
+multi-hop QA. Detailed results are reported in Appendix E and F.
+4.4
+Comparative QA Analysis
+In this section, we provide a detailed comparison of RAG and
+GraphRAG, with a focus on their respective strengths and weak-
+nesses. Unless otherwise specified, we consider vanilla RAG and
+Community-GraphRAG (Local), and refer to the latter simply as
+GraphRAG, as it exhibits performance comparable to RAG in our ex-
+periments. We partition all queries into four categories: (1) queries
+=== [p.5] ===
+RAG vs. GraphRAG: A Systematic Evaluation and Key Insights
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+Table 3: Performance comparison (%) on the NovelQA dataset.
+RAG
+RaptorRAG
+chara
+mean
+plot
+relat
+settg
+span
+times
+avg
+chara
+mean
+plot
+relat
+settg
+span
+times
+avg
+mh
+68.75
+52.94
+58.33
+75.28
+92.31
+64.00
+33.96
+47.34
+mh
+60.42
+70.59
+63.89
+65.17
+92.31
+52
+38.24
+48.17
+sh
+69.08
+62.86
+66.11
+75.00
+78.35
+-
+-
+68.73
+sh
+66.45
+58.57
+65.27
+62.50
+74.23
+-
+-
+66.25
+dtl
+64.29
+45.51
+78.57
+10.71
+83.78
+-
+-
+55.28
+dtl
+62.86
+48.88
+80.36
+28.57
+78.38
+-
+-
+57.72
+avg
+67.78
+50.57
+67.37
+60.80
+80.95
+64.00
+33.96
+57.12
+avg
+64.44
+52.83
+67.67
+56.80
+76.87
+52
+38.24
+57.12
+KG-GraphRAG (Triplets+Text)
+Community-GraphRAG (Local)
+chara
+mean
+plot
+relat
+settg
+span
+times
+avg
+chara
+mean
+plot
+relat
+settg
+span
+times
+avg
+mh
+52.08
+52.94
+44.44
+55.06
+69.23
+64.00
+28.61
+38.37
+mh
+68.75
+64.71
+55.56
+67.42
+92.31
+52.00
+35.83
+47.01
+sh
+36.84
+45.71
+40.17
+87.50
+36.08
+-
+-
+39.93
+sh
+59.87
+58.57
+65.69
+87.50
+64.95
+-
+-
+63.43
+dtl
+38.57
+30.90
+42.86
+21.43
+32.43
+-
+-
+33.60
+dtl
+54.29
+37.64
+62.50
+25.00
+70.27
+-
+-
+46.88
+avg
+40.00
+36.23
+41.09
+49.60
+38.10
+64.00
+28.61
+37.80
+avg
+60.00
+44.91
+64.05
+59.20
+68.71
+52.00
+35.83
+53.03
+Community-GraphRAG (Global)
+HippoRAG2
+chara
+mean
+plot
+relat
+settg
+span
+times
+avg
+chara
+mean
+plot
+relat
+settg
+span
+times
+avg
+mh
+54.17
+58.82
+55.56
+56.18
+53.85
+68
+20.59
+34.39
+mh
+58.33
+64.71
+66.67
+69.66
+92.31
+48
+37.17
+47.84
+sh
+45.39
+50.00
+55.65
+87.50
+38.14
+-
+-
+49.65
+sh
+65.79
+65.71
+64.44
+62.50
+72.16
+-
+-
+66.25
+dtl
+28.57
+29.78
+32.14
+87.50
+40.54
+-
+-
+30.89
+dtl
+60.00
+48.88
+69.64
+28.57
+81.08
+-
+-
+55.83
+avg
+42.59
+36.98
+51.66
+52.00
+40.14
+68
+20.59
+39.17
+avg
+62.96
+54.34
+65.56
+60.00
+76.19
+48
+37.17
+56.54
+GraphRAG Correct GraphRAG Wrong
+RAG Correct
+RAG Wrong
+47.2
+7.8
+6.0
+39.0
+(a) NQ
+GraphRAG Correct GraphRAG Wrong
+RAG Correct
+RAG Wrong
+45.4
+9.2
+9.8
+35.6
+(b) HotpotQA
+GraphRAG Correct GraphRAG Wrong
+RAG Correct
+RAG Wrong
+55.4
+11.6
+13.6
+19.4
+(c) MultiHop-RAG
+GraphRAG Correct GraphRAG Wrong
+RAG Correct
+RAG Wrong
+40.0
+17.1
+13.7
+29.1
+(d) NovelQA
+Figure 2: Confusion matrices comparing GraphRAG and RAG
+correctness across datasets using Llama 3.1-8B.
+correctly answered by both methods, (2) queries correctly answered
+only by RAG (RAG-only), (3) queries correctly answered only by
+GraphRAG (GraphRAG-only), and (4) queries incorrectly answered
+by both methods.
+The confusion matrices representing these four groups using the
+Llama 3.1-8B model are shown in Figure 2. Notably, the proportions
+of queries correctly answered exclusively by GraphRAG and RAG
+are significant. For example, 13.6% of queries are GraphRAG-only,
+while 11.6% are RAG-only on MultiHop-RAG dataset. This phe-
+nomenon highlights the complementary properties of RAG and
+GraphRAG. Therefore, leveraging their unique advantages has the
+potential to improve overall performance.
+4.5
+Improving QA Performance
+Building on the complementary properties of RAG and GraphRAG,
+we investigate the following two strategies to enhance overall QA
+performance.
+Strategy 1: RAG vs. GraphRAG Selection. In Section 4.2, we ob-
+serve that RAG generally performs well on single-hop queries and
+those requiring detailed information, while GraphRAG (Community-
+GraphRAG (Local)) excels in multi-hop queries that require rea-
+soning. Therefore, we hypothesize that RAG is well-suited for fact-
+based queries, which rely on direct retrieval and detailed infor-
+mation, whereas GraphRAG is more effective for reasoning-based
+queries that involve chaining multiple facts together. Therefore,
+given a query, we employ a classification mechanism to determine
+whether it is fact-based or reasoning-based. Each query is then
+assigned to either RAG or GraphRAG based on the classification
+results. Specifically, we leverage the in-context learning ability of
+LLMs for classification [3, 40]. Further details and prompts can be
+found in Appendix G. In this strategy, either RAG or GraphRAG is
+selected for each query, and we refer to this strategy as Selection.
+Strategy 2: RAG and GraphRAG Integration. We further explore
+an Integration strategy that jointly leverages the complementary
+retrieval behaviors of RAG and GraphRAG. For each query, both
+methods retrieve relevant information in parallel, and the retrieved
+contexts are concatenated and fed into the generator to produce
+the final answer. We evaluate the effectiveness of the two proposed
+strategies on all selected datasets. For MultiHop-RAG and NovelQA,
+we report overall accuracy, while for NQ and HotPotQA, we use
+F1 score as the evaluation metric. The results are summarized in
+Figure 3 and Appendix H.
+Overall, both strategies consistently improve QA performance
+across datasets. For instance, on MultiHop-RAG with Llama 3.1-70B,
+the Selection and Integration strategies improve the best baseline
+=== [p.6] ===
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+Han et al.
+NQ
+Hotpot
+MultiHop-RAG
+NovelQA
+50
+55
+60
+65
+70
+Performance
+RAG
+GraphRAG
+Selection
+Integration
+(a) Llama3.1-8B
+NQ
+Hotpot
+MultiHop-RAG
+NovelQA
+50
+55
+60
+65
+70
+75
+Performance
+RAG
+GraphRAG
+Selection
+Integration
+(b) Llama3.1-70B
+Figure 3: Overall QA performance comparison of different methods.
+by 1.1% and 6.4%, respectively. When comparing the two strate-
+gies, Integration generally achieves higher performance than Selec-
+tion. However, Selection processes each query using only a single
+method, making it more computationally efficient. In contrast, Inte-
+gration requires running both RAG and GraphRAG for every query,
+leading to higher computational cost.
+Table 4: The time and storage analysis on MultiHop-RAG.
+Method
+Construction Time (s)
+Retrieval time (s)
+Storage
+RAG
+135
+1724
+127MB
+KG-GraphRAG
+7702
+14434
+117MB
+Community-GraphRAG
+5560
+1249
+165MB
+4.6
+Computation and Storage Analysis
+In this subsection, we analyze the computational and storage trade-
+offs among RAG, KG-GraphRAG, and Community-GraphRAG. Specif-
+ically, we report construction time, retrieval latency, and storage
+footprint on the MultiHop-RAG dataset. The results are summarized
+in Table 4. Results for additional datasets and tasks are provided in
+Appendix M. From the results, we have the following observations:
+• Construction time: Both GraphRAG variants incur substan-
+tially higher construction cost than RAG, as they require addi-
+tional graph construction and preprocessing.
+• Retrieval time: KG-GraphRAG exhibits the highest retrieval
+latency, primarily due to LLM-based entity expansion and multi-
+step graph traversal. In contrast, Community-GraphRAG achieves
+the lowest retrieval latency by relying on direct community-level
+matching, even outperforming vanilla RAG.
+• Storage: Community-GraphRAG requires the largest storage
+footprint, as it stores both community representations and asso-
+ciated summaries. KG-GraphRAG is more storage-efficient than
+Community-GraphRAG and RAG, reflecting a trade-off between
+information richness and storage cost.
+We additionally report the number of retrieved tokens for each
+method and evaluate their performance under a fixed retrieval
+token budget, with detailed results provided in the Appendix M.
+4.7
+Graph Construction Model
+In this subsection, we analyze how graph construction quality af-
+fects GraphRAG performance. We focus on Community-GraphRAG
+(Local) as a representative GraphRAG variant and vary the LLM
+used for graph construction, while keeping the retrieval and gener-
+ation components fixed. We evaluate downstream QA performance
+across multiple tasks and datasets, with detailed results reported in
+Appendix L. Table 28 summarizes results on MultiHop-RAG across
+different query categories.
+Table 5: Impact of graph construction models on the
+MultiHop-RAG dataset using Llama 3.1–70B-Instruct.
+Graph Construction
+Inference
+Comparison
+NULL
+Temporal
+Overall
+None (RAG)
+94.85
+56.31
+91.36
+25.73
+65.77
+GPT-4o-mini
+92.03
+60.16
+88.70
+49.06
+71.17
+GPT-4o
+93.63
+66.59
+81.06
+58.49
+75.08
+We observe that stronger graph construction models consis-
+tently improve QA performance, especially on reasoning-intensive
+queries such as Comparison and Temporal. While omitting explicit
+graph construction (i.e., RAG) yields strong performance on Infer-
+ence and NULL queries, it performs poorly on multi-hop reasoning
+tasks. In contrast, graphs constructed using more capable LLMs,
+such as GPT-4o, substantially improve performance on these chal-
+lenging categories, leading to the highest overall accuracy. These
+results indicate that GraphRAG performance is sensitive to graph
+construction quality. However, stronger construction models also
+incur higher computational cost, highlighting a trade-off between
+graph quality and system efficiency when selecting LLMs for graph
+construction.
+Summary. Across our QA experiments, we find that RAG and
+GraphRAG exhibit complementary strengths rather than a clear
+dominance. RAG consistently performs well on single-hop, fact-
+centric queries that require precise retrieval of detailed information,
+while GraphRAG excels on reasoning-intensive, multi-hop queries
+by explicitly modeling relationships among entities. However, these
+benefits come with different computational and storage trade-offs,
+and GraphRAG performance is further influenced by the quality of
+graph construction. Motivated by these observations, we explore
+selection and integration strategies that combine the strengths
+of both paradigms, leading to consistent improvements in overall
+QA performance. Together, these results suggest that effective QA
+systems should adaptively balance retrieval precision, reasoning
+capability, and system efficiency, rather than relying on a single
+retrieval paradigm.
+=== [p.7] ===
+RAG vs. GraphRAG: A Systematic Evaluation and Key Insights
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+5
+Query-Based Summarization
+Query-based summarization is a widely used benchmark for evalu-
+ating retrieval-augmented generation (RAG) systems [30, 52]. Re-
+cent work has also demonstrated the potential of GraphRAG for
+summarization tasks [5]. However, Edge et al. [5] focus primarily
+on global summarization and rely on LLM-as-a-Judge [57] for evalu-
+ation. As shown in Section 5.3, LLM-as-a-Judge introduces position
+bias in summarization evaluation, which can compromise result
+reliability. Despite the growing interest in GraphRAG, a systematic
+comparison between RAG and GraphRAG on general query-based
+summarization tasks across widely used datasets remains unex-
+plored. To address this gap, we conduct a comprehensive evaluation
+in this section using standard benchmarks and evaluation metrics.
+5.1
+Datasets and Evaluation Metrics
+We evaluate RAG and GraphRAG on four widely used query-based
+summarization datasets: two single-document datasets, SQuAL-
+ITY [37] and QMSum [58], and two multi-document datasets, ODSum-
+story and ODSum-meeting [59]. Unlike the LLM-generated global
+queries used in the unreleased datasets of Edge et al. [5], most
+queries in the selected datasets focus on specific roles or events.
+Since these datasets contain one or more human-written ground
+truth summaries for each query, we leverage ROUGE-2 [22] and
+BERTScore [54] as evaluation metrics to measure lexical and seman-
+tic similarity between the predicted and ground truth summaries.
+5.2
+Summarization Experimental Results
+We evaluate on vanilla RAG and GraphRAG methods, along with
+the Integration strategy discussed in Section 4.5. The results of
+Llama3.1-8B model on Query-based single document summariza-
+tion and multiple document summarization are shown in Table 6
+and Table 7, respectively. The results of Llama3.1-70B are shown
+in Appendix I. Based on these results, we can make the following
+observations:
+(1) RAG, RaptorRAG, and HippoRAG2 generally performs
+well on query-based summarization tasks, primarily be-
+cause they retrieve original text chunks that are more closely
+aligned with ground truth.
+(2) KG-based GraphRAG benefit from combining triplets
+with their corresponding text. This improves performance
+by incorporating more details, making predictions closer to the
+human-written ground truth summaries.
+(3) Community-based GraphRAG performs better with the
+Local search method. Local search retrieves entities, relations,
+and low-level communities, while the Global search method
+retrieves only high-level summaries. This demonstrates the
+importance of detailed information in the selected datasets.
+(4) The Integration strategy often performs comparably to
+RAG alone, suggesting that simply concatenating RAG and
+GraphRAG evidence does not reliably improve alignment with
+detailed ground-truth summaries.
+5.3
+Position Bias in Existing Evaluation
+Based on the results in Section 5.2, Community-based GraphRAG,
+particularly with global search, generally underperforms RAG on
+the selected datasets. This observation contrasts with the findings
+of Edge et al. [5], where Community-based GraphRAG with global
+search outperformed both local search and RAG.
+This discrepancy can be attributed to two key differences be-
+tween our evaluation and that of Edge et al. [5]. First, their study
+focuses on global summarization, which aims to capture high-level
+information from an entire corpus, whereas the datasets used in our
+evaluation involve queries targeting specific roles or events. Second,
+Edge et al. [5] evaluate performance using LLM-as-a-Judge without
+ground-truth references, while we evaluate generated summaries
+against human-written references using ROUGE and BERTScore.
+These reference-based metrics emphasize factual coverage and fine-
+grained details, which may favor different retrieval behaviors.
+To further investigate this difference, we follow Edge et al. [5]
+and evaluate RAG and GraphRAG using LLM-as-a-Judge from two
+perspectives: Comprehensiveness and Diversity. Comprehensiveness
+measures how well a summary covers the details required by the
+query, while Diversity assesses whether the summary provides a
+broad and globally inclusive view. Prompt details are provided in
+Appendix J. For each query, we present summaries generated by
+RAG and GraphRAG to the LLM and ask it to select the better one
+under each criterion.
+To examine potential position effects in LLM-as-a-Judge evalua-
+tions, we consider two presentation orders: Order 1 (O1), where the
+RAG summary appears first, and Order 2 (O2), where the GraphRAG
+summary appears first. For each setting, we report the proportion
+of times each method is preferred by the LLM, where a higher
+proportion indicates stronger performance under the given pre-
+sentation order. Figure 4 presents results comparing RAG with
+GraphRAG (Local) and GraphRAG (Global) on the QMSum and
+ODSum-story datasets; additional results are included in Appen-
+dix K. We make two key observations. First, position bias [33, 39]
+is clearly present in LLM-as-a-Judge evaluations for summa-
+rization, as reversing the order of presented summaries leads to
+substantially different, and in some cases opposite, judgments. This
+effect is especially pronounced for the comparison between RAG
+and GraphRAG (Local), as shown in Figures 4a and 4c. Second, in
+comparisons between RAG and GraphRAG (Global), RAG is consis-
+tently preferred in terms of Comprehensiveness, while GraphRAG
+(Global) is favored for Diversity (Figures 4b and 4d). This suggests
+that Community-based GraphRAG with global search empha-
+sizes corpus-level coverage, whereas RAG is more effective
+at capturing fine-grained, query-specific details.
+Finally, we report additional summarization results with rerank-
+ing and iterative retrieval in Appendix E and F. We also provide
+a detailed analysis of indexing time, retrieval latency, generation
+cost, and token and storage usage for both methods in Appendix M.
+Furthermore, we examine graph construction with different LLMs
+for summarization tasks in Appendix L.
+Summary. Across query-based summarization benchmarks, RAG
+and GraphRAG exhibit different generation characteristic. Under
+reference-based metrics, RAG typically better matches detailed,
+query-specific ground-truth summaries, whereas GraphRAG, es-
+pecially community-based global retrieval, tends to produce more
+corpus-level and diverse summaries that can deviate from fine-
+grained details. We also find that LLM-as-a-Judge evaluation can
+be sensitive to presentation order, raising reliability concerns for
+judge-based comparisons. Overall, these results highlight the need
+=== [p.8] ===
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+Han et al.
+Table 6: The performance of query-based single document summarization task using Llama 3.1-8B.
+Method
+SQuALITY
+QMSum
+ROUGE-2
+BERTScore
+ROUGE-2
+BERTScore
+P
+R
+F1
+P
+R
+F1
+P
+R
+F1
+P
+R
+F1
+RAG
+15.09
+8.74
+10.08
+74.54
+81.00
+77.62
+21.50
+3.80
+6.32
+81.03
+84.45
+82.69
+RaptorRAG
+14.88
+8.42
+9.81
+74.55
+81.20
+77.71
+20.38
+4.17
+6.68
+81.64
+84.57
+83.07
+KG-GraphRAG (Triplets only)
+11.99
+6.16
+7.41
+82.46
+84.30
+83.17
+13.71
+2.55
+4.15
+80.16
+82.96
+81.52
+KG-GraphRAG (Triplets+Text)
+15.00
+9.48
+10.52
+84.37
+85.88
+84.92
+16.83
+3.32
+5.38
+80.92
+83.64
+82.25
+Community-GraphRAG (Local)
+15.82
+8.64
+10.10
+83.93
+85.84
+84.66
+20.54
+3.35
+5.64
+80.63
+84.13
+82.34
+Community-GraphRAG (Global)
+10.23
+6.21
+6.99
+82.68
+84.26
+83.30
+10.54
+1.97
+3.23
+79.79
+82.47
+81.10
+HippoRAG2
+15.07
+8.95
+10.20
+74.60
+81.24
+77.75
+21.35
+4.01
+6.60
+81.44
+84.63
+83.00
+Integration
+15.69
+9.32
+10.67
+74.56
+81.22
+77.73
+21.97
+3.80
+6.34
+80.89
+84.47
+82.63
+Table 7: The performance of query-based multiple document summarization task using Llama3.1-8B.
+Method
+ODSum-story
+ODSum-meeting
+ROUGE-2
+BERTScore
+ROUGE-2
+BERTScore
+P
+R
+F1
+P
+R
+F1
+P
+R
+F1
+P
+R
+F1
+RAG
+15.39
+8.44
+9.81
+83.87
+85.74
+84.57
+15.50
+6.43
+8.77
+83.12
+85.84
+84.45
+RaptorRAG
+14.69
+8.47
+9.62
+83.87
+85.76
+84.58
+14.85
+6.21
+8.44
+82.66
+85.52
+84.06
+KG-GraphRAG (Triplets only)
+11.02
+5.56
+6.62
+82.09
+83.91
+82.77
+11.64
+4.87
+6.58
+81.13
+84.32
+82.69
+KG-GraphRAG (Triplets+Text)
+9.19
+5.82
+6.22
+79.39
+83.30
+81.03
+11.97
+4.97
+6.72
+81.50
+84.41
+82.92
+Community-GraphRAG (Local)
+13.84
+7.19
+8.49
+83.19
+85.07
+83.90
+15.65
+5.66
+8.02
+82.44
+85.54
+83.96
+Community-GraphRAG (Global)
+9.40
+4.47
+5.46
+81.46
+83.54
+82.30
+11.44
+3.89
+5.59
+81.20
+84.50
+82.81
+HippoRAG2
+15.56
+8.43
+9.82
+83.70
+85.71
+84.46
+15.91
+6.09
+8.51
+82.43
+85.55
+83.95
+Integration
+14.77
+8.55
+9.53
+83.73
+85.56
+84.40
+15.69
+6.15
+8.51
+82.87
+85.81
+84.31
+Comprehensiveness
+Diversity
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+Proportion
+RAG-Order 1
+GraphRAG-Local-Order 1
+RAG-Order 2
+GraphRAG-Local-Order 2
+(a) QMSum Local
+Comprehensiveness
+Diversity
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+Proportion
+RAG-Order 1
+GraphRAG-Gloabl-Order 1
+RAG-Order 2
+GraphRAG-Gloabl-Order 2
+(b) QMSum Global
+Comprehensiveness
+Diversity
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+Proportion
+RAG-Order 1
+GraphRAG-Local-Order 1
+RAG-Order 2
+GraphRAG-Local-Order 2
+(c) ODSum-story Local
+Comprehensiveness
+Diversity
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+Proportion
+RAG-Order 1
+GraphRAG-Gloabl-Order 1
+RAG-Order 2
+GraphRAG-Gloabl-Order 2
+(d) ODSum-story Global
+Figure 4: Comparison of LLM-as-a-Judge evaluations for RAG and GraphRAG. "Local" refers to the evaluation of RAG vs.
+GraphRAG-Local, while "Global" refers to RAG vs. GraphRAG-Global.
+to balance detail fidelity, diversity, evaluation reliability, and system
+cost when applying (Graph)RAG to query-based summarization.
+6
+Conclusion
+This work presents a unified benchmark evaluation of RAG and
+GraphRAG across both question answering and query-based sum-
+marization, clarifying when explicit graph structures help, and
+when they do not, under controlled settings. Our analyses reveal
+strong task-dependent behaviors: RAG is consistently effective for
+single-hop, detail-oriented queries that require precise evidence,
+whereas GraphRAG is more advantageous for multi-hop, reasoning-
+intensive QA and tends to produce more corpus-level, diverse sum-
+maries. Motivated by these findings, we study two hybrid strategies,
+Selection and Integration, that combine the strengths of both
+paradigms and improve QA performance. Beyond effectiveness,
+we highlight practical challenges that limit current GraphRAG
+systems, including incomplete or noisy graph construction, addi-
+tional computation and storage overhead, and evaluation artifacts
+such as position effects in LLM-as-a-Judge for summarization. To-
+gether, these observations point toward the next generation of RAG
+systems: approaches that can construct and refine graphs reliably,
+adapt retrieval and aggregation to query needs, and deliver stronger
+reasoning benefits under realistic efficiency constraints.
+=== [p.9] ===
+RAG vs. GraphRAG: A Systematic Evaluation and Key Insights
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+References
+[1] Jiawei Chen, Hongyu Lin, Xianpei Han, and Le Sun. 2024. Benchmarking large
+language models in retrieval-augmented generation. In Proceedings of the AAAI
+Conference on Artificial Intelligence, Vol. 38. 17754–17762.
+[2] Jialin Dong, Bahare Fatemi, Bryan Perozzi, Lin F Yang, and Anton Tsitsulin. 2024.
+Don’t Forget to Connect! Improving RAG with Graph-based Reranking. arXiv
+preprint arXiv:2405.18414 (2024).
+[3] Qingxiu Dong, Lei Li, Damai Dai, Ce Zheng, Jingyuan Ma, Rui Li, Heming Xia,
+Jingjing Xu, Zhiyong Wu, Tianyu Liu, et al. 2022. A survey on in-context learning.
+arXiv preprint arXiv:2301.00234 (2022).
+[4] Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Kadian, Ahmad
+Al-Dahle, Aiesha Letman, Akhil Mathur, Alan Schelten, Amy Yang, Angela Fan,
+et al. 2024. The llama 3 herd of models. arXiv preprint arXiv:2407.21783 (2024).
+[5] Darren Edge, Ha Trinh, Newman Cheng, Joshua Bradley, Alex Chao, Apurva
+Mody, Steven Truitt, and Jonathan Larson. 2024. From local to global: A graph
+rag approach to query-focused summarization. arXiv preprint arXiv:2404.16130
+(2024).
+[6] Shahul Es, Jithin James, Luis Espinosa-Anke, and Steven Schockaert. 2023. Ra-
+gas: Automated evaluation of retrieval augmented generation. arXiv preprint
+arXiv:2309.15217 (2023).
+[7] Wenqi Fan, Yujuan Ding, Liangbo Ning, Shijie Wang, Hengyun Li, Dawei Yin,
+Tat-Seng Chua, and Qing Li. 2024. A survey on rag meeting llms: Towards
+retrieval-augmented large language models. In Proceedings of the 30th ACM
+SIGKDD Conference on Knowledge Discovery and Data Mining. 6491–6501.
+[8] Paulo Finardi, Leonardo Avila, Rodrigo Castaldoni, Pedro Gengo, Celio Larcher,
+Marcos Piau, Pablo Costa, and Vinicius Caridá. 2024. The Chronicles of RAG: The
+Retriever, the Chunk and the Generator. arXiv preprint arXiv:2401.07883 (2024).
+[9] Yunfan Gao, Yun Xiong, Xinyu Gao, Kangxiang Jia, Jinliu Pan, Yuxi Bi, Yi Dai,
+Jiawei Sun, and Haofen Wang. 2023. Retrieval-augmented generation for large
+language models: A survey. arXiv preprint arXiv:2312.10997 (2023).
+[10] Bernal Jiménez Gutiérrez, Yiheng Shu, Weijian Qi, Sizhe Zhou, and Yu Su. 2025.
+From rag to memory: Non-parametric continual learning for large language
+models. arXiv preprint arXiv:2502.14802 (2025).
+[11] Haoyu Han, Yu Wang, Harry Shomer, Kai Guo, Jiayuan Ding, Yongjia Lei, Ma-
+hantesh Halappanavar, Ryan A Rossi, Subhabrata Mukherjee, Xianfeng Tang, et al.
+2024. Retrieval-augmented generation with graphs (graphrag). arXiv preprint
+arXiv:2501.00309 (2024).
+[12] Haoyu Han, Yaochen Xie, Hui Liu, Xianfeng Tang, Sreyashi Nag, William Head-
+den, Yang Li, Chen Luo, Shuiwang Ji, Qi He, et al. 2025. Reasoning with Graphs:
+Structuring Implicit Knowledge to Enhance LLMs Reasoning. arXiv preprint
+arXiv:2501.07845 (2025).
+[13] Lei Huang, Weijiang Yu, Weitao Ma, Weihong Zhong, Zhangyin Feng, Haotian
+Wang, Qianglong Chen, Weihua Peng, Xiaocheng Feng, Bing Qin, et al. 2023. A
+survey on hallucination in large language models: Principles, taxonomy, chal-
+lenges, and open questions. arXiv preprint arXiv:2311.05232 (2023).
+[14] Gautier Izacard, Patrick Lewis, Maria Lomeli, Lucas Hosseini, Fabio Petroni,
+Timo Schick, Jane Dwivedi-Yu, Armand Joulin, Sebastian Riedel, and Edouard
+Grave. 2023. Atlas: Few-shot learning with retrieval augmented language models.
+Journal of Machine Learning Research 24, 251 (2023), 1–43.
+[15] Zhengbao Jiang, Frank F Xu, Luyu Gao, Zhiqing Sun, Qian Liu, Jane Dwivedi-Yu,
+Yiming Yang, Jamie Callan, and Graham Neubig. 2023. Active retrieval augmented
+generation. arXiv preprint arXiv:2305.06983 (2023).
+[16] Bernal Jimenez Gutierrez, Yiheng Shu, Yu Gu, Michihiro Yasunaga, and Yu Su.
+2024. Hipporag: Neurobiologically inspired long-term memory for large language
+models. Advances in Neural Information Processing Systems 37 (2024), 59532–
+59569.
+[17] Vladimir Karpukhin, Barlas Oğuz, Sewon Min, Patrick Lewis, Ledell Wu, Sergey
+Edunov, Danqi Chen, and Wen-tau Yih. 2020. Dense passage retrieval for open-
+domain question answering. arXiv preprint arXiv:2004.04906 (2020).
+[18] Jiho Kim, Sungjin Park, Yeonsu Kwon, Yohan Jo, James Thorne, and Edward
+Choi. 2023. FactKG: Fact verification via reasoning on knowledge graphs. arXiv
+preprint arXiv:2305.06590 (2023).
+[19] Tom Kwiatkowski, Jennimaria Palomaki, Olivia Redfield, Michael Collins, Ankur
+Parikh, Chris Alberti, Danielle Epstein, Illia Polosukhin, Jacob Devlin, Kenton
+Lee, et al. 2019. Natural questions: a benchmark for question answering research.
+Transactions of the Association for Computational Linguistics 7 (2019), 453–466.
+[20] Xinze Li, Zhenghao Liu, Chenyan Xiong, Shi Yu, Yu Gu, Zhiyuan Liu, and Ge Yu.
+2023. Structure-Aware Language Model Pretraining Improves Dense Retrieval
+on Structured Data. arXiv preprint arXiv:2305.19912 (2023).
+[21] Yongqi Li, Wenjie Li, and Liqiang Nie. 2022. Dynamic graph reasoning for con-
+versational open-domain question answering. ACM Transactions on Information
+Systems (TOIS) 40, 4 (2022), 1–24.
+[22] Chin-Yew Lin. 2004. Rouge: A package for automatic evaluation of summaries.
+In Text summarization branches out. 74–81.
+[23] Fangru Lin, Emanuele La Malfa, Valentin Hofmann, Elle Michelle Yang, Anthony
+Cohn, and Janet B Pierrehumbert. 2024. Graph-enhanced Large Language Models
+in Asynchronous Plan Reasoning. arXiv preprint arXiv:2402.02805 (2024).
+[24] Jerry Liu. 2022. LlamaIndex. doi:10.5281/zenodo.1234
+[25] Xinbei Ma, Yeyun Gong, Pengcheng He, Hai Zhao, and Nan Duan. 2023.
+Query rewriting for retrieval-augmented large language models. arXiv preprint
+arXiv:2305.14283 (2023).
+[26] Yao Ma and Jiliang Tang. 2021. Deep learning on graphs. Cambridge University
+Press.
+[27] Fatma Miladi, Valéry Psyché, and Daniel Lemire. 2024. Leveraging GPT-4 for
+Accuracy in Education: A Comparative Study on Retrieval-Augmented Genera-
+tion in MOOCs. In International Conference on Artificial Intelligence in Education.
+Springer, 427–434.
+[28] Zach Nussbaum, John X Morris, Brandon Duderstadt, and Andriy Mulyar. 2024.
+Nomic embed: Training a reproducible long context text embedder. arXiv preprint
+arXiv:2402.01613 (2024).
+[29] Boci Peng, Yun Zhu, Yongchao Liu, Xiaohe Bo, Haizhou Shi, Chuntao Hong, Yan
+Zhang, and Siliang Tang. 2024. Graph retrieval-augmented generation: A survey.
+arXiv preprint arXiv:2408.08921 (2024).
+[30] Ori Ram, Yoav Levine, Itay Dalmedigos, Dor Muhlgay, Amnon Shashua, Kevin
+Leyton-Brown, and Yoav Shoham. 2023. In-context retrieval-augmented language
+models. Transactions of the Association for Computational Linguistics 11 (2023),
+1316–1331.
+[31] Keshav Santhanam, Omar Khattab, Jon Saad-Falcon, Christopher Potts, and Matei
+Zaharia. 2021. Colbertv2: Effective and efficient retrieval via lightweight late
+interaction. arXiv preprint arXiv:2112.01488 (2021).
+[32] Parth Sarthi, Salman Abdullah, Aditi Tuli, Shubh Khanna, Anna Goldie, and
+Christopher D Manning. 2024. Raptor: Recursive abstractive processing for
+tree-organized retrieval. In The Twelfth International Conference on Learning
+Representations.
+[33] Lin Shi, Chiyu Ma, Wenhua Liang, Weicheng Ma, and Soroush Vosoughi. 2024.
+Judging the judges: A systematic investigation of position bias in pairwise com-
+parative assessments by llms. arXiv preprint arXiv:2406.07791 (2024).
+[34] Yixuan Tang and Yi Yang. 2024.
+Multihop-rag: Benchmarking retrieval-
+augmented generation for multi-hop queries. arXiv preprint arXiv:2401.15391
+(2024).
+[35] Yijun Tian, Huan Song, Zichen Wang, Haozhu Wang, Ziqing Hu, Fang Wang,
+Nitesh V Chawla, and Panpan Xu. 2024. Graph neural prompting with large
+language models. In Proceedings of the AAAI Conference on Artificial Intelligence,
+Vol. 38. 19080–19088.
+[36] Harsh Trivedi, Niranjan Balasubramanian, Tushar Khot, and Ashish Sabharwal.
+2022. Interleaving retrieval with chain-of-thought reasoning for knowledge-
+intensive multi-step questions. arXiv preprint arXiv:2212.10509 (2022).
+[37] Alex Wang, Richard Yuanzhe Pang, Angelica Chen, Jason Phang, and Samuel R
+Bowman. 2022. Squality: Building a long-document summarization dataset the
+hard way. arXiv preprint arXiv:2205.11465 (2022).
+[38] Cunxiang Wang, Ruoxi Ning, Boqi Pan, Tonghui Wu, Qipeng Guo, Cheng Deng,
+Guangsheng Bao, Qian Wang, and Yue Zhang. 2024. Novelqa: A benchmark for
+long-range novel question answering. arXiv preprint arXiv:2403.12766 (2024).
+[39] Ziqi Wang, Hanlin Zhang, Xiner Li, Kuan-Hao Huang, Chi Han, Shuiwang Ji,
+Sham M Kakade, Hao Peng, and Heng Ji. 2024. Eliminating position bias of
+language models: A mechanistic approach. arXiv preprint arXiv:2407.01100 (2024).
+[40] Jerry Wei, Jason Wei, Yi Tay, Dustin Tran, Albert Webson, Yifeng Lu, Xinyun
+Chen, Hanxiao Liu, Da Huang, Denny Zhou, et al. 2023. Larger language models
+do in-context learning differently. arXiv preprint arXiv:2303.03846 (2023).
+[41] Nirmalie Wiratunga, Ramitha Abeyratne, Lasal Jayawardena, Kyle Martin, Stew-
+art Massie, Ikechukwu Nkisi-Orji, Ruvan Weerasinghe, Anne Liret, and Bruno
+Fleisch. 2024. CBR-RAG: case-based reasoning for retrieval augmented gen-
+eration in LLMs for legal question answering. In International Conference on
+Case-Based Reasoning. Springer, 445–460.
+[42] Yaozu Wu, Yankai Chen, Zhishuai Yin, Weiping Ding, and Irwin King. 2023.
+A survey on graph embedding techniques for biomedical data: Methods and
+applications. Information Fusion 100 (2023), 101909.
+[43] Zonghan Wu, Shirui Pan, Fengwen Chen, Guodong Long, Chengqi Zhang, and
+S Yu Philip. 2020. A comprehensive survey on graph neural networks. IEEE
+transactions on neural networks and learning systems 32, 1 (2020), 4–24.
+[44] Feng Xia, Ke Sun, Shuo Yu, Abdul Aziz, Liangtian Wan, Shirui Pan, and Huan
+Liu. 2021. Graph learning: A survey. IEEE Transactions on Artificial Intelligence 2,
+2 (2021), 109–127.
+[45] Shitao Xiao, Zheng Liu, Peitian Zhang, and Niklas Muennighoff. 2023.
+C-Pack: Packaged Resources To Advance General Chinese Embedding.
+arXiv:2309.07597 [cs.CL]
+[46] Fangyuan Xu, Weijia Shi, and Eunsol Choi. 2023. Recomp: Improving retrieval-
+augmented lms with compression and selective augmentation. arXiv preprint
+arXiv:2310.04408 (2023).
+[47] Ran Xu, Wenqi Shi, Yue Yu, Yuchen Zhuang, Bowen Jin, May D Wang, Joyce C Ho,
+and Carl Yang. 2024. Ram-ehr: Retrieval augmentation meets clinical predictions
+on electronic health records. arXiv preprint arXiv:2403.00815 (2024).
+[48] Shi-Qi Yan, Jia-Chen Gu, Yun Zhu, and Zhen-Hua Ling. 2024. Corrective retrieval
+augmented generation. arXiv preprint arXiv:2401.15884 (2024).
+=== [p.10] ===
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+Han et al.
+[49] Zhilin Yang, Peng Qi, Saizheng Zhang, Yoshua Bengio, William W Cohen, Ruslan
+Salakhutdinov, and Christopher D Manning. 2018. HotpotQA: A dataset for di-
+verse, explainable multi-hop question answering. arXiv preprint arXiv:1809.09600
+(2018).
+[50] Michihiro Yasunaga, Hongyu Ren, Antoine Bosselut, Percy Liang, and Jure
+Leskovec. 2021. QA-GNN: Reasoning with language models and knowledge
+graphs for question answering. arXiv preprint arXiv:2104.06378 (2021).
+[51] Hao Yu, Aoran Gan, Kai Zhang, Shiwei Tong, Qi Liu, and Zhaofeng Liu. 2024.
+Evaluation of retrieval-augmented generation: A survey. In CCF Conference on
+Big Data. Springer, 102–120.
+[52] Zichun Yu, Chenyan Xiong, Shi Yu, and Zhiyuan Liu. 2023. Augmentation-
+adapted retriever improves generalization of language models as generic plug-in.
+arXiv preprint arXiv:2305.17331 (2023).
+[53] Boyu Zhang, Hongyang Yang, Tianyu Zhou, Muhammad Ali Babar, and Xiao-
+Yang Liu. 2023. Enhancing financial sentiment analysis via retrieval augmented
+large language models. In Proceedings of the fourth ACM international conference
+on AI in finance. 349–356.
+[54] Tianyi Zhang, Varsha Kishore, Felix Wu, Kilian Q Weinberger, and Yoav
+Artzi. 2019. Bertscore: Evaluating text generation with bert. arXiv preprint
+arXiv:1904.09675 (2019).
+[55] Wayne Xin Zhao, Kun Zhou, Junyi Li, Tianyi Tang, Xiaolei Wang, Yupeng Hou,
+Yingqian Min, Beichen Zhang, Junjie Zhang, Zican Dong, et al. 2023. A survey
+of large language models. arXiv preprint arXiv:2303.18223 (2023).
+[56] Huaixiu Steven Zheng, Swaroop Mishra, Xinyun Chen, Heng-Tze Cheng, Ed H
+Chi, Quoc V Le, and Denny Zhou. 2023. Take a step back: Evoking reasoning via
+abstraction in large language models. arXiv preprint arXiv:2310.06117 (2023).
+[57] Lianmin Zheng, Wei-Lin Chiang, Ying Sheng, Siyuan Zhuang, Zhanghao Wu,
+Yonghao Zhuang, Zi Lin, Zhuohan Li, Dacheng Li, Eric Xing, et al. 2023. Judging
+llm-as-a-judge with mt-bench and chatbot arena. Advances in Neural Information
+Processing Systems 36 (2023), 46595–46623.
+[58] Ming Zhong, Da Yin, Tao Yu, Ahmad Zaidi, Mutethia Mutuma, Rahul Jha,
+Ahmed Hassan Awadallah, Asli Celikyilmaz, Yang Liu, Xipeng Qiu, et al. 2021.
+QMSum: A new benchmark for query-based multi-domain meeting summariza-
+tion. arXiv preprint arXiv:2104.05938 (2021).
+[59] Yijie Zhou, Kejian Shi, Wencai Zhang, Yixin Liu, Yilun Zhao, and Arman Cohan.
+2023. Odsum: New benchmarks for open domain multi-document summarization.
+arXiv preprint arXiv:2309.08960 (2023).
+=== [p.11] ===
+RAG vs. GraphRAG: A Systematic Evaluation and Key Insights
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+Appendix
+A Dataset . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+12
+A.1
+Question Answering
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+12
+A.2
+Query-based Summarization .
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+12
+B
+More results on QA datasets . . . . . . . . . . . . . . . .
+12
+B.1
+Results with LLaMA 3.1-70B on NQ and Hotpot datasets
+.
+12
+B.2
+Results with LLaMA 3.1-70B on MultiHop-RAG dataset .
+.
+12
+B.3
+Results with LLaMA 3.1-8B on NovelQA .
+.
+.
+.
+.
+.
+.
+12
+B.4
+Results with LLaMA 3.1-70B on NovelQA
+.
+.
+.
+.
+.
+.
+12
+C Retrieval accuracy of different methods . . . . . . . .
+12
+D Case studies for the question answering task. . . . .
+14
+E
+Iterative Retrieval. . . . . . . . . . . . . . . . . . . . . . .
+14
+E.1
+Iterative Retrieval for QA .
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+15
+E.2
+Iterative Retrieval for Query-based Summarization
+.
+.
+.
+15
+F
+Reranking. . . . . . . . . . . . . . . . . . . . . . . . . . . .
+15
+F.1
+Reranking for QA
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+.
+15
+F.2
+Reranking for Query-based Summarization .
+.
+.
+.
+.
+.
+15
+G RAG vs. GraphRAG Selection . . . . . . . . . . . . . . .
+15
+H RAG and GraphRAG Integration . . . . . . . . . . . . .
+15
+I
+Query-based Summarization Results with Llama
+3.1-70B model. . . . . . . . . . . . . . . . . . . . . . . . . . . .
+16
+J
+The LLM-as-a-Judge Prompt . . . . . . . . . . . . . . .
+16
+K The LLM-as-a-Judge Results on more datasets . . . .
+17
+L
+Graph Construction with different LLMs . . . . . . .
+18
+M Computation and Storage Analysis . . . . . . . . . . .
+19
+=== [p.12] ===
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+Han et al.
+A
+Dataset
+In this section, we introduce the used datasets in the question
+answering tasks and query-based summarization tasks.
+A.1
+Question Answering
+In the QA tasks, we use the following four widely used datasets:
+• Natural Questions (NQ) [19]: The NQ dataset is a widely used
+benchmark for evaluating open-domain question answering sys-
+tems. Introduced by Google, it consists of real user queries from
+Google Search with corresponding answers extracted from the
+Wikipedia. Since it primarily contains single-hop questions, we
+use NQ as the representative dataset for single-hop QA. We treat
+NQ as a single-document QA task, where multiple questions are
+associated with each document. Accordingly, we build a separate
+RAG system for each document in the dataset.
+• Hotpot [49]: HotpotQA is a widely used multi-hop question
+dataset that provides 10 paragraphs per question. The dataset
+includes varying difficulty levels, with easier questions often
+solvable by LLMs. To ensure a more challenging evaluation, we
+randomly selected 1,000 hard bridging questions from the de-
+velopment set of HotpotQA. Additionally, we treat HotpotQA
+as a multi-document QA task and build a single RAG system to
+handle all questions.
+• MultiHop-RAG [34]: MultiHop-RAG is a QA dataset designed
+to evaluate retrieval and reasoning across multiple documents
+with metadata in RAG pipelines. Constructed from English news
+articles, it contains 2,556 queries, with supporting evidence dis-
+tributed across 2 to 4 documents. The dataset includes four query
+types: Inference queries, which synthesize claims about a bridge
+entity to identify it; Comparison queries, which compare simi-
+larities or differences and typically yield "yes" or "no" answers;
+Temporal queries, which examine event ordering with answers
+like "before" or "after"; and Null queries, where no answer can be
+derived from the retrieved documents. It is also a multi-document
+QA task.
+• NovelQA [38]: NovelQA is a benchmark designed to evaluate
+the long-text understanding and retrieval ability of LLMs us-
+ing manually curated questions about English novels exceeding
+50,000 words. The dataset includes queries that focus on minor
+details or require cross-chapter reasoning, making them inher-
+ently challenging for LLMs. It covers various query types such
+as details, multi-hop, single-hop, character, meaning, plot, re-
+lation, setting, span, and times. Key challenges highlighted by
+NovelQA include grasping abstract meanings (meaning ques-
+tions), understanding nuanced relationships (relation questions),
+and tracking temporal sequences and spatial extents (span and
+time questions), emphasizing the difficulty of maintaining and
+applying contextual information across long narratives. We use
+it for single-document QA task.
+A.2
+Query-based Summarization
+In the Query-based Summarization tasks, we adopt the following
+four widely used datasets:
+• SQuALITY [37]: SQuALITY (Summary-format QUestion An-
+swering with Long Input Texts) is a question-focused, long-
+document, multi-reference summarization dataset. It consists
+of short stories from Project Gutenberg, each ranging from 4,000
+to 6,000 words. Each story is paired with five questions, and each
+question has four reference summaries written by Upwork writ-
+ers and NYU undergraduates. SQuALITY is designed as a single-
+document summarization task, making it a valuable benchmark
+for evaluating summarization models on long-form content.
+• QMSum [58]: QMSum is a human-annotated benchmark for
+query-based, multi-domain meeting summarization, containing
+1,808 query-summary pairs from 232 meetings across multiple
+domains. We use QMSum as a single-document summarization
+task in our evaluation.
+• ODSum [59]: The ODSum dataset is designed to evaluate modern
+summarization models in multi-document contexts and consists
+of two subsets: ODSum-story and ODSum-meeting. ODSum-
+story is derived from the SQuALITY dataset, while ODSum-
+meeting is constructed from QMSum. We use both ODSum-story
+and ODSum-meeting for the multi-document summarization task
+in our evaluation.
+B
+More results on QA datasets
+In this section, we present additional results on the NovelQA dataset
+that were omitted from the main paper due to space constraints.
+Results are organized by model size and method for clarity.
+B.1
+Results with LLaMA 3.1-70B on NQ and
+Hotpot datasets
+We report the performance of RAG and GraphRAG methods on NQ
+and Hotpot datasets with LLaMA 3.1-70B in Table 8.
+B.2
+Results with LLaMA 3.1-70B on
+MultiHop-RAG dataset
+We report the performance of RAG and GraphRAG methods on
+MultiHop-RAG dataset with LLaMA 3.1-70B in Table 9.
+B.3
+Results with LLaMA 3.1-8B on NovelQA
+We report the performance of KG-GraphRAG (Triplets) with LLaMA
+3.1-8B in Table 10.
+B.4
+Results with LLaMA 3.1-70B on NovelQA
+Table 11 reports the RAG baseline with LLaMA 3.1-70B. Table 12
+presents KG-GraphRAG (Triplets), Table 13 presents KG-GraphRAG
+(Triplets+Text), Table 14 presents Community-GraphRAG (Local),
+and Table 15 presents Community-GraphRAG (Global), all using
+LLaMA 3.1-70B.
+C
+Retrieval accuracy of different methods
+In this section, we compare the retrieval effectiveness of differ-
+ent methods. Since retrieval does not have explicit ground-truth
+supervision at the chunk level, we measure retrieval accuracy as
+the proportion of examples for which the ground-truth answer
+string appears in the retrieved context. We report results on the
+HotpotQA and NQ datasets.
+As shown in the Table 16, KG-GraphRAG (Triplets only) achieves
+relatively low retrieval accuracy, particularly on NQ. This is pri-
+marily due to the incompleteness of the constructed knowledge
+=== [p.13] ===
+RAG vs. GraphRAG: A Systematic Evaluation and Key Insights
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+Table 8: Performance comparison (%) on NQ and Hotpot datasets using Llama 3.1-70B.
+Method
+NQ
+Hotpot
+P
+R
+F1
+P
+R
+F1
+RAG
+74.55
+67.82
+68.18
+66.34
+63.99
+63.88
+RaptorRAG
+66.32
+60.74
+60.59
+66.44
+63.69
+63.83
+KG-GraphRAG (Triplets only)
+37.84
+31.22
+28.50
+32.59
+30.63
+30.73
+KG-GraphRAG (Triplets+Text)
+60.91
+52.75
+53.88
+51.44
+48.99
+48.75
+Community-GraphRAG (Local)
+71.27
+65.46
+65.44
+67.20
+64.89
+64.60
+Community-GraphRAG (Global)
+61.15
+55.52
+55.05
+48.33
+48.56
+46.99
+HippoRAG2
+69.69
+64.32
+64.03
+68.05
+64.59
+64.93
+Table 9: Performance comparison (%) on the MultiHop-RAG dataset using Llama 3.1-70B.
+Method
+Inference
+Comparison
+Null
+Temporal
+Overall
+RAG
+94.85
+56.31
+91.36
+25.73
+65.77
+RaptorRAG
+92.40
+57.24
+95.02
+43.22
+69.72
+KG-GraphRAG (Triplets only)
+76.96
+32.36
+94.35
+19.55
+50.98
+KG-GraphRAG (Triplets+Text)
+85.91
+35.98
+86.38
+21.61
+54.58
+Community-GraphRAG (Local)
+92.03
+60.16
+88.70
+49.06
+71.17
+Community-GraphRAG (Global)
+89.09
+66.00
+13.95
+59.18
+65.69
+HippoRAG2
+93.01
+58.76
+90.03
+43.40
+69.87
+Table 10: The performance of KG-GraphRAG (Triplets) with Llama 3.1-8B model on NovelQA dataset.
+KG-GraphRAG(Triplet)
+character
+meaning
+plot
+relat
+settg
+span
+times
+avg
+mh
+31.25
+17.65
+41.67
+50.56
+38.46
+64
+26.47
+32.89
+sh
+35.53
+45.71
+30.54
+62.5
+27.84
+-
+-
+33.75
+dtl
+31.43
+24.72
+35.71
+17.86
+27.03
+-
+-
+27.37
+avg
+33.7
+29.81
+32.63
+44
+28.57
+64
+26.47
+31.88
+Table 11: The performance of RAG with Llama 3.1-70B model on NovelQA dataset.
+RAG
+character
+meaning
+plot
+relat
+settg
+span
+times
+avg
+mh
+64.58
+82.35
+77.78
+69.66
+84.62
+36
+36.63
+48.5
+sh
+70.39
+70
+76.57
+75
+83.51
+-
+-
+75.27
+dtl
+60
+51.12
+76.79
+67.86
+83.78
+-
+-
+61.25
+avg
+66.67
+58.11
+76.74
+69.6
+83.67
+36
+36.63
+61.42
+Table 12: The performance of KG-GraphRAG (Triplets) with Llama 3.1-70B model on NovelQA dataset.
+KG-GraphRAG (Triplets)
+character
+meaning
+plot
+relat
+settg
+span
+times
+avg
+mh
+50
+76.47
+75
+43.82
+76.92
+24
+22.46
+33.72
+sh
+52.63
+62.86
+55.23
+12.5
+50.52
+-
+-
+54.06
+dtl
+35.71
+26.97
+39.29
+53.57
+37.84
+-
+-
+33.6
+avg
+47.78
+39.62
+54.68
+44
+49.66
+24
+22.46
+41.18
+graphs—only 65.8% of answer entities exist in the HotpotQA KG,
+and 65.5% in the NQ KG. In contrast, Community-GraphRAG, which
+leverages community-level summarization, demonstrates signifi-
+cantly better retrieval performance. These findings highlight several
+potential directions for improvement:
+(1) Enhancing KG construction to increase entity and relation cov-
+erage.
+(2) Combining structured graph information with raw text to im-
+prove retrieval robustness and completeness.
+=== [p.14] ===
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+Han et al.
+Table 13: The performance of KG-GraphRAG (Triplets+Text) with Llama 3.1-70B model on NovelQA dataset.
+KG-GraphRAG (Triplets+Text)
+character
+meaning
+plot
+relat
+settg
+span
+times
+avg
+mh
+56.25
+58.82
+63.89
+51.69
+84.62
+24
+21.39
+33.72
+sh
+51.97
+61.43
+55.65
+50
+50.52
+-
+-
+54.42
+dtl
+34.29
+25.28
+41.07
+50
+37.84
+-
+-
+32.52
+avg
+48.15
+36.98
+54.08
+51.2
+50.34
+24
+21.39
+41.05
+Table 14: The performance of Community-GraphRAG (Local) with Llama 3.1-70B model on NovelQA dataset.
+Community-GraphRAG (Local)
+character
+meaning
+plot
+relat
+settg
+span
+times
+avg
+mh
+77.08
+70.59
+63.89
+77.53
+92.31
+28
+32.35
+46.68
+sh
+68.42
+71.43
+74.9
+62.5
+74.23
+-
+-
+72.44
+dtl
+55.71
+37.08
+69.64
+64.29
+75.68
+-
+-
+51.49
+avg
+66.67
+48.3
+72.81
+73.6
+76.19
+28
+32.35
+57.32
+Table 15: The performance of Community-GraphRAG (Global) with Llama 3.1-70B model on NovelQA dataset.
+Community-GraphRAG (Global)
+character
+meaning
+plot
+relat
+settg
+span
+times
+avg
+mh
+47.92
+58.82
+55.56
+57.3
+61.54
+16
+35.83
+41.53
+sh
+42.76
+42.86
+54.39
+25
+40.21
+-
+-
+47
+dtl
+24.29
+22.47
+32.14
+50
+35.14
+-
+-
+27.64
+avg
+38.89
+30.19
+50.76
+53.6
+40.82
+16
+35.83
+40.21
+Table 16: Retrieval accuracy (%) of different methods on Hot-
+pot and NQ datasets
+Method
+Hotpot
+NQ
+RAG
+88.60
+86.70
+KG-GraphRAG (Triplets only)
+39.20
+32.18
+KG-GraphRAG (Triplets+Text)
+69.80
+61.50
+Community-GraphRAG (Local)
+67.53
+42.20
+Community-GraphRAG (Global)
+88.60
+83.30
+D
+Case studies for the question answering task
+In this section, we present examples where RAG fails but GraphRAG
+succeeds. In Case 1 (Figure 5), RAG fails because it does not retrieve
+all the relevant chunks required for answering the multi-hop reason-
+ing question. KG-RAG also fails due to missing information during
+knowledge graph construction. However, Community-GraphRAG
+is able to answer correctly by leveraging community-level summa-
+rizations that capture the necessary context. In Case 2 (Figure 6),
+both KG-GraphRAG and Community-GraphRAG succeed because
+they capture the reasoning chain—either through explicit graph
+paths or through summarization within the same community. In
+contrast, RAG fails due to insufficient retrieved information.
+E
+Iterative Retrieval
+Iterative retrieval [31, 36] is a widely adopted technique for en-
+abling RAG to handle multi-step reasoning tasks. Specifically, at
+each iteration, new queries are generated based on the retrieval
+results from the previous step. The system then performs another
+round of retrieval using the updated queries, repeating the process
+until the problem is resolved or a predefined maximum number of
+Case 1
+Question: Alexander Kerensky was defeated and de-
+stroyed by the Bolsheviks in the course of a civil war
+that ended when ?
+RAG:
+Lesser battles of the war continued on the periphery for two
+more years, and minor skirmishes with the remnants of the
+White forces in the Far East continued well into 1923. The
+war ended in 1923
+Answer: 1923
+KG-GraphRAG:
+Answer: “Insufficient Information.”
+Community-GraphRAG:
+Alexander Kerensky: Alexander Kerensky was defeated and
+destroyed by the Bolsheviks in the course of the Russian Civil
+War.
+Russian Civil War: The Russian Civil War was a significant
+multi-party conflict that took place in the former Russian
+Empire from November 1917 to October 1922, following the
+October Revolution.
+Answer: October 1922
+Gold Answer: October 1922
+Figure 5: Case 1 from Hotpot dataset.
+iterations is reached. To further compare the performance of RAG
+and GraphRAG, we apply the iterative retrieval method, specifically
+IRCoT [36], to all approaches.
+=== [p.15] ===
+RAG vs. GraphRAG: A Systematic Evaluation and Key Insights
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+Case 2
+Question: Which British first-generation jet-powered
+medium bomber was used in the South West Pacific
+theatre of World War II?
+RAG:
+Answer: “Insufficient Information.”
+KG-GraphRAG:
+No. 12 Squadron →COMBAT_IN →South West Pacific
+theatre of WWII;
+No. 2 Squadron →EQUIPPED_WITH →English Electric
+Canberra jets;
+Answer: English Electric Canberra jets
+Community-GraphRAG:
+English Electric Canberra: The English Electric Canberra is
+a British first-generation jet-powered medium bomber that
+was manufactured during the 1950s. ...It saw action as a
+bomber unit in the South West Pacific theatre of World War
+II and, equipped with English Electric Canberra jets...
+Answer: English Electric Canberra
+Gold Answer: English Electric Canberra
+Figure 6: Case 2 from Hotpot dataset.
+E.1
+Iterative Retrieval for QA
+We evaluate iterative retrieval on the NQ and MultiHop-RAG
+datasets, representing single-hop and multi-hop QA scenarios, re-
+spectively. We compare RAG, RaptorRAG, Community-GraphRAG
+(Local), and HippoRAG2. The results are presented in Table 18.
+Overall, iterative retrieval consistently improves the performance
+of both RAG and GraphRAG compared to single-step retrieval.
+One notable exception is Community-GraphRAG (Local) on the
+MultiHop-RAG dataset: the accuracy on NULL queries (which should
+be answered as “insufficient information”) drops from 80.07 to 50.50,
+even though accuracy on other query types improves. This suggests
+that iterative retrieval can encourage over-generation, making the
+model more likely to produce an answer rather than abstain when
+evidence is insufficient.
+Importantly, the relative strengths of the two paradigms remain
+unchanged: RAG continues to perform better on single-hop and
+detail-oriented questions, while GraphRAG achieves higher accu-
+racy on multi-hop and reasoning-intensive queries.
+E.2
+Iterative Retrieval for Query-based
+Summarization
+We evaluate iterative retrieval on the ODSum-story and ODSum-
+meeting datasets. We compare RAG, RaptorRAG, Community-
+GraphRAG (Local), and HippoRAG2. The results are presented
+in Table 17.
+Overall, iterative retrieval improves query-based summariza-
+tion performance across methods, with particularly clear gains
+in BERTScore. This suggests that iterative refinement helps the
+model retrieve semantically relevant evidence and better integrate
+information across steps, leading to summaries that are closer to
+reference summaries in meaning even when lexical overlap even
+drops.
+F
+Reranking
+In this section, we study reranking as an inference-time enhance-
+ment for both QA and query-based summarization. Concretely, we
+first retrieve 20 candidates and then apply the widely used reranker
+model, i.e., BAAI/bge-reranker-large, to score candidates with
+respect to the query. Finally, we select the top-10 ranked candidates
+(under the same retrieval token budget as the vanilla setting) and
+pass them to the generator.
+F.1
+Reranking for QA
+We evaluate reranking on the NQ and MultiHop-RAG datasets,
+representing single-hop and multi-hop QA scenarios, respectively.
+We compare RAG, RaptorRAG, Community-GraphRAG (Lo-
+cal), and HippoRAG2. The results are presented in Table 18.
+Overall, reranking consistently improves QA performance for
+all methods across both datasets, indicating that better evidence se-
+lection provides gains beyond the underlying retrieval architecture.
+One notable exception is the NULL query type on MultiHop-RAG,
+where reranking can reduce abstention accuracy (i.e., predicting
+“insufficient information”), suggesting that stronger evidence se-
+lection may also encourage over-generation when the query lacks
+sufficient support.
+F.2
+Reranking for Query-based Summarization
+We evaluate reranking on the ODSum-story and ODSum-meeting
+datasets. We compare RAG, RaptorRAG, Community-GraphRAG
+(Local), and HippoRAG2. The results are presented in Table 19.
+Overall, reranking yields only marginal changes on query-based
+summarization, with performance remaining comparable to the
+vanilla setting across methods. This suggests that, unlike QA, sum-
+marization quality is less sensitive to fine-grained reordering of
+retrieved evidence under a fixed token budget.
+G
+RAG vs. GraphRAG Selection
+We classify QA queries into Fact-based and Reasoning-based queries.
+Fact-based queries are processed using RAG, while Reasoning-based
+queries are handled by GraphRAG. The Query Classification prompt
+is shown in Figure 7.
+H
+RAG and GraphRAG Integration
+In this section, we explore the effect of integrating RAG and GraphRAG
+for the question answering task. Specifically, we concatenate the re-
+trieved results from both RAG and GraphRAG before passing them
+to the LLM. The results are presented in Table 20, Table 21, Table 22,
+Table 23, and Table 24, respectively. For most cases, the integration
+of RAG and GraphRAG improves performance. However, we ob-
+serve a performance drop when integrating with Llama 3.1–8B on
+the MultiHop-RAG dataset. This degradation is primarily attributed
+to a significant decline on Null queries—those requiring the model
+to respond with “Insufficient Information.” By concatenating the
+retrieved results from both RAG and GraphRAG, the input length
+increases considerably, making the 8B model more susceptible to
+=== [p.16] ===
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+Han et al.
+Table 17: The performance of query-based multiple document summarization task in iterative retrieval using Llama3.1-8B.
+Method
+ODSum-story
+ODSum-meeting
+ROUGE-2
+BERTScore
+ROUGE-2
+BERTScore
+P
+R
+F1
+P
+R
+F1
+P
+R
+F1
+P
+R
+F1
+RAG
+15.33
+8.69
+9.89
+83.80
+85.71
+84.52
+16.22
+6.32
+8.75
+83.03
+85.87
+84.42
+RaptorRAG
+14.79
+8.53
+9.68
+83.87
+85.78
+84.59
+14.75
+6.10
+8.29
+82.59
+85.53
+84.03
+Community-GraphRAG (Local)
+14.00
+7.74
+8.80
+83.43
+85.24
+84.10
+15.71
+5.79
+8.12
+82.56
+85.64
+84.07
+HippoRAG2
+15.44
+8.56
+9.87
+83.76
+85.74
+84.51
+15.50
+5.98
+8.32
+82.46
+85.57
+83.98
+Table 18: QA results under different inference strategies on NQ and MultiHop-RAG using Llama3.1-8B.
+Method
+Inference
+NQ
+MultiHop-RAG
+Precision
+Recall
+F1
+Inference
+Comparison
+Null
+Temporal
+Overall
+RAG
+Vanilla
+71.70
+63.93
+64.78
+92.16
+57.59
+96.01
+30.70
+67.02
++ Rerank
+72.89
+66.15
+66.49
+92.89
+57.01
+83.72
+49.57
+69.91
++ IRCoT
+71.92
+65.47
+65.72
+93.87
+57.59
+71.76
+53.00
+69.80
+RaptorRAG
+Vanilla
+66.06
+59.56
+60.04
+91.91
+55.26
+90.03
+45.28
+68.78
++ Rerank
+69.14
+62.61
+63.04
+93.38
+60.05
+87.38
+48.20
+71.21
++ IRCoT
+68.59
+61.82
+62.39
+94.85
+57.83
+85.38
+46.83
+70.38
+Community-GraphRAG (Local)
+Vanilla
+69.48
+62.54
+63.01
+86.89
+60.63
+80.07
+50.60
+69.01
++ Rerank
+70.75
+63.93
+64.45
+87.50
+62.85
+72.76
+53.52
+69.76
++ IRCoT
+70.76
+63.20
+63.77
+90.69
+62.62
+50.50
+52.32
+67.80
+HippoRAG2
+Vanilla
+67.25
+60.42
+61.03
+91.54
+58.41
+85.71
+49.91
+70.27
++ Rerank
+70.57
+64.20
+64.50
+93.87
+60.51
+82.39
+54.03
+72.26
++ IRCoT
+71.04
+63.77
+64.54
+94.36
+61.68
+73.09
+51.29
+71.09
+Table 19: The performance of query-based multiple document summarization task in reranking using Llama3.1-8B.
+Method
+ODSum-story
+ODSum-meeting
+ROUGE-2
+BERTScore
+ROUGE-2
+BERTScore
+P
+R
+F1
+P
+R
+F1
+P
+R
+F1
+P
+R
+F1
+RAG
+15.54
+8.80
+10.01
+83.86
+85.81
+84.59
+16.08
+6.38
+8.83
+83.06
+85.90
+84.45
+RaptorRAG
+15.15
+8.51
+9.74
+83.85
+85.84
+84.61
+14.76
+6.18
+8.40
+82.75
+85.63
+84.16
+Community-GraphRAG (Local)
+13.95
+7.25
+8.49
+83.16
+85.11
+83.91
+15.51
+5.63
+7.96
+82.52
+85.54
+84.00
+HippoRAG2
+15.65
+8.53
+9.90
+83.84
+85.80
+84.58
+15.70
+6.10
+8.48
+82.55
+85.66
+84.07
+hallucination and the generation of incorrect answers. This vul-
+nerability is more pronounced in the 8B model due to its limited
+capacity, whereas the 70B model demonstrates greater robustness
+to longer contexts and handles ambiguous information more con-
+servatively. In contrast, for other query types such as Comparison
+and Temporal, the integration strategy yields notable gains on both
+model sizes.
+For the query-based summarization task, we observed that the
+Integration strategy generally performs comparably to RAG, but
+not significantly better. This is because the evaluation is based
+on human-written ground-truth summaries, which tend to focus
+on detailed and faithful representations of the original text. RAG
+directly retrieves text segments that often match these detailed
+references more closely, as shown in Figure 4 of our paper. In
+contrast, GraphRAG primarily retrieves structured information
+(e.g., entities and relations), which omit finer details needed to
+align with ground-truth summaries. As a result, while Integration
+combines complementary views, the added structured content from
+GraphRAG does not consistently enhance alignment with detailed
+ground-truth summaries, leading to comparable or slightly lower
+scores.
+I
+Query-based Summarization Results with
+Llama 3.1-70B model
+In this section, we present the results for Query-based Summa-
+rization tasks using the LLaMA 3.1-70B model. The results for
+single-document summarization are shown in Table 25, while the
+results for multi-document summarization are provided in Table 26.
+J
+The LLM-as-a-Judge Prompt
+The LLM-as-a-Judge prompt can be found in Figure 8.
+=== [p.17] ===
+RAG vs. GraphRAG: A Systematic Evaluation and Key Insights
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+Table 20: Performance comparison of RAG, GraphRAG, and their integration on NQ and Hotpot datasets
+NQ
+Hotpot
+Datasets
+Llama 3.1-8B
+Llama 3.1-70B
+Llama 3.1-8B
+Llama 3.1-70B
+Method
+P
+R
+F1
+P
+R
+F1
+P
+R
+F1
+P
+R
+F1
+RAG
+71.70
+63.93
+64.78
+74.55
+67.82
+68.18
+62.32
+60.47
+60.04
+66.34
+63.99
+63.88
+GraphRAG
+69.48
+62.54
+63.01
+71.27
+65.46
+65.44
+64.14
+62.08
+61.66
+67.20
+64.89
+64.60
+Integration
+72.81
+65.91
+66.28
+75.67
+69.75
+69.75
+67.21
+65.09
+64.76
+69.22
+66.70
+66.50
+Table 21: The performance of Llama 3.1-8B on MultiHop-RAG dataset
+8B
+Inference
+Comparison
+Null
+Temporal
+Overall
+RAG
+92.16
+57.59
+96.01
+30.7
+67.02
+GraphRAG
+86.89
+60.63
+80.07
+50.6
+69.01
+Integration
+89.71
+64.14
+50.17
+53.34
+68.19
+Table 22: The performance of Llama 3.1-70B on MultiHop-RAG dataset
+70B
+Inference
+Comparison
+Null
+Temporal
+Overall
+RAG
+94.85
+56.31
+91.36
+25.73
+65.77
+GraphRAG
+92.03
+60.16
+88.7
+49.06
+71.17
+Integration
+96.45
+73.48
+59.47
+66.72
+77.62
+Table 23: Performance of integrating RAG and GraphRAG with Llama 3.1–8B on the NovelQA dataset.
+Integration
+character
+meaning
+plot
+relat
+settg
+span
+times
+avg
+mh
+70.83
+58.82
+63.89
+73.03
+84.62
+60.00
+36.90
+49.17
+sh
+62.50
+64.29
+74.90
+62.50
+79.38
+-
+-
+70.85
+dtl
+60.00
+43.82
+83.93
+21.43
+72.97
+-
+-
+54.20
+avg
+63.33
+50.19
+75.23
+60.80
+78.23
+60.00
+36.90
+58.36
+Table 24: Performance of integrating RAG and GraphRAG with Llama 3.1–70B on the NovelQA dataset.
+Integration
+character
+meaning
+plot
+relat
+settg
+span
+times
+avg
+mh
+77.08
+70.59
+83.33
+77.53
+92.31
+44.00
+37.97
+51.99
+sh
+74.34
+74.29
+82.43
+75.00
+87.63
+-
+-
+80.04
+dtl
+67.14
+53.37
+92.86
+75.00
+89.19
+-
+-
+67.21
+avg
+72.96
+60.00
+84.29
+76.80
+88.44
+44.00
+37.97
+65.97
+Table 25: The performance of query-based single document summarization task using Llama 3.1-70B.
+Method
+SQuALITY
+QMSum
+ROUGE-2
+BERTScore
+ROUGE-2
+BERTScore
+P
+R
+F1
+P
+R
+F1
+P
+R
+F1
+P
+R
+F1
+RAG
+11.85
+14.24
+11.00
+85.96
+85.76
+85.67
+10.42
+10.00
+9.53
+86.14
+85.92
+86.02
+KG-GraphRAG(Triplets only)
+8.53
+10.28
+7.46
+84.13
+83.97
+83.89
+10.62
+6.25
+7.48
+83.20
+84.72
+83.94
+KG-GraphRAG(Triplets+Text)
+6.57
+10.14
+6.00
+80.52
+82.23
+81.07
+8.64
+7.85
+7.29
+84.10
+84.55
+84.31
+Community-GraphRAG(Local)
+12.54
+10.31
+9.61
+84.50
+85.33
+84.71
+13.69
+7.43
+9.14
+84.09
+85.85
+84.95
+Community-GraphRAG(Global)
+8.99
+4.78
+5.60
+81.64
+83.64
+82.44
+10.97
+4.40
+6.01
+81.93
+84.67
+83.26
+Combine
+13.59
+11.32
+10.55
+84.88
+85.76
+85.12
+13.16
+8.67
+9.93
+85.18
+86.21
+85.69
+K
+The LLM-as-a-Judge Results on more datasets
+In the main paper, we present LLM-as-a-Judge results on the QM-
+Sum and ODSum-story datasets. Here, we provide additional
+results on SQuALITY and ODSum-meeting, as shown in Figure 9.
+Overall, the trends are consistent with those reported in the main
+section, and we draw similar observations.
+=== [p.18] ===
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+Han et al.
+Table 26: The performance of query-based multiple document summarization task using Llama3.1-70B.
+Method
+ODSum-story
+ODSum-meeting
+ROUGE-2
+BERTScore
+ROUGE-2
+BERTScore
+P
+R
+F1
+P
+R
+F1
+P
+R
+F1
+P
+R
+F1
+RAG
+15.60
+9.98
+11.09
+74.80
+81.29
+77.89
+18.81
+6.41
+8.97
+83.56
+85.16
+84.34
+KG-GraphRAG(Triplets only)
+10.08
+9.12
+8.48
+75.71
+81.93
+78.66
+11.52
+3.41
+4.79
+81.19
+83.07
+82.11
+KG-GraphRAG(Triplets+Text)
+10.98
+16.67
+11.42
+76.74
+81.92
+79.21
+13.09
+6.31
+7.70
+84.07
+84.24
+84.14
+Community-GraphRAG(Local)
+14.20
+11.34
+11.25
+75.44
+81.81
+78.46
+16.17
+7.87
+9.23
+84.17
+84.85
+84.49
+Community-GraphRAG(Global)
+10.46
+6.30
+7.08
+74.63
+81.24
+77.77
+10.65
+1.99
+3.28
+79.78
+82.53
+81.12
+Combine
+14.76
+12.17
+11.72
+75.39
+81.75
+78.41
+17.57
+8.64
+10.34
+84.51
+85.14
+84.81
+Prompt for Query Classification
+System Prompt: Classifying Queries into Fact-Based and
+Reasoning-Based Categories
+You are an AI model tasked with classifying queries into
+one of two categories based on their complexity and rea-
+soning requirements.
+Category Definitions
+1. Fact-Based Queries
+- The answer can be directly retrieved from a knowledge
+source or requires details.
+- The query does not require multi-step reasoning, infer-
+ence, or cross-referencing multiple sources.
+2. Reasoning-Based Queries
+- The answer cannot be found in a single lookup and re-
+quires cross-referencing multiple sources, logical inference,
+or multi-step reasoning.
+Examples
+Fact-Based Queries
+{{ Fact-Based Queries Examples }}
+Reasoning-Based Queries
+{{ Reasoning-Based Queries Examples }}
+Figure 7: Prompt for Query Classification.
+L
+Graph Construction with different LLMs
+In the main paper, we use GPT-4o-mini to extract entities and
+relationships for graph construction due to cost considerations.
+To investigate whether stronger LLMs yield better performance,
+we also use GPT-4o for graph extraction. Specifically, we evalu-
+ate this on the MultiHop-RAG and ODSum-story datasets, repre-
+senting question answering and summarization tasks, respectively.
+We focused on Community-GraphRAG (Local) as a representative
+method (GraphRAG) and evaluated it with both LLaMA3.1-8B and
+LLaMA3.1-70B for generation.
+The results are shown in Table 27, Table 28, Table 29 and Table 30,
+respectively. The results show that using a stronger LLM (GPT-
+4o) for graph extraction generally improves the performance of
+GraphRAG on both question answering and summarization tasks.
+However, the overall conclusion regarding the relative performance
+LLM-as-a-Judge Prompt
+You are an expert evaluator assessing the quality of re-
+sponses in a query-based summarization task.
+Below is a query, followed by two LLM-generated summa-
+rization answers. Your task is to determine which answer is
+better according to the evaluation criteria specified below.
+For each aspect, select the model that performs better.
+Query
+{{query}}
+Answers
+Model 1:
+{{answer 1}}
+Model 2:
+{{answer 2}}
+Evaluation Criteria
+Evaluate each answer independently along the following
+dimensions:
+1. Comprehensiveness
+- Does the answer fully address the query and cover all
+relevant information?
+- A comprehensive answer should include all key points
+without omitting important details.
+- The level of detail should be sufficient to inform the reader
+without being overly verbose.
+2. Global Diversity
+- Does the answer reflect a broad and globally inclusive
+perspective?
+- A high-quality response should avoid region-specific as-
+sumptions or biases.
+- The answer should be understandable and relevant to an
+international audience.
+Figure 8: Prompt used for LLM-as-a-Judge evaluation.
+of RAG and GraphRAG remains consistent across different graph
+construction backbones.
+=== [p.19] ===
+RAG vs. GraphRAG: A Systematic Evaluation and Key Insights
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+Comprehensiveness
+Diversity
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+Proportion
+RAG-Order 1
+GraphRAG-Local-Order 1
+RAG-Order 2
+GraphRAG-Local-Order 2
+(a) SQuALITY Local
+Comprehensiveness
+Diversity
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+Proportion
+RAG-Order 1
+GraphRAG-Gloabl-Order 1
+RAG-Order 2
+GraphRAG-Gloabl-Order 2
+(b) SQuALITY Global
+Comprehensiveness
+Diversity
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+Proportion
+RAG-Order 1
+GraphRAG-Local-Order 1
+RAG-Order 2
+GraphRAG-Local-Order 2
+(c) ODSum-meeting Local
+Comprehensiveness
+Diversity
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+Proportion
+RAG-Order 1
+GraphRAG-Gloabl-Order 1
+RAG-Order 2
+GraphRAG-Gloabl-Order 2
+(d) ODSum-meeting Global
+Figure 9: Comparison of LLM-as-a-Judge evaluations for RAG and GraphRAG. "Local" refers to the evaluation of RAG vs.
+GraphRAG-Local, while "Global" refers to RAG vs. GraphRAG-Global. "Order 1" corresponds to the prompt where RAG result is
+presented before GraphRAG, whereas "Order 2" corresponds to the reversed order.
+Table 27: Performance of different graph construction meth-
+ods with Llama 3.1–8B on the MultiHop-RAG dataset.
+Inference
+Comparison
+Null
+Temporal
+Overall
+RAG
+92.16
+57.59
+96.01
+30.7
+67.02
+GPT-4o-mini
+86.89
+60.63
+80.07
+50.6
+69.01
+GPT-4o
+88.11
+62.62
+70.43
+49.74
+68.74
+Table 28: Performance of different graph construction meth-
+ods with Llama 3.1–70B on the MultiHop-RAG dataset.
+70B
+Inference
+Comparison
+Null
+Temporal
+Overall
+RAG
+94.85
+56.31
+91.36
+25.73
+65.77
+GPT-4o-mini
+92.03
+60.16
+88.70
+49.06
+71.17
+GPT-4o
+93.63
+66.59
+81.06
+58.49
+75.08
+Table 29: Performance of different graph construction meth-
+ods with Llama 3.1–8B on the ODSum-story dataset.
+ROUGE-2
+BERTScore
+P
+R
+F1
+P
+R
+F1
+RAG
+15.39
+8.44
+9.81
+83.87
+85.74
+84.57
+GPT-4o-mini
+13.84
+7.19
+8.49
+83.19
+85.07
+83.90
+GPT-4o
+13.99
+7.45
+8.64
+83.24
+85.1
+83.94
+Table 30: Performance of different graph construction meth-
+ods with Llama 3.1–8B on the ODSum-meeting dataset.
+ROUGE-2
+BERTScore
+P
+R
+F1
+P
+R
+F1
+RAG
+11.85
+14.24
+11.09
+85.96
+85.76
+85.67
+GPT-4o-mini
+12.54
+10.31
+9.61
+84.51
+85.33
+84.71
+GPT-4o
+12.08
+10.84
+9.72
+84.66
+85.28
+84.77
+M
+Computation and Storage Analysis
+Besides runtime and storage, we also analyze the number of to-
+kens retrieved by Community-GraphRAG and RAG. The results are
+shown in Table 31.
+Table 31: The retrieved number of tokens.
+RAG
+Community-GraphRAG
+MultiHop-RAG
+3631
+9770
+ODSum-Story
+2279
+10244
+In our experimental setup, RAG retrieves the top-10 text chunks,
+while Community-GraphRAG (Local) retrieves the top-10 entities
+and their associated relations. As shown in Table 31, Community-
+GraphRAG results in significantly more input tokens due to the
+inclusion of entities, entity descriptions, relations, relation descrip-
+tions, and community summaries.
+To ensure a fair comparison, we conducted an additional experi-
+ment in which we increased the number of retrieved text chunks
+for RAG to match the total number of input tokens retrieved by
+Community-GraphRAG. The results are shown in Table 32, Ta-
+ble 33, Table 34 and Table 35. While increasing RAG’s input size
+does lead to slight performance gains, our main conclusions remain
+unchanged: RAG performs better on inference-style queries and
+summarization tasks, where detailed information is directly retriev-
+able. In contrast, GraphRAG performs better on complex queries
+such as Comparison and Temporal types in MultiHop-RAG, which
+require multi-hop reasoning and aggregation.
+=== [p.20] ===
+Conference acronym ’XX, June 03–05, 2018, Woodstock, NY
+Han et al.
+Table 32: Performance comparison of RAG, token-matched RAG, and GraphRAG using Llama 3.1–8B on MultiHop-RAG dataset.
+Inference
+Comparison
+Null
+Temporal
+Overall
+RAG
+92.16
+57.59
+96.01
+30.7
+67.02
+RAG_Same Token
+95.34
+59.81
+89.04
+36.71
+69.33
+GraphRAG
+86.89
+60.63
+80.07
+50.6
+69.01
+Table 33: Performance comparison of RAG, token-matched RAG, and GraphRAG using Llama 3.1–70B on MultiHop-RAG.
+70B
+Inference
+Comparison
+Null
+Temporal
+Overall
+RAG
+94.85
+56.31
+91.36
+25.73
+65.77
+RAG_Same Token
+95.96
+59.58
+88.7
+43.74
+71.01
+GraphRAG
+92.03
+60.16
+88.7
+49.06
+71.17
+Table 34: Performance comparison of RAG, token-matched RAG, and GraphRAG using Llama 3.1–8B on ODSum-Story.
+8B
+ROUGE-2
+BERTScore
+P
+R
+F1
+P
+R
+F1
+RAG
+15.39
+8.44
+9.81
+83.87
+85.74
+84.57
+RAG_Same Token
+14.16
+10.02
+10.16
+84.34
+85.74
+84.82
+GraphRAG
+13.84
+7.19
+8.49
+83.19
+85.07
+83.9
+Table 35: Performance comparison of RAG, token-matched RAG, and GraphRAG using Llama 3.1–70B on ODSum-Meeting.
+ROUGE-2
+BERTScore
+P
+R
+F1
+P
+R
+F1
+RAG
+11.85
+14.24
+11.09
+85.96
+85.76
+85.67
+RAG_Same Token
+12.82
+14.07
+11.34
+85.86
+86
+85.73
+GraphRAG
+12.54
+10.31
+9.61
+84.51
+85.33
+84.71

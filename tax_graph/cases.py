@@ -32,7 +32,7 @@ CASE_A = Case(
     holds={(ULT, HOLD): HoldEdge(ULT, HOLD, 100.0, date(2020, 1, 1), 3000.0), (HOLD, OP): HoldEdge(HOLD, OP, 100.0, date(2020, 1, 1), 3000.0)},
     flows={"up1": dict(_DIV_FROM_CN), "up2": {"receipt_kind": "REMITTED", "foreign_taxed": True, "foreign_headline_rate": 16.5},
            "exit": dict(_EXIT_OF_CN_OP),
-           # the unwinding (口径 D19) if the plan takes HOLD out: HOLD's stake at market value, what HOLD then distributes
+           # the unwinding (decision D19) if the plan takes HOLD out: HOLD's stake at market value, what HOLD then distributes
            # on its liquidation (both synthetic, test-only)
            "unwind": dict(_UNWIND_CN_OP, amount=5000.0),
            "wind": {"amount": 5000.0, "receipt_kind": "REMITTED", "foreign_taxed": True, "foreign_headline_rate": 16.5}})
@@ -77,7 +77,7 @@ CASE_C = Case(
                    "foreign_taxed": True, "foreign_headline_rate": 25, "qualifying_rd_expenditure": 50.0,
                    "non_qualifying_expenditure": 50.0, "ip_used_in_hk": False, "royalty_deductible_in_hk": False,
                    "price_includes_vat": True},
-           # the IP transfer step (口径 D22) if the plan moves the IP: a patent at its market value 400, IPCO's tax basis
+           # the IP transfer step (decision D22) if the plan moves the IP: a patent at its market value 400, IPCO's tax basis
            # 100, no Hong Kong deductions on it (bought from an associate, s16EC(2)); amounts in yuan; synthetic, test-only
            "iptx": {"amount": 400.0, "ip_kind": "PATENT", "cost_basis": 100.0, "ip_allowances_claimed": 0.0, "receipt_kind": "REMITTED",
                     "qualifying_rd_expenditure": 50.0, "non_qualifying_expenditure": 50.0, "price_includes_vat": False,

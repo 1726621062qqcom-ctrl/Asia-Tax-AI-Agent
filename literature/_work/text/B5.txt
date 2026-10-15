@@ -1,0 +1,832 @@
+=== [p.1] ===
+1
+SCIENTIfIC REPOrts | 7: 6246 | DOI:10.1038/s41598-017-06322-9
+www.nature.com/scientificreports
+Uncovering Offshore Financial 
+Centers: Conduits and Sinks in 
+the Global Corporate Ownership 
+Network
+Javier Garcia-Bernardo   1, Jan Fichtner1, Frank W. Takes1,2 & Eelke M. Heemskerk1
+Multinational corporations use highly complex structures of parents and subsidiaries to organize 
+their operations and ownership. Offshore Financial Centers (OFCs) facilitate these structures through 
+low taxation and lenient regulation, but are increasingly under scrutiny, for instance for enabling tax 
+avoidance. Therefore, the identification of OFC jurisdictions has become a politicized and contested 
+issue. We introduce a novel data-driven approach for identifying OFCs based on the global corporate 
+ownership network, in which over 98 million firms (nodes) are connected through 71 million ownership 
+relations. This granular firm-level network data uniquely allows identifying both sink-OFCs and conduit-
+OFCs. Sink-OFCs attract and retain foreign capital while conduit-OFCs are attractive intermediate 
+destinations in the routing of international investments and enable the transfer of capital without 
+taxation. We identify 24 sink-OFCs. In addition, a small set of five countries – the Netherlands, the 
+United Kingdom, Ireland, Singapore and Switzerland – canalize the majority of corporate offshore 
+investment as conduit-OFCs. Each conduit jurisdiction is specialized in a geographical area and there 
+is significant specialization based on industrial sectors. Against the idea of OFCs as exotic small islands 
+that cannot be regulated, we show that many sink and conduit-OFCs are highly developed countries.
+Multinational corporations use highly complex corporate structures of parents and subsidiaries to organize their 
+global operations and ownership structure. For example, the Britain-based banking and financial services company 
+HSBC is composed of at least 828 legal corporate entities in 71 countries. The largest brewing company in the world, 
+Anheuser-Busch InBev, consists of at least 680 corporate entities involving 60 countries. These complex corporate 
+structures purposefully span across countries and jurisdictions in order to increase competitive advantage by min-
+imizing costs and accountability1. Some jurisdictions are particularly popular, such as Bermuda, the British Virgin 
+Islands, and the Cayman Islands2. Often referred to as Offshore Financial Centers (OFCs), these jurisdictions attract 
+financial activities from abroad through low taxation and lenient regulation. With an estimated 50% of the world’s 
+cross-border assets and liabilities (US$21-US$32 trillion) passing through OFCs3, 4 they have become dominant 
+nodes in the transnational financial-economic network in which capital is stored and redistributed. The largest OFCs 
+generally have well-developed regulatory institutions and comply with international laws on trade and money laun-
+dering5. At the same time, the services that OFCs offer are increasingly under scrutiny for, amongst others, facilitat-
+ing corporate tax avoidance. We consider that OFCs are not only places where capital is ‘stored’, but act as nodes in a 
+complex network of international capital flows. We suggest a novel approach for identifying and classifying offshore 
+financial centers based on the underlying large-scale granular firm level ownership data.
+Corporations create complex corporate ownership structures for at least three reasons. First, corporations 
+seek to increase legal protection. By organizing parts of their corporate structure in certain trusted territories with 
+favorable legal conditions they can increase legal certainty for their operations or for joint-ventures. And by set-
+ting up subsidiaries in specific jurisdictions and using such subsidiaries to invest in other countries, multination-
+als can hedge their investment against decisions of governments. Second, favorable regulatory regimes in OFCs 
+can be used by companies to avoid corporate accountability and public scrutiny of their operations, i.e. regulatory 
+1CORPNET, Amsterdam Institute for Social Science Research, University of Amsterdam, Nieuwe Achtergracht 
+166, 1018, WV, Amsterdam, The Netherlands. 2LIACS, Department of Computer Science, Leiden University, Niels 
+Bohrweg 1, 2333, CA, Leiden, The Netherlands. Correspondence and requests for materials should be addressed to 
+J.G.-B. (email: javier.garcia.bernardo@gmail.com)
+Received: 13 March 2017
+Accepted: 12 June 2017
+Published online: 24 July 2017
+OPEN
+=== [p.2] ===
+www.nature.com/scientificreports/
+2
+SCIENTIfIC REPOrts | 7: 6246 | DOI:10.1038/s41598-017-06322-9
+arbitrage. For instance, many of the opaque structured financial products that aggravated the global financial 
+crisis since 2008 were created in OFCs6, 7. Third, complex corporate ownership structures help to minimize tax 
+payments–especially for corporations that have many intangible assets, such as intellectual property rights8. For 
+instance, between 2007 and 2009 Google moved the majority of its profits generated outside the United States 
+(US$12.5 billion) to Bermuda through corporate entities in the Netherlands. As a result Google paid an effective 
+tax rate of 2.4% on all operations9. Similarly, Apple used Ireland to avoid US$14.5 billion in taxes since 200310, and 
+Starbucks UK voluntarily payed £20 million after it came to light that it had paid virtually no taxes since estab-
+lishing in the UK11. In total, every year multinationals avoid paying US$50-200 billion in taxes in the European 
+Union using OFCs12. In the United States, tax evasion by multinational corporations via offshore jurisdictions is 
+estimated to be at least US$130 billion per year13. While reducing costs is in general a valid concern for corpora-
+tions, these practices significantly diminish tax revenues and as such may inhibit the capacity of states. Moreover, 
+tax avoidance provides a competitive advantage to multinationals over small and middle sized companies, which 
+are taxed at national rates–ranging between 25 and 35% for most developed countries.
+Given the policy-concerns caused by the use of OFCs in recent years, the identification of OFC jurisdictions 
+has become a politicized and contested issue. The International Monetary Fund (IMF) and the Organization for 
+Economic Co-operation and Development (OECD) have published lists of OFCs based on a qualitative assess-
+ment of the jurisdictional regulations and taxation frameworks. However, this approach says little about the 
+real-world relevance of specific jurisdictions as OFCs and is also vulnerable to political influence. In contrast to 
+these qualitative approaches, Zoromé has defined OFCs as jurisdictions that ‘provide financial services to nonres-
+idents on a scale that is incommensurate with the size and the financing of their domestic economies’14. Zoromé14 
+as well as Cobham et al.15 used flow data on the export of financial services to calculate ratios that indicate how 
+significantly a jurisdiction acts as an OFC. Fichtner further expanded this approach by using stock data on inter-
+national banking assets, portfolio investment, and foreign direct investment (FDI) in relation to the gross domes-
+tic product (GDP) of a jurisdiction to calculate an ‘offshore-intensity ratio’16. While the offshore-intensity ratio 
+approach identifies which countries have a disproportionate value of inward foreign investment, it is limited in at 
+least two ways. First, aggregated national statistics such as FDI are subject to political preferences and influence17. 
+For instance, inward FDI is systematically underreported18. Second, the existing methods cannot shed light on 
+the position of a jurisdiction in the broader network of capital flows since they are not able to differentiate if the 
+inward foreign investment reported by Bermuda originates in the Netherlands, or if in contrast it originates in 
+Germany and is routed through the Netherlands.
+We propose a novel network analytic approach to identify OFCs based on a country’s position in the network 
+of global corporate ownership. In contrast to prior work, our approach characterizes countries based on a distinc-
+tion between sink-OFCs and conduit-OFCs. Sink-OFCs are countries that attract and retain foreign capital–ter-
+ritories in this category are usually characterized as tax havens, such as the British Virgin Islands, the Cayman 
+Islands and Bermuda. Most sink-OFCs have small domestic economies and large values of foreign assets, which 
+are attracted through low or zero corporate taxes. Because of this disparity between the local economy and exter-
+nal assets, the aforementioned offshore-intensity ratio approach is well suited for identifying these sink-OFCs16. 
+Conduit-OFCs on the other hand are ‘countries that are widely perceived as attractive intermediate destinations 
+in the routing of investments’19. Conduit-OFCs typically have low or zero taxes imposed on the transfer of cap-
+ital to other countries, either via interest payments, royalties, dividends or profit repatriation. In addition, such 
+jurisdictions have highly developed legal systems that are able to cater to the needs of multinational corporations. 
+Conduits play a key role in the global corporate ownership network by allowing the transfer of capital without 
+taxation. In this way, profit from one country can be re-invested in another part of the world paying no or little 
+taxes. Countries such as the Netherlands and Ireland have been criticized for these types of activities20.
+The building blocks of our method for identifying OFCs are what we call global ownership chains (GOCs), in 
+which a series of companies are connected in a chain if for each two directly subsequent entities A and B, it holds 
+that firm A is owned by firm B, i.e., there is a link between them in the ownership network. Under European 
+Union regulations (Council Directive 2003/123/EC), transfers of capital without taxation are typically only 
+allowed through ownership links from subsidiaries to parents, meaning that value can flow from A to B. These EU 
+regulations are expanded to other countries via tax treaties, allowing companies to transfer capital outside the EU 
+through corporate structures. Based on the value going through these international ownership chains, we propose 
+two new centrality measures specifically aimed at measuring the extent to which a jurisdiction is a sink-OFC or 
+conduit-OFC. We furthermore introduce an entropy-based metric that can characterize the specialization of an 
+OFC in terms of which countries it services.
+The proposed network analytic approach to identifying OFCs has a number of advantages. First, it makes no a 
+priori assumptions about the global economy and the countries involved; the possible identification of a country 
+as an OFC is purely data-driven. Second, it does not rely solely on aggregated macroeconomic indicators that 
+may introduce significant noise and deviations, but on fine-grained data of firm-level corporate ownership. Third, 
+this firm-level data allows us for the first time to quantitatively identify and distinguish between both sink-OFCs 
+and conduit-OFCs. Fourth, our approach is also suitable to classify and characterize the specialization of OFCs 
+across geographic regions and industrial sectors. OFC specialization is a key issue from a policy and regulatory 
+perspective, but cannot be answered by existing quantitative methods. If OFCs are not specialized and occupy 
+structural and functional equivalent positions in the network of global corporate ownership, we can assume that 
+firms can easily re-organize their corporate structures to other OFCs in the wake of regulation21. On the other 
+hand, if OFCs are specialized then there is likely more room for tailored policy interventions and regulation. Our 
+research demonstrates that–contrary to the still prevalent conjecture that offshore finance resembles an ‘atomized’ 
+marketplace in which a multitude of approximately equal jurisdictions compete and where regulation is there-
+fore unfeasible–the corporate use of OFCs is in fact concentrated in a small number of key jurisdictions, most of 
+which are highly-developed OECD countries.
+=== [p.3] ===
+www.nature.com/scientificreports/
+3
+SCIENTIfIC REPOrts | 7: 6246 | DOI:10.1038/s41598-017-06322-9
+Methods
+Data extraction and quality assessment. 
+We sourced company ownership data from the Orbis database 
+(http://orbis.bvdinfo.com) in November 2015. Orbis is a unique and frequently used information provider that 
+covers about 200 million public and private firms worldwide22, 23 compiled from official country registrars and 
+other country collection agencies. For each available company, we extracted its operating revenue, country, city, 
+sector, global ultimate owner (the parent firm who owns at least 50% of the company directly or indirectly and 
+is not itself owned by any other firm) and all ownership relationships, with the direct and total ownership per-
+centage. Moreover, since companies located in Isle of Man (IM), Jersey (JE) and Guernsey (GG) use the country 
+code of the United Kingdom, every company located in IM, JE or GG cities was given the country code of the 
+territories (see Supplementary Methods). The resulting dataset contains 71,201,304 distinct ownership relation-
+ships between 98,255,206 companies. Note that our data selection method does not include private wealth, only 
+corporate structures are considered.
+Data quality in Orbis differs across regions. Firm coverage is better for high-income countries than for 
+low-income countries24, 25. In the United States, a significant number of companies registered in the state of 
+Delaware are not covered because they are not required to file information–a problem shared between all corpo-
+rate information providers. In general, poor data quality is associated with fiscal secrecy since these jurisdictions 
+do not consistently report the companies registered in their territories. So, if we are missing data, then this data is 
+more likely to be missing in an OFC than in a non-OFC. Therefore, the findings that we report likely represent a 
+lower bound on the position of offshore financial centers in the corporate ownership network.
+Two extra steps were done to ensure a correct analysis of the data. First, we deconsolidated financial accounts. 
+Generally, only consolidated financial information is available for large companies–i.e., the revenue of all the sub-
+sidiaries is reported in both the subsidiaries and the parent company. We corrected this by recursively subtracting 
+the operating revenue of all subsidiaries of companies with consolidated accounts along all paths of ownership 
+relations (see Supplementary Methods). Second, since the information is collected by different country-level 
+agencies and merged by Orbis, the sum of the ownership stakes was normalized as in Vitali et al.26 to account for 
+missing shareholders (see Supplementary Methods).
+From company data to global corporate ownership chains. 
+In this section we outline our approach 
+that from the ownership data constructs country chains which can ultimately be used to detect OFCs. For the-
+oretical definitions of the different concepts in each of these construction steps, the reader is referred to the 
+Supplementary Methods.
+Ownership network.  We considered the network of ownership relations as a directed graph with the firms as 
+nodes and the links as ownership relations, where value flows from corporate entities to their owners. The struc-
+ture of this network itself has been extensively studied and exhibits common properties of complex networks 
+such as a power-law degree distribution and weight (strength) distribution. We can furthermore observe the 
+emergence of a giant weakly connected component capturing the majority of corporations in the network, as 
+well as a bow-tie structure featuring a smaller strongly connected component in the center. The remainder of this 
+paper considers the derivation of chains from the ownership links, and is not directly concerned with further 
+exploration of the network’s macro level structure. As such, for more details the reader is referred to the excellent 
+study of the global ownership network by Vitali et al.26.
+Company level chains.  From the set of over 71 million ownership relations we identified the global corporate 
+ownership chains (GCOCs) as follows. For each node, we applied a depth-first search algorithm, exploring the 
+resulting network as far as possible along each branch before backtracking, forming chains from the starting node. 
+We continued adding nodes to a chain until the multiplicative ownership fell below 0.001 (for instance, four com-
+panies in a chain owning 10% of the next). Chains reaching the origin node (i.e., loops) or a node previously visited 
+in the considered chain were ignored to avoid infinite loops. The results are robust to variations of the multiplica-
+tive ownership threshold (Supplementary Information). Our approach still reflects country round-tripping (where 
+value flows from country A to B and to A again) since this strategy requires two different companies in country 
+A. We repeated this process for all nodes in the network, which resulted in a set of 11,404,819 ownership chains.
+Multiplicative ownership.  For each ownership chain we determined its value using the weighting method by 
+Vitali et al.26. It weights the value Vp of a chain p in terms of the revenue of the initial company in the chain: 
+=
+⋅
+V
+R
+MO
+C C C
+C
+C C C
+1
+2
+3
+1
+1
+2
+3. Here C1|C2|C3 corresponds to a chain of three companies in which C2 owns C1 and C3 
+owns C2, RC1 is the operating revenue of company C1 and MO is the multiplicative ownership, i.e., the product of 
+the weights of the links between the subsequent firms in the chain.
+Aggregating at the country level.  Next we determined the country of domicile for each corporate node in a 
+GCOC. Given our goal of studying transnational links, we merged together adjacent nodes in a chain that are 
+located in the same country. Finally, we divided each chain into chunks of length 
+…
+2, 3,
+, chain , which resulted 
+into 108,159,506 chunks. In order to avoid double counting revenue, we kept the maximum revenue for each 
+group of chunks matching to the same country level chain, the same owner and the same upstream companies. 
+For instance, we can have a chain A1|A2|B1|B2, where companies A1 and A2 are located in country A, and compa-
+nies B1 and B2 are in country B. From this chain, we can create all chunks in Fig. 1A, matching to the same country 
+chain (A/B). Since the value originates in the same company (A1), it has the same owner in country B (B1), and the 
+flow happens through the same companies (A1/A2), we only keep the chunk with the largest value. In this way we 
+obtained 16,448,469 chains.
+=== [p.4] ===
+www.nature.com/scientificreports/
+4
+SCIENTIfIC REPOrts | 7: 6246 | DOI:10.1038/s41598-017-06322-9
+After grouping all chains going through the same countries we obtained 377,098 different country-level own-
+ership chains (e.g. ES|NL|LU). In these chains value flows from a company in the source (ES) to an owner in the 
+sink (LU) (the sink owns the source either directly or through conduit countries). Next, we identify OFCs based 
+on particular motifs in the ownership chains.
+Finding Sink and Conduit Offshore Financial Centers. 
+Avoiding double counting of sinks and con-
+duits.  In order to identify sinks and conduits we focus on two subsets of country chains. The first subset contains 
+52,655 chains of size three and is used for the conduit-OFC analysis. This selection strategy ensures that conduits 
+(countries in the middle of an ownership chain) are not double counted (Fig. 1B,C). For instance, using chains of 
+length four would result in double counting country C in Fig. 1C. The second subset contains 7,172 chains of size 
+two and is used for the sink-OFC analysis. This selection strategy ensures that sources and sinks are not counted 
+twice.
+Sink Offshore Financial Centers (sink-OFCs).  Sink-OFCs are jurisdictions that attract and retain foreign capital, 
+i.e., jurisdictions in which GCOCs end. Thus, we define the sink centrality (Sc) of a country as the difference 
+of value entering and leaving the country, divided by the sum of all value in the network. Moreover, since this 
+difference is proportional to the size of the country, we normalized the centrality by the gross domestic product 
+(GDP) of the country.
+= ∑
+−∑
+∑
+⋅∑
+∈
+=
+∈
+=
+∈
+S
+V
+V
+V
+GDP
+GDP
+,
+(1)
+c
+g
+G
+g
+c
+g
+g
+G
+g
+c
+g
+g
+G
+g
+i
+i
+c
+: [1]
+: [0]
+2
+2
+2
+Here, G2 is the set of country chains of size two and g[i] = c means that the i-th country in country chain g is coun-
+try c. Furthermore, GDPc is the GDP of country c. Using the measure in Equation 1, we define as sink offshore 
+financial centers (sink-OFCs) those countries that have a disproportional amount of value staying in the country, 
+where a disproportional amount is set to 10–i.e., the value staying in the country is 10 times higher than the value 
+that would correspond to the country in terms of its GDP. The results are robust to variations of this threshold 
+(Supplementary Information).
+Conduit Offshore Financial Centers (conduit-OFCs).  We define conduits as jurisdictions that act as intermediate 
+destinations to sink-OFCs. The conduit centrality Cc of a country c is defined in two axes. The first axis, inward 
+conduit centrality (Ccin), measures the value of chains flowing from a sink-OFC, into the conduit, out to another 
+country. The second axis, outward conduit centrality Ccout measures the value of chains flowing from any country, 
+into the conduit, out to a sink-OFC. Since this flow is proportional to the size of the country, we normalized the 
+centrality by the gross domestic product (GDP) of the country.
+= ∑
+∑
+⋅∑
+∈
+=
+∈
+C
+V
+V
+GDP
+GDP
+,
+(2)
+c
+g
+G
+g
+c
+g
+g
+G
+g
+i
+i
+c
+: [2]
+in
+s1
+3
+3
+= ∑
+∑
+⋅∑
+∈
+=
+∈
+C
+V
+V
+GDP
+GDP
+,
+(3)
+c
+g
+G
+g
+c
+g
+g
+G
+g
+i
+i
+c
+: [2]
+out
+s3
+3
+3
+Here, G3 are chains of length three, Gs1
+3 is the subset of G3 in which the first country in the chain is a sink-OFC. 
+Analogously, Gs3
+3 is the subset of G3 in which the third and last country in the chain is a sink-OFC. Countries with 
+a Cc larger than 1 in both axes (Ccin and Ccout) were considered conduit-OFCs. We empirically found that the divi-
+sion between conduit-OFCs and other countries occur naturally around 
+=
+C
+1
+c in out
+(
+/
+)
+ (Supplementary 
+Information).
+In order to understand if a country c serves as a conduit for many other countries or only a few, we calculate 
+the Shannon entropy of the distribution of values leaving (ECcout) or entering (ECcin) the country in chains of size 
+Figure 1.  Strategy used to avoid double counting flows. (A) Four chunks matching to the same country-level 
+chain (A|B) originated from the same GCOC (A1|A2|B1|B2). Companies present in the original chain but not 
+in the chunk are depicted in gray. The upstream of the chunks is underlined. B1 corresponds to the first owner 
+in country B. (B,C) Finding conduits using overlapping chains. A,B,C,D and E are individual countries. (B) 
+Conduits would be counted only once after splitting the chain in chunks of size three and counting all the 
+fragments. (C) Conduits would be double counted if the chain is split in chunks of size four.
+=== [p.5] ===
+www.nature.com/scientificreports/
+5
+SCIENTIfIC REPOrts | 7: 6246 | DOI:10.1038/s41598-017-06322-9
+three. Shannon entropy is lower for conduits catering to few countries and more skewed value distributions–i.e., 
+most of the value coming from the same country; and higher for conduits catering to many countries and with 
+more even distributions.
+∑
+= −
+EC
+V
+V
+(
+log(
+)),
+(4)
+c
+i
+i c s
+i c s
+in
+∑
+= −
+EC
+V
+V
+(
+log(
+)),
+(5)
+c
+i
+s c i
+s c i
+out
+where Vi|c|w denotes the sum of value in all G3 where the source is country i, the conduit is country c and s is any 
+sink-OFC, normalized such that ∑
+=
+V
+(
+)
+1
+i
+i c s
+.
+Results
+Identifying Sink Offshore Financial Centers. 
+We first identified sink and conduit Offshore Financial 
+Centers. Figure 2A shows the sink-OFC centrality for every country, with the absolute value of the metric on the 
+horizontal axis and the proper GDP-normalized value on the vertical axis (see Methods). Node size reflects the 
+sum of all value entering or leaving the country. Orange colored countries receive more value than they send and 
+are thus net sinks. Green countries cannot be sink-OFCs because they are net senders.
+We denoted the 24 orange colored countries above the factor 10 threshold in Fig. 2A as sink OFCs (Table 1 and S2). 
+The sink-OFC centrality is proportional to FDI and as such mirrors the offshore intensity ratio approach16 for 
+identifying sink-OFCs (Supplementary Fig. S1). Our list of sink-OFCs is indeed associated with territories with 
+low or zero corporate taxes, where capital accumulates. While Panama is well known as a tax haven, our approach 
+does not identify it as a sink-OFC. Panama is mainly a tax haven for individuals and with relatively high corporate 
+taxes (25%) is less attractive for corporate groups. In the notorious Panama Papers (https://panamapapers.icij.org) 
+the large majority of the involved shell companies were actually domiciled in the British Virgin Islands (VG).
+In contrast to the results from the offshore-intensity ratio approach, our method identifies Taiwan (TW) as 
+a very prominent sink-OFC. In-depth studies by tax specialists have suggested that Taiwan is an ‘unnoticed tax 
+haven’27, since it has not signed the OECD Common Reporting Standard for the automatic exchange of financial 
+information and maintains bank confidentiality. The prominence of Taiwan is driven by Taiwanese technological 
+companies, which often own Chinese firms through Hong Kong (33%) and Caribbean Islands (20%), or own 
+Hong Kong firms through Caribbean Islands (12%). Due to pressure by China, Taiwan does not participate in 
+FDI statistics collected by the IMF and therefore was not detected by studies relying on aggregated international 
+FDI data.
+Figure 2.  Sink and conduit centralities. (A) Absolute value of the sink-OFC centrality versus absolute value of 
+the sink-OFC centrality without the GDP normalization. The color of the node indicates the sign of the sink-
+OFC centrality (green are negative, orange are positive). The size of the node is proportional to the sum of the 
+value entering and leaving the country. (B) Inward vs outward conduit centrality. (C) Average conduit centrality 
+(in and out) versus average entropy of the distribution of value (in and out). (D) Value flowing through the 
+conduit to non-sink-OFC countries versus non-normalized conduit centrality (value flowing through the 
+conduit to sink-OFC countries). Color in plots B–D indicates function; sink-OFCs are colored in red, conduit-
+OFCs are colored in green, and all other countries are colored in blue.
+=== [p.6] ===
+www.nature.com/scientificreports/
+6
+SCIENTIfIC REPOrts | 7: 6246 | DOI:10.1038/s41598-017-06322-9
+Our approach replicates the outcomes of the offshore-intensity ratio method, but is also able to identify hith-
+erto ‘unnoticed’ sink-OFCs. In addition, our approach enables us to quantify the weight of each territory in cor-
+porate offshore finance. In conclusion, the five largest sink-OFCs in terms of non-normalized sink-OFC centrality 
+are: Luxembourg, Hong Kong, the British Virgin Islands, Bermuda and Jersey (Supplementary Table S2).
+Identifying Conduit Offshore Financial Centers. 
+While sink-OFCs store capital, conduit-OFCs facili-
+tate the movement of capital between sink-OFCs and other countries. Figure 2B shows the inward versus outward 
+conduit-OFC centrality (see Methods). We marked in red countries identified as sink-OFCs in Fig. 2A. Blue 
+countries are not OFCs since they are not sink-OFCs and only a moderate sum of value in chains ending (or 
+starting) in sink-OFCs goes through them. We denote all the jurisdictions in the upper right quadrant as conduit 
+OFCs. As expected, the sink-OFCs (in red) are also important conduits.
+Green countries are distinct conduit-OFCs (Table 2). Our approach identifies five large conduit-OFCs that do 
+not act as sink-OFCs: The Netherlands, the United Kingdom, Switzerland, Singapore and Ireland. These coun-
+tries facilitate the transfer of value from and to sink-OFCs, and are used by a wide range of countries (Fig. 2C). 
+Importantly, these countries are also used extensively as conduits to non-OFCs (Fig. 2D), indicating that 
+conduit-OFCs are not used exclusively for the transfer of value to sink-OFCs. This contrasts with countries such 
+as Russia, China or most sink-OFCs, which are used by companies as conduits to sink-OFCs more frequently 
+than as conduits to non-OFCs (Fig. 2D). Finally, our approach also identifies three small conduit-OFCs that do 
+not act as sink-OFCs: Belgium, Panama and Guernsey. For a comparison of our approach with other rankings of 
+OFCs, see Supplementary Information and Supplementary Table S5.
+Geographical specialization. 
+Next, we investigated if there exists geographical specialization in the own-
+ership network. Figure 3 shows the network of value flow between countries, where the color indicates the relative 
+importance of the link in relation to a simple null model where the weights are set to the product of the GDP 
+of each pair of countries (see Supplementary Methods). The size of the nodes is proportional to the fraction of 
+chains where that country appears, and the color shows the sink-OFC centrality. The position of a country in the 
+network is set through a force-directed layout, where well connected countries are close in space. This is reflected 
+by European countries placed close to the Netherlands (NL) and Luxembourg (LU), while Asian countries are 
+placed close to Hong Kong (HK) and other sink-OFCs, and United Kingdom (GB) acts as an integrator between 
+Europe and Asia.
+The geographical specialization observed at the country-by-country ownership network (Fig. 3) can be further 
+dissected at the global corporate ownership chain level. Figure 4 shows the countries that appear in the source 
+and sink position of the chain. Since we are interested in conduit-OFCs, we restricted the analysis to those chains 
+ending in a sink-OFC. For each country in the horizontal axis we visualized two columns. The leftmost column 
+represents the value associated to the source countries, while the rightmost column shows the distribution of 
+the value associated to sink-OFCs. The Netherlands and the United Kingdom are the largest conduits, with val-
+ues going through them twice the value of the next largest country (Luxembourg). Each country is specialized 
+in a geographical area: the United Kingdom serves as a conduit between European countries and LU, BM, JE, 
+VG and KY. The Netherlands is the principal conduit between European companies and LU, CW, CY and BM. 
+ISO2
+Country name
+Sc
+ISO2
+Country name
+Sc
+ISO2
+Country 
+name
+Sc
+VG
+British Virgin 
+Islands
+5235
+MH
+Marshall Islands
+100
+BZ
+Belize
+38
+TW
+Taiwan
+2278
+MT
+Malta
+100
+GI
+Gibraltar
+34
+JE
+Jersey
+397
+MU
+Mauritius
+75
+AI
+Anguilla
+27
+BM
+Bermuda
+374
+LU
+Luxembourg
+71
+LR
+Liberia
+17
+KY
+Cayman Islands
+331
+NR
+Nauru
+67
+VC
+St. Vincent & 
+Granadines
+14
+WS
+Samoa
+277
+CY
+Cyprus
+62
+GY
+Guyana
+14
+LI
+Lichtenstein
+225
+SC
+Seychelles
+60
+HK
+Hong Kong
+14
+CW
+Curaçao
+115
+BS
+Bahamas
+40
+MC
+Monaco
+11
+Table 1.  List of sink-OFCs, ordered by sink centrality value.
+ISO2
+Country name
+Non-normalized 
+Ccout
+Non-normalized 
+Ccin
+Ccout
+Ccin
+NL
+The Netherlands
+7.4 · 1011
+3.8 · 1011
+18.6
+22.5
+GB
+United Kingdom
+3.8 · 1011
+1.3 · 1011
+3.1
+2.4
+CH
+Switzerland
+2.2 · 1011
+2.7 · 1010
+6.9
+2.0
+SG
+Singapore
+7.2 · 1010
+2.2 · 1010
+5.1
+3.8
+IE
+Ireland
+6.4 · 1010
+3.3 · 1010
+5.9
+7.2
+Table 2.  List of conduit-OFCs, ordered by value flowing through the conduit toward sink-OFCs.
+=== [p.7] ===
+www.nature.com/scientificreports/
+7
+SCIENTIfIC REPOrts | 7: 6246 | DOI:10.1038/s41598-017-06322-9
+Importantly, the majority of investments from LU or HK do not require a conduit, and thus LU and HK com-
+panies invest directly in European countries and China (Fig. 4 inset). In contrast, investments from countries 
+typically identified as tax havens (e.g., BM, VG or KY) do, and thus companies located in these jurisdictions invest 
+in other OFCs (Fig. 4 inset).
+Other countries are also specialized. Switzerland is used as a conduit to Jersey. Ireland is the route for Japanese 
+and American companies to Luxembourg (note that since the US is not considered a sink-OFC, companies with 
+Figure 3.  Network of ownership flows between countries. Node size is proportional to the unnormalized 
+conduit-OFC (value flowing through the conduit towards sink-OFCs). Node color is sink centrality (value 
+entering minus value leaving the country, divided by the GDP). Edge size is proportional to the value flowing 
+through countries. Edge color is proportional to the significance of the flow in relation to a null model. See 
+Supplementary Methods for an explanation of the null model.
+Figure 4.  Geographical specialization. The value going through each conduit in chains of size three ending 
+in sink-OFCs is depicted. The first column visualizes the source countries, the second column represents the 
+sink countries, and the horizontal axis shows the conduit countries. Sink-OFCs are marked red and conduit-
+OFCs are marked green, all countries representing less than US$1010 are combined together in gray. Dark gray 
+corresponds to companies with unknown location. (inset) Value invested from companies located in sink-OFCs 
+(horizontal axis) into other countries.
+=== [p.8] ===
+www.nature.com/scientificreports/
+8
+SCIENTIfIC REPOrts | 7: 6246 | DOI:10.1038/s41598-017-06322-9
+the structure 
+→
+→
+EU country
+IE
+US (such as Apple) do not contribute to the conduit-OFC centrality of 
+Ireland). Cyprus is primarily used by Russian companies owned from the British Virgin Islands. Belgium is used 
+as a conduit for the company Euroclear (see Supplementary Information).
+British Virgin Islands (VG), Cayman Islands (KY) and Bermuda (BM) are strongly interlinked, with many 
+chains starting and ending in the three jurisdictions under British sovereignty (as evidenced in Fig. 3). However 
+they are used by different countries. VG is used for chains starting in China (CN) and Hong Kong (HK) and 
+ending in Taiwan (TW) or HK. BM is used for European companies owned from the VG or LU. Cayman Islands 
+(KY) chains start in TW, HK and China and end in TW and HK. Finally, HK and Singapore (SG) are small terri-
+tories connecting Asia, Europe and sink-OFCs: HK acts as the conduit between China and TW, VG, KY; SG has 
+an important role joining many different countries (mainly South-East Asia, CN, GB and NL) to HK, VG, KY 
+and BM.
+Sector specialization. 
+Next, we looked at whether specialization was also present at the sectoral level. 
+We first converted each global corporate ownership chain in terms of the sectors involved by using the statis-
+tical classification of economic activities in the European community (NACE Rev. 2). For instance the chain 
+291→642→829 indicates that a company in sector 291 (manufacture of motor vehicles) is owned by a company 
+in sector 642 (holding company), which in turn is owned by a company in sector 829 (administrative and sup-
+port activities sector). In order to explore the sectoral specialization, we classified the sectors by their dominant 
+position in chains of size three (in terms of value), finding six categories: only source, only conduit, only sink, 
+source + conduit, source + sink, conduit + sink and source + conduit + sink (see Supplementary Methods). For 
+instance, sectors prevalent in the source position were assigned to the source group. Figure 5A summarizes our 
+findings. We found that while the source category is relatively diversified in terms of sectors, this is not the case for 
+conduit and sink sectors. The conduit positions in the chains are dominated by ‘Holding companies’ (prominent 
+in the Netherlands). Sinks are specialized by sector as well, with ‘Administrative’ (829, prominent in Luxembourg) 
+and ‘Unknown’ (prominent in sink-OFCs) sectors attracting the majority of the value. Two sectors are prominent 
+in both source and conduit position, ‘Head offices’ (701) and ‘Wholesale trade’ (46) sectors.
+The concentration is more pronounced at the end of the chains, where administrative and office support (829, 
+driven by Luxembourg), oil industry (08/09, driven by Russia) and manufacture of computers (26, driven by 
+Hong Kong and Taiwan) are the main sectors. As expected since sink-OFCs are usually associated with secrecy, 
+companies with missing sectors (00, driven by sink-OFCs) also appear at the end of the chains. Finally, sectors 
+that are evenly distributed among sectors correspond to other types of financial companies (sector 64). Different 
+sectors appear in different parts of the chains, with only a small number of sectors appearing in the conduit and 
+sink positions.
+Sectoral-geographical specialization. 
+Finally, we investigated if the geographical specialization in con-
+duits correlates with a sectoral specialization. Since conduit-OFCs have favorable legislation for the establishment 
+of only a few concrete types of entities (e.g., head offices, or holding companies), we expected that the majority 
+of the value going through a conduit-OFC would be concentrated in one or a few sectors. Figure 5B shows the 
+sectoral specialization for different conduit-OFCs as well as Luxembourg and Hong Kong, given their relevance 
+as sink-OFCs and their position in the European Union and in proximity of China. For each country in the 
+horizontal axis we show three columns. The leftmost column represent the distribution of sectors of the com-
+panies located in the source country, the middle columns represent the distribution of sectors in the conduit 
+country, while the right columns represent the distribution of sectors in the companies within the sink-OFCs. 
+In general, we observe that while the source sector is generally known, this is not the case for the sink sector. 
+Consequently with their classification as sink-OFCs, 40% of LU and 70% of HK companies involved in chains 
+ending in sink-OFCs have missing sector information. We found that the Netherlands (NL), the United Kingdom 
+(GB), Switzerland (CH) and Singapore (SG) are specialized in holding companies (code 642), while Ireland (IE) 
+(together with GB) specializes in activities of head offices (code 701).
+Figure 5.  Sectoral specialization. (A) Distribution of sectors (NACE Rev. 2) in terms of their dominant 
+position in the chain (Source (SO), Conduit (CO), Sink (SI), Source + Conduit (SC), Source + Sink (SS), 
+Source + Conduit + Sink (SCS)). (B) Percentage of revenue going through each country in chains of size 
+three, by sector. The first column visualizes the distribution of sectors in the source country, the second 
+columns visualizes the distribution of sectors in the conduit (horizontal axis), and the third column shows the 
+distribution of sectors in the sink country.
+=== [p.9] ===
+www.nature.com/scientificreports/
+9
+SCIENTIfIC REPOrts | 7: 6246 | DOI:10.1038/s41598-017-06322-9
+For chains using Luxembourg as a conduit, 90% of the value ends up in an unknown sector in a sink-OFC. 
+Similar trends are observed for HK, SG and IE. For Switzerland, 70% of the value ends in sector 089 in Jersey. 
+We observe the 641|642|641 sandwich in GB, corresponding mainly to HSBC. Manufacturers of electronics and 
+computers (261 and 262) use predominantly HK as conduit, while holding companies use the Netherlands and 
+Luxembourg as conduits, and other financial sectors use Ireland. Finally, we observe that Dutch companies are 
+owned by companies in sector 829 (concentrated in Luxembourg). Hence, we observe a clear sectoral specializa-
+tion of conduit-OFCs.
+Discussion
+Prior work on OFC identification used either qualitative assessments of policies and regulations or a quantitative 
+approach based on ratios of foreign investment to GDP. Here we develop a novel method for OFC identification 
+by analyzing the transnational ownership network based on global corporate ownership chains. By investigating 
+which countries are used predominantly as owners in the chain we are able to find a set of 24 sink-OFCs. We show 
+that the majority of investment from and to sink-OFCs occurs through only five jurisdictions (conduit-OFCs): 
+the Netherlands, the United Kingdom, Switzerland, Ireland and Singapore. The Netherlands and the United 
+Kingdom rank among the largest countries in global cross-border direct investment, according to IMF data. 
+Thus, it could have been expected that these two countries would also appear in a firm-level analysis of the global 
+corporate ownership network, such as ours. However, our method for the first time uncovers the role of both 
+countries as dominant conduits within transnational corporate ownership chains. This granular analysis sheds 
+new light on the outsized role of the Netherlands and the United Kingdom in global finance.
+We find a clear geographical specialization in the offshore financial network28, 29: the Netherlands is the con-
+duit between European companies and Luxembourg. The United Kingdom is the conduit between European 
+countries and former members of the British Empire, such as Hong Kong, Jersey, Guernsey or Bermuda. Hong 
+Kong and Luxembourg, being themselves sink-OFCs, also serve as the main countries in the route to typical 
+tax havens (British Virgin Islands, Cayman Islands and Bermuda). The specialization is not only geographi-
+cal, but also present at the sector level. For instance, the Netherlands is specialized in holding companies, the 
+United Kingdom in head offices and fund management, Ireland is prominent in financial leasing and head offices, 
+Luxembourg in support activities, Hong Kong and Switzerland are characterized under the “Other financial 
+activities category”, which encompasses commodity dealing, financial intermediation and derivatives dealing. 
+Companies choose to centralize their investment apparatus in specific jurisdictions according to the tax regula-
+tions of the jurisdiction, its bilateral tax treaties, and its sectoral advantages. Our network approach thus sheds 
+light on the geographic structure of the global ownership network, finding that only a small set of territories act 
+as sinks of ownership chains (most of them under British sovereignty), and even a smaller subset act as conduits 
+for ownership structures to sinks.
+Our approach identifies, characterizes and ranks OFCs and as such helps to increase transparency of and 
+insight in highly complex international corporate financial structures. The developed method to identify OFCs 
+improves previous attempts such as the list of tax havens published by the European Union in 2015, where 
+countries such as Luxembourg or the Netherlands–the most prominent sink-OFC and conduit-OFC (see 
+Supplementary Table S5)–were not included. The European Union list also does not rank jurisdictions, giving the 
+same status to the British Virgin Islands and to Anguilla, while in fact 170 times more value ends in the former 
+than in the latter.
+Since the financial crisis, the G20 and the OECD have increased pressure on tax evasion21. However the effects 
+of these efforts have been modest30. Our contribution can help regulators target the policy to the sectors and ter-
+ritories where the offshore activity concentrates. While efforts usually focus on small exotic islands, we showed 
+that the main sinks of corporate ownership chains are highly developed countries which have signed numerous 
+tax treaty agreements (Luxembourg and Hong Kong). Moreover, we showed that only a small number of con-
+duits canalize the majority of investments to typical sink-OFCs such as Bermuda, British Virgin Islands, Cayman 
+Islands, or Jersey (which, in fact, are all under the sovereignty of the United Kingdom). Targeting conduit-OFCs 
+could prove more effective than targeting sink-OFCs, since–while new territories with low or no corporate taxes 
+are continuously emerging–the conditions for conduit-OFCs (numerous tax treaties, strong legal systems, good 
+reputation) can only be found in a few countries.
+Future work could investigate the resilience of the network, in order to find points of action for legislators. For 
+instance, an estimation of the changes in corporate structures at the global scale following the implementation 
+of a policy could be calculated by co-analyzing tax treaties, trade networks, and corporate ownership chains (in 
+the same vein as Weyzig21). Future work can also compare the structure and resilience of the ownership network 
+with other networks such as the airline31 or trade networks32, finding how trade (representing ‘real’ economy), 
+ownership (representing flux of value) and airlines (representing connections between countries) are interlinked.
+References
+	 1.	 Seabrooke, L., Wigan, D. & Paper, N. W. The governance of global wealth chains. Review of International Political Economy 24, 1–29 
+(2017).
+	 2.	 Fichtner, J. The anatomy of the cayman islands offshore financial center: Anglo-america, japan, and the role of hedge funds. Review 
+of International Political Economy 23, 1034–1063 (2016).
+	 3.	 Henry, J. S. The price of offshore revisited, new estimates for missing global private wealth, income, inequality, and lost taxes. Tax 
+Justice Network, July 5 (2012).
+	 4.	 Palan, R., Murphy, R. & Chavagneux, C. Tax havens: How globalization really works (Cornell University Press, 2013).
+	 5.	 Rixen, T. Why reregulation after the crisis is feeble: Shadow banking, offshore financial centers, and jurisdictional competition. 
+Regulation & Governance 7, 435–459 (2013).
+	 6.	 Lysandrou, P. & Nesvetailova, A. The role of shadow banking entities in the financial crisis: a disaggregated view. Review of 
+International Political Economy 22, 257–279 (2015).
+=== [p.10] ===
+www.nature.com/scientificreports/
+10
+SCIENTIfIC REPOrts | 7: 6246 | DOI:10.1038/s41598-017-06322-9
+	 7.	 Fernandez, R. & Wigger, A. Lehman brothers in the dutch offshore financial centre: the role of shadow banking in increasing 
+leverage and facilitating debt. Economy and Society 1–24 (2017).
+	 8.	 Bryan, D., Rafferty, M. & Wigan, D. Capital unchained: finance, intangible assets and the double life of capital in the offshore world. 
+Review of International Political Economy 24, 56–86 (2017).
+	 9.	 Drucker, J. Google 2.4% rate shows how $60 billion is lost to tax loopholes. Bloomberg (2010).
+	10.	 European Commission. Press release - State aid: Ireland gave illegal tax benefits to Apple worth up to 13 billion euro. (2016).
+	11.	 Houlder, V., Pickard, J., Lucas, L. & Jopson, B. Starbucks to pay GBP 20 m UK corporate tax. Financial Times (2012).
+	12.	 Dover, R., Ferrett, B., Gravino, D., Jones, E. & Merler, S. Bringing transparency, coordination and convergence to corporate tax 
+policies in the european union. European Parliamentary Research Service PE 558.773 (2015).
+	13.	 Zucman, G. Taxing across borders: Tracking personal wealth and corporate profits. Journal of Economic Perspectives 28, 121–148 
+(2014).
+	14.	 Zorome, A. Concept of offshore financial centers: In search of an operational definition. IMF Working Papers 1–32 (2007).
+	15.	 Cobham, A., Jansky, P. & Meinzer, M. The financial secrecy index: Shedding new light on the geography of secrecy. Economic 
+geography 91, 281–303 (2015).
+	16.	 Fichtner, J. The offshore-intensity ratio. Identifying the strongest magnets for foreign capital. CITYPERC Working Paper Series 
+2015/02, City University London. SSRN ID 2928027 (2015).
+	17.	 Mügge, D. & Stellinga, B. The unstable core of global finance: Contingent valuation and governance of international accounting 
+standards. Regulation & Governance 9, 47–62 (2015).
+	18.	 International Monetary Fund. Report on the Measurement of International Capital Flows (IMF, Washington, DC, 1992).
+	19.	 International Monetary Fund. Spillovers in international corporate taxation (2014).
+	20.	 Berkhout, E. Tax battles: The dangerous global race to the bottom on corporate tax. Tech. Rep., Oxfam policy paper (2016).
+	21.	 Weyzig, F. Tax treaty shopping: structural determinants of foreign direct investment routed through the netherlands. International 
+Tax and Public Finance 20, 910–937 (2013).
+	22.	 Glattfelder, J. B. Ownership networks and corporate control: mapping economic power in a globalized world. Ph.D. thesis, ETH Zürich 
+(2010).
+	23.	 Heemskerk, E. M., Takes, F. W., Garcia-Bernardo, J. & Huijzer, M. J. Where is the global corporate elite? A large-scale network study 
+of local and nonlocal interlocking directorates. Sociologica 2016, 1–18 (2016).
+	24.	 Cobham, A. & Loretz, S. International distribution of the corporate tax base: Implications of different apportionment factors under 
+unitary taxation. ICTD Working Paper 27. Available at SSRN: https://ssrn.com/abstract=2587839 (2014).
+	25.	 Garcia-Bernardo, J. & Takes, F. W. The effects of data quality on the analysis of corporate board interlock networks. arXiv preprint 
+arXiv:1612.01510 (2016).
+	26.	 Vitali, S., Glattfelder, J. B. & Battiston, S. The network of global corporate control. PloS one 6 (2011).
+	27.	 Tax Justice Network. Taiwan–the un-noticed Asian tax haven? Tax Justice Network Blog (2016).
+	28.	 Haberly, D. & Wójcik, D. Regional blocks and imperial legacies: Mapping the global offshore fdi network. Economic Geography 91, 
+251–280 (2015).
+	29.	 Haberly, D. & Wójcik, D. Tax havens and the production of offshore FDI: an empirical analysis. Journal of Economic Geography 
+(2014).
+	30.	 Johannesen, N. & Zucman, G. The end of bank secrecy? An evaluation of the G20 tax haven crackdown. American Economic Journal: 
+Economic Policy 65–91 (2014).
+	31.	 Verma, T., Araújo, N. A. M. & Herrmann, H. J. Revealing the structure of the world airline network. Scientific Reports 4, 5638 (2014).
+	32.	 Lee, K.-M. & Goh, K.-I. Strength of weak layers in cascading failures on multiplex networks: case of the international trade network. 
+Scientific Reports 6, 26346 (2016).
+Acknowledgements
+This project has received funding from the European Research Council (ERC) under the European Union’s 
+Horizon 2020 research and innovation programme (grant agreement number 638946). We thank Arjan Reurink 
+for useful suggestions and comments.
+Author Contributions
+All authors were involved in the research design. J.G.B. collected the data, implemented the methods and 
+performed the experiments. All authors wrote and reviewed the manuscript.
+Additional Information
+Supplementary information accompanies this paper at doi:10.1038/s41598-017-06322-9
+Competing Interests: The authors declare that they have no competing interests.
+Publisher's note: Springer Nature remains neutral with regard to jurisdictional claims in published maps and 
+institutional affiliations.
+Open Access This article is licensed under a Creative Commons Attribution 4.0 International 
+License, which permits use, sharing, adaptation, distribution and reproduction in any medium or 
+format, as long as you give appropriate credit to the original author(s) and the source, provide a link to the Cre-
+ative Commons license, and indicate if changes were made. The images or other third party material in this 
+article are included in the article’s Creative Commons license, unless indicated otherwise in a credit line to the 
+material. If material is not included in the article’s Creative Commons license and your intended use is not per-
+mitted by statutory regulation or exceeds the permitted use, you will need to obtain permission directly from the 
+copyright holder. To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/.
+ 
+© The Author(s) 2017

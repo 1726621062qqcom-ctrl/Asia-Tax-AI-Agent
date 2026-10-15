@@ -1,0 +1,1611 @@
+=== [p.1] ===
+Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing, pages 7052–7063
+November 7–11, 2021. c⃝2021 Association for Computational Linguistics
+7052
+Entity-Based Knowledge Conﬂicts in Question Answering
+Shayne Longpre∗♠
+Kartik Perisetla∗♠
+Anthony Chen∗♥
+Nikhil Ramesh♠
+Chris DuBois♠
+Sameer Singh♥
+♠Apple
+♥University of California, Irvine
+slongpre@mit.edu
+{kperisetla, nikhilr, cdubois} @apple.com
+{anthony.chen, sameer} @uci.edu
+Abstract
+Knowledge-dependent tasks typically use two
+sources of knowledge: parametric, learned at
+training time, and contextual, given as a pas-
+sage at inference time.
+To understand how
+models use these sources together, we for-
+malize the problem of knowledge conﬂicts,
+where the contextual information contradicts
+the learned information.
+Analyzing the be-
+haviour of popular models, we measure their
+over-reliance on memorized information (the
+cause of hallucinations), and uncover impor-
+tant factors that exacerbate this behaviour.
+Lastly, we propose a simple method to mit-
+igate over-reliance on parametric knowledge
+which minimizes hallucination and improves
+out-of-distribution generalization by 4%−7%.
+Our ﬁndings demonstrate the importance for
+practitioners to evaluate model tendency to hal-
+lucinate rather than read, and show that our
+mitigation strategy encourages generalization
+to evolving information (i.e., time-dependent
+queries).
+To encourage these practices, we
+have released our framework for generating
+knowledge conﬂicts.1
+1
+Introduction
+Knowledge-dependent tasks, such as open-retrieval
+question answering (QA), require expansive “world
+knowledge”, common sense, and reasoning abili-
+ties. State-of-the-art approaches typically follow a
+retrieve-and-read setup (Chen et al., 2017), where
+the retriever sources relevant documents, and the
+reader produces an answer from these. In this sense,
+there are two sources of knowledge contributing
+to model inference with an ambiguous and opaque
+division of labour. The ﬁrst is the implicit para-
+metric knowledge (i.e., their learned weights) in-
+stilled by pre-training and ﬁne-tuning (Petroni et al.,
+2019). The second is contextual knowledge, usu-
+∗Equal Contribution.
+1Framework is provided at https://github.com/
+apple/ml-knowledge-conflicts.
+Question: Who did US ﬁght in world war 1?
+Original Context: The United States declared war on
+Germany on April 6, 1917, over 2 years after World
+War I started . . .
+Original Answer: Germany
+Model Prediction: Germany
+Question: Who did US ﬁght in world war 1?
+Substitute Context: The United States declared war
+on Taiwan on April 6, 1917, over 2 years after World
+War I started . . .
+Substitute Answer: Taiwan
+Model Prediction: Germany
+Figure 1: Knowledge Substitution: A substitute ex-
+ample is derived from the original example by replac-
+ing the original answer, Germany, with a similar type
+of answer, i.e. Taiwan. An example of a knowledge
+conﬂict occurs when a model is trained (or pre-trained)
+on the original example and evaluated on the substi-
+tute example.
+ally sourced as passages of text from the retriever
+(Fisch et al., 2019).
+As a testament to their memorization abilities,
+large language models can produce competitive
+results relying only on their own parametric knowl-
+edge, without access to relevant documents (Brown
+et al., 2020; Roberts et al., 2020). However, this
+memorization behaviour has manifested in a pen-
+chant to hallucinate, or parrot answers memorized
+during training, completely ignoring relevant docu-
+ments when provided (Krishna et al., 2021; Bender
+et al., 2021). This memorization behaviour violates
+the expectation that the reader produce answers
+consistent with the retrieved information, diminish-
+ing interpretability of the system. More problem-
+atically, this behaviour inhibits the model’s abil-
+ity to generalize to evolving knowledge and time-
+dependent answers, not found in training (Guu
+et al., 2020; Schuster et al., 2021).
+Our objective is to understand how systems em-
+ploy parametric and contextual knowledge together
+by studying knowledge conﬂicts: situations where
+
+=== [p.2] ===
+7053
+the contextual knowledge contradicts with knowl-
+edge learned during pre-training or ﬁne-tuning. Be-
+cause the space of knowledge conﬂicts is broad,
+we restrict ourselves to the space of entity-based
+conﬂicts – restricted to named entity substitutions.
+We create an automated framework that identiﬁes
+QA instances with named entity answers, then sub-
+stitutes mentions of the entity in the gold document
+with an alternate entity, thus changing the answer
+(Fig. 1). Our framework is extensible and ﬂexible,
+allowing entities mined from various sources (enti-
+ties in datasets, or knowledge graphs like Wikidata
+(Vrandecic and Krötzsch, 2014)), and with custom
+substitution policies.
+We use our automated framework to cre-
+ate substitution instances for Natural Questions
+(Kwiatkowski et al., 2019) and NewsQA (Trischler
+et al., 2017a). Using these instances as knowledge
+conﬂicts, we evaluate the behaviour of popular QA
+model paradigms and discover several factors that
+signiﬁcantly affect a model’s over-reliance on para-
+metric knowledge, including: model size, model
+type, quality of retrieval during training, domain
+similarity, and speciﬁc characteristics of the an-
+swers. Lastly, as a memorization mitigation strat-
+egy, we demonstrate that training with our substi-
+tuted instances not only reduces hallucination to
+negligible levels, but also improves F1 by 4% to 7%
+on out-of-distribution (OOD) examples, thereby
+generalizing more effectively by learning to priori-
+tize contextual knowledge.
+2
+Substitution Framework
+We introduce a substitution framework for creating
+knowledge-conﬂicting instances. The framework
+maps a QA instance x = (q, a, c), with query q,
+answer a, and the context passage c in which a
+appears, to x′ = (q, a′, c′) where a is replaced
+by substitution answer a′ as the gold answer, and
+where all occurrences of a in c have been replaced
+with a′, producing new context c′.
+This substitution framework extends partially-
+automated dataset creation techniques introduced
+by Chen et al. (2021) for Ambiguous Entity Re-
+trieval (AmbER). Our dataset derivation follows
+two steps: (1) identifying QA instances with named
+entity answers, and (2) replacing all occurrences
+of the answer in the context with a substituted en-
+tity, effectively changing the answer. We provide
+tools to identify coherence-preserving substitutions
+and create substitutions with certain characteristics
+(e.g. semantic equivalence, or popularity score on
+Wikipedia).
+2.1
+Identifying Named Entity Answers
+As our focus is entity-based knowledge conﬂicts,
+our ﬁrst step identiﬁes instances where the answer
+is a named entity. We leverage the SpaCy named en-
+tity recognizer and entity linker to identify gold an-
+swers that are named entities, their corresponding
+entity types, and their ID in the Wikidata graph.2
+This allows us to gather auxiliary information about
+the entity, such as entity popularity.
+We focus on ﬁve entity types that are well rep-
+resented in question answering datasets: person
+(PER), date (DAT), numeric (NUM), organization
+(ORG), and location (LOC). Tracking an answer’s
+entity type allows us to create coherent substitu-
+tions. QA instances without a gold answer among
+these ﬁve entity types are ﬁltered out. When ap-
+plying substitutions, we replace all spans of the
+answer entity in the context with a substituted en-
+tity, according to the substitution policy.
+2.2
+Types of Substitutions
+There are many possible substitution policies which
+evaluate different properties. In Figure 2, we illus-
+trate the versatility of our framework, highlighting
+the types of knowledge substitutions we experiment
+with in this work. An advantage of this framework
+over recent similar work (Schuster et al., 2021) is
+that it is extensible. Our framework enables practi-
+tioners to create custom substitutions, with precise
+textual modiﬁcations, and a variety of Wikidata
+metadata to draw on to create substitution poli-
+cies. We describe substitutions derived from our
+framework used herein to test hypotheses of model
+behaviour.
+Corpus
+Substitution
+(CS)
+replaces
+answer
+a
+with
+another
+entity
+a′
+from
+the
+same
+dataset
+(in-domain).
+The
+substitution
+en-
+tity is randomly sampled from the gold an-
+swers found in the same dataset D,
+such
+that a and a′
+share the same entity type
+(i.e., for type(·) ∈{PER, DAT, NUM, ORG, LOC},
+type(a) = type(a′)).
+Type Swap Substitution (TSS)
+replaces an-
+swers a with a nonsensical in-domain entity a′. The
+2SpaCy
+NER:
+https://spacy.io/usage/
+linguistic-features#named-entities,
+EL:
+https://v2.spacy.io/usage/training#
+entity-linker.
+
+=== [p.3] ===
+7054
+Query: “Who do you meet at the gates of heaven?”
+Context: “The image of the gates in popular culture 
+is a set of large gold, white or wrought - iron gates in 
+the clouds, guarded by Saint Peter (the keeper of the 
+‘keys to the kingdom’).”
+Sample Rules
+Example
+Original
+Alias 
+Substitution
+Corpus 
+Substitution
+Type Swap 
+Substitution
+Popularity 
+Substitution
+Sample an equivalent answer a0a0, from the set of 
+Wikidata aliases for original answer a (Saint Peter).
+▪
+Peter the Apostle
+▪
+Pope Peter
+▪
+Saint Peter the Apostle
+▪
+Simon Peter
+▪
+Petrus
+Original answer a
+Context: “The image of the gates in popular culture 
+is a set of large gold, white or wrought - iron gates in 
+the clouds, guarded by Simon Peter (the keeper of 
+the ‘keys to the kingdom’).”
+Sample an answer a0a0 of the same type t as original a, 
+from the set of answers found in the corpus D.
+Context: “The image of the gates in popular culture 
+is a set of large gold, white or wrought - iron gates in 
+the clouds, guarded by Mary Quant (the keeper of the 
+‘keys to the kingdom’).”
+Context: “The image of the gates in popular culture 
+is a set of large gold, white or wrought - iron gates in 
+the clouds, guarded by the United Nations (the 
+keeper of the ‘keys to the kingdom’).”
+Sample an answer a0a0 from all WikiData entities of the 
+same type t as a, given popularity range [pl, pu]
+[pl, pu].
+▪
+Jennifer Aniston
+▪
+John Wayne
+▪
+Liam Neeson
+▪
+Emily Blunt
+▪
+…
+Context: “The image of the gates in popular culture 
+is a set of large gold, white or wrought - iron gates in 
+the clouds, guarded by John Wayne (the keeper of 
+the ‘keys to the kingdom’).”
+Sample From
+Sample an answer a0a0 of a diﬀerent type t as original a, 
+from the set of answers found in the corpus D.
+▪
+Russell Wilson
+▪
+Mary Quant
+▪
+Dajana Eitberger
+▪
+Bon Jovi
+▪
+…
+▪
+September (date)
+▪
+42 (num)
+▪
+the United Nations (org)
+▪
+St. Ives (loc)
+▪
+…
+▪
+Saint Peter
+a0 s CP ER
+a0 s CP ER
+CP ER = {¯a|¯a 2 D, type(¯a) = PER}
+CP ER = {¯a|¯a 2 D, type(¯a) = PER}
+a0 s Walias(a)
+a0 s Walias(a)
+a0 s C¬P ER
+a0 s C¬P ER
+a0 s C[pl,pu]
+P ER
+a0 s C[pl,pu]
+P ER
+C¬P ER = {¯a|¯a 2 D, type(¯a) 6= PER}
+C¬P ER = {¯a|¯a 2 D, type(¯a) 6= PER}
+Cpl,pu
+P ER = {¯a|¯a 2 W, type(¯a) = PER, pl pop(¯a) pu}
+Cpl,pu
+P ER = {¯a|¯a 2 W, type(¯a) = PER, pl pop(¯a) pu}
+Figure 2: Substitution Methods. An illustration of substitution types and their rules, whereby the original answer
+a is replaced by a substitution answer a′, sourced either from Wikidata W or the set of answers appearing in the
+training dataset D. type(¯a) yields the answer type, and pop(¯a) yields the Wikidata popularity value.
+substitution entity is randomly sampled from the
+gold answers found in the same dataset D, such that
+a and a′ have different types, type(a) ̸= type(a′).
+Nonsensical answer substitutions are useful to test
+model robustness or common sense.
+Popularity Substitution (PS)
+tests how the pop-
+ularity of the substituted entity affects reliance on
+parametric knowledge. We replace a in c with a′,
+which is a randomly sampled Wikidata entity of the
+same type as a. The popularity of a′, pop(a′), is be-
+tween user-speciﬁed bounds pl and pu, measured in
+monthly Wikipedia page views, as estimated from
+October 2019.
+Alias Substitution (AS)
+replaces answer a with
+a semantically equivalent paraphrase a′, sampled
+from the list of a’s Wikidata aliases Walias(a).
+2.3
+Substitution Quality
+The authors conduct human grading to evaluate
+the ﬂuency and correctness of each substitution
+method. For ﬂuency, the annotator is asked whether
+the substituted answer a′ is a grammatical replace-
+ment within the given context c′. For correctness,
+the annotator is given the query-context pair (q, c′)
+and asked to highlight the span that answers the
+question. Comparing the substituted answer to the
+Sub. Type
+Fluency (%)
+Correctness (%)
+ALIAS SUB
+86
+80
+POPULARITY SUB
+98
+87
+CORPUS SUB
+84
+82
+TYPE SWAP SUB†
+16
+–
+ORIGINAL
+98
+91
+Table 1: Human Evaluation of 80-100 Natural Ques-
+tions examples per row. Substitutions yield reasonable
+ﬂuency and correctness compared to original examples.
+† Type swap substitution is intended to have low ﬂuency to
+test model robustness. Correctness evaluation is omitted as
+this metric is poorly deﬁned for this type of substitution.
+human chosen span gives us a direct measurement
+of how naturally intuitive the new examples are.
+Table 1 shows the automated substitution meth-
+ods retain ﬂuency and correctness just above 80%
+for Natural Questions — slightly less than the orig-
+inal examples. These metrics suggest the current
+framework is effective for average-case analysis of
+model interpretability, and certain training methods
+(see Section 4.4). However, there are quality lim-
+itations with respect to human-curated resources
+(0-14% ﬂuency gap, 4-11% correctness gap), and
+this resource is most effective for tasks and datasets
+with entity-based answers, easily classiﬁed by a
+corresponding Named Entity Recognition model.
+
+=== [p.4] ===
+7055
+The main advantage of an automated framework is
+it’s capacity to inexpensively scale beyond human
+annotation. Identifying more ﬁne-grained answer
+types using NER models, and deﬁning valid substi-
+tutions is a promising direction to further improve
+on ﬂuency and correctness.
+3
+Experimental Setup
+3.1
+Datasets
+Training
+We adopt a common and human-
+sourced query distribution in open-domain ques-
+tion answering, using Kwiatkowski et al. (2019)’s
+Natural Questions (NQ) for training. For certain ex-
+periments we train with NewsQA (Trischler et al.,
+2017b), a news-oriented dataset with examples
+whose answers are prone to change over time (sus-
+ceptible to knowledge conﬂicts).
+Inference
+At inference time we create knowl-
+edge conﬂicts for (1) the training set (to under-
+stand knowledge conﬂicts on data the models have
+seen), (2) the development set, as well as (3) an
+out-of-distribution (OOD) set, either the training
+set for NQ or NewsQA, depending on which was
+not used at training time. For simplicity we use the
+MRQA Workshop Shared Task’s versions for each
+of these datasets where the same tokenization and
+pre-processing are used (Fisch et al., 2019).3
+Lewis et al. (2021) show the Natural Questions
+training and development sets contain many sim-
+ilar queries and answers. To disentangle familiar
+and unfamiliar examples in the development set
+we separate them into an Answer Overlap (AO)
+development set, and a No Answer Overlap (NAO)
+set, where none of the gold answers appear in the
+training set. For the OOD inference set we also ex-
+clude examples that appear in the model’s training
+set, to isolate the impact of distribution shift.
+3.2
+Models
+This work evaluates retrieve-and-read QA sys-
+tems: the retriever ﬁnds relevant documents and the
+reader produces an answer using these documents.
+Retriever
+We use dense passage retrieval (DPR)
+(Karpukhin et al., 2020) as the primary retrieval
+system. In some experiments we also use a sparse
+retriever, TF-IDF (Ramos, 1999; Manning et al.,
+2008). During training, we retrieve a single docu-
+ment which we provide to the reader to produce an
+3https://github.com/mrqa/
+MRQA-Shared-Task-2019.
+answer. During inference, we ignore the retriever
+and provide to the reader either a gold document or
+the substituted version of the gold document to test
+knowledge conﬂicts.
+Generative Reader
+In this setting, a model re-
+ceives a query concatenated with contextual text
+and decodes a prediction. Our generative model is
+a T5 model (Raffel et al., 2020) and for simplicity,
+we train using a single retrieved passage.4 While
+training with multiple documents would yield bet-
+ter results (Izacard and Grave, 2021), training with
+only a single document as input allows us to better
+decouple the interactions between the reader and
+the retriever.
+We choose to evaluate a simple T5 reader model
+because it is the consistent component across high-
+performing retrieval-based QA models (Izacard and
+Grave, 2021; Lewis et al., 2020; Kim et al., 2020),
+and thus preserves the generality of our ﬁndings.
+Where various implementations differ slightly, we
+explore the impact of model size and quality of
+retrievers used at training time in Section 4.2.
+Extractive Reader
+We also experiment with a
+span-extraction QA model, where the predicted
+answer is a span of text taken directly from the
+context c. We use the RoBERTa (Liu et al., 2019)
+implementation from HuggingFace (Wolf et al.,
+2020) and hyperparameters from Longpre et al.
+(2019).5 By necessity, this model is trained with
+gold passages that always have a gold span.
+3.3
+Metrics
+To understand a model’s propensity to rely on mem-
+orized answers, we narrow our focus to examples
+that a model correctly answered on the original, un-
+altered example. Using the standard SQuAD-based
+Exact Match measurement (Rajpurkar et al., 2016),
+we compare model predictions on examples before
+(x) and after (x′) the substitution has been applied.
+We then measure the fraction of times the model
+predicts: the Original answer (po), the Substitute
+answer (ps), or an Other answer altogether, on x′.
+The Memorization Ratio (MR) measures how
+often the model generates the original answer (para-
+metric knowledge) as opposed to the answer in the
+4Default
+implementation
+and
+hyperparameters:
+https://github.com/google-research/
+text-to-text-transfer-transformer.
+5Training pipeline available at https://github.
+com/huggingface/transformers/tree/
+master/examples/question-answering.
+
+=== [p.5] ===
+7056
+0
+10
+20
+30
+40
+50
+60
+70
+80
+90
+100
+Prediction (%)
+NQ Train
+NQ Dev (AO)
+NQ Dev (NAO)
+NewsQA Train
+Inference Set
+47
+33
+20
+47
+36
+17
+61
+38
+1
+52
+42
+5
+0
+50
+100
+MR
+30
+27
+2
+9
+Original
+Other
+Substitute
+Prediction Behaviour
+(a) Trained on Natural Questions (NQ) Train
+0
+10
+20
+30
+40
+50
+60
+70
+80
+90
+100
+Prediction (%)
+NewsQA Train
+NewsQA Dev (AO)
+NewsQA Dev (NAO)
+NQ Train
+Inference Set
+5
+20
+75
+7
+52
+41
+13
+70
+17
+33
+62
+5
+0
+50
+100
+MR
+94
+86
+58
+13
+Original
+Other
+Substitute
+Prediction Behaviour
+(b) Trained on NewsQA Train
+Figure 3: Corpus Substitution. Inference behaviour
+and memorization ratio (MR) of generative models
+evaluated on corpus substituted instances.
+context (contextual knowledge). This estimates
+the overstability of the model — it’s brittleness to
+changing information.
+MR =
+po
+po + ps
+4
+Experiments
+4.1
+Results
+Our results on corpus substitution test how a QA
+model chooses answers when the substituted an-
+swer is in the same distribution as the training set.
+Figure 3 measure how often the model generates
+the Original answer, the Substitute answer, or some
+Other answer altogether on x′. To conﬁrm the
+observed phenomena is not dataset speciﬁc, Fig-
+ure 3a presents results for the model trained on Nat-
+ural Questions (NQ), and Figure 3b for the model
+trained on NewsQA. In each case, we evaluate on
+the training set, validation set (with and without
+answer overlap), and an out-of-distribution dataset.
+Ideally, the model should preference the Substi-
+tute answer, supported by contextual knowledge,
+over the Original answer observed in ﬁne-tuning,
+or some Other answer. However, the model pre-
+dicts the Substitute answer a′ rarely more than 50%
+of the time for the NQ model, and signiﬁcantly
+less for the NewsQA model. Instead, the model
+reverts back to predicting the Original answer seen
+in training, ignoring the contextual passage, up to
+20% of the time for NQ, and 75% for NewsQA.
+Additionally, the knowledge conﬂicts appears to
+destabilize the model predictions, predicting Other,
+usually incorrect, answers a large portion of the
+Inference Set
+Model Prediction Category on x′
+ORIG.
+OTHER
+SUB.
+AVG.
+NQ TRAIN
+63.3
+87.1
+69.9
+74.2
+NQ DEV (AO)
+62.0
+85.9
+70.2
+74.4
+NQ DEV (NAO)
+66.7
+83.5
+52.0
+64.1
+NEWSQA
+75.7
+77.1
+60.8
+68.5
+Table 2: Model Uncertainty.
+For the NQ trained
+model, we compute the percentage of time in which
+p(x) > p(x′), indicating the model was more conﬁ-
+dent in it’s prediction made for the original example x
+than the corpus substitution example x′.
+time. (See Section 4.3, where the Other category
+is discussed in detail.) These results demonstrate
+that common generative QA reader models are un-
+likely to trust the retrieved information over their
+parametric memory (learned at training time).
+The most apparent trend is that the model pre-
+dicts the memorized Original answer more fre-
+quently in examples observed at (or similar to)
+training-time. While the memorization ratio (MR)
+falls signiﬁcantly for Dev NAO and the out-of-
+distribution (OOD) sets, it is still non-trivial — nor
+is the resultant tendency for the model to predict
+Other answers, where it had correctly generated
+the Original answer, when supported by contextual
+knowledge in x.
+How is Model Uncertainty Affected?
+Next we
+ask whether knowledge conﬂicts are reﬂected in
+model uncertainty? If model predictions are rela-
+tively uncertain when knowledge conﬂicts occur,
+then conﬁdence thresholds might permit the system
+to abstain from answering some of these questions.
+In Table 2 we compute how often model conﬁ-
+dence is greater on the original example x than the
+modiﬁed example x′, broken down by prediction
+category and inference set.
+Knowledge conﬂicts yield relatively higher pre-
+diction uncertainty, especially for in-domain ex-
+amples (74%). Uncertainty is also elevated for
+out-of-distribution examples in NQ Dev (NAO) or
+NewsQA (64% and 69% respectively). In particu-
+lar, uncertainty is highest for instances where the
+model predicts Other. These results suggest practi-
+tioners may be able to abstain on many knowledge
+conﬂicting examples, preventing an elevated rate
+of erroneous answers. However, the abstention so-
+lution simply exchanges incorrect answers for no
+answers, without addressing the primary issue of a
+model ignoring contextual knowledge.
+
+=== [p.6] ===
+7057
+0
+10
+20
+30
+40
+50
+60
+70
+80
+90
+100
+Prediction (%)
+NQ Train
+NQ Dev (AO)
+NQ Dev (NAO)
+NewsQA Train
+Inference Set
+56
+16
+28
+54
+18
+28
+78
+15
+7
+54
+32
+14
+0
+50
+100
+MR
+33
+34
+8
+20
+Original
+Other
+Substitute
+Prediction Behaviour
+Figure 4: Alias Substitution. Inference behaviour and
+memorization ratio (MR) of a T5 model trained on NQ.
+7.6
+8.0
+8.4
+8.8
+9.2
+9.6
+10.0
+Log(Model Size)
+0
+5
+10
+15
+20
+25
+30
+35
+40
+45
+50
+55
+Memorization Ratio (%)
+NQ Dev (AO)
+NQ Dev (NAO)
+NQ Train
+Dataset
+Figure 5: Impact of Model Size on Memorization Ra-
+tio. We ﬁnetune T5 small (60M), large (770M), XL
+(3B), and XXL (11B) models on NQ, ﬁnding the mem-
+orization ratio increases with model size for all infer-
+ence sets.
+How is Inference Stability over Semantically
+Equivalent Answers?
+Alias substitution swaps
+the answer with a semantically equivalent para-
+phrase, effectively isolating the impact of a benign
+perturbation, without introducing any real conﬂict
+in knowledge. As this type of substitution is not
+a knowledge conﬂict, we consider both Original
+and Substitute predictions correct model behaviour,
+and examine how often subtle answer paraphrases
+cause instability in the answers (i.e., predicting
+Other). Figure 4 shows an elevated preference to se-
+lect the Original answer than when the knowledge
+conﬂicted in corpus substitution, however Other
+is also predicted at least 15% of the time. This
+phenomena suggests models are frequently non-
+robust even to paraphrases that do not contradict
+learned knowledge, and may cause unpredictable
+behaviour as a knowledge conﬂict is still perceived.
+4.2
+Factors Impacting Model Behaviour
+We’ve observed model behaviour appears strongly
+contingent on the domain similarity of presented
+knowledge conﬂicts. Next we explore what other
+factors may signiﬁcantly impact a proclivity to pref-
+erence parametric knowledge.
+How does Model Size impact Memorization?
+As Bender et al. (2021) has shown, large language
+0
+10
+20
+30
+40
+50
+60
+70
+80
+90
+100
+Prediction (%)
+DPR-  1
+DPR- 10
+DPR- 20
+DPR- 50
+DPR-100
+TFIDF-  1
+TFIDF- 10
+TFIDF- 20
+TFIDF- 50
+TFIDF-100
+Gold
+Retrieval Type
+51
+36
+13
+28
+36
+36
+24
+37
+39
+17
+35
+48
+16
+33
+51
+34
+35
+31
+32
+35
+33
+26
+38
+36
+27
+36
+38
+21
+36
+43
+79
+18
+3
+0
+50
+100
+MR
+20
+57
+62
+74
+77
+47
+50
+58
+59
+66
+4
+0
+20
+40
+Recall@K
+35
+9
+7
+5
+5
+11
+6
+5
+4
+3
+Original
+Other
+Substitute
+Prediction Behaviour
+Impact of Retrieval Quality on Memorization Rate
+Figure 6: Impact of Retrieval Quality on Memoriza-
+tion. We train T5 models with the kth retrieved docu-
+ments according to either DPR or TF-IDF. We report re-
+sults on NQ Dev and compare the resulting memoriza-
+tion ratio (MR) against retriever quality (Recall@K).
+0
+10
+20
+30
+40
+50
+60
+70
+80
+90
+100
+Prediction (%)
+NQ Train
+NQ Dev (AO)
+NQ Dev (NAO)
+NewsQA Train
+Inference Set
+83
+17
+0
+81
+19
+0
+85
+15
+0
+72
+27
+0
+0
+50
+100
+MR
+0
+0
+0
+1
+Original
+Other
+Substitute
+Prediction Behaviour
+Figure 7: Extractive QA. Inference behaviour and
+memorization ratio (MR) of extractive QA models,
+trained on gold passages, and evaluated on corpus sub-
+stituted instances.
+models are susceptible to parroting memorized in-
+formation. Figure 5 illustrates notable increases in
+memorization ratio as a function of the number of
+parameters. On the Train and Dev (AO) sets, the
+memorization ratio rises from < 15% to ≥50%
+in just two orders of magnitude, with no sign of
+diminishing returns. Most striking, the memoriza-
+tion ratio even for the Dev (NAO) set rises for the
+largest models in our experiments (11B parame-
+ters), which remain orders of magnitude smaller
+than the largest language models available.
+How does Retrieval Quality impact Memoriza-
+tion?
+Until now we’ve used the highest ranked
+DPR document during training. We now test if the
+quality of the retriever used during training impacts
+the reader’s behaviour on knowledge conﬂicts. For
+DPR and TF-IDF, we sample the kth ranked pas-
+sage returned from the retriever instead of the ﬁrst
+and use it to train our generative model. We mea-
+sure the quality of a retriever with Recall@K, de-
+ﬁned here as mean percentage in which the passage
+contains the query’s gold answer.
+Figure 6 illustrates a clear inverse relationship
+between retrieval quality (Recall@K) and the mem-
+orization ratio (MR). For both TF-IDF and DPR,
+less relevant passages during training causes the
+model to predict the Original answer at inference
+on x′, effectively ignoring the passage. Training
+
+=== [p.7] ===
+7058
+0.5
+0.6
+0.7
+Fake Prediction
+NQ Train
+NQ Dev (AO)
+NQ Dev (NAO)
+0.30
+0.35
+0.40
+Other Prediction
+0
+5
+10
+0.00
+0.05
+0.10
+0.15
+0.20
+Original Prediction
+0
+5
+10
+0
+5
+10
+Percentage of Queries
+Log Diff Between Original and Substitued Entity Popularity
+Figure 8:
+Popularity Substitution.
+Inference on
+queries where documents have been substituted with
+Wikidata entities of varying popularities. Model is T5
+trained on NQ.
+with gold passages reduces memorization, as the
+model is conditioned to expect the answer to al-
+ways present in the passage.
+While training with gold passages effectively
+minimizes the memorization ratio, this is not stan-
+dard practice among state-of-the-art QA models
+(Izacard and Grave, 2021; Lewis et al., 2020; Kim
+et al., 2020). Typically, these generative QA sys-
+tems are trained with retrieved passages, more con-
+ducive to scalable, and end-to-end training proce-
+dures. Consequently, training with gold passages
+may not present a convenient or viable solution.
+Are Extractive QA Models susceptible to
+Knowledge Conﬂicts?
+One potential solution to
+the aforementioned issues with generative models
+is to use extractive QA readers which select a span
+from the passage. We examine this to understand if
+the presence of knowledge conﬂicts may still have
+some bearing on model behaviour.
+In Figure 7, we replicate the corpus substitu-
+tion knowledge conﬂicts from Figure 3 but with
+an extractive QA model. The memorization ratio
+falls to negligible values, as expected, however the
+model predicts Other ≥15% of the time, for exam-
+ples it had correctly answered pre-substitution. As
+discussed further in Section 4.3, this is likely symp-
+tomatic of greater model uncertainty in the pres-
+ence of knowledge conﬂicts. This phenomenon is
+particularly problematic on NewsQA, the OOD set
+(27%), suggesting knowledge conﬂicts may ham-
+per generalization even for span selection models.
+How does Popularity of an Answer Entity im-
+pact Memorization?
+Using popularity substitu-
+tion we examine if models are biased towards pre-
+dicting more popular answers (Shwartz et al., 2020;
+Chen et al., 2021). Limiting our focus to the Per-
+son answer category, we order all PER Wikidata
+entities by popularity (approximated by Wikipedia
+monthly page views) and stratify them into ﬁve
+evenly sized popularity buckets. For each NQ in-
+stance with a PER answer, we generate ﬁve substi-
+tuted instances, using a sampled entity for each of
+the ﬁve buckets.
+In Figure 8, we plot the difference in popular-
+ity between the original and substituted answers
+against the percentage of model predictions on x′
+that fall into each category. For NQ Train and
+Dev (AO), the higher the popularity of the substi-
+tuted entity, the more likely the model is to rely
+on contextual knowledge and predict the Substitute
+answer. Conversely, the lower the popularity, the
+more likely the model is to predict an Other or
+Original answer. On the Dev (NAO) set, the popu-
+larity of the substituted entity is less predictive of
+model behavior. This suggests the popularity of a
+substituted entity plays a role only when the origi-
+nal answer is from a domain very close to training.
+How do Models Behave on Nonsensical Knowl-
+edge Substitutions?
+Here we ask if nonsensical
+(obviously incorrect) substitutions elicit a higher
+memorization ratio, and whether model behaviour
+varies for different types of answers. Type swap
+substitution tests this by replacing the original en-
+tity with an entity of a different type. While practi-
+tioners typically prefer models to produce answers
+consistent with contextual knowledge, here a model
+may have good reason to doubt the quality of infor-
+mation. This experiment is relevant to measuring
+the common sense inherent in models, or robust-
+ness to misinformation attacks. We plot the memo-
+rization ratio MR, across the possible range of type
+substitutions in Figure 9.
+We again observe elevated memorization ratios
+across NQ Train and NQ Dev (AO). When the
+original entity is a string (entity types LOC, PER,
+ORG), the model is more likely to rely on contex-
+tual knowledge and generate the Substitute answer.
+In contrast, when the original entity is numerical
+(DAT and NUM), the model is more likely to pre-
+dict the Original answer. The most striking result
+
+=== [p.8] ===
+7059
+Figure 9: Type Swap Substitution. A Memorization Ratio (MR) matrix broken down by answer type, for the NQ
+generative model. Darker intensity indicates higher MR. We ﬁnd MR is much higher when the original entity is
+numeric (DAT and NUM) and when the example is similar to those seen in training.
+is when a numeric entity is replaced with a textual
+one; at least 83% of the time the model predicts the
+Original answer. On NQ Dev (NAO), memoriza-
+tion is low across type-pair substitutions, aligning
+with our previous experiments demonstrating mem-
+orization is lower on unseen data. Overall, these
+results suggest generative QA models may (inad-
+vertently) be partially robust to index poisoning or
+misinformation attacks, attempting to elicit obvi-
+ously false answers.
+4.3
+Analyzing Other Predictions
+While the Original and Substitute answers are well
+deﬁned, the Other category is broad and serves
+as a catch-all. We perform a qualitative analysis
+to understand what phenomenon Other captures.
+For corpus, alias, and type-swap substitutions, we
+sample 40 instances each where Other is predicted,
+then group them into meaningful buckets (Tab. 3).
+Part of Other predictions are due to the strict
+EM metric. Most prevalent is alias substitution; for
+40% of cases the predicted answer is grounded to
+the original answer. Additionally, hallucinating an
+answer not in the context occurs throughout substi-
+tution types. We ﬁnd that a reason models either
+hallucinate an answer or picks a random context
+span is when the substituted answer is implausible,
+as is designed in the type-swap substitution.
+We also ﬁnd interesting behavior within the type-
+swap substitution. When a textual entity (PER,
+LOC, or ORG) is replaced by another textual entity
+(with a different type), models are more likely to
+predict the substituted entity than when a textual
+entity is replaced by a numeric entity (DAT or NUM).
+This suggests models are able to recognize the plau-
+sibility of answers, and fall back to hallucinating
+an answer when an answer is implausible.
+4.4
+Mitigating Memorization
+Our experiments suggest memorization can be mit-
+igated by training with a perfect retriever — the
+reader learns to trust the passage and ground it’s
+generation in this context. However, perfect re-
+trieval annotations are costly and prohibitive to
+collect. In the absence of gold documents, we pro-
+pose a simple method to mitigate memorization:
+augment the training set with training examples
+modiﬁed by corpus substitution. We construct a
+training set containing NQ examples with DPR
+passages, and the corpus substituted version of all
+DPR passages that contain a gold answer to sub-
+stitute for. (This works out to 25% of the original
+training set size for DPR on NQ). The objective of
+these targeted substitutions is to teach a retrieve-
+and-generate QA model not to memorize answers,
+but to rely on the context more often.
+Table 4 illustrates training with our augmented
+dataset greatly decreases the memorization ratio
+on all KC datasets to negligible levels. An impor-
+tant consequence of this: out-of-domain generaliza-
+tion on original instances improves for both NQ
+Dev NAO (7%) and NewsQA (4%). These im-
+provements demonstrate the beneﬁts of increased
+reliance on contextual knowledge, particularly for
+examples where parametric priors can coax models
+to make poor decisions. We hope our substitution
+framework with this simple training method proves
+useful for practitioners developing systems which
+generalize to changing knowledge.
+5
+Related Work
+Overreliance on Parametric Knowledge
+Kr-
+ishna et al. (2021) showed that replacing the re-
+trieved documents with random documents during
+
+=== [p.9] ===
+7060
+Sub (%)
+Example of Phenomena
+Grounding to Original
+CS (7.5%)
+AS (40%)
+TSS (2.5%)
+XCS (10%)
+Context: The 2017 American Championship
+Series pit Hodgson against the Yankees . . .
+Q: who won the american league?
+Orig Ans: the Houston Astros
+Sub Ans: Hodgson
+Pred: the astros
+Grounding to Substitute
+CS (12.5%)
+AS (-)
+TSS (7.5%)
+XCS (25%)
+Context: The Bay of Pigs was a failed inva-
+sion defeated by New Amsterdam . . .
+Q: who won the the bay of pigs?
+Orig Ans: Cuban Revolutionary Forces
+Sub Ans: New Amsterdam
+Pred: Amsterdam
+Another Correct Answer
+CS (12.5%)
+AS (2.5%)
+TSS (2.5%)
+XCS (-)
+Context: Abby graduated from Canberra
+and earned her master from Georgia St. . . .
+Q: where did abby go to college?
+Orig Ans: Louisiana State
+Sub Ans: Canberra
+Pred: georgia state university
+Random Passage Span
+CS (17.5%)
+AS (27.5%)
+TSS
+(22.5%)
+XCS (65%)
+Context: There are 1000 sq metres farmers
+and 757,900 ag workers in the US . . .
+Q: how many farmers are in usa?
+Orig Ans: 3.2 million
+Sub Ans: 1000 sq metres
+Pred: 757,900
+Hallucinate
+CS (47.5%)
+AS (15%)
+TSS (65%)
+XCS (-)
+Context: “El Pollo Loco” means “Chile” . . .
+Q: what does el pollo loco mean?
+Orig Ans: The Crazy Chicken
+Sub Ans: Chile
+Pred: the oiled bird
+Other
+CS (2.5%)
+AS (15%)
+TSS (0%)
+XCS (-)
+Context: The His Airness River is a 251-
+kilometre long river ...
+Q: what is east of the jordan river?
+Orig Ans: Jordan
+Sub Ans: His Airness
+Pred: al - qurnah
+Table 3: Qualitative Analysis for Other predictions.
+We sample 40 Other predictions for substitution types
+(CS, AS, TSS, and XCS, which is CS for the extractive
+QA model), group them by ﬁne-grained phenomena.
+inference yields similar performance for the task
+of long form question answering. Similarly, for the
+task of fact checking, Schuster et al. (2021) showed
+that models have trouble on documents when the
+input has subtly changed, and that training on con-
+trastive examples for fact checking improves at-
+tention to context. Our work builds upon these
+works by exploring the factors that contribute to
+this overreliance on parametric knowledge.
+Overstability
+Overreliance on parametric knowl-
+edge is related to overstability, where a model out-
+put stays constant despite semantically signiﬁcant
+Inference Set
+MR
+EM (∆)
+NQ TRAIN
+29.5 →2.6
+70.9 →64.9 (-5.0)
+NQ DEV (AO)
+27.1 →1.9
+62.7 →64.2 (+1.5)
+NQ DEV (NAO)
+1.5 →0.0
+32.9 →40.0 (+7.1)
+NEWSQA
+9.3 →0.6
+21.4 →25.8 (+4.4)
+Table 4: Mixed Training with Substitutions yields
+reduced memorization (MR) and improves generaliza-
+tion to OOD data.
+changes to the input. Niu and Bansal (2018) ex-
+plore overstability in dialougue systems. Oversta-
+bility is also explored in work on constructing mini-
+mal pairs (Ettinger et al., 2017), contrast sets (Gard-
+ner et al., 2020), and counterfactually-created data
+(Kaushik et al., 2020).
+Entity-based Substitutions
+Key to our evalua-
+tion framework is substituting entity names with
+other plausible entity names. Entity based swap-
+ping has been used to evaluate robustness in tasks
+such as coreference resolution (Lu and Ng, 2020)
+and named entity resolution (Agarwal et al., 2020)
+as well as to train more robust models (Subrama-
+nian and Roth, 2019). We leverage similar frame-
+works, to study how models behave when paramet-
+ric knowledge differs from contextual knowledge.
+6
+Conclusion
+In this work, we examine how conﬂicts between
+contextual and parametric knowledge affect ques-
+tion answering models. In formalizing this prob-
+lem, we ﬁrst contribute a substitution framework
+for creating knowledge conﬂicts and evaluating
+model behaviour. Using this framework, we con-
+duct a detailed examination of knowledge con-
+ﬂicts in QA. Finally, we propose a method to miti-
+gate memorization and consequently improve gen-
+eralization on out-of-distribution examples. Our
+ﬁndings show knowledge conﬂicts are an under-
+explored topic, providing valuable insights into
+model interpretability and generalization to evolv-
+ing world knowledge.
+Acknowledgements
+We thank Ni Lao, Yu Wang, Russ Webb, Adam
+Fisch, Matt Gardner, Dheeru Dua, Sanjay Subra-
+manian, and the anonymous reviewers for their
+valuable feedback. This work is funded in part
+by the DARPA MCS program under Contract No.
+N660011924033 with the United States Ofﬁce Of
+Naval Research and in part by NSF award #IIS-
+1817183.
+
+=== [p.10] ===
+7061
+References
+Oshin Agarwal, Yinfei Yang, Byron C. Wallace,
+and A. Nenkova. 2020.
+Entity-switched datasets:
+An approach to auditing the in-domain robust-
+ness of named entity recognition models.
+ArXiv,
+abs/2004.04123.
+Emily M. Bender, Timnit Gebru, Angelina McMillan-
+Major, and Shmargaret Shmitchell. 2021.
+On the
+dangers of stochastic parrots: Can language models
+be too big? In Proceedings of the 2021 ACM Confer-
+ence on Fairness, Accountability, and Transparency,
+FAccT ’21, page 610–623, New York, NY, USA. As-
+sociation for Computing Machinery.
+Tom B. Brown, Benjamin Mann, Nick Ryder, Melanie
+Subbiah, Jared Kaplan, Prafulla Dhariwal, Arvind
+Neelakantan, Pranav Shyam, Girish Sastry, Amanda
+Askell,
+Sandhini Agarwal,
+Ariel Herbert-Voss,
+Gretchen Krueger, Tom Henighan, Rewon Child,
+Aditya Ramesh, Daniel M. Ziegler, Jeffrey Wu,
+Clemens Winter, Christopher Hesse, Mark Chen,
+Eric Sigler, Mateusz Litwin, Scott Gray, Benjamin
+Chess, Jack Clark, Christopher Berner, Sam Mc-
+Candlish, Alec Radford, Ilya Sutskever, and Dario
+Amodei. 2020. Language models are few-shot learn-
+ers. In Advances in Neural Information Processing
+Systems 33: Annual Conference on Neural Informa-
+tion Processing Systems 2020, NeurIPS 2020, De-
+cember 6-12, 2020, virtual.
+Anthony Chen, Pallavi Gudipati, Shayne Longpre,
+Xiao Ling, and Sameer Singh. 2021.
+Evaluating
+entity disambiguation and the role of popularity in
+retrieval-based NLP. In Proceedings of the 59th An-
+nual Meeting of the Association for Computational
+Linguistics and the 11th International Joint Confer-
+ence on Natural Language Processing (Volume 1:
+Long Papers), pages 4472–4485, Online. Associa-
+tion for Computational Linguistics.
+Danqi Chen, Adam Fisch, Jason Weston, and Antoine
+Bordes. 2017. Reading Wikipedia to answer open-
+domain questions. In Proceedings of the 55th An-
+nual Meeting of the Association for Computational
+Linguistics (Volume 1: Long Papers), pages 1870–
+1879, Vancouver, Canada. Association for Computa-
+tional Linguistics.
+Allyson Ettinger, Sudha Rao, Hal Daumé III, and
+Emily M. Bender. 2017. Towards linguistically gen-
+eralizable NLP systems: A workshop and shared
+task.
+In Proceedings of the First Workshop on
+Building Linguistically Generalizable NLP Systems,
+pages 1–10, Copenhagen, Denmark. Association for
+Computational Linguistics.
+Adam Fisch, Alon Talmor, Robin Jia, Minjoon Seo, Eu-
+nsol Choi, and Danqi Chen. 2019.
+MRQA 2019
+shared task: Evaluating generalization in reading
+comprehension.
+In Proceedings of the 2nd Work-
+shop on Machine Reading for Question Answering,
+pages 1–13, Hong Kong, China. Association for
+Computational Linguistics.
+Matt Gardner, Yoav Artzi, Victoria Basmov, Jonathan
+Berant, Ben Bogin, Sihao Chen, Pradeep Dasigi,
+Dheeru Dua, Yanai Elazar, Ananth Gottumukkala,
+Nitish Gupta, Hannaneh Hajishirzi, Gabriel Ilharco,
+Daniel Khashabi, Kevin Lin, Jiangming Liu, Nel-
+son F. Liu, Phoebe Mulcaire, Qiang Ning, Sameer
+Singh, Noah A. Smith, Sanjay Subramanian, Reut
+Tsarfaty, Eric Wallace, Ally Zhang, and Ben Zhou.
+2020. Evaluating models’ local decision boundaries
+via contrast sets.
+In Findings of the Association
+for Computational Linguistics: EMNLP 2020, pages
+1307–1323, Online. Association for Computational
+Linguistics.
+Kelvin Guu, Kenton Lee, Zora Tung, Panupong Pasu-
+pat, and Ming-Wei Chang. 2020. Realm: Retrieval-
+augmented language model pre-training.
+arXiv
+preprint arXiv:2002.08909.
+Gautier Izacard and Edouard Grave. 2021. Leveraging
+passage retrieval with generative models for open
+domain question answering. In Proceedings of the
+16th Conference of the European Chapter of the As-
+sociation for Computational Linguistics: Main Vol-
+ume, pages 874–880, Online. Association for Com-
+putational Linguistics.
+Vladimir Karpukhin, Barlas Oguz, Sewon Min, Patrick
+Lewis, Ledell Wu, Sergey Edunov, Danqi Chen, and
+Wen-tau Yih. 2020.
+Dense passage retrieval for
+open-domain question answering. In Proceedings of
+the 2020 Conference on Empirical Methods in Nat-
+ural Language Processing (EMNLP), pages 6769–
+6781, Online. Association for Computational Lin-
+guistics.
+Divyansh
+Kaushik,
+Eduard
+H.
+Hovy,
+and
+Zachary Chase Lipton. 2020.
+Learning the differ-
+ence that makes A difference with counterfactually-
+augmented data. In 8th International Conference on
+Learning Representations, ICLR 2020, Addis Ababa,
+Ethiopia, April 26-30, 2020. OpenReview.net.
+Jihyeok Kim, Seungtaek Choi, Reinald Kim Amplayo,
+and Seung-won Hwang. 2020. Retrieval-augmented
+controllable review generation.
+In Proceedings
+of the 28th International Conference on Compu-
+tational Linguistics, pages 2284–2295, Barcelona,
+Spain (Online). International Committee on Compu-
+tational Linguistics.
+Kalpesh Krishna, Aurko Roy, and Mohit Iyyer. 2021.
+Hurdles to progress in long-form question answer-
+ing.
+In Proceedings of the 2021 Conference of
+the North American Chapter of the Association for
+Computational Linguistics: Human Language Tech-
+nologies, pages 4940–4957, Online. Association for
+Computational Linguistics.
+Tom Kwiatkowski, Jennimaria Palomaki, Olivia Red-
+ﬁeld, Michael Collins, Ankur Parikh, Chris Al-
+berti, Danielle Epstein, Illia Polosukhin, Jacob De-
+vlin, Kenton Lee, Kristina Toutanova, Llion Jones,
+Matthew Kelcey, Ming-Wei Chang, Andrew M. Dai,
+Jakob Uszkoreit, Quoc Le, and Slav Petrov. 2019.
+
+=== [p.11] ===
+7062
+Natural questions: A benchmark for question an-
+swering research. Transactions of the Association
+for Computational Linguistics, 7:452–466.
+Patrick Lewis, Pontus Stenetorp, and Sebastian Riedel.
+2021.
+Question and answer test-train overlap in
+open-domain question answering datasets. In Pro-
+ceedings of the 16th Conference of the European
+Chapter of the Association for Computational Lin-
+guistics: Main Volume, pages 1000–1008, Online.
+Association for Computational Linguistics.
+Patrick S. H. Lewis, Ethan Perez, Aleksandra Pik-
+tus, Fabio Petroni, Vladimir Karpukhin, Naman
+Goyal, Heinrich Küttler, Mike Lewis, Wen-tau Yih,
+Tim Rocktäschel, Sebastian Riedel, and Douwe
+Kiela. 2020.
+Retrieval-augmented generation for
+knowledge-intensive NLP tasks.
+In Advances in
+Neural Information Processing Systems 33: Annual
+Conference on Neural Information Processing Sys-
+tems 2020, NeurIPS 2020, December 6-12, 2020,
+virtual.
+Yinhan Liu, Myle Ott, Naman Goyal, Jingfei Du, Man-
+dar Joshi, Danqi Chen, Omer Levy, Mike Lewis,
+Luke Zettlemoyer, and Veselin Stoyanov. 2019.
+Roberta: A robustly optimized bert pretraining ap-
+proach. arXiv preprint arXiv:1907.11692.
+Shayne Longpre, Yi Lu, Zhucheng Tu, and Chris
+DuBois. 2019. An exploration of data augmentation
+and sampling techniques for domain-agnostic ques-
+tion answering. In Proceedings of the 2nd Workshop
+on Machine Reading for Question Answering, pages
+220–227, Hong Kong, China. Association for Com-
+putational Linguistics.
+Jing Lu and Vincent Ng. 2020. Conundrums in entity
+coreference resolution: Making sense of the state
+of the art. In Proceedings of the 2020 Conference
+on Empirical Methods in Natural Language Process-
+ing (EMNLP), pages 6620–6631, Online. Associa-
+tion for Computational Linguistics.
+Christopher Manning, Prabhakar Raghavan, and Hin-
+rich Schütze. 2008. Introduction to information re-
+trieval, volume 1. Cambridge University Press.
+Tong Niu and Mohit Bansal. 2018. Adversarial over-
+sensitivity and over-stability strategies for dialogue
+models. In Proceedings of the 22nd Conference on
+Computational Natural Language Learning, pages
+486–496, Brussels, Belgium. Association for Com-
+putational Linguistics.
+Fabio Petroni, Tim Rocktäschel, Sebastian Riedel,
+Patrick Lewis, Anton Bakhtin, Yuxiang Wu, and
+Alexander Miller. 2019. Language models as knowl-
+edge bases?
+In Proceedings of the 2019 Confer-
+ence on Empirical Methods in Natural Language
+Processing and the 9th International Joint Confer-
+ence on Natural Language Processing (EMNLP-
+IJCNLP), pages 2463–2473, Hong Kong, China. As-
+sociation for Computational Linguistics.
+Colin Raffel, Noam Shazeer, Adam Roberts, Katherine
+Lee, Sharan Narang, Michael Matena, Yanqi Zhou,
+Wei Li, and Peter J Liu. 2020. Exploring the lim-
+its of transfer learning with a uniﬁed text-to-text
+transformer. Journal of Machine Learning Research,
+21:1–67.
+Pranav Rajpurkar, Jian Zhang, Konstantin Lopyrev, and
+Percy Liang. 2016. SQuAD: 100,000+ questions for
+machine comprehension of text. In Proceedings of
+the 2016 Conference on Empirical Methods in Natu-
+ral Language Processing, pages 2383–2392, Austin,
+Texas. Association for Computational Linguistics.
+Juan Ramos. 1999. Using tf-idf to determine word rel-
+evance in document queries.
+Adam Roberts, Colin Raffel, and Noam Shazeer. 2020.
+How much knowledge can you pack into the param-
+eters of a language model?
+In Proceedings of the
+2020 Conference on Empirical Methods in Natural
+Language Processing (EMNLP), pages 5418–5426,
+Online. Association for Computational Linguistics.
+Tal Schuster, Adam Fisch, and Regina Barzilay. 2021.
+Get your vitamin C! robust fact veriﬁcation with con-
+trastive evidence. In Proceedings of the 2021 Con-
+ference of the North American Chapter of the Asso-
+ciation for Computational Linguistics: Human Lan-
+guage Technologies, pages 624–643, Online. Asso-
+ciation for Computational Linguistics.
+Vered Shwartz, Rachel Rudinger, and Oyvind Tafjord.
+2020. “you are grounded!”: Latent name artifacts in
+pre-trained language models. In Proceedings of the
+2020 Conference on Empirical Methods in Natural
+Language Processing (EMNLP), pages 6850–6861,
+Online. Association for Computational Linguistics.
+Sanjay Subramanian and Dan Roth. 2019. Improving
+generalization in coreference resolution via adversar-
+ial training. In Proceedings of the Eighth Joint Con-
+ference on Lexical and Computational Semantics
+(*SEM 2019), pages 192–197, Minneapolis, Min-
+nesota. Association for Computational Linguistics.
+Adam Trischler, Tong Wang, Xingdi Yuan, Justin Har-
+ris, Alessandro Sordoni, Philip Bachman, and Ka-
+heer Suleman. 2017a. NewsQA: A machine com-
+prehension dataset. In Proceedings of the 2nd Work-
+shop on Representation Learning for NLP, pages
+191–200, Vancouver, Canada. Association for Com-
+putational Linguistics.
+Adam Trischler, Tong Wang, Xingdi Yuan, Justin Har-
+ris, Alessandro Sordoni, Philip Bachman, and Ka-
+heer Suleman. 2017b. NewsQA: A machine com-
+prehension dataset. In Proceedings of the 2nd Work-
+shop on Representation Learning for NLP, pages
+191–200, Vancouver, Canada. Association for Com-
+putational Linguistics.
+Denny Vrandecic and M. Krötzsch. 2014. Wikidata: a
+free collaborative knowledgebase. Commun. ACM,
+57:78–85.
+
+=== [p.12] ===
+7063
+Thomas Wolf, Lysandre Debut, Victor Sanh, Julien
+Chaumond, Clement Delangue, Anthony Moi, Pier-
+ric Cistac, Tim Rault, Remi Louf, Morgan Funtow-
+icz, Joe Davison, Sam Shleifer, Patrick von Platen,
+Clara Ma, Yacine Jernite, Julien Plu, Canwen Xu,
+Teven Le Scao, Sylvain Gugger, Mariama Drame,
+Quentin Lhoest, and Alexander Rush. 2020. Trans-
+formers: State-of-the-art natural language process-
+ing. In Proceedings of the 2020 Conference on Em-
+pirical Methods in Natural Language Processing:
+System Demonstrations, pages 38–45, Online. Asso-
+ciation for Computational Linguistics.
+

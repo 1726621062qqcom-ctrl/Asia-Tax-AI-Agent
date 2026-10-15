@@ -1,0 +1,96 @@
+cases per model: {'qwen3.8-flash': 10} | settings: {'samples': 2, 'k': 5, 'locate': 'retrieval', 'patterns': True, 'dense': True, 'temperature': 0.7, 'prompt_version': '2026-10-14c'}
+qwen3.8-flash    derived        {'correct': 10, 'null': 47, 'wrong': 4, 'conflict': 1}
+qwen3.8-flash    null-expected  {'abstained': 18, 'false_fill': 4}
+qwen3.8-flash    value          {'correct': 68, 'conflict': 7, 'null': 8, 'rejected': 1, 'wrong': 2}
+qwen3.8-flash    by pattern-sentence {'correct': 45}
+qwen3.8-flash    by retrieved   {'correct': 33, 'conflict': 8, 'null': 55, 'rejected': 1, 'abstained': 18, 'false_fill': 4, 'wrong': 6}
+qwen3.8-flash {'calls': 1025, 'cached': 0, 'prompt_tokens': 603988, 'completion_tokens': 24794, 'cache_hit_tokens': 0, 'retries': 0, 'seconds': 3074} max case wall 156s
+
+NON-CORRECT ROWS
+(K3-carote-2026, roles.ULT.attrs.incorporated_in, disclosed, gold='HK')
+    conflict   None retrieved |  ['conflict: HK / OTHER']
+        conflict 'HK' (K3-carote-2024, same document): “Carote Group” Carote Group Limited (卡羅特集團有限公司), a limited liability company incorporated in Hong Kong SAR on 
+        conflict 'OTHER' (K3-carote-2024, same document): (An exempted company incorporated in the Cayman Islands with limited liability)
+(K3-carote-2026, holds.ULT>OP.ratio, disclosed, gold=100.0)
+(K3-carote-2026, holds.ULT>OP.since, disclosed, gold='2023-08-29')
+    rejected   None retrieved |  ['no date in the quote']
+(K3-carote-2026, holds.ULT>HOLD.cost, missing, gold=None)
+    false_fill 100000.0 retrieved | On January 23, 2024, pursuant to a share transfer agreement entered into on January 18, 2024, Carote Group acquired the  
+(K3-carote-2026, flows.up2.foreign_headline_rate, disclosed, gold=17)
+(K3-ekh-2026, flows.up2.foreign_headline_rate, disclosed, gold=16.5)
+    conflict   None retrieved |  ['conflict: 17.0 / 25.0 / 16.5']
+        conflict 17.0 (K3-ekh-2026, same document): The corporate income tax rate in Singapore is 17% of the chargeable income.
+        conflict 25.0 (K3-ekh-2026, same document): The income tax rate of resident enterprises is 25%
+        conflict 16.5 (K3-ekh-2026, same document): Under the Inland Revenue Ordinance (Chapter 112 of the Laws of Hong Kong), Hong Kong profits tax will be charg
+(K3-jst-2026, holds.ULT>OP.ratio, disclosed, gold=100.0)
+    conflict   None retrieved |  ['conflict: 91.35 / 100.0']
+        conflict 91.35 (K3-jst-2025, same document): Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund) transferred
+        conflict 100.0 (K3-jst-2025, same document): Hong Kong True Value Limited (Hong Kong) Offshore 100% 100% 100% 100% 100% 100% 100% 100% 90%(1) 85%(2) 100% O
+    wrong      '2023-02-21' retrieved | On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Hol 
+(K3-jst-2026, holds.ULT>OP.cost, missing, gold=None)
+    false_fill 3484473.0 retrieved | transferred to Hong Kong True Value Limited their equity interests in Shanghai Jushuitan equivalent to RMB3,484,473 of r 
+(K3-mirxes-2026, holds.ULT>HOLD.cost, missing, gold=None)
+    false_fill 11662432.0 retrieved | whereby MiRXEA Pte. Ltd. has completed the paid-in obligation to Huzhou Mirui’s registered capital of US$11,662,432. 
+(K3-mirxes-2026, flows.reorg.amount, disclosed, gold=83463359.41)
+(K3-mirxes-2026, flows.up2.foreign_headline_rate, disclosed, gold=25)
+    wrong      'OTHER' retrieved | Hui Yuan Holdings Limited is a business company incorporated under the laws of the British Virgin Islands. 
+(K3-sunsine-2026, roles.ULT.attrs.incorporated_in, disclosed, gold='SG')
+    conflict   None retrieved |  ['conflict: OTHER / SG']
+        conflict 'OTHER' (K3-sunsine-2024, same document): The immediate and ultimate holding corporation of the Company is Success More Group Ltd (“Success More”), a co
+        conflict 'SG' (K3-sunsine-2024, same document): China Sunsine Chemical Holdings Ltd. (the “Company”) is listed on the Singapore Exchange and incorporated and 
+    wrong      'OTHER' retrieved | The immediate and ultimate holding corporation of the Company is Success More Group Ltd (“Success More”), a company inco 
+(K4-freetech-2024, roles.ULT.attrs.incorporated_in, disclosed, gold='HK')
+    conflict   None retrieved |  ['conflict: HK / OTHER']
+        conflict 'HK' (K4-freetech-2024, same document): Freetech Smart Road Recycling Engineering Investment Limited (英達智能道路再生工程投資有限公司), a company incorporated in Hon
+        conflict 'OTHER' (K4-freetech-2024, same document): (incorporated in the Cayman Islands with limited liability)
+(K4-freetech-2024, roles.OP.loc, disclosed, gold='CN')
+    conflict   None retrieved |  ['conflict: CN / OTHER']
+        conflict 'CN' (K4-freetech-2024, same document): The Target Company is a company established in the PRC with limited liability on 1 September 2009 by the Purch
+        conflict 'OTHER' (K4-freetech-2024, same document): (incorporated in the Cayman Islands with limited liability)
+(K4-freetech-2024, roles.OP.attrs.incorporated_in, disclosed, gold='CN')
+    conflict   None retrieved |  ['conflict: CN / OTHER']
+        conflict 'CN' (K4-freetech-2024, same document): The Target Company is a company established in the PRC with limited liability on 1 September 2009 by the Purch
+        conflict 'OTHER' (K4-freetech-2024, same document): (incorporated in the Cayman Islands with limited liability)
+(K4-freetech-2024, holds.ULT>OP.since, disclosed, gold='2015-08-31')
+    wrong      '2015-06-30' retrieved | On 30 June 2015, Tianjin Expressway Group Company Limited. and Freetech Smart Road Recycling Engineering Investment Limi 
+(K4-shuion-kic-2024, holds.ULT>OP.since, disclosed, gold='2010-06-09')
+    wrong      'HK' retrieved | The interests of the Group in the Project Companies as at the Latest Practicable Date are held through its 51% equity in 
+    conflict   None retrieved |  ['conflict: OTHER / CN']
+        conflict 'OTHER' (K4-shuion-2024, same document): Wisdom Forever Limited Partnership, a limited partnership incorporated in the Cayman Islands and is owned as t
+        conflict 'CN' (K4-shuion-2024, same document): Ningbo Fund is a limited partnership established under the laws of the PRC and is principally
+(K4-shuion-ypu-2024, holds.ULT>OP.since, disclosed, gold='2003-08-26')
+(K4-shuion-ypu-2024, holds.ULT>OP.cost, missing, gold=None)
+    false_fill 11935000.0 retrieved | Bright Continental Limited 11,935.00 86.80 Monetary funds 
+(K4-shuion-ypu-2024, present.exit_route, disclosed, gold='DIRECT')
+    wrong      'INDIRECT' retrieved | The Equity Transfer completes upon the receipt of the consideration for the Equity Transfer (deducting the Withholding T 
+(K4-shuion-ypu-2024, event.exit, disclosed, gold=4706000000.0)
+(K4-smit-2026, event.exit, disclosed, gold=266200000.0)
+
+DISCLOSED ROWS WITHOUT A VALUE, BY WHERE THE GOLD QUOTE WAS (rank among the k candidates; None = outside; -1 = in no passage)
+  conflict   retrieved gold_rank=0     3
+  conflict   retrieved gold_rank=1     1
+  conflict   retrieved gold_rank=4     1
+  conflict   retrieved gold_rank=None  2
+  null       retrieved gold_rank=0     2
+  null       retrieved gold_rank=2     1
+  null       retrieved gold_rank=4     1
+  null       retrieved gold_rank=None  4
+  rejected   retrieved gold_rank=1     1
+  wrong      retrieved gold_rank=None  2
+
+COVERAGE–ERROR (fields with a value, ordered by agreement then retrieval score; error = wrong + false_fill)
+  coverage  25%  n= 22  errors= 0  (0.0%)
+  coverage  50%  n= 44  errors= 0  (0.0%)
+  coverage  75%  n= 66  errors= 2  (3.0%)
+  coverage 100%  n= 88  errors=10  (11.4%)
+  feature spread: agree {1.0: 3, 0.88: 1, 0.8: 2, 0.78: 3, 0.75: 2, 0.67: 5, 0.62: 2, 0.6: 3, 0.57: 2, 0.56: 5, 0.5: 3, 0.44: 6, 0.43: 2, 0.4: 9, 0.38: 2, 0.33: 7, 0.25: 1, 0.22: 2, 0.2: 26, 0.17: 1, 0.12: 1}
+
+METAMORPHIC TESTS (K4)
+  K4-freetech-2024   holds.ULT>OP.ratio                   substitute 55% -> 65% expected 65.0 got None missing conflict: 65.0 / 55.0
+  K4-freetech-2024   holds.ULT>OP.cost                    substitute 46.8 million -> 56.8 million expected 56800000.0 got 46802400.0 old figure stated elsewhere
+  K4-shuion-kic-2024 holds.ULT>OP.ratio                   substitute 99% -> 19% expected 19.0 got None missing conflict: 19.0 / 99.0
+  K4-shuion-ypu-2024 event.exit                           substitute 4,706,000,000 -> 5,706,000,000 expected 5706000000.0 got None missing
+  K4-smit-2026       event.exit                           substitute 266.2 million -> 366.2 million expected 366200000.0 got None missing
+  substitute follows    5
+  substitute missing    4
+  substitute old figure stated elsewhere 1

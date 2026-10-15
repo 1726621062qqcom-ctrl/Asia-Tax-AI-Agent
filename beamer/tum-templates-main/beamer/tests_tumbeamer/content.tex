@@ -1,0 +1,347 @@
+\part{Usage of the \texttt{tumbeamer} class}
+\section{Basic settings}
+\subsection{Class options}
+\begin{frame}[fragile]{Class options}
+  The class is loaded similar to any other class with the command
+  \lstinline|\documentclass[<options>]{tumbeamer}|. Available options
+  are key=value pairs and are summarized in the following table.
+
+  \vspace{3mm}
+  \begin{tabular}{lp{2cm}ll}
+    \toprule
+    option      & values             & default & Description               \\
+    \midrule
+    aspectratio & 169, 43            & 169     & choose the slide format   \\
+    handout     & simple, 2on1, 4on1 & --      & enable handout mode with
+    1, 2 or 4 slides per page                                              \\
+    partpage    & true, false        & false   & enable slide at beginning
+    of every part                                                          \\
+    sectionpage & true, false        & true    & enable slide at beginning
+    of every section                                                       \\
+    \bottomrule
+  \end{tabular}
+  \vspace{.1mm}
+
+  Additionally you can pass options to the base class \texttt{beamer}.
+  Please refer to the \href{https://ctan.org/pkg/beamer}{beamer manual}
+  for their usage.
+\end{frame}
+
+\subsection{Style setup}
+\begin{frame}[fragile]{Style setup}
+  For setting up the style of your presentation you use the command
+  \lstinline|\TUMbeamersetup{<options>}|. The default setup is shown
+  in the following listing.
+
+  \begin{lstlisting}
+    \TUMbeamersetup{
+      title page   = TUM tower,
+      part page    = TUM toc,
+      section page = TUM toc,
+      content page = TUM default,
+      headline     = TUM threeliner,
+      headline on  = {title page},
+      footline     = TUM default,
+      footline on  = {every page, title page=false},
+    }
+  \end{lstlisting}
+\end{frame}
+
+\begin{frame}{Style setup}
+  \texttt{tumbeamer} uses a concept of \textit{framestyles}, which are
+  collections of beamertemplate definitions combined to get a certain style.
+  Initially we defined 4 different framestyles for \texttt{title page},
+  \texttt{part page}, \texttt{section page}, and \texttt{content page},
+  respectively. \\
+  The predefined options for every framestyle are summarized on a following
+  slide. \\\vspace{3mm}
+
+  With the keys \texttt{headline} and \texttt{footline} you can choose from
+  predefined styles.
+
+  Enabling or disabling of headlines and footlines can be done on a per
+  framestyle basis with the keys \texttt{headline on} and
+  \texttt{footline on}. As value you can pass a list of framestyles or the
+  alias \texttt{every page}, which enables the headline or footline on all 4
+  framestyles.
+\end{frame}
+
+\begin{frame}{Predefined framestyles}
+  List of predefined styles for \texttt{title page}, \texttt{part page},
+  and \texttt{section page}.
+
+  \vspace{3mm}
+  \begin{tabular}{ll}
+    \toprule
+    possible values                                   & background color \\
+    \midrule
+    TUM default, TUM centered, TUM tower              & white            \\
+    TUM blue, TUM blue centered, TUM blue tower       & blue             \\
+    TUM shaded, TUM shaded centered, TUM shaded tower & blue shaded      \\
+    TUM flags                                         & flag picture     \\
+    \bottomrule
+  \end{tabular}
+  \vspace{3mm}
+
+  For the section and part pages there is the additional style
+  "TUM toc" available, which prints a table of content of the current
+  part or section, respectively.
+\end{frame}
+
+\begin{frame}{Predefined framestyles}
+  For content pages, there are fewer options possible (and reasonable).
+
+  \vspace{3mm}
+  \begin{tabular}{ll}
+    TUM default    & white, frametitle $1\times$ logoheight below TUM logo \\
+    TUM more space & white, frametitle at same height with TUM logo        \\
+    TUM blue       & default layout with blue background                   \\
+    TUM shaded     & default layout with shaded background                 \\
+  \end{tabular}
+\end{frame}
+
+\begin{frame}[fragile]{Predefined styles for headlines and footlines}
+  Possible options for headlines.
+
+  \vspace{1mm}
+  \begin{tabular}{ll}
+    TUM empty      & no headline at all    \\
+    TUM oneliner   & the TUM CD oneliner   \\
+    TUM twoliner   & the TUM CD twoliner   \\
+    TUM threeliner & the TUM CD threeliner \\
+  \end{tabular}
+  \vspace{3mm}
+
+  Possible options for footlines. For the "TUM default" option, the user has
+  to provide a custom footline with the command
+  \lstinline|\footline{my footline text}|.
+
+  \vspace{1mm}
+  \begin{tabular}{ll}
+    TUM empty    & no footline at all                                \\
+    TUM default  & user defined footline and additional slide number \\
+    TUM infoline & predefined footline with autor, shorttitle, date,
+    and slide number                                                 \\
+  \end{tabular}
+\end{frame}
+
+\section{Advanced settings}
+\subsection{Handling custom framestyles}
+\begin{frame}[fragile]{Handling custom framestyles}
+  As explained above we use a concept of \texttt{framestyles} and we have
+  predefined 4 framestyles which should cover most needs.
+  If a user wants to have complete control over the style of a particular
+  frame, we offer macros to define and load custom framestyles.
+
+  \vspace{3mm}
+  \lstinline|\defTUMframestyle{<name>}{<code>}| \\
+  \hspace{5mm} Define a new framestyle <name> with the given <code>\\
+  \lstinline|\setTUMframestyle{<name>}{<code>}| \\
+  \hspace{5mm} Overwrite an existing framestyle <name> with the given <code>\\
+  \lstinline|\addtoTUMframestyle{<name>}{<code>}| \\
+  \hspace{5mm} Add the given <code> to an existing framestyle <name>\\
+  \lstinline|\TUMframestyle{<name>}| \\
+  \hspace{5mm} Load the framestyle <name> \\
+\end{frame}
+
+\begin{frame}[fragile]{Handling custom framestyles}
+  The <code> that should go in these commands is intendet to load or define
+  beamer templates. Please refer to the
+  \href{https://ctan.org/pkg/beamer}{beamer manual} if you are not sure how
+  to use these templates.
+
+  To load the framestyle use the command before the frame
+  \begin{lstlisting}
+    .\TUMframestyle{section page}
+    .\begin{frame}{my frametitle}
+    .  my content
+    .\end{frame}
+  \end{lstlisting}
+\end{frame}
+
+\subsection{Color themes}
+\begin{frame}[fragile]{Color themes}
+  For color management we use the beamer framework to set and use colors.
+  Please refer to the \href{https://ctan.org/pkg/beamer}{beamer manual}
+  if you want to know more about setting and using colors.
+
+  But if you use the standard \lstinline|\setbeamercolor{<name>}{<color>}|
+  command offered by beamer in the preamble of your document. The color
+  you defined will most likely not appear in the document. The reason for
+  that is our way of handling framestyles. Since we can switch between
+  framestyles with different background colors inside the document, we need
+  a way to adapt the text colors as well. For this we defined 2 color themes
+  which are automatically loaded when switching framestyles.
+
+  \vspace{3mm}
+  \begin{tabular}{ll}
+    TUM default & color setup for white pages                  \\
+    TUM inverse & color setup for blue, shaded, and flag pages \\
+  \end{tabular}
+\end{frame}
+
+\begin{frame}[fragile]{Color themes}
+  If you want to change the color of a particular element, you have to add
+  the definition to one of the color themes. For this we offer the macro
+  \lstinline|\addtoTUMcolortheme{<name>}{<code>}|.
+
+  \vspace{3mm}
+  As an example we can chage the title color on blue background pages with the
+  command
+  \begin{lstlisting}
+    \addtoTUMcolortheme{TUM inverse}{
+      \setbeamercolor{title}{fg=green}
+    }
+  \end{lstlisting}
+\end{frame}
+
+
+\part{Test document}
+\section{Text only page}
+\begin{frame}{Text only page}{with a subtitle}
+  This is a text only page, to see if the spacing is correct.
+  \lipsum[1]
+\end{frame}
+
+\section{List environments}
+\subsection{Itemize page}
+\begin{frame}{Itemize test}
+  \begin{itemize}
+    \item This is the first point.
+    \item This is a second point.
+      \begin{itemize}
+        \item This point has sub items.
+        \item And there is also one sub item which is very long and
+          hopefully spans two lines, so I can see if the alignment of
+          the second line is correct.
+        \item Here the last sub item.
+      \end{itemize}
+    \item After sub items there are more items.
+    \item Here is another item with a very long text that should span at
+      least two lines. So I am telling a bit Lorem Ipsum stuff, to get the
+      lines full.
+  \end{itemize}
+\end{frame}
+
+\subsection{Enumerate page}
+\begin{frame}{Enumerate test}
+  \begin{enumerate}
+    \item This is the first point.
+    \item This is a second point.
+      \begin{enumerate}
+        \item This point has sub items.
+        \item And there is also one sub item which is very long and
+          hopefully spans two lines, so I can see if the alignment of
+          the second line is correct.
+        \item Here the last sub item.
+      \end{enumerate}
+    \item After sub items there are more items.
+    \item Here is another item with a very long text that should span at
+      least two lines. So I am telling a bit Lorem Ipsum stuff, to get the
+      lines full.
+  \end{enumerate}
+\end{frame}
+
+\subsection{Description page}
+\begin{frame}{Description test}
+  \begin{description}
+    \item[TUM] is an excellent university
+    \item[EI] is an excellent faculty
+    \item[Nano] is an excellent group
+    \item[ICMST] is a conference on mostly scientific topics
+    \item[Longer Label] is to see the alignment
+    \item[Even longer label] is to see the alignment
+  \end{description}
+\end{frame}
+
+\section{Figures and Tables}
+\subsection{Figure page}
+\begin{frame}{A nice figure}
+  \begin{figure}
+    \includegraphics[height=4cm]{resources/TUM_Flags_169}
+    \caption{This is a picure of Flags. Of course the excellent TUM flag
+      is in the front!}
+    \label{fig:TUMflags}
+  \end{figure}
+\end{frame}
+
+\subsection{Table page}
+\begin{frame}{An important table}
+  \begin{table}
+    \caption{This table contains very important data.}
+    \label{tab:test}
+    \begin{tabular}{lrc}
+      \toprule
+      a & b & c \\
+      \midrule
+      d & e & f \\
+      g & h & i \\
+      1 & 2 & 3 \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+\end{frame}
+
+
+\part{Another part}
+\section{Beamer Blocks}
+\subsection{Alert Block}
+\begin{frame}{ALERT!}
+  \begin{alertblock}{Watch out!}
+    This is how an alert block looks like.
+    \begin{equation}
+      a^2 + b^2 = c^2
+    \end{equation}
+  \end{alertblock}
+  Let's also try an \alert{alerted} text and an \emph{emphasized} text.
+\end{frame}
+
+\begin{frame}{ALERT!}
+  On this slied, we test \alert<2>{alerts with overlays} in both text and
+  math mode. The variables \alert<2>{$x$} and $\alert<2>{y}$ will be alerted
+  by color change only and not by boldfacing, because this would change the
+  meaning of the variable.
+
+  Alerting in math mode should also work in math environments
+  \begin{equation}
+    \alert<2>{\nabla}\times\vec{B} = \mu_{0} \left(
+      \vec{J} + \varepsilon_{0}\frac{\partial \vec{E}}{\alert<2>{\partial t}}
+    \right),
+  \end{equation}
+  and when alerting text with \alert<2>{inline math $\sin(\alpha)$}.
+\end{frame}
+
+\subsection{Example and Standard Blocks}
+\begin{frame}{Example and Standard Blocks}
+  \begin{exampleblock}{The only example}
+    Here is an example.
+  \end{exampleblock}
+  \begin{block}{This is a standard block}
+    Here we see the content of a standard block.
+  \end{block}
+\end{frame}
+
+\section{Columns}
+\begin{frame}{Columns}
+  \begin{columns}[t, onlytextwidth]
+    \column{.49\textwidth}
+    Let's split the text of this frame in two columns! This could look
+    really good.
+    \begin{itemize}
+      \item We can include items
+      \item another one
+      \item and the last one
+    \end{itemize}
+    The second column should contain a figure.
+    \column{.49\textwidth}
+    The top alignment is checked.
+    \begin{figure}
+      \theTUMLogo[height=2cm]
+      \caption{This is the TUM logo, obviously.}
+    \end{figure}
+  \end{columns}
+  \vspace{3mm}
+  And this is text after the column environment, which should span the
+  full width again. And indeed it does! But vertical space must be included
+  manually :/
+\end{frame}

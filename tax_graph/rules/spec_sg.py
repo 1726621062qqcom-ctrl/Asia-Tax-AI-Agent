@@ -10,8 +10,16 @@ SG, CN, HK = "SG", "CN", "HK"
 DIVIDEND, INTEREST, ROYALTY, SHARE_TRANSFER = "DIVIDEND", "INTEREST", "ROYALTY", "SHARE_TRANSFER"
 SERVICE_FEE = "SERVICE_FEE"
 IP_TRANSFER = "IP_TRANSFER"
+GOODS = "GOODS"                                                 # decision D42
+BRANCH_PROFIT = "BRANCH_PROFIT"                                 # decision D47
+PROPERTY = "PROPERTY_TRANSFER"                                  # decision D48
+RENT = "PROPERTY_RENT"                                          # decision D49
 WITHHELD = (INTEREST, ROYALTY, SERVICE_FEE)                       # s45 / s45A income
 NON_RESIDENT = Leaf("payee_in_source_jur", is_false, on="payee")
+SG_BSD = tuple("sg.stamp.bsd_%s" % k for k in ("res_1", "res_2", "res_3", "res_4", "res_5", "nonres_1", "nonres_2", "nonres_3", "nonres_4",
+                                               "nonres_top", "band_1", "band_2", "band_3", "band_4", "band_5"))                     # decision D48
+SG_SSD = tuple("sg.stamp.ssd_%s" % k for k in ("res_2y", "res_3y", "res_4y", "res_old_1y", "res_old_2y", "res_old_3y", "ind_1y", "ind_2y",
+                                               "ind_3y", "res_new_from", "res_old_from", "ind_from"))
 
 
 def dom(income):
@@ -54,8 +62,8 @@ SPEC = [
     # ---- stamp duty: a transfer of shares is stamped at 0.2% of the consideration, paid by the transferee (First Schedule
     #      Art 3(c), Third Schedule Art 2(a)); an outside buyer's duty is its own
     # SDA s15(1)(b) with the 2014 Rules: no ad valorem duty between associated permitted entities (75% of voting capital,
-    #   more than half the votes), claimed, kept associated and the asset kept for 2 years (rule 7(1)(a), (b)) (口径 D18, D19)
-    #   shares a liquidation or capital reduction cancels pass by no conveyance on sale (口径 D19)
+    #   more than half the votes), claimed, kept associated and the asset kept for 2 years (rule 7(1)(a), (b)) (decision D18, D19)
+    #   shares a liquidation or capital reduction cancels pass by no conveyance on sale (decision D19)
     RuleObj("sg.stamp.buyer", dom(SHARE_TRANSFER), Effect.STAMP, "sg.stamp.share_rate", bearer="payer",
             cond=And(Leaf("shares_cancelled", is_false, "sg.stamp.share_rate"),
                      Not(And(Leaf("associated_ratio", ge, "sg.stamp.associated_capital_min"), Leaf("stamp_relief_claimed", is_true),
@@ -74,7 +82,7 @@ SPEC = [
     RuleObj("sg.p2.topup", Scope(SG, SG, "TOPUP", side="residence"), Effect.CHARGE, "sg.p2.minimum_rate",
             cond=And(Leaf("group_revenue_eur", ge, "sg.p2.revenue_threshold", on="payee"), Leaf("p2_iir", is_false, "p2.qualified_iir_sg")),
             uses=("sg.p2.dtt",)),
-    #      口径 D20: the MTT (Part 2, ss 11-15) — a Singapore responsible member pays the top-up tax of its relevant
+    #      decision D20: the MTT (Part 2, ss 11-15) — a Singapore responsible member pays the top-up tax of its relevant
     #      entities abroad (the engine's iir: pseudo-flow, the parent's own)
     RuleObj("sg.p2.mtt", Scope(SG, SG, "TOPUP", side="residence"), Effect.CHARGE, "sg.p2.minimum_rate",
             cond=And(Leaf("group_revenue_eur", ge, "sg.p2.revenue_threshold", on="payee"), Leaf("p2_iir", is_true, "p2.qualified_iir_sg")),
@@ -83,8 +91,30 @@ SPEC = [
 
     # ---- domestic flows: income accruing in Singapore to a Singapore company is charged (s10(1)); dividends are exempt
     #      under the declaration below
-    RuleObj("sg.domestic.charge", Scope(SG, SG, (INTEREST, ROYALTY, SERVICE_FEE), side="residence"), Effect.CHARGE, "sg.corp.rate",
+    RuleObj("sg.domestic.charge", Scope(SG, SG, (INTEREST, ROYALTY, SERVICE_FEE, GOODS), side="residence"), Effect.CHARGE,
+            "sg.corp.rate",
             cond=Leaf("payee_in_source_jur", is_true, on="payee"), uses=("sg.charge.basis", "sg.corp.rate_entity")),
+
+    # ---- decision D42: a Singapore seller of goods — its profit is charged under s10(1)(a) where the trade is carried on here
+    #      (a judgement) or, foreign-sourced, when received here (s10(25)); replaces the gross FSIE charge. A non-resident
+    #      seller without a fixed place here carries on no trade here
+    RuleObj("sg.goods.charge", inbound(GOODS), Effect.CHARGE, "sg.corp.rate",
+            cond=And(NON_RESIDENT, Or(Discretion("trading_profits_sourced_in_sg", cites=("sg.ita1947.full#s10",)),
+                                      Leaf("receipt_kind", is_in, "sg.fsie.receipt_kinds"))),
+            overrides=frozenset({"sg.fsie.charge"}), uses=("sg.goods.trade_income", "sg.charge.basis", "sg.corp.rate_entity")),
+    RuleObj("sg.goods.base", inbound(GOODS), Effect.BASE, None, uses=("sg.goods.trade_income", "sg.tp.income_arms_length")),
+    RuleObj("sg.goods.nonresident", dom(GOODS), Effect.CHARGE, "sg.corp.rate",
+            cond=And(NON_RESIDENT, Leaf("fixed_place_in_sg", is_true, on="payee"),
+                     Discretion("trading_profits_sourced_in_sg", cites=("sg.ita1947.full#s10",))),
+            uses=("sg.goods.trade_income", "sg.corp.rate_entity")),
+    RuleObj("sg.goods.nonresident.base", dom(GOODS), Effect.BASE, None, cond=NON_RESIDENT, uses=("sg.goods.trade_income",)),
+    # decision D43: GST on goods imported into Singapore (s16(e)), paid by the importer — the buyer; what it recovers as input
+    # tax is no cost (as the reverse charge)
+    RuleObj("sg.gst.import.goods", dom(GOODS), Effect.VAT, "sg.gst.rate", bearer="payer",
+            cond=And(Leaf("goods_imported_into_sg", is_true), Leaf("gst_input_fully_recoverable", is_false, on="payer")),
+            uses=("sg.gst.import_charge", "sg.gst.recovery_ratio_basis")),
+    RuleObj("sg.nocharge.goods_nonresident", dom(GOODS), Effect.NOCHARGE, None,
+            cond=And(NON_RESIDENT, Leaf("fixed_place_in_sg", is_false, on="payee")), uses=("sg.charge.basis",)),
 
     # ---- a Singapore company's service income from abroad: charged on the profit in the fee, under s10(1) for the work done
     #      here or s10(25) when the rest is received here; replaces the gross FSIE charge for this income
@@ -94,7 +124,7 @@ SPEC = [
             overrides=frozenset({"sg.fsie.charge"}), uses=("sg.charge.basis", "sg.corp.rate_entity")),
     RuleObj("sg.service.base", inbound(SERVICE_FEE), Effect.BASE, None, uses=("sg.charge.basis",)),
 
-    # ---- 口径 D22: the IP transfer step. An outright purchase is no payment "for the use of or the right to use" (s12(7)):
+    # ---- decision D22: the IP transfer step. An outright purchase is no payment "for the use of or the right to use" (s12(7)):
     #      nothing is deemed sourced here, nothing withheld; the buyer writes the price down over the 5 years it may elect
     #      (s19B(1AA), (1AB)) — none for rights from a related party that had Singapore deductions for creating them (10A),
     #      none for rights acquired after the basis period for YA 2028 (10)(aa). A Singapore seller: the proceeds above the
@@ -114,6 +144,41 @@ SPEC = [
     # ---- dividends of a Singapore company are exempt in the recipient's hands (one-tier, s13(1)(za)): a declaration
     RuleObj("sg.nocharge.dividend", dom(DIVIDEND), Effect.NOCHARGE, None, uses=("sg.nocharge.dividend",)),
 
+    # ---- decision D48: land or a building in Singapore. The buyer's duty on the conveyance (First Schedule Article 3(a)(iv),
+    #      residential and other scales), an entity's additional buyer's duty on residential property (Article 3(bi)(xix),
+    #      65%), the seller's duty on residential or industrial property sold within its holding period (Article 3(bd),
+    #      (bg), (bj)); GST on the sale of non-residential property by a registered seller (s8; Fourth Schedule para 2 exempts
+    #      residential land) — the buyer recovers it as its input tax where it may; the gain is income only if not capital
+    RuleObj("sg.stamp.bsd", dom(PROPERTY), Effect.STAMP, "sg.stamp.bsd_rate_top", bearer="payer", uses=SG_BSD),
+    RuleObj("sg.stamp.absd", dom(PROPERTY), Effect.STAMP, "sg.stamp.absd_entity", bearer="payer",
+            cond=Leaf("property_residential", is_true), uses=("sg.stamp.absd_by_purchaser",)),
+    RuleObj("sg.stamp.ssd", dom(PROPERTY), Effect.STAMP, "sg.stamp.ssd_res_1y", bearer="payee", uses=SG_SSD),
+    RuleObj("sg.gst.property", dom((PROPERTY, RENT)), Effect.VAT, "sg.gst.rate", bearer="payee",
+            cond=And(Leaf("property_non_residential", is_true, "sg.gst.residential_land_exempt"),
+                     Leaf("gst_registered", is_true, "sg.gst.registered_supplier", on="payee")),
+            uses=("sg.gst.property_taxable",)),
+    RuleObj("sg.gst.property.input_credit", dom((PROPERTY, RENT)), Effect.VAT, "sg.gst.rate", bearer="payer",
+            cond=Leaf("gst_input_fully_recoverable", is_true, "sg.gst.recovery_ratio_basis", on="payer")),
+    RuleObj("sg.property.charge", dom(PROPERTY), Effect.CHARGE, "sg.corp.rate", uses=("sg.charge.basis", "sg.corp.rate_entity")),
+    RuleObj("sg.property.base", dom(PROPERTY), Effect.BASE, None, uses=("sg.charge.basis",)),
+    RuleObj("sg.property.capital", dom(PROPERTY), Effect.EXEMPT, None,
+            cond=Discretion("gain_is_capital_in_nature", cites=("sg.ita1947.full#s10",))),
+
+    # ---- decision D49: rent of land or a building in Singapore — income (s10(1)(f)) on the profit in it; the owner's property
+    #      tax on the annual value (Property Tax Act s9; IRAS: 10% for non-residential property, 12% / 20% / 28% / 36% on the
+    #      bands of a let residential one); the lease's duty, the lessee's (First Schedule Article 8(aa): 0.4% of the rent of
+    #      at most 4 years; Third Schedule 4); GST as on a sale. A Singapore company's rent from abroad is charged when
+    #      received (sg.fsie.charge) on the profit in it
+    RuleObj("sg.rent.charge", dom(RENT), Effect.CHARGE, "sg.corp.rate", uses=("sg.rent.income", "sg.corp.rate_entity")),
+    RuleObj("sg.deduct.rent", dom(RENT), Effect.DEDUCTION, "sg.corp.rate", uses=("sg.deduct.rent_for_premises", "sg.corp.rate_entity")),
+    RuleObj("sg.rent.base", dom(RENT), Effect.BASE, None, uses=("sg.rent.income",)),
+    RuleObj("sg.rent.foreign.base", inbound(RENT), Effect.BASE, None, cond=NON_RESIDENT, uses=("sg.rent.income",)),
+    RuleObj("sg.property_tax.rent", dom(RENT), Effect.PROPERTY_TAX, "sg.property_tax.non_residential", bearer="payee",
+            uses=("sg.property_tax.max_rate", "sg.property_tax.res_1", "sg.property_tax.res_2", "sg.property_tax.res_3",
+                  "sg.property_tax.res_4", "sg.property_tax.band_1", "sg.property_tax.band_2", "sg.property_tax.band_3")),
+    RuleObj("sg.stamp.lease", dom(RENT), Effect.STAMP, "sg.stamp.lease_rate", bearer="payer",
+            cond=Leaf("lease_year", le, "sg.stamp.lease_years"), uses=("sg.stamp.lease_by_lessee",)),
+
     # ---- gains: no tax on capital; a gain is Singapore income for a Singapore company, or for a non-resident only through
     #      a Singapore business (s10(1)); either way s13W exempts a >= 20% holding kept >= 24 months
     RuleObj("sg.gain.charge", dom(SHARE_TRANSFER), Effect.CHARGE, "sg.corp.rate",
@@ -124,6 +189,11 @@ SPEC = [
             cond=Discretion("gain_is_capital_in_nature", cites=("sg.ita1947.full#s10",))),
     RuleObj("sg.gain.s13w", dom(SHARE_TRANSFER), Effect.EXEMPT, None,
             cond=And(Leaf("ratio", ge, "sg.s13w.ratio_min"), Leaf("holding_months", ge, "sg.s13w.holding_months_min"))),
+    # decision D45: s13W(1B) from 2026 — the shares sold held 24 months, and at the start of those 24 months the seller together
+    # with its group (> 50%, multiplied through levels, (1C), (1D)) held 20%, not sold below it in the period
+    RuleObj("sg.gain.s13w.group", dom(SHARE_TRANSFER), Effect.EXEMPT, None,
+            cond=And(Leaf("holding_months", ge, "sg.s13w.holding_months_min"), Leaf("sg_group_ratio", ge, "sg.s13w.ratio_min")),
+            uses=("sg.s13w.group_basis", "sg.s13w.group_more_than_half", "sg.s13w.group_chain")),
 
     # ---- the payer's deduction (s14(1)); "wholly and exclusively in the production of the income" is a judgement
     # s14(1)(a): interest is deductible when the borrowed capital is employed in acquiring the income (not, say, shares
@@ -139,10 +209,20 @@ SPEC = [
             uses=("sg.tp.arms_length",)),
     # s34F: documentation when gross revenue exceeds $10m, by the time of the return; s34E: 5% surcharge on an adjustment
     RuleObj("sg.tp.documentation", dom((INTEREST, ROYALTY, SERVICE_FEE)), Effect.DEADLINE, "sg.tp.documentation_due",
-            cond=And(Leaf("payee_is_related", is_true, on="payee"), Leaf("gross_revenue", gt, "sg.tp.documentation_revenue_min", on="payer")),
+            cond=And(Leaf("sg_related", is_true), Leaf("gross_revenue", gt, "sg.tp.documentation_revenue_min", on="payer")),
             uses=("sg.corp.return_due",)),
     RuleObj("sg.tp.surcharge", dom((INTEREST, ROYALTY, SERVICE_FEE)), Effect.PENALTY, "sg.tp.surcharge_rate",
-            cond=Leaf("payee_is_related", is_true, on="payee")),
+            cond=Leaf("sg_related", is_true), uses=("sg.tp.related_party",)),
+    # ---- decision D41: a related party pays a Singapore company interest, a royalty or a fee below its arm's-length amount —
+    #      the Comptroller increases the income (s34D(1A)(a)) into the arm's-length results (IRAS TP Guidelines 5.115),
+    #      with the 5% surcharge on the increase (s34E(1)(a)); a Singapore payer's deduction follows a Mainland adjustment of
+    #      the payee through the Agreement's Art 9(2) (MLI Art 17(1)) — a judgement; none with Hong Kong (no treaty)
+    RuleObj("sg.tp.income_uplift", inbound((INTEREST, ROYALTY, SERVICE_FEE)), Effect.BASE, None, cond=NON_RESIDENT,
+            uses=("sg.tp.income_arms_length", "sg.tp.range_no_adjustment", "sg.tp.related_party")),
+    RuleObj("sg.tp.income_surcharge", inbound((INTEREST, ROYALTY, SERVICE_FEE)), Effect.PENALTY, "sg.tp.surcharge_rate",
+            cond=And(NON_RESIDENT, Leaf("sg_related", is_true)), uses=("sg.tp.income_arms_length", "sg.tp.related_party")),
+    RuleObj("sg.tp.corresponding", dom((INTEREST, ROYALTY, SERVICE_FEE)), Effect.DEDUCT_BASE, None, cond=NON_RESIDENT,
+            uses=("cn-sg.tp.corresponding",)),
 
     # ---- CN–SG agreement: caps and the equipment-rent base; min() makes the two interest caps compatible
     RuleObj("cn-sg.int.cap_bank@sg", treaty(INTEREST), Effect.RATE_CAP, "cn-sg.int.cap_bank",
@@ -171,7 +251,7 @@ SPEC = [
     RuleObj("sg.dtr.cor_prior_years", treaty(ALL), Effect.DEADLINE, "sg.dtr.cor_due_prior_years",
             cond=Leaf("claim_is_for_prior_year", is_true)),
 
-    # ---- 口径 D24, receiving side, Singapore-sourced: interest or a royalty a Singapore company derives from a lending or licensing
+    # ---- decision D24, receiving side, Singapore-sourced: interest or a royalty a Singapore company derives from a lending or licensing
     #      business carried on here is income accruing in or derived from Singapore (s10(1)), charged whether or not it
     #      is remitted; where it arises is a judgement — when it is Singapore-sourced the remittance rules are beside the point
     RuleObj("sg.onshore.charge", inbound((INTEREST, ROYALTY)), Effect.CHARGE, "sg.corp.rate",
@@ -187,14 +267,32 @@ SPEC = [
                      Leaf("foreign_headline_rate", ge, "sg.fsie.headline_rate_min"),
                      Discretion("exemption_beneficial", cites=("sg.ita1947.full#s13",))),
             uses=("sg.fsie.beneficial", "sg.fsie.ministerial_order")),
-    # s10L: a foreign disposal gain received in Singapore is income unless the seller has adequate economic substance
-    RuleObj("sg.s10l.gain", inbound(SHARE_TRANSFER), Effect.EXEMPT, None,
-            cond=Or(Leaf("is_relevant_group_entity", is_false, "sg.s10l.relevant_group_entity", on="payee"),
-                    Leaf("is_excluded_entity", is_true, "sg.s10l.excluded_entity", on="payee"),
-                    Discretion("adequate_substance", cites=("sg.ita1947.full#s10L",))),
+    # decision D47: a Singapore company's branch abroad — its profit, received here, is charged (sg.fsie.charge) unless s13(8)(b)
+    # exempts it on the s13(9) conditions; a foreign company's branch here is charged on the profit its trade here derives
+    # (s10(1)(a), where the trade is carried on — a judgement, as for goods)
+    RuleObj("sg.fsie.branch_exempt", inbound(BRANCH_PROFIT), Effect.EXEMPT, None,
+            cond=And(Leaf("foreign_taxed", is_true, "sg.fsie.subject_to_tax"),
+                     Leaf("foreign_headline_rate", ge, "sg.fsie.headline_rate_min"),
+                     Discretion("exemption_beneficial", cites=("sg.ita1947.full#s13",))),
+            uses=("sg.fsie.branch_profits", "sg.fsie.beneficial")),
+    RuleObj("sg.branch.charge", dom(BRANCH_PROFIT), Effect.CHARGE, "sg.corp.rate",
+            cond=And(NON_RESIDENT, Discretion("branch_profit_sourced_in_sg", cites=("sg.ita1947.full#s10",))),
+            uses=("sg.branch.trade_income", "sg.corp.rate_entity")),
+    # s10L: a foreign disposal gain received in Singapore is income unless the seller has adequate economic substance;
+    # only property situated outside Singapore (s10L(1); decision D32) — a Singapore gain (sg.gain.charge) is not this rule's to lift
+    RuleObj("sg.s10l.gain", inbound((SHARE_TRANSFER, PROPERTY)), Effect.EXEMPT, None,
+            cond=And(NON_RESIDENT, Or(Leaf("is_relevant_group_entity", is_false, "sg.s10l.relevant_group_entity", on="payee"),
+                                      Leaf("is_excluded_entity", is_true, "sg.s10l.excluded_entity", on="payee"),
+                                      Discretion("adequate_substance", cites=("sg.ita1947.full#s10L",)))),
             uses=("sg.s10l.received_in_sg_trigger", "sg.s10l.substance_pure_holding", "sg.s10l.substance_non_pure_holding",
-                  "sg.s10l.share_situs")),
-    RuleObj("sg.fsie.gain.base", inbound(SHARE_TRANSFER), Effect.BASE, None),
+                  "sg.s10l.share_situs", "sg.s10l.place_of_business")),   # decision D47
+    # s10L(3): a disposal before 1 January 2024 is outside s10L — the foreign gain, which this model takes as one not
+    # otherwise chargeable (s10L(2)(a)), is no income (decision D36)
+    RuleObj("sg.s10l.not_in_force", inbound((SHARE_TRANSFER, PROPERTY)), Effect.EXEMPT, None,
+            cond=And(NON_RESIDENT, Leaf("disposed_in_s10l_regime", is_false, "sg.s10l.commencement"))),
+    # decision D32: foreign-sourced only (a Singapore gain has sg.gain.base); decision D41: s10L(10) below the open-market price
+    RuleObj("sg.fsie.gain.base", inbound((SHARE_TRANSFER, PROPERTY)), Effect.BASE, None, cond=NON_RESIDENT,
+            uses=("sg.s10l.open_market_price",)),
     # foreign tax credit: under the Agreement for Mainland tax (s50), unilaterally for Hong Kong tax (s50A)
     RuleObj("sg.ftc.dta", inbound(ALL, CN), Effect.CREDIT, None, uses=("sg.ftc.credit_limit", "sg.ftc.tax_payable_under_arrangements")),
     RuleObj("sg.ftc.unilateral", inbound(ALL, HK), Effect.CREDIT, None,
@@ -208,4 +306,15 @@ SPEC = [
                      Leaf("foreign_taxed", is_true, "sg.ftc.pooling_foreign_tax_paid"),
                      Leaf("foreign_headline_rate", ge, "sg.ftc.pooling_headline_rate_min")),
             uses=("sg.ftc.pooling_sg_tax_not_nil",)),
+    # decision D51: losses (tax_graph.losses) — s37(3)(a), (5); the shareholders test s37(12)-(14) and the Minister's waiver
+    # (16), (17)(a); group relief s37B
+    RuleObj("sg.loss.carryforward", Scope(ALL, SG, ALL, mount=Mount.ENTITY, side="residence"), Effect.DEDUCTION, None,
+            uses=("sg.loss.carryforward", "sg.loss.order_years")),
+    RuleObj("sg.loss.continuity", Scope(ALL, SG, ALL, mount=Mount.ENTITY, side="residence"), Effect.DENY, None,
+            cond=Not(Discretion("sg_loss_continuity_waived", cites=("sg.ita1947.full#s37",))),
+            overrides=frozenset({"sg.loss.carryforward"}),
+            uses=("sg.loss.continuity", "sg.loss.shareholders_same_min", "sg.loss.look_through", "sg.loss.waiver")),
+    RuleObj("sg.loss.group_relief", Scope(ALL, SG, ALL, mount=Mount.ENTITY, side="residence"), Effect.DEDUCTION, None,
+            uses=("sg.group_relief.transfer", "sg.group_relief.ratio_min", "sg.group_relief.qualifying_loss",
+                  "sg.group_relief.days", "sg.group_relief.singapore_company", "sg.group_relief.election")),
 ]

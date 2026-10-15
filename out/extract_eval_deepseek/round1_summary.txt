@@ -1,0 +1,232 @@
+cases per model: Counter({'deepseek-flash': 10, 'deepseek-v4-pro': 10})
+deepseek-flash   derived        {'correct': 27, 'null': 31, 'wrong': 4}
+deepseek-flash   null-expected  {'abstained': 18, 'false_fill': 4}
+deepseek-flash   value          {'correct': 83, 'wrong': 2, 'null': 1}
+deepseek-v4-pro  derived        {'correct': 24, 'null': 29, 'wrong': 2, 'error': 6, 'rejected': 1}
+deepseek-v4-pro  null-expected  {'abstained': 16, 'false_fill': 4, 'error': 2}
+deepseek-v4-pro  value          {'correct': 70, 'null': 7, 'wrong': 3, 'error': 6}
+deepseek-flash {'calls': 149, 'prompt_tokens': 2255524, 'completion_tokens': 360044, 'cache_hit_tokens': 46336, 'seconds': 2183.612643480301} max case wall 357s
+deepseek-v4-pro {'calls': 127, 'prompt_tokens': 2252430, 'completion_tokens': 312069, 'cache_hit_tokens': 6912, 'seconds': 3536.8247990608215} max case wall 747s
+errors: [('deepseek-v4-pro', 'K3-sunsine-2026', 'JSONDecodeError: Invalid control character at: line 1 column 3054 (char 3053)')]
+
+NON-CORRECT ROWS
+('K3-carote-2026', 'flows.up1.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-carote-2026', 'flows.up2.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-carote-2026', 'holds.ULT>HOLD.cost', 'missing', 'None')
+    deepseek-flash   false_fill 100000.0  | On January 23, 2024, pursuant to a share transfer agreement entered into on January 18, 2024, Carote Group acquired the entire issued share  
+    deepseek-v4-pro  false_fill 100000.0  | On January 23, 2024, pursuant to a share transfer agreement entered into on January 18, 2024, Carote Group acquired the entire issued share  
+('K3-carote-2026', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-carote-2026', 'roles.ULT.attrs.group_revenue_eur', 'derived', '201430425.49')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-ekh-2026', 'flows.up1.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-ekh-2026', 'flows.up1.foreign_headline_rate', 'disclosed', '25')
+    deepseek-flash   wrong      20.0  | The income tax rate of resident enterprises is 25%, while the income tax rate of non-resident enterprises is 20%. 
+    deepseek-v4-pro  wrong      20.0  | The income tax rate of resident enterprises is 25%, while the income tax rate of non-resident enterprises is 20%. 
+('K3-ekh-2026', 'flows.up1.foreign_taxed', 'derived', 'True')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  correct    True  | Under the Enterprise Income Tax Law of the PRC, withholding tax at 10% or a lower applicable rate is imposed on dividends declared and payab 
+('K3-ekh-2026', 'flows.up2.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-ekh-2026', 'holds.HOLD>OP.since', 'derived', '2012-12-31')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-ekh-2026', 'holds.ULT>HOLD.since', 'derived', '2012-12-31')
+    deepseek-flash   wrong      '2010-10-26'  | Best China Development Limited (保昌發展有限公司), a limited liability company incorporated in Hong Kong on 26 October 2010 and our wholly-owned sub 
+    deepseek-v4-pro  null       None  |  
+('K3-ekh-2026', 'roles.HOLD.attrs.is_mne_member', 'derived', 'True')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  correct    True  | Headquartered in Singapore, we have established a broad geographical footprint with operations in the PRC, Hong Kong, Malaysia, Thailand and 
+('K3-ekh-2026', 'roles.ULT.attrs.group_revenue_eur', 'derived', '98891763.71')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-ekh-2026', 'roles.ULT.attrs.incorporated_in', 'disclosed', 'SG')
+    deepseek-flash   correct    'SG'  | (Incorporated in the Republic of Singapore with limited liability) 
+    deepseek-v4-pro  null       None  |  
+('K3-ekh-2026', 'roles.ULT.loc', 'disclosed', 'SG')
+    deepseek-flash   correct    'SG'  | EKH LIMITED
+永康控股有限公司*
+(Incorporated in the Republic of Singapore with limited liability) 
+    deepseek-v4-pro  null       None  |  
+('K3-jst-2026', 'flows.out.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-jst-2026', 'flows.out.foreign_headline_rate', 'disclosed', '25')
+    deepseek-flash   wrong      10.0  | The EIT Law provides that since January 1, 2008, an income tax rate of 10% will normally be applicable to dividends declared to non-PRC resi 
+    deepseek-v4-pro  wrong      10.0  | The EIT Law provides that since January 1, 2008, an income tax rate of 10% will normally be applicable to dividends declared to non-PRC resi 
+('K3-jst-2026', 'holds.ULT>OP.cost', 'missing', 'None')
+    deepseek-flash   false_fill 493484473.0  | On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte 
+    deepseek-v4-pro  false_fill 493484473.0  | On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte 
+('K3-jst-2026', 'holds.ULT>OP.since', 'derived', '2023-09-05')
+    deepseek-flash   wrong      '2023-02-21'  | On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte 
+    deepseek-v4-pro  wrong      '2023-02-21'  | On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte 
+('K3-jst-2026', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   wrong      'HK'  | After the completion of the above transfers of equity interests, Shanghai Jushuitan has become a wholly foreign-owned enterprise wholly-owne 
+    deepseek-v4-pro  wrong      'HK'  | After the completion of the above transfers of equity interests, Shanghai Jushuitan has become a wholly foreign-owned enterprise wholly-owne 
+('K3-jst-2026', 'roles.ULT.attrs.group_revenue_eur', 'derived', '120885764.78')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-jst-2026', 'roles.ULT.attrs.is_mne_member', 'derived', 'True')
+    deepseek-flash   correct    True  | on September 14, 2021, True Value Limited was incorporated as an exempted company with limited liability in BVI, a direct wholly-owned subsi 
+    deepseek-v4-pro  null       None  |  
+('K3-mirxes-2026', 'flows.reorg.reorg_equity_payment_share', 'derived', '100.0')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  correct    100.0  | Following such share swap, Hangzhou Miwei was wholly owned by Huzhou Mirui, which was in turn wholly owned by MiRXEA Pte. Ltd. 
+('K3-mirxes-2026', 'flows.up1.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-mirxes-2026', 'flows.up1.foreign_headline_rate', 'disclosed', '25')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  correct    25.0  | Under the Law of the PRC on Enterprise Income Tax (the “EIT Law”) and implementation regulations of the EIT Law, the basic tax rate of the C 
+('K3-mirxes-2026', 'flows.up1.foreign_taxed', 'derived', 'True')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-mirxes-2026', 'flows.up2.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-mirxes-2026', 'holds.ULT>HOLD.cost', 'missing', 'None')
+    deepseek-flash   false_fill 11662432.0  | whereby MiRXEA Pte. Ltd. has completed the paid-in obligation to Huzhou Mirui’s registered capital of US$11,662,432. 
+    deepseek-v4-pro  false_fill 11662432.0  | whereby MiRXEA Pte. Ltd. has completed the paid-in obligation to Huzhou Mirui’s registered capital of US$11,662,432 
+('K3-mirxes-2026', 'holds.ULT>OP.cost', 'missing', 'None')
+    deepseek-flash   false_fill 10000000.0  | Our subsidiary, Hangzhou Miwei, was incorporated in the PRC on December 11, 2020 as a limited liability company with an initial registered c 
+    deepseek-v4-pro  false_fill 10000000.0  | Our subsidiary, Hangzhou Miwei, was incorporated in the PRC on December 11, 2020 as a limited liability company with an initial registered c 
+('K3-mirxes-2026', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   correct    'NONE'  | Our subsidiary, Hangzhou Miwei, was incorporated in the PRC on December 11, 2020 as a limited liability company with an initial registered c 
+    deepseek-v4-pro  null       None  |  
+('K3-mirxes-2026', 'roles.ULT.attrs.group_revenue_eur', 'derived', '19373610.56')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-shein-2026', 'flows.up1.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-shein-2026', 'flows.up1.foreign_taxed', 'derived', 'True')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-shein-2026', 'holds.ULT>OP.ratio', 'derived', '100.0')
+    deepseek-flash   correct    100.0  | Guangzhou Shein International Import & Export Co., Ltd. (廣州希音國際進出口有限公司) Supply chain management, product selection, merchant management, pro 
+    deepseek-v4-pro  null       None  |  
+('K3-shein-2026', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-shein-2026', 'present.financing', 'derived', 'EQUITY')
+    deepseek-flash   correct    'EQUITY'  | 100% 
+    deepseek-v4-pro  null       None  |  
+('K3-shein-2026', 'roles.ULT.attrs.group_revenue_eur', 'derived', '35675288689.21')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-sunsine-2026', 'event.dividend', 'synthetic', 'None')
+    deepseek-flash   abstained  None  |  
+    deepseek-v4-pro  error      None  |  
+('K3-sunsine-2026', 'event.on', 'synthetic', 'None')
+    deepseek-flash   abstained  None  |  
+    deepseek-v4-pro  error      None  |  
+('K3-sunsine-2026', 'flows.up1.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  error      None  |  
+('K3-sunsine-2026', 'flows.up1.foreign_headline_rate', 'disclosed', '25')
+    deepseek-flash   correct    25.0  | As such, the subsidiary corporation has accrued and paid its income tax for the financial year ended 31 
+December 2024 at the corporate head 
+    deepseek-v4-pro  error      None  |  
+('K3-sunsine-2026', 'flows.up1.foreign_taxed', 'derived', 'True')
+    deepseek-flash   correct    True  | withholding tax on foreign dividend income
+9,038
+10,215 
+    deepseek-v4-pro  error      None  |  
+('K3-sunsine-2026', 'holds.ULT>OP.cost', 'derived', '350010000.0')
+    deepseek-flash   correct    350010000.0  | 14
+Investments in subsidiary corporations
+Company
+2024
+2023
+RMB’000
+RMB’000
+Equity investments at cost
+Beginning and end of the financial ye 
+    deepseek-v4-pro  error      None  |  
+('K3-sunsine-2026', 'holds.ULT>OP.ratio', 'disclosed', '100.0')
+    deepseek-flash   correct    100.0  | Held by the Company 
+Shandong Sunsine Chemical 
+Co.,Ltd (a),(b)
+Manufacturing and sale 
+of rubber chemicals, 
+comprising rubber 
+accelerator 
+    deepseek-v4-pro  error      None  |  
+('K3-sunsine-2026', 'holds.ULT>OP.since', 'derived', '2023-12-31')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  error      None  |  
+('K3-sunsine-2026', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   wrong      'SG'  | CHINA SUNSINE CHEMICAL HOLDINGS LTD.
+(Singapore) 
+    deepseek-v4-pro  error      None  |  
+('K3-sunsine-2026', 'present.financing', 'derived', 'EQUITY')
+    deepseek-flash   correct    'EQUITY'  | Equity investments at cost 
+    deepseek-v4-pro  error      None  |  
+('K3-sunsine-2026', 'roles.OP.attrs.incorporated_in', 'disclosed', 'CN')
+    deepseek-flash   correct    'CN'  | People’s Republic of China 
+    deepseek-v4-pro  error      None  |  
+('K3-sunsine-2026', 'roles.OP.loc', 'disclosed', 'CN')
+    deepseek-flash   correct    'CN'  | China Main Offices
+Shandong Sunsine Chemical Co., Ltd.
+Shandong Shanxian Economic Development Zone
+Shandong Province
+Post Code: 274300
+The P 
+    deepseek-v4-pro  error      None  |  
+('K3-sunsine-2026', 'roles.ULT.attrs.incorporated_in', 'disclosed', 'SG')
+    deepseek-flash   correct    'SG'  | (Incorporated in the Republic of Singapore on 28 June 2006) 
+    deepseek-v4-pro  error      None  |  
+('K3-sunsine-2026', 'roles.ULT.loc', 'disclosed', 'SG')
+    deepseek-flash   correct    'SG'  | China Sunsine Chemical Holdings Ltd. (the “Company”) is listed on the Singapore Exchange and incorporated and domiciled in Singapore. The re 
+    deepseek-v4-pro  error      None  |  
+('K4-freetech-2024', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K4-freetech-2024', 'roles.BUYER.attrs.incorporated_in', 'disclosed', 'CN')
+    deepseek-flash   correct    'CN'  | The Purchaser, a state-owned enterprise, is a company established in the PRC with limited liability. 
+    deepseek-v4-pro  null       None  |  
+('K4-freetech-2024', 'roles.BUYER.loc', 'disclosed', 'CN')
+    deepseek-flash   correct    'CN'  | The Purchaser, a state-owned enterprise, is a company established in the PRC with limited liability. 
+    deepseek-v4-pro  null       None  |  
+('K4-freetech-2024', 'roles.OP.loc', 'disclosed', 'CN')
+    deepseek-flash   correct    'CN'  | The Target Company is a company established in the PRC with limited liability on 1 September 2009 by the Purchaser. 
+    deepseek-v4-pro  null       None  |  
+('K4-freetech-2024', 'roles.ULT.attrs.incorporated_in', 'disclosed', 'HK')
+    deepseek-flash   correct    'HK'  | Freetech Smart Road Recycling Engineering Investment Limited (英達智能道路再生工程投資有限公司), a company incorporated in Hong Kong with limited liability 
+    deepseek-v4-pro  null       None  |  
+('K4-freetech-2024', 'roles.ULT.loc', 'disclosed', 'HK')
+    deepseek-flash   correct    'HK'  | Freetech Smart Road Recycling Engineering Investment Limited (英達智能道路再生工程投資有限公司), a company incorporated in Hong Kong with limited liability 
+    deepseek-v4-pro  null       None  |  
+('K4-shuion-kic-2024', 'flows.exit.immovable_ratio', 'derived', '97.8')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  rejected   None  |  ['quote not found in the document']
+('K4-shuion-kic-2024', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K4-shuion-kic-2024', 'roles.BUYER.loc', 'derived', 'CN')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  correct    'CN'  | An onshore merger and acquisition loan (the “M&A Loan”) for the Limited Partnership to pay for a portion of the consideration for the Equity 
+('K4-shuion-ypu-2024', 'event.exit', 'disclosed', '4706000000.0')
+    deepseek-flash   correct    4706000000.0  | the 86.8% equity interests in YPU will be transferred from Bright Continental to the Limited Partnership at the consideration of approximate 
+    deepseek-v4-pro  wrong      86.8  | the 86.8% equity interests in YPU will be transferred from Bright Continental to the Limited Partnership at the consideration of approximate 
+('K4-shuion-ypu-2024', 'flows.exit.immovable_ratio', 'derived', '96.86')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K4-shuion-ypu-2024', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K4-shuion-ypu-2024', 'roles.BUYER.loc', 'derived', 'CN')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K4-smit-2026', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  

@@ -8,11 +8,16 @@ JURISDICTIONS = (CN, HK, SG)            # the one list: templates, coverage matr
 ARRANGEMENT, DTA, NONE = "ARRANGEMENT", "DTA", "NONE"
 DIVIDEND, INTEREST, ROYALTY, SHARE_TRANSFER = "DIVIDEND", "INTEREST", "ROYALTY", "SHARE_TRANSFER"
 SERVICE_FEE, LIQUIDATION, CAPITAL_REDUCTION = "SERVICE_FEE", "LIQUIDATION", "CAPITAL_REDUCTION"
-IP_TRANSFER = "IP_TRANSFER"                             # a sale of IP ownership: a one-off step of the ip template (口径 D22)
+IP_TRANSFER = "IP_TRANSFER"                             # a sale of IP ownership: a one-off step of the ip template (decision D22)
+GOODS = "GOODS"                                         # a sale of goods: the seller's profit on it (trading template, decision D42)
 SPLIT_INCOMES = (LIQUIDATION, CAPITAL_REDUCTION)        # decomposed into a dividend part and a disposal part (engine.normalise)
 CFC_INCLUSION = "CFC_INCLUSION"                         # a deemed distribution the engine generates (范围.md 5), never a case input
 TOPUP = "TOPUP"                                         # Pillar Two excess profit the engine generates per in-scope entity (范围.md 9)
-RECURRING = (DIVIDEND, INTEREST, ROYALTY, SERVICE_FEE)  # flows a multi-year event repeats each year
+BRANCH_PROFIT = "BRANCH_PROFIT"                         # decision D47: a branch's profit, attributed to its head office (engine.branch_flows)
+BRANCH = "BRANCH"                                       # decision D47: the entity type of a branch the engine places for that flow
+PROPERTY = "PROPERTY_TRANSFER"                          # decision D48: a sale of land use rights or a building; sourced where it lies
+RENT = "PROPERTY_RENT"                                  # decision D49: the rent of land or a building; sourced where it lies
+RECURRING = (DIVIDEND, INTEREST, ROYALTY, SERVICE_FEE, GOODS, "PROPERTY_RENT")  # flows a multi-year event repeats each year
 COMPANY = "COMPANY"
 
 TREATY = {frozenset({CN, HK}): ARRANGEMENT, frozenset({CN, SG}): DTA, frozenset({HK, SG}): NONE}
@@ -60,7 +65,7 @@ class Graph:
     holds: List[HoldEdge]
     flows: List[FlowEdge]
     members: Optional[set] = None   # the group whose tax the objective counts, when the case declares it
-    unmodelled: tuple = ()          # steps the structure needs whose tax no rule computes (口径 D19): it is no plan
+    unmodelled: tuple = ()          # steps the structure needs whose tax no rule computes (decision D19): it is no plan
 
     def holders_of(self, eid):
         return [h for h in self.holds if h.held == eid]
@@ -140,4 +145,4 @@ class Label:
     final: frozenset = frozenset()  # jurisdictions whose item is closed: every clock has run out, or the case says so
     applied: List[str] = field(default_factory=list)   # rule ids whose effect was applied (deadlines and penalties included)
     gaps: Dict[str, tuple] = field(default_factory=dict)   # deadline -> (jurisdiction, year) whose holiday calendar is missing
-    outside: Dict[tuple, tuple] = field(default_factory=dict)   # 口径 D30: (jur, levy, party bearing it) -> (law, in force from)
+    outside: Dict[tuple, tuple] = field(default_factory=dict)   # decision D30: (jur, levy, party bearing it) -> (law, in force from)

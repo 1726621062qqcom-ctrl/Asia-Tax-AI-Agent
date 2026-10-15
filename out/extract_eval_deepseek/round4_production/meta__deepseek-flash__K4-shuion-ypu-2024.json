@@ -1,0 +1,63 @@
+{
+ "model": "deepseek-flash",
+ "case": "K4-shuion-ypu-2024",
+ "tests": [
+  {
+   "path": "holds.ULT>OP.ratio",
+   "test": "substitute",
+   "token": "86.8%",
+   "new": "96.8%",
+   "replaced": 16,
+   "gold": 86.8,
+   "expected": 96.8,
+   "value": null,
+   "status": "missing",
+   "why": "conflict: 96.8 / 100.0",
+   "quote": null,
+   "conflict": [
+    {
+     "value": 96.8,
+     "doc": "K4-shuion-2024",
+     "quote": "YPU is directly owned as to 96.8% by Bright Continental and 13.2% by Yangpu Knowledge Innovation.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    },
+    {
+     "value": 100.0,
+     "doc": "K4-shuion-2024",
+     "quote": "Simplified\nshareholding\nstructure\nof\nthe\nProject\nCompanies\nbefore\nthe\nTransactions:\n96.8%\n49%\n51%\n13.2%\n1%\n99%\n100%\n100%\n100%\nGP\nShui On Knowledge and \nInnovation Partners\nYPU\nBright Continental\nBright Power\nCybricity Limited\nSODH\nKIC\nMerry Wave\nTop Victory\nWisdom Forever\nYangpu Knowledge \nInnovation\nNingbo Fund\n100% LP\ninterests",
+     "origin": "same document",
+     "modality": "table",
+     "kind": "number",
+     "explicit": true
+    }
+   ]
+  },
+  {
+   "path": "event.exit",
+   "test": "substitute",
+   "token": "4,706,000,000",
+   "new": "5,706,000,000",
+   "replaced": 2,
+   "gold": 4706000000.0,
+   "expected": 5706000000.0,
+   "value": 5706000000.0,
+   "status": "follows",
+   "why": null,
+   "quote": "the 86.8% equity interests in YPU will be transferred from Bright Continental to the\nLimited Partnership at the consideration of approximately RMB5,706,000,000 (equivalent\nto approximately HK$5,159,000,000); and",
+   "conflict": null
+  }
+ ],
+ "usage": {
+  "calls": 0,
+  "prompt_tokens": 0,
+  "completion_tokens": 0,
+  "cache_hit_tokens": 0,
+  "seconds": 0.0,
+  "retries": 0,
+  "cached": 13
+ },
+ "prompt_version": "2026-10-14c"
+}

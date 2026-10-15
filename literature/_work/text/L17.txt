@@ -1,0 +1,1027 @@
+=== [p.1] ===
+Assurance 2.0: A Manifesto
+Robin E. Bloomﬁeld
+Adelard LLP and City, University of London
+London UK
+John Rushby
+Computer Science Laboratory
+SRI International, Menlo Park CA USA
+Abstract—System assurance is confronted by signiﬁcant chal-
+lenges. Some of these are new, for example, autonomous
+systems with major functions driven by machine learning
+and AI, and ultra-rapid system development, while others
+are the familiar, persistent issues of the need for efﬁcient,
+effective and timely assurance. Traditional assurance is seen as
+a brake on innovation and often costly and time consuming.
+We therefore propose a modernized framework, “Assurance
+2.0,” as an enabler that supports innovation and continuous
+incremental assurance. Perhaps unexpectedly, it does so by
+making assurance more rigorous, with increased focus on the
+reasoning and evidence employed, and explicit identiﬁcation of
+defeaters and counterevidence.
+1. Introduction and Overview
+Assurance is often seen as a drag on innovation and as
+an activity that is additional to (and generally comes after)
+the “real work” of design and implementation. We instead
+propose that assurance can be an enabler for innovation and
+a constructive element in a holistic design process. However,
+if assurance is employed from the earliest stages of design,
+it will necessarily be incomplete at those stages, so we
+need some measures to indicate if we are headed in the
+“right direction” and to help prioritize issues and solutions.
+Counterintuitively, perhaps, we propose that the way to
+address these and other concerns that we will introduce later,
+is by making assurance more rigorous, in a framework that
+we call “Assurance 2.0.”
+This framework aims to support reasoning and com-
+munication about the behavior and trustworthiness of engi-
+neered systems and, ultimately, their certiﬁcation. It builds
+on the notion of an “Assurance Case,” where claims about
+the system are justiﬁed by an argument based on evidence.
+In particular, it maintains a representation of the structure of
+the argument as a tree of claims linked by argument steps
+and grounded on evidence (e.g., Figure 8) as in Claims-
+Arguments-Evidence (CAE) [1] and Goal Structuring Nota-
+tion (GSN) [2]1, but strengthens it with increased focus on
+the evidence and the reasoning (both logical and probabilis-
+tic) employed, and on exploration and assessment of doubts
+1. We use a variant on CAE terminology: we say claim where GSN
+says goal, we say argument step where CAE says simply argument (and
+GSN says strategy) and we use argument for the whole tree of claims and
+argument steps. Our diagrams use the CAE style.
+and “defeaters.” We introduce the ideas in this section, using
+some technical terms such as “Conﬁrmation Theory” and
+“Natural Language Deductivism” that are given in italics
+and are detailed (with references) in later sections.
+In current practice, steps in an assurance argument are
+often inductive,2 meaning the subclaims strongly support the
+parent claim, but do not ensure it, as a deductive step would.
+In Assurance 2.0 we advocate that argument steps should
+be deductive, and this can require additional evidence. For
+example, argument steps often iterate over some enumera-
+tion (e.g., over components, or over hazards) and for this
+to be deductive we need evidence that the enumeration is
+complete and that the claim distributes over its elements. In
+cases where it seems impossible to provide a deductive step,
+the “gap” in reasoning must be acknowledged and given
+special attention. To support these recommendations, we ad-
+vocate use of pre-analyzed argument templates such as CAE
+Blocks [3], which provide mechanisms for managing the side
+conditions that are necessary to justify deductive steps and
+excuse inductive ones. This insistence that reasoning steps
+should be “as deductive as possible and inductive only as
+strictly necessary” is one of the ways in which Assurance
+2.0 strengthens traditional assurance; deductive reasoning
+steps ensure that doubts have nowhere to hide and thereby
+help identify weak spots and focus attention in productive
+directions. Furthermore, this increased rigor clariﬁes what
+must be accomplished at each step (indeed, there are only
+ﬁve basic CAE Blocks: evidence incorporation, calculation,
+decomposition, substitution, and concretion [3]) so that as-
+surance developers are less “bewildered by choice.”
+Arguments are grounded on evidence and we advocate
+explicit assessment of the “weight” of evidence offered in
+support of a claim. It is not enough for evidence to support
+a claim; it must also discriminate between a claim and
+its negation or counterclaim (weak evidence could support
+either). We recommend interpreting “weight” using ideas
+and measures from Conﬁrmation Theory, which do exactly
+this. Again, this aspect of Assurance 2.0 is more demanding
+than traditional estimates for the strength of evidence and
+requires explicit consideration of counterclaims.
+Claims supported by sufﬁcient weight of evidence may
+be used as premises in a logical interpretation of the overall
+2. This is an unfortunate choice of words as the same term is used with
+several other meanings in mathematics and logic.
+arXiv:2004.10474v3  [cs.SE]  14 Jan 2021
+=== [p.2] ===
+assurance argument and when, in addition, all the reason-
+ing steps are deductive, we have a deductive thread from
+facts, established by evidence, to the top level claim and
+thereby satisfy a benchmark for informal reasoning known
+as Natural Language Deductivism (NLD).
+Although it is primarily motivated by practical consid-
+erations and by experience with current methods, the As-
+surance 2.0 framework aligns with modern developments in
+epistemology (notably, conﬁrmation theory and NLD), and
+we strengthen this alignment through use of “indefeasibility”
+as the criterion for justiﬁed belief (e.g., that an assurance
+case establishes its claim). For a belief to be justiﬁed,
+the Indefeasibility Criterion requires that we must be sure
+that all identiﬁed doubts and objections have been attended
+to and no credible doubts remain that would change the
+conclusion. We cannot be certain of our beliefs and there
+will always be some residual doubts. What makes the case
+indefeasible is that we know about these residual doubts,
+have examined them, and made a conscious decision about
+them. Indefeasibility is lost when there may be doubts that
+we do not know about, or doubts we do know about but
+have not consciously addressed.
+Doubts and objections are exempliﬁed as defeaters, so
+the indefeasibility criterion applied to assurance cases re-
+quires a comprehensive search for defeaters to the argument.
+Once a potential defeater has been identiﬁed, it must itself be
+defeated, meaning that more detailed analysis shows that it is
+not, in fact, a defeater, or that the system and/or its assurance
+case are adjusted to negate it. In Assurance 2.0, we advocate
+that the search for defeaters, and their own defeat, should be
+systematized and documented as essential parts of the case
+(just as hazard analysis and the hazard log are essential parts
+of safety engineering). One systematic approach is through
+construction and dialectical consideration of counterclaims
+and countercases. Counterclaims arise naturally in conﬁr-
+mation measures and are discussed in Section 2.1, while a
+countercase is an assurance case for the negation of the top
+claim and is discussed in Section 3.2.5.
+Conﬁrmation bias—the tendency to interpret information
+in a way that conﬁrms or strengthens our prior beliefs—is
+a natural concern with assurance cases: after all, we are
+engaged in building a case to support the system. Com-
+petent and diligent external reviewers are good defenses
+against conﬁrmation bias, but are typically involved only
+periodically and mostly toward the end of the development
+of a case. Several of the innovations in Assurance 2.0 are
+intended to provide systematic mitigations against conﬁrma-
+tion bias at every step in the development of a case without
+the excessive conservatism that leads to verbose cases with
+unnecessary evidence presented “just in case,” and even to
+the rejection of good systems.
+The paper is organized as follows. Section 2 describes
+the basic structure of an assurance case argument and the
+criteria for evaluating its soundness. Section 3 discusses con-
+ﬁdence in the case and Section 4 provides brief conclusions.
+2. Arguments, Step by Step
+A key innovation in the development of modern as-
+surance cases was the idea of a “structured safety case,”
+introduced in the 1970s, that required an argument to explain
+how the design of the system and the checks and tests
+performed during its development combine to ensure safety.
+Subsequent reﬁnements in the 1990s led to the idea that
+the argument itself should be structured, that is, organized
+around goals or claims, and grounded on evidence about the
+system. Methods and notations such as GSN [2] and CAE
+[1] emerged at this time and support a body of expertise
+and practice that thrives to this day.
+The general structure of an assurance case argument is
+illustrated in later diagrams, such as Figure 8. An argument
+is organized as a tree with two kinds of basic steps: evi-
+dential (at the leaves) and reasoning (interior), which are
+described in the following subsections. Mixed forms and
+cross links are also possible.
+2.1. Elementary Evidential Steps
+Let us begin with the most basic kind of argument step:
+one where some item of evidence directly supports a claim.
+To make things concrete, we will suppose our examples are
+taken from a case in which random tests are used to support
+a claim of reliability (certain cases for nuclear systems are
+like this [4]). One step in the argument for this case will con-
+cern soundness of the test oracle: that is, soundness of the
+means by which we judge the correctness of test outcomes.
+Figure 1 portrays this step: at the top is the (sub)claim that
+the oracle is sound (which will be backed by a description
+of what it means for an oracle to be sound); at the bottom
+is a description of the evidence for its soundness (which
+will be backed by reference to ﬁles containing the actual
+evidence), and in between is an argument that the evidence
+does indeed guarantee the claim; we say that this argument
+is one for evidence incorporation and we refer to the whole
+argument step (i.e., claim, argument, and evidence) as an
+evidential step.
+Figure 1. Elementary Evidential Step
+2
+=== [p.3] ===
+Implicit in the previous sentence is the idea that claims
+and subclaims are logical propositions: that is, statements
+about the “world” (by which we mean the system of interest
+and its environment) that may be true or false. Evidence,
+on the other hand, is a description or pointer to some
+observation or experiment in the world. An argument for
+evidence incorporation documents a human assessment that
+the evidence persuasively attests the truth of the claim.
+This assessment may be informal, or it may employ
+some systematic process. In the latter case, it is usual to
+talk of weighing the evidence and of accepting the claim
+when the weight of its supporting evidence crosses some
+threshold. This raises the question of how weighing is per-
+formed and what units are employed. A standard treatment
+uses probabilities: if e is some evidence then P(e) is the
+probability of seeing this evidence. This is generally inter-
+preted as a subjective probability, that is, a human judgment
+of likelihood expressed numerically from 0 (impossible) to
+1 (certain). Similarly, P(c) is the subjective probability that
+the claim c is true. We might consider this the “background”
+or prior probability, which is then “boosted” by the evidence
+e to the posterior probability P(c | e). Thus, P(c | e) > t for
+some t might be considered a suitable criterion for accepting
+c on the basis of e.
+Let us suppose that the evidence for soundness of our or-
+acle is that it was extensively validated against the previous
+version of the system. This seems like fairly strong evidence
+so we might make the qualitative assessment that P(c | e)
+is “high.” However, a critic might say that if the evidence
+is about a previous version of the system, how relevant
+can it be to soundness of the oracle for this version? A
+sharp and general version of this question asks whether the
+evidence can discriminate between a claim and its negation,
+or counterclaim. This suggests the weight of evidence should
+not be based on P(c | e) alone, but should also consider the
+difference between this value and P(¬ c | e). Difference can
+be measured as a ratio, or as arithmetic difference.
+An attractive variant turns these conditional probabilities
+around: instead of the posterior probability of the claim
+P(c | e), we consider the likelihood of the evidence given
+the claim, P(e | c), and compare this to its likelihood given
+the counterclaim, P(e | ¬ c). Likelihood and posterior prob-
+ability are related by Bayes’ rule and so the choice of one
+over the other might seem moot. However, it is often easier
+to estimate the likelihood of concrete observations, given
+a claim about the world, than vice-versa (i.e., it is easier
+to estimate a likelihood than a posterior). Furthermore, the
+likelihood P(e | c) has a more “causal” ﬂavor—we think of
+(the property underlying) the claim causing the evidence
+rather than vice-versa.
+These ideas, and the general topics of evaluating and
+measuring “weight of evidence,” date back to the World War
+II codebreaking work of Turing and Good [5], where Good’s
+original measure for weight of evidence was log
+P (e | c)
+P (e | ¬ c).
+Today, these topics are studied in Bayesian Conﬁrmation
+Theory (a subﬁeld of Bayesian Epistemology [6]) and many
+conﬁrmation (i.e., weight) measures have been proposed [7].
+Among these, that of Kemeny and Oppenheim is popular:
+P(e | c) −P(e | ¬ c)
+P(e | c) + P(e | ¬ c).
+This measure is positive for strong evidence, near zero for
+weak evidence, and negative for counterevidence.
+Returning to our example, we need to estimate the
+likelihood of the evidence about the oracle (i.e., it exhibited
+good performance against a previous version of the system),
+given a) the claim that the oracle is sound, and b) the
+counterclaim that it is not. An oracle evaluates tests and their
+outcomes against requirements, so we need to ask whether
+the requirements have changed between the previous and
+current versions of the system. Let us suppose the answer is
+“yes, a little.” It’s good that we asked, for the proffered
+evidence tells us nothing about the performance of the
+oracle against those requirements that have changed from
+the previous system (unless we know more about the oracle
+structure and the modularity of the requirements). Without
+further evidence about the nature of the requirements and
+the oracle, the Kemeny-Oppenheim measure is zero and we
+conclude that the proffered evidence is of no value.
+Although in most cases we do not advocate assessment
+of numerical valuations for conﬁrmation measures, nor their
+constituent probabilities, we believe that informal consider-
+ation as was done here (with “qualitative” assessments such
+as low, medium, and high) can provide signiﬁcant beneﬁts
+in the evaluation of evidence.
+What are these beneﬁts? There are just a couple of ways
+in which a well-formed assurance case can be ﬂawed or, as
+we say, defeated [8]. One is that the evidence supporting
+a claim is inadequate to justify the conﬁdence required;
+philosophers call this undercutting defeat. It could be that
+the evidence is merely insufﬁcient (e.g., we did some testing,
+but not enough of it) or it could be that its relationship to its
+claim has a gap or ﬂaw (e.g., the case just considered of an
+oracle evaluated against a previous version of the system).
+Conﬁrmation measures, even when assessed informally, pro-
+vide rational quantiﬁcation for the weight of evidence and
+thereby guard against undercutting defeat.
+The other kind of defeat is when there is evidence
+that contradicts a claim; this is called a rebutting defeater.
+Conﬁrmation measures require consideration of the extent
+to which proffered evidence supports counterclaims, and
+this should also invite consideration of alternative evidence
+that could support the counterclaim, or some other claim,
+and thereby guide a search for rebutting defeaters within
+evidential steps.
+Defeaters for an assurance case are rather like hazards
+for a critical system, and just as the search for hazards is
+an essential element in the engineering of critical systems,
+so the search for defeaters is an essential element in the
+evaluation of assurance cases. Conﬁrmation measures are
+an attractive tool in this search as they identify both kinds
+of defeat in evidential steps and thereby provide a valuable
+and necessary antidote to conﬁrmation bias, which some
+consider an endemic vulnerability in assurance cases [9].
+3
+=== [p.4] ===
+This section considered only elementary evidential steps;
+a less elementary step may incorporate several items of
+evidence in support of a single claim. The overall conﬁ-
+dence measure can then involve conditional probabilities
+and likelihoods for evidential items that are not independent
+of each other. Tools for Bayesian Belief Nets (BBNs) can
+assist in construction and evaluation of numeric models for
+these circumstances. Although we do not advocate numer-
+ical assessments for the probabilities involved, “what if”
+experiments with a range of possibilities can prove very
+enlightening. An example is given in [10].
+2.2. Elementary Reasoning Steps
+We have considered an elementary evidential argument
+step—one where we assess the extent to which evidence
+supports a claim—and now turn to a similarly elementary
+reasoning step—one where several (sub)claims combine to
+support a parent claim. Figure 2 illustrates such a step.
+Here we suppose we have three subclaims concerning a
+test procedure, each supported by evidence or an entire
+subargument (these are not shown): one asserts that the test
+oracle is sound (as in the previous section), another that
+the test procedure is sound, and the third that the tested
+software is the actual software. The step asserts that if these
+three subclaims are true, then we may conclude that the
+overall test process is sound. Each subclaim will be backed
+by a description of what it means and collectively they will
+be bound together by an argument that they “lead to” the
+parent claim.
+Figure 2. Elementary Reasoning Step
+We say the subclaims “lead to” the parent because we
+have not yet established the relationship that is intended.
+In some early interpretations for an assurance case, the
+intended relationship was structural rather than logical: it
+simply indicated that the case for the parent claim decom-
+posed into subcases for each of the subclaims. In modern
+interpretations, the intended relationship is logical but it may
+be deductive (i.e., the subclaims imply or entail the parent
+claim) or inductive (i.e., the subclaims “suggest” the parent
+claim). In diagrammatic presentations, an annotation on the
+central argument box can indicate which of these is intended.
+When a deductive interpretation is indicated, the argu-
+ment must make the case that the subclaims truly entail the
+parent claim. Sometimes a convincing case can be made
+with no additional information, but often an additional sub-
+claim will be needed to substantiate the case. Logically, this
+additional subclaim is just like the others and conjoins with
+them to entail the parent claim; however, it is contextually
+somewhat different, so we call it a “side condition” or “side
+claim” (or sometimes an “assumption”) and draw it in a
+different position and color (but same shape), as shown in
+Figure 3. In this case, we are claiming the three conditions
+considered in the original subclaims are the only threats
+to overall soundness of the testing process and the side
+condition, which asserts this, will need to be supported by
+evidence, akin to hazard analysis, to justify it.
+Figure 3. Reasoning Step with Side Condition
+Observe that what we are doing here is constructing
+a theory for sound testing, but we are doing it in an ad
+hoc manner during construction of a larger assurance case.
+In current practice, assurance cases often contain subcases
+that develop ad hoc theories or models in this way. For
+Assurance 2.0 we recommend that such theories and models
+should be developed explicitly and separately from the
+overall case. This allows them to be suitably reviewed and
+validated, and reused in other cases. For example, we could
+have an explicit theory for sound testing that would develop
+and justify all the hazards to a test campaign. Figure 3
+might still look the same, but its subclaims (and there would
+probably be several more of these) would be supplied by
+decomposition on the theory for sound testing and the side
+claim and narrative justiﬁcation would reference that theory.
+In Assurance 2.0, we advocate that all reasoning steps
+eventually should be deductive as this raises the bar on the
+quality of argumentation required and is necessary to satisfy
+the indefeasibility criterion for justiﬁed belief in the overall
+argument. Dually, challenges to deductiveness can provide a
+systematic basis to the search for defeaters, whose energetic
+pursuit is a rational guard against hubris and conﬁrmation
+bias in the construction of assurance cases. The challenge
+and response to defeaters of this kind often goes hand-in-
+hand with (re)formulation of side conditions: strengthening
+a side condition, and its supporting evidence, is one way to
+respond to a successful defeater.
+Observe that some elements that may appear in claims
+(e.g., an expression like
+x
+y ) may not even “make sense”
+unless a suitable “assumption” side claim is true (e.g., y ̸=
+4
+=== [p.5] ===
+0). Such a claim may be established in one place but used
+in many others, so the overall argument is no longer a tree.
+The precision and rigor we advocate via deductiveness
+needs to be reconciled with the need for concise commu-
+nication and constructive progress during system develop-
+ment. Thus, we accept that the case will be incomplete and
+argument steps may be inductive during the early stages
+of system development and assurance exploration. But it
+is desirable that tools should assist in keeping track of
+these transitional compromises. A technique for tools based
+on deductivism would be to supply inductive steps with
+a nugatory “something missing here” side claim that is
+asserted to make the step deductive, but is unsupported by
+evidence. This allows progress, while the unsupported side
+claim acts as a constant reminder of imperfection in this
+argument step.
+This discussion has considered only elementary reason-
+ing steps: those where a claim is supported by subclaims. In
+less elementary reasoning steps, a claim may be supported
+by a combination of subclaims and evidence. The most
+useful construction of this kind is best interpreted not as
+a reasoning step, but as an evidential step with side claims
+that function as assumptions. Reference [11] provides more
+discussion of these topics.
+3. Soundness and Conﬁdence Assessment
+In Assurance 2.0, the interpretation that we apply to an
+assurance case is a systematic instance of “Natural Lan-
+guage Deductivism” (NLD) [12], which regards its informal
+argument as an approximation to a deductively valid proof.
+NLD differs from proof in formal mathematics and logic
+in that its premises are “reasonable or plausible” rather than
+certain, and hence its conclusions are likewise reasonable or
+plausible rather than certain. Our requirements that eviden-
+tial steps cross some threshold for credibility (as assessed
+by a conﬁrmation measure, for example), that all reasoning
+steps are deductive, and that a thorough search for defeaters
+persuades stakeholders that the case is indefeasible, system-
+atizes what it means for the premises to be “reasonable or
+plausible” and thereby give us conﬁdence that the overall
+argument is sound and the top claim is true. But then we
+might ask, how much conﬁdence does it give us, and how
+much do we need?
+Some assurance cases may be more persuasive than
+others, and not all (sub)systems need the highest levels
+of assurance: indeed, several standards speak of “Safety
+Integrity Levels” (SILs) from 1 (low) to 4 (high) [13] or
+“Design Assurance Levels” (DALs) from E (low) to A
+(high) [14]. Thus, we need ways to assess conﬁdence in
+a case, and principled ways to organize cases so that the
+lower SILs and DALs are easier and cheaper to achieve.
+The conﬁdence we need depends on the nature of the claim
+and the decision being made. In some cases (we call them
+“explicit”), the claim may include a numeric estimate for
+some parameter (e.g., reliability) and our conﬁdence then
+reﬂects epistemic uncertainty in this quantity. In others (we
+call them “implicit”), the claim may be absolute and conﬁ-
+dence is then a separate estimate of its likelihood expressed
+as a subjective probability. For example, the claim may be
+that the system has no faults, and conﬁdence in this claim
+(sometimes called “probability of perfection” [15]) can be
+used to estimate long run survival without critical failures
+by means of Conservative Bayesian Inference (CBI) [16].
+Conﬁdence should be related to the number and severity
+of potential defeaters that have been considered and elimi-
+nated or mitigated. Identiﬁcation and treatment of defeaters
+are often addressed implicitly as safety engineers question
+whether the arguments they put forward are valid and they
+adjust and correct the case as necessary. In Assurance 2.0,
+we attempt to record these defeaters and their treatment as
+part of the assurance csse and we use these records in assess-
+ing conﬁdence. However, some defeaters are simply errors
+or deﬁciencies in reasoning (e.g., well-known fallacies, such
+as reasoning from the speciﬁc to the general, or the wrong
+instantiation of an applicable rule) [17] and in Assurance
+2.0 we attempt to eliminate these “by construction” through
+the use of predeﬁned CAE Blocks and do not record them.
+Others are due to oversights or incorrect reasoning about
+behaviors and dependencies and we attempt to detect and
+record those during construction by explicit consideration of
+sources of doubt (i.e., undercutting defeaters). A pattern of
+reasoning (i.e., a macro on blocks) that we have introduced
+to do this is shown in Figure 4.
+Figure 4. Conﬁdence Building Pattern
+5
+=== [p.6] ===
+Here, the claim X initially (at lower left) has conﬁdence
+c1 associated with it, but this is contingent on doubts and
+assumptions concerning the claim. The right-hand subcase
+assesses these and the “conﬁdence calculation” block eval-
+uates a revised conﬁdence c2 for claim X. The side claim
+has to justify why the theory or “calculus” of conﬁdence
+used is valid and how it supports the top claim. Meanwhile,
+the doubts and missing assumptions and other potential
+defeaters contributing to this calculation are examined and
+addressed in the decomposition block at the lower right of
+the case, and the sum of their signiﬁcance is supplied to the
+subclaim of the conﬁdence calculation. The side condition to
+this block must justify that those identiﬁed are all and only
+the relevant sources of doubt. Notice here that the subcases
+d1, d2, . . . , dx at the bottom of this case concern sources
+of doubt that have not yet been addressed or mitigated
+(i.e., defeaters) such as “test oracle is unsound”). This is
+indicated by the red color of the claims and arrows, whose
+semantics are that any one of them defeats the argument
+above. As development of the case continues, the defeaters
+will be eliminated or mitigated and their claims will become
+“positive” and the red color replaced by blue. The human
+factors and dynamics of how defeaters should be presented
+and archived is a topic of investigation. Takai and Kido
+describe the methods used in Astah GSN [18].
+There are several ways to use the pattern of Figure 4.
+1)
+Claim X could be an absolute proposition about
+functional behavior (e.g., there are no deadlocks)
+or a probabilistic one that includes aleatory un-
+certainty (e.g., 95% conﬁdence that the reliability
+is better than three nines).3 Assumption and other
+epistemic doubts are then explored by identifying
+defeaters. If the subcase to the right shows that
+these are all mitigated and their impact is below
+some threshold then conﬁdence in X remains the
+same and c2 = c1. This form is the most common
+when we deal with epistemic doubts qualitatively.
+2)
+If evaluation of the defeaters reveals signiﬁcant
+impact, then c2 will be larger than c1. This calcula-
+tion might be done quantitatively in terms of some
+descriptive scale (e.g., low, medium, and high).
+3)
+We may have probability distributions for c1 that
+can be combined in a conservative Bayesian manner
+with the doubts. This could be done either qualita-
+tively as in the example leading up to Figure 8 or
+quantitatively as in the example of Figure 9.
+We next consider how assessments of conﬁdence for in-
+dividual claims can be accumulated and propagated through
+a case to yield an assessment of conﬁdence in the top claim.
+3. Aleatoric (or aleatory) uncertainty is uncertainty in the world: if I toss
+a fair coin 100 times, the number of heads is subject to aleatoric uncertainty;
+epistemic uncertainty is uncertainty about the world: if I give you a coin
+and invite you to toss it 100 times, there is additional uncertainty about
+the number of heads because you do not know if the coin is fair or not.
+3.1. Issues in Assessing Conﬁdence
+A natural measure for conﬁdence in the claim of an
+evidential step is P(c | e); as explained in Section 2.1, we
+do not use this as a measure for the weight of evidence
+because that must also account for the ability of the evidence
+to discriminate between the claim and a counterclaim, but
+once the evidence has been accepted on the basis of its
+weight, it is reasonable to use P(c | e) as our conﬁdence in
+its claim.
+Next, we need a method to “combine” the conﬁdence
+measures from the evidentially supported subclaims of a
+reasoning step to yield a conﬁdence measure for its parent
+claim, and so on up to the root of the tree where we
+obtain a conﬁdence measure for the top claim. Probability
+and logic build on completely different foundations and
+their combination is difﬁcult. Graydon and Holloway [19]
+examined 12 proposals for using probabilistic methods to
+quantify conﬁdence in assurance case arguments: 5 based on
+Bayesian Belief Networks (BBNs), 5 based on Dempster-
+Shafer [20] or similar forms of evidential reasoning, and
+2 using other methods. By perturbing the original authors’
+own examples, they showed that all the proposed methods
+can deliver implausible results.
+However, in Assurance 2.0 we have a very simple special
+case. Ideally, all our reasoning steps are deductive conjunc-
+tive implications (i.e., deﬁnite clauses), so conﬁdence in a
+parent claim is given by the product of conﬁdence in the
+subclaims (provided they are independent)4. Iterating this
+over the whole argument tree, conﬁdence in the top claim
+is the product of conﬁdence in all the evidentially supported
+claims. If we have reasoning steps that are not deductive,
+then it is sound (though often highly conservative) to cal-
+culate doubt (i.e., 1 −conﬁdence) in a parent claim as no
+worse than the sum of doubts of its subclaims [21].
+Conﬁdence in individual claims may itself be expressed
+qualitatively (e.g., low, medium, and high) and so it will
+be necessary to develop plausible rules for the “product” of
+such estimates (e.g., the product of 15 to 25 highs yields
+medium). Adjusting a case, or a case template, for different
+SILs can be accomplished by weakening claims, and by
+reducing the quantity or quality of evidence demanded; this
+may in turn allow some subclaims and their supporting
+argument to be eliminated: e.g., if we replace static analysis
+by human inspection, we no longer need a subcase for
+soundness of the static analyzer (but we will need a subcase
+for reviewer efﬁcacy). Subclaims should not otherwise be
+removed, for that necessarily makes the case inductive, but
+we could reduce the threshold at which minor caveats and
+defeaters are considered mitigated.
+In the early stages of system development, the assurance
+case may be very incomplete yet we would still like to get
+guidance on areas where attention should be focused. One
+4. If the subclaims are not independent, then we will need to use an
+approach such as BBNs to assess their combination. Note that our use of
+BBNs is simpler than those examined by Graydon and Holloway because
+we apply BBNs only to individual reasoning steps (this is because we
+assess soundness separately from conﬁdcence).
+6
+=== [p.7] ===
+possibility is to assign exaggerated numerical assessments
+for projected conﬁdence in various subclaims (e.g., 95%
+for high estimated conﬁdence, 5% for low, and 1% for
+a nugatory side claim) and then “run the numbers” and
+do “what if” exercises to learn where the largest impacts
+reside. The tools supporting these calculations could also
+take challenges and defeaters into account: a subclaim that
+has not been challenged would have its conﬁdence reduced,
+and undefeated defeaters would do the same. Note that
+conﬁdence is a “weakest link” phenomenon. Thus, we do
+best when we have approximately the same high level of
+conﬁdence in each claim.
+3.2. Explicit Representation of Conﬁdence
+Next, we consider an example where conﬁdence is an
+explicit part of the top claim and show how we use aspects
+of CAE Blocks and the conﬁdence pattern of Figure 4 to
+develop a case. In addition to conﬁdence, this example also
+illustrates a more complex development, where defeaters and
+counterclaims play an important part.
+The example is a case based on statistical testing, as used
+in certain nuclear applications. The idea is that random tests
+that follow the “operational proﬁle” can justify a reliability
+claim, such as probability of failure on demand (pfd) [4].
+It is also similar to many examples in autonomous systems
+where we wish to build on simulation and ﬁeld trials to
+support, or not, a claim of safety related reliability.
+In the example, we
+•
+First focus on evidence integration and claim deﬁ-
+nition, then
+•
+Apply the conﬁdence pattern to deal with defeaters,
+•
+Extend the case to reason quantitatively about epis-
+temic conﬁdence, and
+•
+Apply again the conﬁdence pattern as the quantita-
+tive reasoning brings new defeaters.
+3.2.1. Evidence integration and claim deﬁnition. In this
+example the initial evidence offered is a report of the tests
+performed. The analyst reviews this and integrates it into an
+assurance case justifying a claim for a certain pfd x that is
+held with conﬁdence c1, based on what the analyst considers
+to be a well-known theory of statistical testing (e.g., [4,
+Annex I]). This initial assurance case is shown in Figure
+5, where the top claim is a predicate that could be used in
+a larger case, such as one that combines reasoning about
+reliability with evidence for correctness.
+However, on reﬂection, or under challenge, the analyst
+decides that this initial case is subject to signiﬁcant doubts
+because the argument for evidence incorporation does not
+reach the threshold for indefeasibility: for example, can we
+be sure the assumptions underpinning the theory of statisti-
+cal testing are satisﬁed? In a tool-supported environment
+for Assurance 2.0, there would be ways to indicate this
+potential defeater but, for the diagrammatic representation
+used here, the analyst simply notates the claim as one with
+given doubts.
+Figure 5. Initial Case for Statistical Testing, with Doubt Annotation
+Figure 6. Separation of Facts from Test Report and Inference of Reliability
+The root problem is that the evidence incorporation step
+combines both the extraction of facts from the test report,
+and their analysis and interpretation with respect to a model
+of statistical testing. Consequently, in Figure 6 these two
+aspects are separated: evidence incorporation extracts the
+purported facts, namely that the system passed N tests, and
+a substitution block provides the argument that these justify
+the top claim, with a side claim (that will eventually need to
+be justiﬁed by its own evidence) to support the validity and
+correct application of the underlying model for statistical
+testing and reliability.
+In weighing the test evidence, conﬁrmation measures
+will invite us to consider whether “Passed N tests” could
+be true of an unreliable system as well as a reliable one.
+We realize that if we don’t mind failures along the way,
+7
+=== [p.8] ===
+Figure 7. More Precise Claims
+then more or less any system will eventually pass N tests.
+Thus, we see the need for a more precise interpretation:
+namely, that the tests demonstrated N failure-free demands
+in succession, and that no other failures were observed. Con-
+sequently, this claim should be changed to “N successive
+failure-free demands and no other failures.” If the evidence
+can support this claim (as opposed to a weaker claim where
+some failures may have been observed) then we can retain
+Figure 6 as our assurance case, but with the claim “Passed
+N tests” replaced by the more precise form, as shown in
+Figure 7.
+Consideration of the side claim concerning validity of
+the reliability model and its application forces realization
+that conﬁdence in the top claim is with respect to aleatoric
+uncertainty (based on the extent of testing) and this is
+reﬂected in the revised top claim where ca replaces c1.5
+Consideration of indefeasibility, conﬁrmation measures,
+and side claims suggested improvements in the case; we
+now look at defeaters.
+3.2.2. Applying the conﬁdence building pattern. Further
+reﬂection, or challenging peer review, might ask how do we
+know that the tests were performed correctly, and that issues
+such as correctness of the test oracle were addressed ap-
+propriately? The analyst recognizes that these are legitimate
+defeaters and the case needs to be strengthened by using the
+theory and pattern for test performance previously illustrated
+in Figure 4. This leads to a new assurance case (not shown)
+in which Figure 7 is a subcase dealing with reliability
+and conﬁdence, and an elaborated version of Figure 4 is a
+subcase dealing with soundness of the overall test procedure.
+5. c1 and ca are numbers, but they are annotated with descriptions of
+their interpretation and it is these that change.
+A slight variant, which is appropriate because the top
+claim explicitly states the conﬁdence associated with the
+pfd x, is to interpret Figure 7 as a subcase dealing with
+aleatoric uncertainty and an elaborated Figure 4 as a subcase
+dealing with epistemic uncertainties. This approach is shown
+in Figure 8 in which the defeaters of Figure 4 have been
+addressed and become positive claims. Note that this and
+subsequent examples are not complete cases: some claims
+lack supporting evidence.
+Figure 8. Showing Defeaters Have Been Incorporated
+Figure 8 provides a pattern in which we separate rea-
+soning about aleatoric doubts (left-hand leg) from that about
+epistemic doubts (right-hand leg). However, we may some-
+times need to reason about aleatoric and epistemic aspects
+within the same framework, as when we wish to model their
+interactions and dependencies. This is illustrated in the next
+example.
+3.2.3. Extending the conﬁdence reasoning to quantiﬁed
+models of epistemic doubts. If we were able to provide a
+quantiﬁed judgment of our conﬁdence in the soundness of
+the oracle and the test process in the form of conditional
+probability distributions, then we could combine them in a
+BBN model, as illustrated by the left-hand leg in Figure 9.
+Here, the leg uses Bayesian reasoning to provide a
+probability distribution for the property of interest, and from
+that derives a conﬁdence ﬁgure in the claimed pfd x. There is
+a new side claim that requires justiﬁcation for the application
+and validity of the BBN model.
+3.2.4. Seeking defeaters in the extended pattern. We
+again apply the pattern of Figure 4 as using the BBN model
+approach brings its own defeaters. The right-hand leg of
+Figure 9 applies the pattern to deal with defeaters to the
+BBN approach; it has identiﬁed two concerning elicitation
+8
+=== [p.9] ===
+Figure 9. Incorporating BBN Modeling
+of the probability distributions from experts: namely, its
+validity and repeatability. Furthermore, we have a side claim
+asserting these are the only sources of doubt. We are not
+sure they are, so this argument step is inductive; we choose
+to represent this by adding a nugatory third “other doubts”
+claim.
+These defeaters are formidable: it is seldom credible that
+we can derive full conditional distributions as needed here. If
+we can, then the beneﬁt is that the conﬁdence calculated by
+the left-hand leg may be much greater than can be supported
+by weaker assumptions and conservative calculations as in
+Section 3.1. An intermediate position in the tradeoff between
+conﬁdence in the claim and doubts about assumptions is to
+reduce criticality of the claim and increase conﬁdence in
+its reduced form: if we are 90% conﬁdent that a subcase
+establishes SIL3 then, with some additional modeling and
+assumptions, we might become 99% conﬁdent that it is
+better than SIL2, and this could be sufﬁcient to argue that
+it meets the evidential threshold. If challenged to deal with
+the remaining doubt, we could use a chain of conﬁdence
+[22] that combines a ﬁrm judgment about the 99% with a
+conservative judgment about the other 1%.
+3.2.5. Countercases. Another way of identifying defeaters
+or sources of doubt is to develop an explicit countercase
+that aims to refute the claim under consideration. This task
+could be assigned to a different team, which, given its differ-
+ent viewpoint, might generate challenging and unexpected
+defeaters for the base case. There is some tension here:
+a totally independent countercase might have an argument
+structure completely different to the base case, and thereby
+generate irrelevant defeaters. However, there seems to be
+a useful initial transformation from a case to a parallel
+countercase (and vice-versa): mitigated defeaters become
+claims and claims become a source of defeaters. Even so, a
+countercase would be very different from a positive case as
+only one strong defeater would be needed to substantiate the
+counter claim. This is similar to reasoning about security:
+the attacker only needs to ﬁnd one vulnerability, whereas
+the defender needs to defend against all.
+Instead of reasoning about the negation of the claim, it
+may be more useful to argue several different diverse but
+related top-level claims (e.g., different risk-based claims,
+claims of critical defect-freeness, operation in a different
+environment). As with explicit defeaters, the use and utility
+of counter cases or diverse cases is one of the novel areas
+that will be evaluated as Assurance 2.0 becomes deployed.
+4. Conclusion
+We have described and illustrated Assurance 2.0, whose
+purpose is to respond to the assurance challenges posed by
+recent developments in system design and deployment, and
+to provide a framework in which assurance can become
+more dynamic and can enable innovation and greater au-
+tomation. Assurance 2.0 retains the argument structure of
+Assurance Cases and can build on much recent and current
+research and tooling for these. Where it differs is in stressing
+rigor in assessment of the evidence and reasoning employed,
+and a focus on combatting conﬁrmation bias through active
+exploration and recording of potential defeaters.
+Key elements of Assurance 2.0 are:
+•
+Use of a limited repertoire of ﬁve building “blocks”
+for arguments, with an associated framework that
+reduces the bewildering choice of free-form argu-
+ments by guiding assurance case development to-
+ward productive directions, and that eliminates many
+errors “by construction” through use of rigorous side
+conditions.
+•
+Cleanly separating the development and description
+of “models,” such as for the system environment, and
+“theories” such as for the sound and productive use
+of static analysis, from the assurance case itself. This
+allows the case to focus on assembly and evaluation
+of claims, arguments and evidence concerning these
+externally described artifacts.
+•
+Use of an Indefeasibility Criterion for justiﬁed belief
+that frames the notion of defeaters, both undercutting
+and rebutting, and motivates construction of argu-
+ments that are predominately deductive, an approach
+known as “Natural Language Deductivism” (NLD).
+•
+Use of Conﬁrmation Measures to evaluate the
+strength of evidence and arguments. It is not enough
+for evidence to support a claim; it must also discrim-
+inate between a claim and alternatives, including its
+negation or counterclaim.
+•
+An approach to reduce conﬁrmation bias through
+active search for defeaters and a methodology for
+doing so by means of counterclaims and counter-
+cases.
+Current assurance cases have served traditional safety-
+critical systems well [23], but we have observed them
+ﬂoundering when confronted by radically new challenges
+such as autonomous systems driven by machine learning,
+by new stakeholders such as the AI community, and by
+9
+=== [p.10] ===
+applications with a security focus. Assurance 2.0 renews
+the original focus of assurance by asking for a natural
+language explanation why the proposed system satisﬁes the
+properties claimed for it, while reinforcing this with the rigor
+of NLD, and challenging it through systematic search for
+defeaters. A completed Assurance 2.0 Case attests to the
+relevance and strength of its evidence and the deductive
+validity of its reasoning (although inductive steps may be
+used if absolutely necessary), and also records the defeaters
+to which it has responded, thereby establishing not merely
+its plausibility but its soundness and indefeasibility.
+We believe we are not alone in observing and diagnosing
+weaknesses in current approaches to assurance, nor in our
+prescriptions for improvement. For example, Viger et al
+favor deductivism [24] and Denney and Pai [25] and also
+Cˆarlan and Ratiu employ formalised templates [26].
+We have used ideas underlying Assurance 2.0 with some
+success in training several groups of engineers and managers
+and applied them in research projects with regulators and
+industry.
+For the future, we hope to see application of these
+ideas to signiﬁcant modern systems, supported by training
+across a wide range of disciplines and the development of
+constructive tool support. The formal nature of the reasoning
+and evidential analysis that underlies Assurance 2.0 should
+enable productive interaction with tools for logical and
+probabilistic reasoning and formal argumentation, together
+with novel automation in the search for defeaters, the con-
+struction of cases and countercases, and the management
+and representation of dialectical examination. We plan to
+prototype and evaluate the approach (e.g., following ideas
+of Graydon [27]) in industrial applications and research
+projects including the DARPA ARCOS program. As we
+develop more material and experience with Assurance 2.0
+we will publish this on claimsargumentevidence.org.
+Acknowledgments. We thank colleagues at Adelard LLP,
+City, University of London, and SRI for many stimulating
+discussions on these topics. This work was funded by Ade-
+lard and by SRI.
+References
+[1] ASCAD: Adelard Safety Case Development Manual,
+Adelard LLP, London, UK, 1998, available from https:
+//www.adelard.com/resources/ascad.html.
+[2] S. P. Wilson, J. A. McDermid, C. Pygott, and D. J.
+Tombs, “Assessing complex computer based systems
+using the goal structuring notation,” in Second IEEE
+International Conference on the Engineering of Com-
+plex Computer Systems (ICECCS).
+Montreal, Canada:
+IEEE Computer Society, Oct. 1996, pp. 498–505.
+[3] R. Bloomﬁeld and K. Netkachova, “Building blocks
+for assurance cases,” in ASSURE: Second International
+Workshop on Assurance Cases for Software-Intensive
+Systems. Naples, Italy: IEEE International Symposium
+on Software Reliability Engineering Workshops, Nov.
+2014, pp. 186–191.
+[4] Dependability Assessment of Software for Safety In-
+strumentation and Control Systems at Nuclear Power
+Plants, International Atomic Energy Agency, 2018, nu-
+clear Energy Series, NP-T-3.27.
+[5] I. J. Good, “Weight of evidence: A brief survey,” in
+Bayesian Statistics 2: Proceedings of the Second Va-
+lencia International Meeting, J. Bernardo et al., Eds.,
+Valencia, Spain, Sep. 1983, pp. 249–270.
+[6] L. Bovens and S. Hartmann, Bayesian Epistemology.
+Oxford University Press, 2003.
+[7] K. Tentori, V. Crupi, N. Bonini, and D. Osherson,
+“Comparison of conﬁrmation measures,” Cognition,
+vol. 103, pp. 107–119, 2007.
+[8] J. B. Goodenough, C. B. Weinstock, and A. Z. Klein,
+“Eliminative induction: A basis for arguing system
+conﬁdence,” in Proceedings International Conference
+on Software Engineering, New Ideas and Emerging
+Results.
+San Francisco, CA: IEEE Computer Society,
+May 2013, pp. 1161–1164.
+[9] N. Leveson, “The use of safety cases in certiﬁcation and
+regulation,” Journal of System Safety, vol. 47, no. 6, pp.
+1–5, 2011.
+[10] J. Rushby, “On the interpretation of assurance case
+arguments,” in New Frontiers in Artiﬁcial Intelligence:
+JSAI-isAI 2015 Workshops, LENLS, JURISIN, AAA,
+HAT-MASH, TSDAA, ASD-HR, and SKL, Revised Se-
+lected Papers, ser. Lecture Notes in Artiﬁcial Intelli-
+gence, vol. 10091.
+Kanagawa, Japan: Springer-Verlag,
+Nov. 2015, pp. 331–347.
+[11] ——, “The indefeasibility criterion for assurance
+cases,” in Implicit and Explicit Semantics Integration
+in Proof Based Developments of Discrete Systems, ser.
+Communications of NII Shonan Meetings.
+Kanagawa,
+Japan: Springer, Jul. 2020, pp. 259–279, postproceed-
+ings of a workshop held in November 2016.
+[12] L. Groarke, “Deductivism within pragma-dialectics,”
+Argumentation, vol. 13, no. 1, pp. 1–16, 1999.
+[13] IEC
+61508—Functional
+Safety
+of
+Electri-
+cal/Electronic/Programmable Electronic Safety-Related
+Systems, International Electrotechnical Commission,
+Geneva, Switzerland, Mar. 2004, seven volumes.
+[14] DO-178C: Software Considerations in Airborne Sys-
+tems and Equipment Certiﬁcation, Requirements and
+Technical Concepts for Aviation (RTCA), Washington,
+DC, Dec. 2011.
+[15] B. Littlewood and J. Rushby, “Reasoning about the
+reliability of diverse two-channel systems in which one
+channel is “possibly perfect”,” IEEE Transactions on
+Software Engineering, vol. 38, no. 5, pp. 1178–1194,
+Sep./Oct. 2012.
+10
+=== [p.11] ===
+[16] X. Zhao, V. Robu, D. Flynn, K. Salako, and L. Strigini,
+“Assessing the safety and reliability of autonomous
+vehicles from road testing,” in Twentieth International
+Symposium on Software Reliability Engineering, ISSRE
+’19.
+Berlin, Germany: IEEE Computer Society, Oct.
+2019.
+[17] W. S. Greenwell, J. C. Knight, C. M. Holloway, and
+J. J. Pease, “A taxonomy of fallacies in system safety
+arguments,” in Proceedings of the 24th International
+System Safety Conference, Albuquerque, NM, 2006.
+[18] T. Takai and H. Kido, “A supplemental notation of
+GSN to deal with changes of assurance cases,” in 4th
+International Workshop on Open Systems Dependability
+(WOSD). Naples, Italy: IEEE International Symposium
+on Software Reliability Engineering Workshops, Nov.
+2014, pp. 461–466.
+[19] P. J. Graydon and C. M. Holloway, “An investigation
+of proposed techniques for quantifying conﬁdence in
+assurance arguments,” Safety Science, vol. 92, pp. 53–
+65, Feb. 2017.
+[20] G. Shafer, A Mathematical Theory of Evidence.
+Princeton University Press, 1976.
+[21] E. W. Adams, A Primer of Probability Logic.
+Center
+for the Study of Language and Information (CSLI),
+Stanford University, 1998.
+[22] P. Bishop, R. Bloomﬁeld, B. Littlewood, A. Povyakalo,
+and D. Wright, “Toward a formalism for conserva-
+tive claims about the dependability of software-based
+systems,” IEEE Transactions on Software Engineering,
+vol. 37, no. 5, pp. 708–717, 2011.
+[23] D. Rinehart, J. Knight, and J. Rowanhill, “Current
+practices in constructing and evaluating assurance cases
+with applications to aviation,” NASA Langley Re-
+search Center, NASA Contractor Report NASA/CR-
+2015-218678, Jan. 2015.
+[24] T. Viger, R. Salay, G. Selim, and M. Chechik, “Just
+enough formality in assurance argument structures,”
+in Computer Safety, Reliability, and Security (SAFE-
+COMP 2020), ser. Lecture Notes in Computer Science,
+A. Casimiro et al., Eds., vol. 12234.
+Lisbon, Portugal:
+Springer, Sep. 2020, pp. 34–63.
+[25] E. Denney and G. Pai, “A formal basis for safety case
+patterns,” in Computer Safety, Reliability, and Security
+(SAFECOMP 2013), ser. Lecture Notes in Computer
+Science, vol. 8153.
+Toulouse, France: Springer, Sep.
+2013, pp. 21–32.
+[26] C. Cˆarlan and D. Ratiu, “FASTEN.Safe: A model-
+driven engineering tool to experiment with checkable
+assurance cases,” in Computer Safety, Reliability, and
+Security (SAFECOMP 2020), ser. Lecture Notes in
+Computer Science, A. Casimiro et al., Eds., vol. 12234.
+Lisbon, Portugal: Springer, Sep. 2020, pp. 298–306.
+[27] M. S. Graydon, “Towards efﬁcacy hypotheses for
+safety cases,” in 16th European Dependable Computing
+Conference (EDCC).
+Munich, Germany: IEEE, Sep.
+2020, pp. 51–58.
+[28] A. Casimiro et al., Eds., Computer Safety, Reliability,
+and Security (SAFECOMP 2020), ser. Lecture Notes
+in Computer Science, vol. 12234.
+Lisbon, Portugal:
+Springer, Sep. 2020.
+11

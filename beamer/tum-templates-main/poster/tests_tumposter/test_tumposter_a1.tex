@@ -1,0 +1,207 @@
+\documentclass[a1paper,english]{tumposter}
+
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{lipsum}
+
+\title{Very important science}
+\subtitle{A promising new approach to beautiful \LaTeX\ posters}
+\author[affil=1]{First Author}
+\author[affil=2]{Second Author}
+\author[affil=1]{Last Author}
+
+\affil[mark=1]{\theSchoolName, \theUniversityName}
+\affil[mark=2]{School of Applied \LaTeX, University of \TeX nology}
+
+% You can configure your poster style globally, here in the preamble
+% or you execute this command inside the document, directly before your
+% poster content (if you want multiple posters in one document)
+\TUMpostersetup{
+  columns = 3,
+  rows = 6,
+  boxes = TUMBoxBlank,
+  printaffil = true,
+  showframe = true,
+}
+
+
+\begin{document}
+
+
+% .:: Example poster with 3 columns
+% ----------------------------------------------------------------------------
+
+\TUMpostersetup{
+  columns = 3,
+  rows = 6,
+  boxes = TUMBoxBlank,
+  printaffil = true,
+  showframe = true,
+}
+\maketitle
+\begin{tcbposter}
+  % footer with some contact information
+  \posterbox[fontupper=\small, enlarge top initially by = .5\TUMposterboxsep
+  ]{
+    name=footer, column=1, span=3, above=bottom
+  }{
+    \begin{tabularx}{\textwidth}{p{.35\textwidth}XXX}
+      \textbf{\theUniversityName}\newline\theSchoolName
+       &
+      \textbf{First Author}\newline Some contact information\newline
+      E-mail: \href{mailto:first.author@tum.de}{first.author@tum.de}
+       &
+      \textbf{Dr. Second Author}\newline Don't contact me!
+       &
+      \textbf{Prof. Dr. Last Author}\newline Arcisstr. 21, 80333 Munich (D)
+      \newline E-mail: \href{mailto:last.author@tum.de}{last.author@tum.de}
+      \newline \href{www.ei.tum.de}{www.ei.tum.de}
+    \end{tabularx}
+  }
+
+  % figure on the top right
+  \posterbox{name=fig1, column=3, below=top}{
+    \includegraphics[width=\columnwidth, height=20cm]{example-image-a}
+    \captionof{figure}{This is a figure caption. The figure contains a
+      placeholder to test the layout.}
+  }
+
+  % references box
+  \posterbox[fontupper=\small]{name=refs, column=3, above=footer}{
+    \bibliographystyle{unsrt}
+    \bibliography{sample}
+  }
+
+  % main text box is a sequence over the rest of the page
+  \posterbox{name=text,
+    sequence = 1 between top and footer then
+    2 between top and footer then
+    3 between fig1 and refs
+  }{
+    \section{First Section}
+    \lipsum[1] \cite{feynman1958theory}
+    \section{Another Section}
+    \lipsum[2] \cite{einstein1905elektrodynamik}\par
+    \subsection{With a Subsection}
+    \lipsum[3-5] \cite{bardeen1973four}\par
+    \subsection{And another one}
+    \lipsum[6-7]
+  }
+\end{tcbposter}
+
+
+% .:: Example poster with single column
+% ----------------------------------------------------------------------------
+
+\clearpage
+\TUMpostersetup{
+  columns = 1,
+  rows = 6,
+  boxes = TUMBoxBlank,
+  printaffil = false,
+  showframe = false,
+}
+\maketitle
+\begin{tcbposter}
+  % figure
+  \posterbox[blankest]{name=fig1, below=top, rowspan=5}{
+    \includegraphics[width=\tcbtextwidth, height=\tcbtextheight
+    ]{example-image}
+  }
+
+  % main text box
+  \posterbox[fontupper=\usekomafont{TUM.H2}]{
+    name=text, between=fig1 and bottom
+  }{
+    This figure will change the world!
+  }
+\end{tcbposter}
+
+
+% .:: Example poster with boxes (3 columns asymmetric)
+% ----------------------------------------------------------------------------
+
+\clearpage
+\TUMpostersetup{
+  columns = 3,
+  rows = 6,
+  boxes = TUMBox,
+  printaffil = true,
+  showframe = false,
+}
+\maketitle
+\begin{tcbposter}
+  % footer with some contact information
+  \posterbox[TUMBox=TUMGray, fontupper=\small,
+    enlarge top initially by = \TUMposterboxsep,
+    equal height group=A
+  ]{
+    name=contact, column=1, span=1.5, above=bottom
+  }{
+    \textbf{\theUniversityName}\\
+    This footer box could be used to place contact information.\\
+    Setting a fixed height and insert additional spacing\\
+    to separate the footer from the main content is possible.
+  }
+
+  % footer with acknowledgement
+  \posterbox[TUMBox=TUMGray, fontupper=\small,
+    enlarge top by = \TUMposterboxsep,
+    equal height group=A
+  ]{
+    name=acknowledgement, column*=3, span=1.5, above=bottom
+  }{
+    \begin{minipage}[t]{.55\textwidth}
+      \vspace{0pt}
+      We would like to thank our sponsors\\
+      Sponsor 1 and Sponsor 2, \\
+      as well as the Institute of applied \LaTeX.
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{.43\textwidth}
+      \vspace{0pt}
+      \includegraphics[width=.48\textwidth, height=2.5cm]{example-image}
+      \hfill
+      \includegraphics[width=.48\textwidth, height=2.5cm]{example-image}
+    \end{minipage}
+  }
+
+  % Separator line between footer and content posterboxes
+  \draw[TUMBlue, line width = \TUMposterrulewidth, line cap = round,
+      dashed, dash pattern = on 0pt off 2\TUMposterrulewidth
+    ] ([xshift=.5\TUMposterrulewidth]TCBPOSTER@contact.north west)
+    -- +(\tcbposterwidth, 0);
+
+  % Motivation box
+  \posterbox[adjusted title=Motivation]{name=motivation,
+    below=top, span=1, rowspan=3
+  }{
+    Here we motivate our work
+  }
+
+  % Results box
+  \posterbox[adjusted title=Results]{name=results,
+    column=1, between=motivation and contact
+  }{
+    We achieved some very interesting results
+  }
+
+  % Method and Model description
+  \posterbox[adjusted title=Method and Model]{name=method,
+    column=2, span=2, between=top and contact
+  }{
+    \lipsum[1]
+    \vspace{\baselineskip}
+
+    \includegraphics[width=.49\textwidth]{example-image-a}
+    \hfill
+    \includegraphics[width=.49\textwidth]{example-image-b}
+    \captionof{figure}{This is a figure caption. (a) shows something and
+      (b) shows something else.}
+    \vspace{\baselineskip}
+
+    After the figgure, there is more information
+  }
+\end{tcbposter}
+
+\end{document}

@@ -43,8 +43,10 @@ def NOT(x):
 
 
 # facts of the modelled structure, not data: the template or the engine sets them where the structure has the thing
-# (the restructuring step, a special reorganisation behind a dividend); absent, the structure has none (口径 D18)
-STRUCTURAL = frozenset({"reorg_step", "reorg_special_applied", "shares_cancelled", "p2_iir"})
+# (the restructuring step, a special reorganisation behind a dividend); absent, the structure has none (decision D18)
+STRUCTURAL = frozenset({"reorg_step", "reorg_special_applied", "shares_cancelled", "p2_iir",
+                        "subject_income_taxed_abroad",         # decision D44: only an earlier intra-group transfer gives one
+                        "capitalised"})                        # decision D46: a dividend is booked as capital only when stated
 
 
 class Ctx:

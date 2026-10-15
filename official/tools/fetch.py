@@ -40,7 +40,8 @@ BLOCKED_FIELDS = ["id", "jur", "title", "url", "reason", "alt_tried", "logged_at
 ATT_EXT = (".pdf", ".doc", ".docx", ".xls", ".xlsx", ".zip", ".rar", ".ofd", ".wps", ".et", ".rtf")
 OFFICIAL = ("chinatax.gov.cn", "gov.cn", "npc.gov.cn", "court.gov.cn", "ird.gov.hk", "elegislation.gov.hk",
             "gov.hk", "iras.gov.sg", "agc.gov.sg", "mof.gov.sg", "gov.sg", "oecd.org", "europa.eu",
-            "chinamoney.com.cn")          # 中国外汇交易中心：经人民银行授权发布人民币汇率中间价
+            "chinamoney.com.cn",          # CFETS (中国外汇交易中心): publishes the CNY central parity as authorised by the People's Bank of China
+            "judiciary.hk", "elitigation.sg")   # Hong Kong Judiciary Legal Reference System; Singapore Supreme Court judgments (案例采集.md K1)
 CT_EXT = {"application/pdf": "pdf", "text/html": "html", "application/msword": "doc",
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
           "application/vnd.ms-excel": "xls",

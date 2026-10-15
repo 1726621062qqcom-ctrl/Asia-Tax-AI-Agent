@@ -16,7 +16,7 @@ in the rule layer the battery notices) replaces "rules fired" as the adequacy me
 
 Invariants per case: no exception; lo <= hi on every row; every group cost >= 0; the best row is not dominated; scaling
 all amounts by k scales both bounds by k (open cases); role views sum to the group total; one income charge item per
-(flow, jurisdiction); every non-zero item carries a cite; a settled item pins its flow and raises no PLAN item of its
+(flow, jurisdiction) and one domestic base on it (decision D32); every non-zero item carries a cite; a settled item pins its flow and raises no PLAN item of its
 own jurisdiction; claims obey 0 <= confirmed <= potential <= paid. Coverage: rules that fired (cites or pending
 groups) across the battery, and the ones that never did.
 """
@@ -34,18 +34,26 @@ from .engine import EX_ANTE, RULES, CaseCtx, Defect, Reject, bounds
 from .ex_ante import ex_ante
 from .model import CN, HK, JURISDICTIONS, SG
 from .run import load_case
-from .scenarios import BUYER, CLIENT, GROUP, HOLD, IPCO, LENDER, OP, SERVICER, TEMPLATES, ULT, views
+from .rules.eval import ARMS_LENGTH, NET_OF_VAT
+from .rules.model import Effect
+from .scenarios import BUYER, CLIENT, CUSTOMER, GROUP, HOLD, IPCO, LENDER, OP, OWNER, SERVICER, TEMPLATES, TENANT, TRADER, ULT, views
 
 OUT = Path("out")
 DIR = Path("cases") / "battery"
 ON = "2026-03-31"
+# decision D32: the domestic bases (gain or profit share; not a treaty's cap base, not the VAT taken out of the price) — two
+# of them on one income item take the share twice (found on K4-smit-2026, which no invariant here had caught)
+ONE_BASE = frozenset(r.id for r in RULES if r.effect is Effect.BASE and r.id not in ARMS_LENGTH     # decision D41: a factor
+                     and not (r.scope.residence is not None and r.scope.side == "source")             # on the amount
+                     and not any(m in r.uses + ((r.value,) if r.value else ()) for m in NET_OF_VAT))
 
 ENTITY = {
     CN: {"managed_from": CN, "vat_general_taxpayer": True, "payee_is_government": False, "payee_is_financial_institution": False,
+         "fixed_place_in_hk": False, "fixed_place_in_sg": False,             # decision D42: a Mainland seller without one abroad
          "related_party_volume": 60000000.0, "tp_documentation_provided": True, "after_tax_profit": 8000000.0,
          "related_party_debt_equity_ratio": 1.5,
          "income_tax_other": 2666666.67,                                   # 25% on 10.67m: synthetic, test-only
-         # Pillar Two figures of a Mainland entity (an IIR abroad computes the Mainland's top-up, 口径 D20): 25% covered
+         # Pillar Two figures of a Mainland entity (an IIR abroad computes the Mainland's top-up, decision D20): 25% covered
          # taxes, so the CbC simplified ETR meets the safe harbour; synthetic, test-only
          "globe_income": 10666666.67, "covered_taxes_other": 2666666.67, "payroll": 10000000.0, "tangible_assets": 20000000.0,
          "p2_qualified_cbcr_cn": True, "p2_tcsh_history_cn": True, "p2_cbcr_revenue_cn": 300000000.0, "p2_cbcr_pbt_cn": 10666666.67,
@@ -79,7 +87,7 @@ FLOW = {
                 "royalty_deductible_in_hk": False, "price_includes_vat": True},
     "SERVICE_FEE": {"service_location": None, "service_days_12m": 60, "service_kind": "MANAGEMENT", "profit_margin": 20, "receipt_kind": "REMITTED",
                     "foreign_taxed": True, "foreign_headline_rate": 25, "price_includes_vat": False},
-    # the IP transfer step (口径 D22): a patent sold at 2000 with a tax basis of 500, no allowances claimed so far; the
+    # the IP transfer step (decision D22): a patent sold at 2000 with a tax basis of 500, no allowances claimed so far; the
     # case's amounts are yuan; the instrument is used in the Mainland (its patents); synthetic, test-only
     "IP_TRANSFER": {"amount": 2000.0, "ip_kind": "PATENT", "cost_basis": 500.0, "ip_allowances_claimed": 0.0, "price_includes_vat": False,
                     "technology_export_restricted": False, "cny_rate": 1.0, "instrument_used_in_cn": True, "receipt_kind": "REMITTED",
@@ -91,6 +99,19 @@ FLOW = {
                        "intragroup_reorg_ratio": 0, "reorg_consideration_in_equity": False, "later_cn_tax_not_reduced": False},
     "DISTRIBUTION": {"receipt_kind": "REMITTED", "foreign_taxed": True, "foreign_headline_rate": 25, "underlying_profits_taxed": True,
                      "deductible_at_payer": False, "reinvested_in_cn": False, "accumulated_profits_share": 600.0, "reduced_capital_ratio": 50.0},
+    # decision D42, D43: goods at 13% VAT refunded at 9%, no export duty, 5% import duty; synthetic, test-only
+    "GOODS": {"receipt_kind": "REMITTED", "foreign_taxed": True, "foreign_headline_rate": 25, "goods_vat_rate": 13.0,
+              "export_refund_rate": 9.0, "export_duty_rate": 0.0, "import_duty_rate": 5.0},
+    # decision D48: a building bought on 2018-01-15 for 600 (deed tax 18 paid), its basis 600, the buyer bearing Hong Kong's
+    # duty; synthetic, test-only
+    "PROPERTY_TRANSFER": {"property_use": "non_residential", "acquired_on": "2018-01-15", "acquisition_price": 600.0, "cost_basis": 600.0,
+                          "self_built": False, "deed_paid_on_acquisition": 18.0, "price_includes_vat": False,
+                          "input_vat_documents_kept": True, "receipt_kind": "REMITTED", "held_as_trading_stock": False,
+                          "stamp_borne_by": "payer", "foreign_taxed": True, "foreign_headline_rate": 25},
+    # decision D49: the building let for 3 years at 100 a year, 40% of it profit, its annual value 90; synthetic, test-only
+    "PROPERTY_RENT": {"property_use": "non_residential", "acquired_on": "2018-01-15", "price_includes_vat": False, "input_vat_documents_kept": True,
+                      "receipt_kind": "REMITTED", "profit_margin": 40, "lease_term_months": 36, "annual_value": 90.0,
+                      "property_tax_area": True, "stamp_borne_by": "payer", "foreign_taxed": True, "foreign_headline_rate": 25},
 }
 SPARSE_DROP = {"residence_cert", "bo_safe_harbour", "receipt_kind", "interest_rate", "benchmark_rate", "service_days_12m", "profit_margin",
                "accumulated_profits_share", "qualifying_rd_expenditure", "related_party_debt_equity_ratio", "managed_from",
@@ -115,37 +136,75 @@ def flowpack(kind, sparse, source):
     return a
 
 
+CURRENCY = {CN: "CNY", HK: "HKD", SG: "SGD"}                # decision D48: the property's currency, for the duty scales
+
 VARIANTS = {
+    # decision D48: property bought before 2016-05-01 (the 5% simplified VAT, the election open); residential, bought 2025-08-01
+    # (Singapore's buyer's and seller's duties); the property where ULT is (a foreign owner)
+    "property": [("old", {"sale": {"acquired_on": "2015-06-30"}}),
+                 ("residential", {"sale": {"property_use": "residential", "acquired_on": "2025-08-01"}}),
+                 ("abroad", {"__property_abroad__": True}),
+                 ("seller_stamp", {"sale": {"stamp_borne_by": "payee"}}),
+                 ("trader_abroad", {"__property_abroad__": True, "sale": {"held_as_trading_stock": True}}),
+                 ("leased", {"__lease__": True}),                  # decision D49: let instead of sold
+                 ("leased_abroad", {"__lease__": True, "__property_abroad__": True}),
+                 ("leased_lessor_stamp", {"__lease__": True, "rent": {"stamp_borne_by": "payee"}})],
     "ip": [("lease", {"roy": {"is_equipment_lease": True}}), ("aircraft", {"roy": {"is_aircraft_or_ship_lease": True}}),
            ("prior_year_claim", {"roy": {"claim_is_for_prior_year": True, "as_at": "2026-10-07"}}),   # the clock is read as at a date
-           ("before_vat_law", {"__on__": "2025-06-30"}),   # 口径 D30: before the VAT Law the CN VAT is outside the library
-           ("book_transfer", {"__ult__": "CN"}),                  # OP and a new IPCO both under a Mainland parent (口径 D28)
+           ("before_vat_law", {"__on__": "2025-06-30"}),   # decision D30: before the VAT Law the CN VAT is outside the library
+           ("book_transfer", {"__ult__": "CN"}),                  # OP and a new IPCO both under a Mainland parent (decision D28)
            # the VAT conditions decided: a Mainland general taxpayer holding the input documents, and a trademark, which no
-           # technology exemption covers (口径 D23, D22) — so a negated input-credit or IP-sale rule shows
+           # technology exemption covers (decision D23, D22) — so a negated input-credit or IP-sale rule shows
            ("vat_decided", {"__cn_attrs__": {"vat_general_taxpayer": True}, "roy": {"input_vat_documents_kept": True},
-                            "iptx": {"ip_kind": "TRADEMARK", "input_vat_documents_kept": True}})],
+                            "iptx": {"ip_kind": "TRADEMARK", "input_vat_documents_kept": True}}),
+           ("arms_length", {"roy": {"arms_length_value": 750.0}})],          # decision D41: the royalty 500 below its value; synthetic
     "financing": [("government", {"__role__": {"LENDER": "GOVERNMENT"}}), ("bank", {"__role__": {"LENDER": "BANK_FI"}}),
-                  ("before_vat_law", {"__on__": "2025-06-30"})],             # 口径 D30: an outside lender bears it — a note
+                  ("before_vat_law", {"__on__": "2025-06-30"})],             # decision D30: an outside lender bears it — a note
     "holding": [("minority", {"__hold__": 20.0}), ("listed", {"exit": {"listed_market_trade": True}}),
                 # a Mainland entity taxed well below 15% (incentive rate and super deduction): no safe harbour, so a
-                # Hong Kong or Singapore parent's IIR charges its top-up (口径 D20); synthetic, test-only
+                # Hong Kong or Singapore parent's IIR charges its top-up (decision D20); synthetic, test-only
                 ("cn_low_etr", {"__cn_attrs__": {"covered_taxes_other": 500000.0, "p2_cbcr_simplified_taxes_cn": 500000.0}}),
                 ("reorg", {"exit": {"intragroup_reorg_ratio": 100, "reorg_consideration_in_equity": True, "later_cn_tax_not_reduced": True}}),
                 ("reinvest", {"__years__": 2,                   # the credit is used against the next year's withholding
                               "up1": {"reinvested_in_cn": True, "reinvestment_form": "capital_increase", "direct_payment": True,
                                       "reinvestment_from_distributed_profit": True, "investee_encouraged_industry": True, "planned_holding_months": 60}}),
                 ("carryforward", {"__years__": 2,               # year 1 foreign tax above the Mainland limit, room in year 2
-                                  "up2": {"underlying_tax_share": 45.0}, "up2@2027": {"underlying_tax_share": 5.0}})],
+                                  "up2": {"underlying_tax_share": 45.0}, "up2@2027": {"underlying_tax_share": 5.0}}),
+                ("open_market", {"exit": {"arms_length_value": 8000.0}}),  # decision D41: s10L(10), the exit 5000 below it; synthetic
+                # decision D46: OP may capitalise 800 of retained earnings for its holder before the exit (the client has not);
+                # the capitalisation's facts are a dividend's; synthetic, test-only
+                ("capitalise", {"__event__": {"capitalisable": 800.0}, "__present__": {"capitalise": False},
+                                "cap": {k: v for k, v in FLOW["DIVIDEND"].items()}}),
+                # ... the client has capitalised them, or has capitalised share premium (no dividend, no basis, no stamp)
+                ("capitalised", {"__event__": {"capitalisable": 800.0}, "__present__": {"capitalise": True},
+                                 "cap": {k: v for k, v in FLOW["DIVIDEND"].items()}}),
+                ("capitalised_premium", {"__event__": {"capitalisable": 800.0}, "__present__": {"capitalise": True},
+                                         "cap": dict(FLOW["DIVIDEND"], capitalised_from="share_premium")}),
+                # decision D47: ULT has a branch in the next jurisdiction whose year made 600, remitted; synthetic, test-only
+                ("branch", {"__branch__": 600.0}),
+                # decision D51: every company has a loss of 500 from 2023 and a loss of 200 of its own each year; ULT's branch made
+                # a loss of 600 (only that country's income takes it in the Mainland); synthetic, test-only
+                ("losses", {"__all_attrs__": {"loss_brought_forward": [[2023, 500.0]], "taxable_income_other": -200.0}}),
+                ("branch_loss", {"__branch__": -600.0, "__all_attrs__": {"taxable_income_other": 1000.0}})],
     "services": [("tp_adjusted", {"svc": {"tp_adjustment_tax": 50.0, "tp_adjustment_amount": 200.0, "tp_adjustment_paid_on": "2027-09-30",
                                           "pboc_benchmark_rate": 3.45}}),
-                 ("before_vat_law", {"__on__": "2025-06-30"})],
+                 ("before_vat_law", {"__on__": "2025-06-30"}),
+                 # decision D41: the fee 800 below an arm's-length range 1000-1200 (median 1200); synthetic, test-only
+                 ("arms_length", {"svc": {"arms_length_value": 1200.0, "arms_length_low": 1000.0}})],
     "inbound_services": [("partial_gst", {"__role__": {"SERVICER": None}, "__payer_attrs__": {"gst_input_fully_recoverable": False, "gst_recovery_ratio": 40.0}})],
+    # decision D42, D43: a trader's contracts effected in Hong Kong, the goods passing through it, the refund rate not given
+    "trading": [("onshore", {"resale": {"purchase_effected_in_hk": True, "sale_effected_in_hk": True}}),
+                ("routed", {"resale": {"routed_via_trader": True}}),
+                ("refund_unknown", {"sale": {"export_refund_rate": None}, "supply": {"export_refund_rate": None}})],
 }
 
 
 ROLE_FACTS = {"GOVERNMENT": {"payee_is_government": True, "government_exempt_condition_met": True},
               "BANK_FI": {"payee_is_financial_institution": True}}
-EXPECTED_SILENT = {"cn.wht.statutory": "displaced by cn.wht.reduced wherever both apply (实施条例 第九十一条)"}
+EXPECTED_SILENT = {"cn.wht.statutory": "displaced by cn.wht.reduced wherever both apply (实施条例 第九十一条)",
+                   # decision D51: no template sells a company that then earns income in Hong Kong (the holding exit sells OP,
+                   # which only pays); check_scope covers s61B
+                   "hk.loss.change": "no template has a Hong Kong loss company earning after its shares change hands"}
 
 
 def apply_variant(case, variant):
@@ -161,15 +220,40 @@ def apply_variant(case, variant):
                     case["roles"][role]["attrs"].update(ROLE_FACTS.get(typ, {}))   # the packs pin these flags; the type sets them
         elif fname == "__years__":
             case["event"]["years"] = facts
+        elif fname == "__event__":                            # event amounts (decision D46: what OP may capitalise)
+            case["event"].update(facts)
+        elif fname == "__present__":                          # the client's present choice of a structural variable
+            case["present"].update(facts)
+        elif fname == "__lease__":                            # decision D49: OWNER lets the building to a tenant where it lies
+            loc = case["flows"]["sale"]["property_loc"]
+            case["event"].update(property_sale=None, property_rent=100.0)
+            case["roles"].pop(BUYER, None)
+            case["roles"][TENANT] = {"loc": loc, "attrs": {"managed_from": loc}}
+            case["flows"]["rent"] = dict(FLOW["PROPERTY_RENT"], property_loc=loc, currency=CURRENCY[loc])
+            case["flows"].pop("sale", None)
+        elif fname == "__property_abroad__":                  # decision D48: the property lies where ULT is (sold or let)
+            loc = case["roles"][ULT]["loc"]
+            for name, role in (("sale", BUYER), ("rent", TENANT)):
+                if name in case["flows"]:
+                    case["flows"][name].update(property_loc=loc, currency=CURRENCY[loc])
+                    case["roles"][role] = {"loc": loc, "attrs": {"managed_from": loc}}
+        elif fname == "__branch__":                           # decision D47: a branch of ULT in the next jurisdiction
+            loc = case["roles"][ULT]["loc"]
+            j = JURISDICTIONS[(JURISDICTIONS.index(loc) + 1) % len(JURISDICTIONS)].lower()
+            case["roles"][ULT]["attrs"].update({"branch_profit_" + j: facts, "branch_receipt_" + j: "REMITTED",
+                                                "branch_taxed_" + j: True, "fixed_place_in_" + j: True})
         elif fname == "__on__":                               # the flows' date (before the VAT Law: the 36号 rules)
             case["event"]["on"] = facts
-        elif fname == "__ult__":                              # the parent's jurisdiction (口径 D28: a Mainland parent)
+        elif fname == "__ult__":                              # the parent's jurisdiction (decision D28: a Mainland parent)
             case["roles"][ULT] = {"loc": facts, "attrs": pack(facts, False)}
         elif fname == "__hold__":
             for h in case["holds"]:
                 h["ratio"] = facts
         elif fname == "__payer_attrs__":
             case["roles"]["CLIENT"]["attrs"].update(facts)
+        elif fname == "__all_attrs__":                        # decision D51: every role the case places
+            for rf in case["roles"].values():
+                rf["attrs"].update(facts)
         elif fname == "__cn_attrs__":                         # every role the case places in the Mainland
             for rf in case["roles"].values():
                 if rf["loc"] == CN:
@@ -196,14 +280,14 @@ def skeletons():
                         yield tname, dict(zip(fixed, locs)), sparse, timing, years
             if tname in ("holding", "repatriation") and len(set(locs)) == len(locs):
                 # the client's own holding company in the third jurisdiction: the plan may keep it, dissolve it or move
-                # its role to a new company — the unwinding (口径 D19)
+                # its role to a new company — the unwinding (decision D19)
                 third = [j for j in JURISDICTIONS if j not in locs][0]
                 for sparse, timing in ((False, "open"), (True, "open"), (False, "paid")):
                     yield tname, dict(zip(fixed, locs), **{HOLD: third}), sparse, timing, 1
 
 
 def unwinding_packs(sparse, src, own):
-    """The two steps when the plan takes the client's HOLD out (口径 D19): HOLD's stake in OP at market value, HOLD's
+    """The two steps when the plan takes the client's HOLD out (decision D19): HOLD's stake in OP at market value, HOLD's
     liquidation distribution. The amounts are synthetic, test-only; the sparse case leaves them out (the planner asks)."""
     unwind, wind = flowpack("SHARE_TRANSFER", sparse, src), flowpack("DISTRIBUTION", sparse, own)
     wind.pop("reduced_capital_ratio", None)
@@ -216,7 +300,7 @@ def make_case(tname, locs, sparse, timing, years):
     roles = {r: {"loc": l, "attrs": pack(l, sparse)} for r, l in locs.items()}
     holds, flows, event, present, settled, closed = [], {}, {"on": ON, "years": years}, {}, {}, []
     src = locs.get(OP) or locs.get(CLIENT)
-    own = locs.get(HOLD)                                   # the client's own holding company (口径 D19), or none
+    own = locs.get(HOLD)                                   # the client's own holding company (decision D19), or none
     if tname == "holding":
         holds = [{"holder": ULT, "held": OP, "ratio": 100.0, "since": "2020-01-01", "cost": 3000.0}]
         roles[BUYER] = {"loc": [j for j in JURISDICTIONS if j != locs[OP]][0], "attrs": {"managed_from": [j for j in JURISDICTIONS if j != locs[OP]][0]}}
@@ -273,6 +357,30 @@ def make_case(tname, locs, sparse, timing, years):
         if timing != "open":
             settled = {"int": {locs[OP]: 100.0}}
             flows["int"].update(tax_paid_on=ON)
+    elif tname == "trading":                               # decision D42, D43: OP's goods (cost 600) sold for 1000; a trader
+        holds = [{"holder": ULT, "held": OP, "ratio": 100.0, "since": "2020-01-01", "cost": 3000.0}]   # buys at 800 (arm's
+        event.update(goods_sale=1000.0, goods_supply=800.0)                                          # length 900); synthetic
+        g = flowpack("GOODS", sparse, src)
+        flows = {"sale": dict(g, cost_basis=600.0, delivered_to=locs[CUSTOMER]),
+                 "supply": dict(g, cost_basis=600.0, arms_length_value=900.0),
+                 "resale": dict(g, operating_costs=50.0, delivered_to=locs[CUSTOMER], routed_via_trader=False)}
+        if sparse:
+            for f in flows.values():
+                f.pop("cost_basis", None)
+        present = {TRADER: None, "payment": False}
+        if timing != "open":
+            settled = {"sale": {locs[OP]: 100.0}}
+            flows["sale"].update(tax_paid_on=ON)
+    elif tname == "property":                             # decision D48: OWNER's building, where OWNER is, sold for 1000
+        holds = [{"holder": ULT, "held": OWNER, "ratio": 100.0, "since": "2020-01-01", "cost": 3000.0}]
+        roles[BUYER] = {"loc": locs[OWNER], "attrs": {"managed_from": locs[OWNER]}}
+        event.update(property_sale=1000.0)
+        flows = {"sale": dict(flowpack("PROPERTY_TRANSFER", sparse, locs[OWNER]), property_loc=locs[OWNER],
+                              currency=CURRENCY[locs[OWNER]])}
+        present = {}
+        if timing != "open":
+            settled = {"sale": {locs[OWNER]: 100.0}}
+            flows["sale"].update(tax_paid_on=ON)
     elif tname == "inbound_services":
         event.update(service_fee=1000.0)
         flows = {"fee": dict(flowpack("SERVICE_FEE", sparse, src), service_onshore_share=20.0)}
@@ -391,6 +499,9 @@ def check_case(path, fired, pairs=None, summary=None):
                         defects.append("item without cite on %s %s" % (r.cand, fid))
                     if it.levy == "income" and not it.deduction and it.effective > 0:
                         charges[it.jur] = charges.get(it.jur, 0) + 1
+                    bases = sorted({c for c in it.cites if c in ONE_BASE})
+                    if it.levy == "income" and not it.deduction and len(bases) > 1:
+                        defects.append("two bases on %s %s %s: %s" % (r.cand, fid, it.jur, ", ".join(bases)))
                 dup = [j for j, k in charges.items() if k > 1]
                 if dup:
                     defects.append("two income charges on %s %s for %s" % (r.cand, fid, dup))
@@ -417,22 +528,31 @@ def check_case(path, fired, pairs=None, summary=None):
                     rule = next((x for x in RULES if x.id == rid), None)
                     if fid == name and rule is not None and rule.scope.taxing in case.settled[name] and any(n.source == "PLAN" for n in ns):
                         defects.append("PLAN item on a settled jurisdiction: %s" % (gid,))
-    if not case.settled and (event.years or 1) == 1 and "__thr_" not in Path(path).stem:
+    progressive = any(fx.get("property_loc") in ("HK", "SG") for fx in case.flows.values())   # decision D48: duty scales
+    if not case.settled and (event.years or 1) == 1 and "__thr_" not in Path(path).stem and not progressive:
         k = 2.0
         MONEY_ENTITY = {"after_tax_profit", "income_tax_other", "globe_income", "covered_taxes_other", "payroll", "tangible_assets", "revenue", "total_assets",
                         "related_party_volume", "gross_revenue", "sbie", "p2_cbcr_revenue_hk", "p2_cbcr_pbt_hk", "p2_cbcr_simplified_taxes_hk",
                         "p2_cbcr_revenue_sg", "p2_cbcr_pbt_sg", "p2_cbcr_simplified_taxes_sg", "p2_carry_back_topup",
-                        "p2_cbcr_revenue_cn", "p2_cbcr_pbt_cn", "p2_cbcr_simplified_taxes_cn"}
+                        "p2_cbcr_revenue_cn", "p2_cbcr_pbt_cn", "p2_cbcr_simplified_taxes_cn",
+                        "branch_profit_cn", "branch_profit_hk", "branch_profit_sg",                   # decision D47
+                        "taxable_income_other", "loss_brought_forward"}                               # decision D51
         PER_UNIT = {"p2_eur_rate", "p2_eur_rate_2027", "cny_rate"}  # EUR / yuan per unit of the case's amounts: scale inversely
-        MONEY_FLOW = {"accumulated_profits_share", "arms_length_max", "tp_adjustment_tax", "tp_adjustment_amount", "consideration", "cost_basis",
+        MONEY_FLOW = {"accumulated_profits_share", "arms_length_max", "arms_length_value", "arms_length_low", "tp_adjustment_tax",
+                      "operating_costs",                                                              # decision D42
+                      "acquisition_price", "deed_paid_on_acquisition", "lat_appraised_value",           # decision D48
+                      "annual_value",                                                                    # decision D49
+                      "tp_adjustment_amount", "consideration", "cost_basis",
                       "amount", "ip_allowances_claimed", "ip_book_value", "ip_book_amortization"}
         scaled_case = replace(case, holds={key: replace(h, cost=h.cost * k if h.cost else h.cost) for key, h in case.holds.items()},
                               flows={n: {kk: (v * k if kk in MONEY_FLOW else v / k if kk in PER_UNIT else v) for kk, v in fx.items()}
                                      for n, fx in case.flows.items()},
-                              roles={r: replace(rf, attrs={kk: (v * k if kk in MONEY_ENTITY and v is not None else
-                                                                 v / k if kk in PER_UNIT and v is not None else v) for kk, v in rf.attrs.items()})
+                              roles={r: replace(rf, attrs={kk: scale_attr(kk, v, k, MONEY_ENTITY, PER_UNIT) for kk, v in rf.attrs.items()})
                                      for r, rf in case.roles.items()})
-        ev2 = replace(event, **{f: (getattr(event, f) * k if getattr(event, f) else None) for f in ("dividend", "onward", "exit", "royalty", "service_fee", "interest")})
+        ev2 = replace(event, **{f: (getattr(event, f) * k if getattr(event, f) else None) for f in ("dividend", "onward", "exit", "royalty",
+                                                                                         "service_fee", "interest", "goods_sale", "goods_supply",
+                                                                                         "capitalisable", "property_sale",
+                                                                                         "property_rent")})
         try:
             out2 = ex_ante(template, ev2, scaled_case, ticks=ticks or None, subject=subject)
             pairs = {tuple(sorted(r.cand.items())): r for r in out2.table}
@@ -445,6 +565,20 @@ def check_case(path, fired, pairs=None, summary=None):
         except Exception as e:                                    # noqa: BLE001
             defects.append("scaling run failed: %s" % e)
     return defects
+
+
+def scale_attr(kk, v, k, money, per_unit):
+    """A company fact under the scaling invariant: money times k, a rate per unit divided by k; other income by year
+    and the losses by year incurred (decision D51) scale their amounts."""
+    if v is None:
+        return v
+    if kk == "loss_brought_forward" and kk in money:
+        return [[r[0], r[1] * k] + list(r[2:]) for r in v] if isinstance(v, list) else {y: a * k for y, a in v.items()}
+    if isinstance(v, dict) and kk in money:
+        return {y: a * k for y, a in v.items()}
+    if kk in money:
+        return v * k
+    return v / k if kk in per_unit else v
 
 
 # ---------------------------------------------------------------- boundary values (J8, J9)

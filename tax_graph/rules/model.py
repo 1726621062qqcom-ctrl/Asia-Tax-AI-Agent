@@ -32,11 +32,19 @@ class Effect(Enum):
     DEDUCT_BASE = "DEDUCT_BASE"   # scales the payer's deduction (benchmark interest, arm's-length cap)
     STAMP = "STAMP"         # a levy on the instrument, by the taxing jurisdiction, borne by the side the rule names
     VAT = "VAT"             # a turnover-tax item: withheld from the payee, or the payer's input credit (negative)
+    CUSTOMS = "CUSTOMS"     # decision D43: customs duty on goods crossing the border, borne by the importer or the exporter
+    SURCHARGE = "SURCHARGE" # decision D48: a levy on the VAT actually paid (city maintenance and construction tax, local education surcharge), each VAT item's own bearer
+    LAT = "LAT"             # decision D48: land appreciation tax (LAT) on the value a transfer of land or buildings adds, borne by the transferor
+    DEED = "DEED"           # decision D48: deed tax on the price of land or buildings, borne by the transferee
+    PROPERTY_TAX = "PROPERTY_TAX"   # decision D49: a tax on owning land or buildings let (Mainland property tax 房产税, HK property tax, SG property tax)
 
 
-STAGES = (Effect.NOCHARGE, Effect.SPLIT, Effect.VAT, Effect.CHARGE, Effect.BASE, Effect.RATE_CAP, Effect.EXEMPT, Effect.CREDIT, Effect.DEFER,
-          Effect.DEDUCTION, Effect.DEDUCT_BASE, Effect.STAMP)   # on an edge, in this order; VAT first: an income tax on a
-                                                                # VAT-inclusive price is on the price net of the VAT (口径 D26)
+STAGES = (Effect.NOCHARGE, Effect.SPLIT, Effect.VAT, Effect.SURCHARGE, Effect.STAMP, Effect.LAT, Effect.DEED, Effect.PROPERTY_TAX,
+          Effect.CHARGE, Effect.BASE,
+          Effect.RATE_CAP, Effect.EXEMPT, Effect.CREDIT, Effect.DEFER, Effect.DEDUCTION, Effect.DEDUCT_BASE, Effect.CUSTOMS)
+# decision D48: the levies on a transfer come before the income stages — a resident's gain is net of the taxes on it (实施条例
+# 第三十一条), LAT deducts the surcharges and the stamp duty (公告2026年第3号 第五条)   # on an edge, in this order; VAT first: an income tax on a
+                                                                # VAT-inclusive price is on the price net of the VAT (decision D26)
 ENTITY_STAGES = ()                                # pooled credits across flows (SG s50C) would live here; not in v1
 PROCEDURE = (Effect.DEADLINE, Effect.PENALTY)
 NON_COMMUTING = (Effect.CHARGE, Effect.BASE)      # two of these on one scope must be linked by overrides
@@ -151,7 +159,7 @@ class RuleObj:
     uses: Tuple[str, ...] = ()          # params a procedure evaluator reads besides value
     bearer: Optional[str] = None        # STAMP: "payer" (the buyer) or "payee" (the seller) bears the levy
     ambiguous: bool = False             # its direction depends on the numbers (a recharacterisation): decided by comparing both outcomes
-    before: Tuple[str, ...] = ()        # 口径 D30: (law, clause) when its law replaced rules the library does not keep — a flow
+    before: Tuple[str, ...] = ()        # decision D30: (law, clause) when its law replaced rules the library does not keep — a flow
                                         # dated before the rule takes effect is outside the library for its levy
     # derived by compile.py
     reads: FrozenSet[str] = frozenset()

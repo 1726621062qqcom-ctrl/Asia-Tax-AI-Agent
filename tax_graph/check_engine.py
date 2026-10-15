@@ -1,4 +1,4 @@
-"""End-to-end check of the engine on every template x case (场景.md §4 校验): the candidate table with its bounds,
+"""End-to-end check of the engine on every template x case (场景.md §4 checks): the candidate table with its bounds,
 the pending items of the best row, and the invariants: lo <= hi, costs >= 0, the best row is not dominated, the
 client's own floor labels leave nothing to claim (roundtrip), role views add up to the group total, and scaling all
 amounts scales both bounds.

@@ -70,11 +70,16 @@ def value_in_quote(value, quote, unit=""):
                     cands.add(cn_numeral(n // scale) + word)
     if unit == "%":                                                 # 万分之五 = 0.05%
         if v == 50:
-            cands.add("减半")                                         # 减半征收: half the tax
+            cands |= {"减半", "half"}                                 # 减半征收: half the tax; "more than half" (Cap 112 s50AAH)
         frac = v / 100.0
         for scale, word in ((100, "百分之"), (1000, "千分之"), (10000, "万分之")):
             if 0 < frac and abs(frac * scale - round(frac * scale)) < 1e-9 and round(frac * scale) < 1000:
                 cands.add(word + cn_numeral(int(round(frac * scale))))
+            if scale == 100 and frac > 0:                           # Cap 117: "25 cents for every $100" = 0.25%
+                cands.add("%g cents for every $100" % round(frac * 10000, 6))
+            x = frac * scale                                        # 万分之二点五 = 0.025% (one decimal)
+            if 1 <= x < 1000 and abs(x * 10 - round(x * 10)) < 1e-9 and abs(x - round(x)) > 1e-9:
+                cands.add(word + cn_numeral(int(x)) + "点" + "零一二三四五六七八九"[int(round(x * 10)) % 10])
     return any(c and re.sub(r"\s+", "", c) in q for c in cands)      # the quote was de-spaced above
 
 
@@ -158,7 +163,7 @@ def compile_rules(spec, P, report=None):
                     if c not in clause_ids:
                         errors.append("%s: clause not in library: %s" % (r.id, c))
                 sources += list(x.cites)
-        if r.before:                                      # 口径 D30: the clause that says from when its law applies
+        if r.before:                                      # decision D30: the clause that says from when its law applies
             if r.before[1] not in clause_ids:
                 errors.append("%s: clause not in library: %s" % (r.id, r.before[1]))
             sources.append(r.before[1])
@@ -166,7 +171,8 @@ def compile_rules(spec, P, report=None):
         valid_to = min([d for d in tos if d], default=None)
         if valid_from and valid_to and valid_from > valid_to:          # effective_to is the last day in force
             errors.append("%s: empty validity interval %s..%s" % (r.id, valid_from, valid_to))
-        if r.effect in (Effect.CHARGE, Effect.DENY, Effect.PENALTY, Effect.STAMP, Effect.DEDUCT_BASE) or (
+        if r.effect in (Effect.CHARGE, Effect.DENY, Effect.PENALTY, Effect.STAMP, Effect.DEDUCT_BASE, Effect.CUSTOMS,
+                        Effect.SURCHARGE, Effect.LAT, Effect.DEED, Effect.PROPERTY_TAX) or (
                 r.effect is Effect.VAT and ".input_credit" not in r.id):   # a levy, a cut deduction, VAT borne: against the taxpayer
             favourable = False                                            # DEDUCTION, NOCHARGE, the payer's input credit: for it
         elif r.effect is Effect.BASE:                 # a fraction below 100% lowers the tax; computed fractions are reliefs too
@@ -255,12 +261,14 @@ def check_registry(rules, P, clause_ids, errors):
                     errors.append("%s: evaluator cites a clause not in the library: %s" % (key, c))
     reached = {r.id for key in seen for r in by_key.get(key, [])}
     for r in rules:
-        if (r.effect in (Effect.PENALTY, Effect.DEDUCT_BASE) or (r.effect is Effect.BASE and r.value is None)) and r.id not in reached:
+        if (r.effect in (Effect.PENALTY, Effect.DEDUCT_BASE, Effect.CUSTOMS, Effect.SURCHARGE, Effect.LAT, Effect.DEED, Effect.PROPERTY_TAX)
+                or (r.effect is Effect.BASE and r.value is None)) and r.id not in reached:
             errors.append("%s: a %s rule without an evaluator" % (r.id, r.effect.name))
 
 
 from ..model import JURISDICTIONS
-INCOMES = ("DIVIDEND", "INTEREST", "ROYALTY", "SERVICE_FEE", "SHARE_TRANSFER", "LIQUIDATION", "CAPITAL_REDUCTION", "IP_TRANSFER")
+INCOMES = ("DIVIDEND", "INTEREST", "ROYALTY", "SERVICE_FEE", "SHARE_TRANSFER", "LIQUIDATION", "CAPITAL_REDUCTION", "IP_TRANSFER",
+           "GOODS", "BRANCH_PROFIT", "PROPERTY_TRANSFER", "PROPERTY_RENT")
 
 
 def coverage(rules):

@@ -1,0 +1,68 @@
+cases on one side only: 111 (holding-ip_OPCN-ULHK_full_open_y1, holding-ip_OPCN-ULHK_full_open_y1__thr_cn-div-holding_months_min_above, holding-ip_OPCN-ULHK_full_open_y1__thr_cn-div-holding_months_min_at, holding-ip_OPCN-ULHK_full_open_y1__thr_cn-div-holding_months_min_below)
+cases by template: {'holding': 130, 'repatriation': 67}
+candidate rows by bound move:
+  lo+ hi-    1540
+      holding_OPCN-ULHK_full_open_y1 {"HOLD": "HK", "exit_route": "INDIRECT", "financing": "DEBT", "payment": "False"} lo 5233706.46->5233810.46 hi 5235286.04->5234206.03
+      holding_OPCN-ULHK_full_open_y1 {"HOLD": "SG", "exit_route": "INDIRECT", "financing": "DEBT", "payment": "False"} lo 5233720.0->5233824.0 hi 5234943.5->5234330.49
+  lo+ hi+    1327
+      holding_OPCN-ULHK_full_open_y1__pw01 {"HOLD": "HK", "exit_route": "INDIRECT", "financing": "DEBT", "payment": "False"} lo 5233706.46->5233710.46 hi 5233961.04->5233969.88
+      holding_OPCN-ULHK_full_open_y1__pw01 {"HOLD": "HK", "exit_route": "INDIRECT", "financing": "EQUITY", "payment": "False"} lo 5233805.0->5233809.0 hi 5233970.0->5233978.84
+  lo- hi-    664
+      holding_OPCN-ULHK_full_open_y1 {"HOLD": "HK", "exit_route": "DIRECT", "financing": "DEBT", "payment": "False"} lo 5233903.96->5233807.96 hi 5234288.54->5234170.53
+      holding_OPCN-ULHK_full_open_y1 {"HOLD": "SG", "exit_route": "DIRECT", "financing": "DEBT", "payment": "False"} lo 5233922.5->5233826.5 hi 5234461.0->5234332.99
+  lo- hi+    369
+      holding_OPCN-ULHK_full_open_y1__pw01 {"HOLD": "CN", "exit_route": "DIRECT", "financing": "EQUITY", "payment": "False"} lo 5234002.5->5233856.5 hi 5234092.5->5234201.34
+      holding_OPCN-ULHK_full_open_y1__pw01 {"HOLD": "CN", "exit_route": "DIRECT", "financing": "EQUITY", "payment": "True"} lo 10474402.5->10474256.5 hi 10474492.5->10474601.34
+  lo= hi-    258
+      holding_OPHK-ULSG_full_open_y1 {"HOLD": "HK", "exit_route": "DIRECT", "financing": "EQUITY", "payment": "False"} lo 8564405.0->8564405.0 hi 8564690.0->8564607.23
+      holding_OPHK-ULSG_full_open_y1 {"HOLD": "SG", "exit_route": "INDIRECT", "financing": "EQUITY", "payment": "False"} lo 8564400.0->8564400.0 hi 8565420.0->8564620.23
+  lo= hi+    174
+      holding_OPCN-ULHK_full_open_y1_reinvest__thr_cn-reinvest-credit_min_holding_months_above {"HOLD": "None", "exit_route": "DIRECT", "financing": "EQUITY", "payment": "False"} lo 202.5->202.5 hi 462.5->562.5
+      holding_OPCN-ULHK_full_open_y1_reinvest__thr_cn-reinvest-credit_min_holding_months_above {"HOLD": "None", "exit_route": "DIRECT", "financing": "EQUITY", "payment": "True"} lo 202.5->202.5 hi 462.5->562.5
+  lo= hi=    86
+      holding_OPCN-ULHK_full_open_y1__pw27 {"HOLD": "None", "exit_route": "DIRECT", "financing": "DEBT", "payment": "False"} lo 5233752.5->5233752.5 hi 5234140.49->5234140.49
+      holding_OPCN-ULHK_full_open_y1_minority__thr_cn-hk-gain-immovable_ratio_over_above {"HOLD": "None", "exit_route": "DIRECT", "financing": "DEBT", "payment": "False"} lo 22.5->22.5 hi 497.5->497.5
+  lo- hi=    32
+      repatriation_OPHK-ULCN_full_open_y1 {"HOLD": "None", "payment": "False", "repatriation": "LIQUIDATION"} lo 5233861.88->5233861.08 hi 5233861.88->5233861.88
+      repatriation_OPHK-ULCN_full_open_y1 {"HOLD": "None", "payment": "False", "repatriation": "CAPITAL_REDUCTION"} lo 5233886.88->5233886.08 hi 5233886.88->5233886.88
+need keys added / removed (rule key):
+  2806 + hk.fsie.charge flow.receipt_kind
+  2156 + cn-hk.gain.listed@cn flow.listed_market_trade
+  1844 + cn.reorg.special payee.reorg_reasonable_commercial_purpose
+  1844 + cn.reorg.special flow.reorg_shares_kept_12m:is_true
+  1844 + cn.reorg.special flow.reorg_operations_unchanged_12m:is_true
+  1844 + cn.reorg.special flow.reorg_commitment_3y:is_true
+  1844 + cn.reorg.special flow.reorg_filed:is_true
+  1844 + cn.reorg.special flow.reorg_equity_payment_share:ge
+  1812 + hk.fsie.participation.share_transfer flow.foreign_headline_rate
+  1796 + hk.fsie.participation.share_transfer flow.foreign_taxed
+  1782 + hk.fsie.participation.share_transfer flow.underlying_profits_taxed
+  1762 + hk.fsie.participation.share_transfer flow.deductible_at_payer
+  1760 + hk.fsie.intragroup_relief flow.acquirer_chargeable_in_hk
+  1760 + hk.fsie.intragroup_relief flow.clawback_event_within_2y:is_false
+  1192 + hk.fsie.participation.share_transfer payee.no_main_purpose_of_tax_benefit
+   922 + cn.reorg.special payee.reorg_wht_burden_unchanged
+   733 + cn-hk.ppt@cn payee.ppt
+   728 + hk.fsie.substance.share_transfer payee.adequate_substance
+   720 + sg.ftc.pooling flow.foreign_taxed
+   720 + sg.ftc.pooling flow.foreign_headline_rate
+   686 + cn-sg.div.cap_qualified@cn flow.holding_months:ge
+   686 + cn-hk.div.cap_qualified@cn flow.holding_months:ge
+   680 + sg.stamp.buyer flow.clawback_event_within_2y:is_false
+   680 + sg.stamp.buyer flow.stamp_relief_claimed:is_true
+   649 - cn.gain.base flow.cost_basis
+   636 - hk.fsie.gain.base flow.cost_basis
+   608 + hk.stamp.buyer flow.stamp_relief_claimed:is_true
+   608 + hk.stamp.seller flow.stamp_relief_claimed:is_true
+   608 + hk.stamp.buyer flow.clawback_event_within_2y:is_false
+   608 + hk.stamp.seller flow.clawback_event_within_2y:is_false
+   586 + cn.reorg.treaty_dividend_denied flow.dividend_from_pre_reorg_profits:is_true
+   571 + sg.fsie.charge flow.receipt_kind
+   532 + cn.domestic.dividend_listed flow.holding_months:lt
+   523 + hk.onshore_gain.certainty flow.held_as_trading_stock
+   523 + hk.onshore_gain.certainty payee.sch17k_elected
+   464 + hk.fsie.participation.dividend flow.holding_months:ge
+   414 + sg.s10l.gain payee.adequate_substance
+   386 - cn.indirect.gain.base flow.cost_basis
+   384 + cn.domestic.dividend_listed flow.listed_market_trade
+   377 - hk.gain.base flow.cost_basis

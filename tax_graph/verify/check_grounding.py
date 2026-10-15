@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""Does the 依据核对 notice a missing basis? Gold case A is traced as it is (no failure), then once per seeded fault in
-a copy of the library or the parameters — a quote that no longer occurs in its clause, a cited clause gone from the
-clause layer (superseded or repealed), a parameter expired before the flow's date, a judgement's clause gone, a 口径
-anchor broken — and each must come out as a failure.
+"""Does the grounding check notice a missing basis? Gold case A is traced as it is (no failure), then once per seeded
+fault in a copy of the library or the parameters — a quote that no longer occurs in its clause, a cited clause gone from
+the clause layer (superseded or repealed), a parameter expired before the flow's date, a judgement's clause gone, a
+decision anchor broken — and each must come out as a failure.
 
     python -m tax_graph.verify.check_grounding
 """
@@ -46,15 +46,15 @@ def main():
         results.append((label, bool(got), len(got)))
 
     seeded("a parameter's quote no longer in its clause",
-           lambda lib, P: P.rows[rate].update(quote="这句话不在条文里"))
+           lambda lib, P: P.rows[rate].update(quote="this sentence is not in the clause"))
     seeded("the clause a parameter cites gone from the clause layer",
            lambda lib, P: lib.clauses.pop(cite))
     seeded("a parameter expired before the flow's date",
            lambda lib, P: P.rows[rate].update(effective_to="2020-12-31"))
     seeded("a judgement's clause gone from the clause layer",
            lambda lib, P: lib.clauses.pop(gaar))
-    seeded("a 口径 anchor's quote broken",
-           lambda lib, P: lib.decisions[did]["anchors"].__setitem__(0, (lib.decisions[did]["anchors"][0][0], "这句话不在条文里")))
+    seeded("a decision anchor's quote broken",
+           lambda lib, P: lib.decisions[did]["anchors"].__setitem__(0, (lib.decisions[did]["anchors"][0][0], "this sentence is not in the clause")))
     bad = 0
     for label, ok, n in results:
         bad += not ok

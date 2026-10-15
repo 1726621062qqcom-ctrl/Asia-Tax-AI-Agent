@@ -1,0 +1,157 @@
+[p.1] LEGALBENCH: A Collaboratively Built Benchmark | for Measuring Legal Reasoning in Large Language | Models
+[p.2] which, it is argued, make them more suited for legal tasks. The models’ capacity to learn  | from limited labeled data would reduce the manual data annotation costs that ordinarily bu | development of legal language models [13]. Their apparent proficiency at sophisticated rea
+[p.3] the potential impact and role of LLMs, we hope to grow LEGALBENCH by continuing to solict | and incorporate tasks from legal professionals.4 | In this paper, we make several contributions. First, we present a typology for organizing 
+[p.4] 3 | The LEGALBENCH typology | LEGALBENCH identifies six types of legal reasoning that LLMs can be evaluated for: (1) iss
+[p.5] The extent to which the outcome of the application and conclusion steps follow each other  | by the level of ambiguity in the fact patterns. When the law on a particular question is c | is little ambiguity in the facts (as the case in the above example), then the application 
+[p.6] Conclusion example: ucc_v_common_law | The UCC (through Article 2) governs the sale of goods, which are defined as moveable tangi | (cars, apples, books, etc.), whereas the common law governs contracts for real estate and 
+[p.7] function or has a certain property. An example is the definition_classification task, in w | must determine if a sentence from a judicial opinion provides a definition of a term. | Rhetorical-understanding example: definition_classification
+[p.8] to add tasks addressing these limitations. Finally, LEGALBENCH evaluates IRAC abilities in | law exams and other legal work requires lawyers to generate outputs which follow IRAC in a | (i.e., each aspect is applied to the same fact pattern).
+[p.9] Appendix provides more details on our approach to manual grading. All manual evaluation wa | reference to a grading guide, which we additionally make available. | 5.2
+[p.10] capable of performance that matches or exceeds certain commercial models. For instance, Fl | outperforms GPT-3.5 and Claude-1 383 on two categories (issue-spotting and rhetorical-unde | the relative gap in parameter count. Notably, the gap between closed and open-source model
+[p.11] Acknowledgments and Disclosure of Funding | We are grateful to the following individuals and groups for feedback on this project: Alex | Arjun Desai, Armin Thomas, Avanika Narayan, Ben Spector, Brandon Yang, Eric Nguyen, Gautam
+[p.12] References | [1] Neel Alex, Eli Lifland, Lewis Tunstall, Abhishek Thakur, Pegah Maham, C Jess Riedel, E | Carolyn Ashurst, Paul Sedille, Alexis Carlier, et al. Raft: A real-world few-shot text cla
+[p.13] [20] Ilias Chalkidis, Nicolas Garneau, Catalina Goanta, Daniel Martin Katz, and Anders Søg | and legallama: Facilitating english multinational legal language model development. arXiv  | arXiv:2305.07507, 2023.
+[p.14] [39] Ido Dagan, Oren Glickman, and Bernardo Magnini. The pascal recognising textual entail | In Machine Learning Challenges. Evaluating Predictive Uncertainty, Visual Object Classific | Recognising Tectual Entailment: First PASCAL Machine Learning Challenges Workshop, MLCW 20
+[p.15] [59] Dan Hendrycks, Collin Burns, Steven Basart, Andy Zou, Mantas Mazeika, Dawn Song, and  | Steinhardt. Measuring massive multitask language understanding. arXiv preprint arXiv:2009. | 2020.
+[p.16] [82] Bingfeng Luo, Yansong Feng, Jianbo Xu, Xiang Zhang, and Dongyan Zhao. Learning to pre | for criminal cases with legal basis. arXiv preprint arXiv:1707.09168, 2017. | [83] Vijit Malik, Rishabh Sanjay, Shouvik Kumar Guha, Angshuman Hazarika, Shubham Nigam, A
+[p.17] [102] Shounak Paul, Pawan Goyal, and Saptarshi Ghosh. Lesicin: A heterogeneous graph-based | automatic legal statute identification from indian legal documents. In Proceedings of the  | on artificial intelligence, volume 36, pages 11139–11146, 2022.
+[p.18] [121] Aarohi Srivastava, Abhinav Rastogi, Abhishek Rao, Abu Awal Md Shoeb, Abubakar Abid,  | Adam R Brown, Adam Santoro, Aditya Gupta, Adrià Garriga-Alonso, et al. Beyond the Imitatio | Quantifying and Extrapolating the Capabilities of Language Models. arXiv preprint arXiv:22
+[p.19] [142] Alex Warstadt, Amanpreet Singh, and Samuel R Bowman. Neural network acceptability ju | Transactions of the Association for Computational Linguistics, 7:625–641, 2019. | [143] Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Ed H. Chi, Quoc Le, and Denn
+[p.20] A | Outline | For the sake of clarity, we provide a brief outline of the Appendix.
+[p.21] stakeholders to conduct evaluations. We additionally note that LEGALBENCH, as a tool for r | substitute for more in-depth and context-specific evaluation efforts. The deployment of an | law must be accompanied by evaluation on in-domain data, and assessments for ethical and l
+[p.22] Nearly every LEGALBENCH task corresponds to a sample of a population, or entirely syntheti | contains a more detailed description for each dataset. We highlight several broader explan | in acquiring complete or representative data which generalizes across tasks:
+[p.23] LEGALBENCH data relates to people to the extent that LEGALBENCH contains tasks which conta | drawn from judicial cases involving individuals, or posts by individuals to legal forums ( | Tasks).
+[p.24] Were the individuals in question notified about the data collection? If so, please describ | screenshots or other information) how notice was provided, and provide a link or other acc | otherwise reproduce, the exact language of the notification itself.
+[p.25] D.6 | Distribution | Will the dataset be distributed under a copyright or other intellectual property (IP) lice
+[p.26] E | Task overview | E.1
+[p.27] Publication status | Tasks | Previously published tasks
+[p.28] NLP reasoning type | Tasks | Knowledge (e.g., MMLU [59], WikiFact in
+[p.29] Size range (samples) | Number of tasks | 50-100
+[p.30] Table 9 – continued from previous page | Task | Number of Samples
+[p.31] Table 9 – continued from previous page | Task | Number of Samples
+[p.32] Table 9 – continued from previous page | Task | Number of Samples
+[p.33] Table 9 – continued from previous page | Task | Number of Samples
+[p.34] F | Evaluation | This section describes metrics and evaluation protocols.
+[p.35] G | Task descriptions | This section provides a detailed description for each family of tasks.
+[p.36] Construction process | We manually create a dataset to evaluate a model’s ability to classify a mark’s | distinctiveness (into one of the above 5 categories) with respect to a product. In writing
+[p.37] G.2 | Canada Tax Court Outcomes | In LEGALBENCH, the Canada Tax Court Outcomes task is also denoted as canada_tax_court_outc
+[p.38] Excerpt | Outcome | The appeal is allowed in part and the assess-
+[p.39] G.3 | Citation Prediction Tasks | In the LEGALBENCH, the Citation Prediction tasks are also denoted as citation_prediction_*
+[p.40] Input | Citation | Supported?
+[p.41] G.4 | Clause Classification Tasks | LEGALBENCH includes a number of tasks in which the LLM must determine the “type” or “categ
+[p.42] Table 16 – continued from previous page | Task | Task name: cuad_affiliate_license-licensor
+[p.43] Table 16 – continued from previous page | Task | Description: Does the clause specify exclusive dealing commitment with the counterparty? T
+[p.44] Table 16 – continued from previous page | Task | Example: Eutectix agrees that in the event any Licensed Products shall be sold (1) to any 
+[p.45] Table 16 – continued from previous page | Task | Example: In consideration for the licenses granted to Corio pursuant to Section 2 (except 
+[p.46] Table 16 – continued from previous page | Task | Example: This Agreement shall be governed by and construed under the laws of the State of 
+[p.47] If the provision includes one or both of these components, it can be classified as a J.Cre | provision does not meet the criteria. | Construction process
+[p.48] Clause | J.Crew | Blocker
+[p.49] G.4.3 | Unfair Terms of Service | In LEGALBENCH, the Unfair Terms of Service task is denoted as unfair_tos.
+[p.50] Clause | Clause type | you also acknowledge that a variety of evernote actions may impair or
+[p.51] Class | Number of samples | Other
+[p.52] G.5 | Consumer Contracts QA | In LEGALBENCH, the Consumer Contracts QA task is denoted as consumer_contracts_qa.
+[p.53] Contract: Content Removal and Disabling or Terminating Your Account | We can remove any content or information you share on the Service if we believe that it vi | of Use, our policies (including our Instagram Community Guidelines), or we are permitted o
+[p.54] G.6 | Contract NLI Tasks | In LEGALBENCH, the Contract NLI tasks are denoted as contract_nli_*.
+[p.55] Table 23 – continued from previous page | Task | Example: 1. As used herein, the term “Proprietary Information” refers to any and all Infor
+[p.56] Table 23 – continued from previous page | Task | Example: If any party makes copies of the Confidential Information of the other party, suc
+[p.57] G.7 | Corporate Lobbying | In LEGALBENCH, the Corporate Lobbying task is denoted as corporate_lobbying.
+[p.58] Field | Text | Bill Title
+[p.59] G.8 | Definition Tasks | In LEGALBENCH, the Definition Tasks are denoted as definition_classification and definitio
+[p.60] Sentence | Definition sentence? | The risk of that consequence ought to tell us
+[p.61] G.9 | Diversity Jurisdiction | In LEGALBENCH, the Diversity Jurisdiction tasks are denoted as diversity_*.
+[p.62] Task | Facts | Diversity
+[p.63] G.10 | Function of Decision Section | In LEGALBENCH, the Function of Decision Section task is denoted as function_of_decision_se
+[p.64] Excerpt | Function | The Commission’s notice and orders, however, are to the contrary. From the very
+[p.65] G.11 | Hearsay | In LEGALBENCH, the hearsay task is denoted as hearsay.
+[p.66] Facts | Hearsay? | On the issue of whether Will knew that the com-
+[p.67] G.12 | Insurance Policy Interpretation | In
+[p.68] G.13 | International Citizenship Questions | In LEGALBENCH, the International Citizenship Questions task is denoted as international_ci
+[p.69] G.14 | Learned Hand Tasks | In LEGALBENCH, the Learned Hand tasks are denoted as learned_hand_*.
+[p.70] • Estates: A situation would have an estates issue if a person is dealing with an estate,  | guardianship. This may include issues around end-of-life planning, health and financial di | trusts, guardianships, conservatorships, and other estate issues that people and family de
+[p.71] process that paralegals or justice workers carry out over hotlines or in-person, to speed  | intake process. | 71
+[p.72] G.15 | Legal Reasoning Causality | In LEGALBENCH, the Legal Reasoning Causality task is denoted as legal_reasoning_causality.
+[p.73] Excerpt | Relies on statistical | evidence?
+[p.74] Class | Number of samples | Yes
+[p.75] G.16 | MAUD Tasks | In LEGALBENCH, the MAUD tasks are denoted as maud_*.
+[p.76] Table 36 – continued from previous page | Task | Example: Conditions to the Offer
+[p.77] Table 36 – continued from previous page | Task | Example: “Material Adverse Effect” means, with respect to BancorpSouth, Cadence or the Sur
+[p.78] Table 36 – continued from previous page | Task | Answer: A
+[p.79] Table 36 – continued from previous page | Task | Example: “Company Material Adverse Effect” shall mean any state of facts, circumstance, co
+[p.80] Table 36 – continued from previous page | Task | Question: Do pandemics or other public health events have to have disproportionate impact 
+[p.81] Table 36 – continued from previous page | Task | Example: “Material Adverse Effect” means, with respect to Huntington, TCF or the Surviving
+[p.82] Table 36 – continued from previous page | Task | Example: Section 5.1 Interim Operations of the Company and Parent.
+[p.83] Table 36 – continued from previous page | Task | Example: Except (w) with respect to the Specified Exceptions (other than as applied to Sec
+[p.84] Table 36 – continued from previous page | Task | Example: SECTION 5.3 No Solicitation by the Company; Company Recommendation. <omitted> (d)
+[p.85] Table 36 – continued from previous page | Task | Example: 6.1 No Solicitation. <omitted>
+[p.86] Table 36 – continued from previous page | Task | Example: Section 5.4 Non-Solicitation. <omitted>
+[p.87] Table 36 – continued from previous page | Task | Options: A: Known, but consequences unknown or not reasonably foreseeable, at signing; B: 
+[p.88] Table 36 – continued from previous page | Task | Answer: C
+[p.89] G.17 | New York State Judicial Ethics | In LEGALBENCH, the New York State Judicial Ethics task is denoted as nys_judicial_ethics.
+[p.90] G.18 | OPP-115 Tasks | In LEGALBENCH, the OPP-115 tasks are denoted as opp115_*.
+[p.91] Task/category | Example of clause | opp115_data_retention
+[p.92] G.19 | Purpose of Oral Argument Questions | In LEGALBENCH, the Purpose of Oral Argument Questions task is denoted as oral_argument_que
+[p.93] Question | Purpose | May I ask you a question about standing? So
+[p.94] G.20 | Overruling | In LEGALBENCH, the Overruling task is denoted as overruling.
+[p.95] G.21 | Personal Jurisdiction | In LEGALBENCH, the Personal Jurisdiction task is denoted as personal_jurisdiction.
+[p.96] Facts | Personal jurisdiction? | Dustin is a repairman who lives in Arizona and
+[p.97] G.22 | Privacy Policy Entailment | In LEGALBENCH, the Privacy Policy Entailment task is denoted as privacy_policy_entailment.
+[p.98] G.23 | Privacy Policy QA | In name, the Privacy Policy QA task is denoted as privacy_policy_qa.
+[p.99] G.24 | Private Right of Action (PROA) | In LEGALBENCH, the Private Right of Action task is denoted as proa.
+[p.100] The PROA task derives additional significance from a recent movement towards studying stat | language [153]. Legal scholars have long been unable to conduct large scale empirical stud | language, given the sheer volume of state statutes. The ability for LLMs to accurately cla
+[p.101] G.25 | Rule QA | In LEGALBENCH, the Rule QA task is denoted as rule_qa.
+[p.102] G.26 | SARA Tasks | In LEGALBENCH, the SARA tasks are denoted as sara_*.
+[p.103] Task name: sara_entailment | Statute: (2) an individual legally separated from his spouse under a decree of divorce or  | separate maintenance shall not be considered as married.
+[p.104] G.27 | SCALR | In LEGALBENCH, the SCALR task is denoted as scalr.
+[p.105] answerable without specific knowledge of a case. For example, we eliminated a case that pr | “Whether this Court’s decision in Harris v. United States, 536 U.S. 545 (2002), should be  | To create choices for each question presented, we first filter our set of parenthetical de
+[p.106] G.28 | Securities Complaint Extraction | In LEGALBENCH, the Securities Complaint Extraction tasks are denoted as ssla_*.
+[p.107] heading was not found, texts fragments were limited to 2,000 characters. Cases with both h | filtered to include only those with texts up to 2,000 characters, which excluded cases wit | sections. Thus, all observations in this dataset are 2,000 characters or less.
+[p.108] Table 47 – continued from previous page | Task | Excerpt: 11. Plaintiff, as set forth in th e attached certification, purchas ed Catalyst s
+[p.109] G.29 | Successor Liability | In LEGALBENCH, the Successor Liability task is denoted as successor_liability.
+[p.110] Facts | Issue | Relevant exception
+[p.111] G.30 | Supply Chain Disclosure Tasks | In LEGALBENCH, the Supply Chain Disclosure Tasks are denoted as supply_chain_disclosure_*.
+[p.112] Significance and value | Corporate disclosure requirements are a commonly used regulatory tool, but | evidence suggests that firms do not always fully comply with these disclosure requirements
+[p.113] G.31 | Telemarketing Sales Rule | In LEGALBENCH, the Telemarketing Sales Rule task is denoted as telemarketing_sales_rule.
+[p.114] G.32 | Textualism Tasks | In LEGALBENCH, the Textualism tasks are denoted as textualism_tool_*.
+[p.115] Input | Answer | overcome our prior interpretation of a statute
+[p.116] Input | Answer | we pause to note that even if congress sought, through the csra, to regulate the
+[p.117] G.33 | UCC vs Common Law | In LEGALBENCH, the UCC vs Common Law task is denoted as ucc_v_common_law.
+[p.118] H | Extended empirical study | We now present a fuller discussion of LEGALBENCH experiments. Specifically, we use LEGALBE
+[p.119] LLM | HuggingFace URL | Incite-Instruct-3B
+[p.120] Number of in-context demonstrations | Tasks | 0
+[p.121] LLM | Issue | Rule
+[p.122] The gap between open-source and commercial models | Finally, we find evidence that open-source | models are capable of performance that matches or exceeds certain commercial models. For i
+[p.123] because the telemarketer failed to make a mandatory disclosure (16 CFR § 310.3(a)(1)), but | the rule prohibiting misrepresentations (16 CFR § 310.3(a)(2)). Examples of other types of | can be found in Table 57.
+[p.124] Fact Pattern (task) | LLM generation | What analysis is missing?
+[p.125] Slice | Slice description | GPT-3.5
+[p.126] Figure 3: We compare performance of prompts which describe the legal rule to be applied (“ | tion”) against prompts which reference the legal rule to be applied (“reference”). Error b | standard error, computed using a bootstrap with 1000 resamples.
+[p.127] Figure 4: We compare performance of prompts which describe the task in plain language to p | which describe the task in technical legal language (for GPT-3.5). Error bars measure stan | computed using a bootstrap with 1000 resamples.
+[p.128] Under a permutation test, we find significant differences (p < 0.01) between the best and  | prompt for Incite-Instruct (on all tasks), and for GPT-3.5 (on all tasks except opp115_thi | collection and overruling).37 For many tasks, the magnitude of difference is substantial. 
+[p.129] Task | Flan | Llama-2
+[p.130] Task | GPT-4 | GPT-3.5
+[p.131] Task | Bloom | Falcon
+[p.132] Task | Bloom | Flan
+[p.133] Task | Flan | Llama-2
+[p.134] Task | Bloom | Flan
+[p.135] Task | Flan | Llama-2
+[p.136] Task | Bloom | Flan
+[p.137] Table 78: Commercial models on interpretation tasks. | Task | GPT-4
+[p.138] Table 78 – continued from previous page | Task | GPT-4
+[p.139] Table 78 – continued from previous page | Task | GPT-4
+[p.140] Table 78 – continued from previous page | Task | GPT-4
+[p.141] Table 79 – continued from previous page | Task | Flan
+[p.142] Table 79 – continued from previous page | Task | Flan
+[p.143] Table 79 – continued from previous page | Task | Flan
+[p.144] Task | BLOOM | Falcon
+[p.145] Task | BLOOM | Falcon
+[p.146] Task | BLOOM | Falcon
+[p.147] Task | BLOOM | Falcon
+[p.148] Task | BLOOM | Falcon
+[p.149] Task | BLOOM | Falcon
+[p.150] Task | BLOOM | Falcon
+[p.151] Task | BLOOM | Falcon
+[p.152] Task | BLOOM | Falcon
+[p.153] Task | BLOOM | Falcon
+[p.154] Table 81: 3B models on interpretation tasks. | Task | BLOOM
+[p.155] Table 81 – continued from previous page | Task | BLOOM
+[p.156] Table 81 – continued from previous page | Task | BLOOM
+[p.157] Table 81 – continued from previous page | Task | BLOOM

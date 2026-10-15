@@ -1,0 +1,54 @@
+{
+ "case_id": "K4-yunnanwater-2023",
+ "kind": "K4",
+ "template": "holding",
+ "subject": "GROUP",
+ "members": ["ULT", "HOLD", "OP"],
+ "roles": {
+  "ULT": {"loc": "HK", "attrs": {"incorporated_in": "HK"}},
+  "HOLD": {"loc": "BVI", "attrs": {"incorporated_in": "BVI"}},
+  "OP": {"loc": "CN", "attrs": {"incorporated_in": "CN"}},
+  "BUYER": {"loc": "HK", "attrs": {"incorporated_in": "HK"}}
+ },
+ "holds": [
+  {"holder": "ULT", "held": "HOLD", "ratio": 100.0, "since": "2020-08-26"},
+  {"holder": "HOLD", "held": "OP", "ratio": 100.0, "since": "2022-02-28", "cost": 123947000.0}
+ ],
+ "flows": {"exit": {"indirect_cn_target": true, "cn_value_ratio": 99.99, "cn_asset_ratio": 99.96, "limited_functions_and_risks": true,
+                    "listed_market_trade": false}},
+ "present": {"HOLD": "BVI", "exit_route": "INDIRECT"},
+ "settled": {},
+ "event": {"exit": 296259700.0, "on": "2022-11-03"},
+ "provenance": {
+  "roles.ULT.loc": {"kind": "disclosed", "source": "K4-yunnanwater-2023", "page": "pdf 5", "quote": "Yunnan Water (Hong Kong) Company Limited, a company incorporated in Hong Kong with limited liability"},
+  "roles.ULT.attrs.incorporated_in": {"kind": "disclosed", "source": "K4-yunnanwater-2023", "page": "pdf 5", "quote": "a company incorporated in Hong Kong with limited liability"},
+  "roles.HOLD.loc": {"kind": "disclosed", "source": "K4-yunnanwater-2023", "page": "pdf 14", "quote": "The Target Company is a company incorporated in the British Virgin Islands with limited liability, and is a wholly-owned subsidiary of Yunnan Water (Hong Kong), which is in turn a wholly-owned subsidiary of the Company."},
+  "roles.HOLD.attrs.incorporated_in": {"kind": "disclosed", "source": "K4-yunnanwater-2023", "page": "pdf 14", "quote": "The Target Company is a company incorporated in the British Virgin Islands with limited liability"},
+  "roles.OP.loc": {"kind": "disclosed", "source": "K4-yunnanwater-2023", "page": "pdf 4", "quote": "a limited liability company established in the PRC and one of the Project Companies"},
+  "roles.OP.attrs.incorporated_in": {"kind": "disclosed", "source": "K4-yunnanwater-2023", "page": "pdf 4", "quote": "a limited liability company established in the PRC and one of the Project Companies"},
+  "roles.BUYER.loc": {"kind": "disclosed", "source": "K4-yunnanwater-2023", "page": "pdf 4", "quote": "Global Environment Investment (HK) Limited, a limited liability company incorporated in Hong Kong"},
+  "roles.BUYER.attrs.incorporated_in": {"kind": "disclosed", "source": "K4-yunnanwater-2023", "page": "pdf 4", "quote": "a limited liability company incorporated in Hong Kong"},
+  "holds.ULT>HOLD.ratio": {"kind": "disclosed", "source": "K4-yunnanwater-2023", "page": "pdf 60", "quote": "Yunshui Technology Co., Ltd. was held by Yunnan Water (Hong Kong) Company Limited as to 100% of its equity interest."},
+  "holds.ULT>HOLD.since": {"kind": "disclosed", "source": "K4-yunnanwater-2023", "page": "pdf 60", "quote": "Yunshui Technology Co., Ltd. was established on 26 August 2020 and registered in the British Virgin Islands."},
+  "holds.ULT>HOLD.cost": {"kind": "missing", "source": "K4-yunnanwater-2023", "page": "pdf 60", "note": "the seller's cost of the BVI company's shares is not disclosed as an amount, only \"registered capital of US$1\""},
+  "holds.HOLD>OP.ratio": {"kind": "disclosed", "source": "K4-yunnanwater-2023", "page": "pdf 14", "quote": "The principal business of the Target Company is investment holding. The Target Company holds the entire equity interests in each of the Project Companies"},
+  "holds.HOLD>OP.since": {"kind": "derived", "source": "K4-yunnanwater-2023", "page": "pdf 27", "quote": "were transferred to the Target Company at a consideration of approximately RMB123,947,000 in February 2022", "formula": "the reorganisation was completed in February 2022; the last day of that month, 2022-02-28, is taken as the start of the holding (only a lower bound for the holding period)"},
+  "holds.HOLD>OP.cost": {"kind": "disclosed", "source": "K4-yunnanwater-2023", "page": "pdf 27", "quote": "were transferred to the Target Company at a consideration of approximately RMB123,947,000 in February 2022 (the “Reorganisation”) and the Project Companies became the wholly-owned subsidiaries of the Target Company upon completion of the Reorganisation."},
+  "flows.exit.indirect_cn_target": {"kind": "derived", "source": "K4-yunnanwater-2023", "page": "pdf 14", "quote": "The Target Company holds the entire equity interests in each of the Project Companies", "formula": "the BVI company holds all the equity of four Mainland project companies: transferring the BVI shares is an indirect transfer of Mainland taxable property (公告2015年第7号 Article 1)"},
+  "flows.exit.cn_value_ratio": {"kind": "derived", "source": "K4-yunnanwater-2023", "page": "pdf 103", "quote": "Of which: Long-term equity investment 12,394.73 42,047.36 29,652.63 239.24", "formula": "appraised values: long-term equity investments 42,047.36 ÷ total assets 42,052.48 (RMB ten thousand) = 99.99% (公告2015年第7号 Article 4(1) looks at the share of the foreign enterprise's equity value derived from Chinese taxable property)"},
+  "flows.exit.cn_asset_ratio": {"kind": "derived", "source": "K4-yunnanwater-2023", "page": "pdf 103", "quote": "Total assets 12,399.85 42,052.48 29,652.63 239.14", "formula": "book values: long-term equity investments 12,394.73 ÷ total assets 12,399.85 (RMB ten thousand) = 99.96% (公告2015年第7号 Article 4(2) looks at the asset composition)"},
+  "flows.exit.limited_functions_and_risks": {"kind": "derived", "source": "K4-yunnanwater-2023", "page": "pdf 60", "quote": "It is a newly established company with no substantial business operations at present.", "formula": "the valuation report says the BVI company is a holding platform with no substantive operations (pdf 60) and had carried on no actual business as at the valuation date (pdf 79) — 公告2015年第7号 Article 4(3)"},
+  "flows.exit.listed_market_trade": {"kind": "derived", "source": "K4-yunnanwater-2023", "formula": "what is transferred is 100% of a BVI limited company, taken up by the sole qualified bidder through a public listing-for-sale (pdf 8), not a public market trade in listed shares"},
+  "present.HOLD": {"kind": "disclosed", "source": "K4-yunnanwater-2023", "page": "pdf 14", "quote": "The Target Company is a company incorporated in the British Virgin Islands with limited liability"},
+  "present.exit_route": {"kind": "disclosed", "source": "K4-yunnanwater-2023", "page": "pdf 7", "quote": "Under the Disposal, Yunnan Water (Hong Kong) has agreed to sell, and Global Environment Investment has agreed to acquire, 100% interest in the Target Company."},
+  "event.exit": {"kind": "disclosed", "source": "K4-yunnanwater-2023", "page": "pdf 7", "quote": "The Consideration of the Disposal is RMB296,259,700, which was determined and equivalent to the appraised value of the Disposal Interest as at 31 December 2021 by an independent PRC valuer"},
+  "event.on": {"kind": "disclosed", "source": "K4-yunnanwater-2023", "page": "pdf 10", "quote": "The Consideration was paid by Global Environment Investment on 3 November 2022."}
+ },
+ "company_estimate": {"CN": 11215000.0, "page": "pdf 37", "quote": "The estimated tax effect of the Disposal amounted to RMB11,215,000 represents the PRC enterprise income tax calculated based on a tax rate of 10% on taxable disposal gain arising from the transfer of equity interests in the Project Companies", "use": "for comparison only: 10% corresponds to taxable income of about RMB112.15m, i.e. deductions of about RMB184.11m; the circular does not disclose the revenue and deductions used, and the seller's cost of the BVI shares is not disclosed as an amount either"},
+ "notes": [
+  "Source: Yunnan Water Investment (6839.HK) circular of 2023-02-24 (cases/sources/K4-yunnanwater-2023/source.pdf). A Hong Kong company sells the BVI company holding four Mainland project companies: an indirect transfer of Mainland taxable property.",
+  "The four project companies are combined into OP (the BVI company holds 100% of each, and their aggregate appraised value equals its long-term equity investments); the listed parent (a Mainland joint stock company) above the seller is not modelled.",
+  "The BVI company is outside the three jurisdictions: the tax of the existing structure is evaluated directly on the existing structure; the planner's candidates place intermediate holding companies only in the Mainland, Hong Kong and Singapore.",
+  "Amounts are in RMB."
+ ]
+}

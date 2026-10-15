@@ -1,0 +1,155 @@
+{
+ "model": "deepseek-flash",
+ "case": "K3-jst-2026",
+ "samples": 2,
+ "rows": [
+  {
+   "path": "roles.ULT.loc",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "quote": "Hong Kong True Value Limited (“HK True Value”) was incorporated in Hong Kong with a limited liability on 4 October 2021 as an intermediate holding company of the Group.",
+   "rejected": []
+  },
+  {
+   "path": "roles.ULT.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "quote": "on October 4, 2021, Hong Kong True Value Limited was incorporated as a limited liability company in Hong Kong and a direct wholly-owned subsidiary of True Value Limited.",
+   "rejected": []
+  },
+  {
+   "path": "roles.ULT.attrs.is_mne_member",
+   "kind": "derived",
+   "gold": true,
+   "value": true,
+   "status": "correct",
+   "quote": "on September 14, 2021, True Value Limited was incorporated as an exempted company with limited liability in BVI, a direct wholly-owned subsidiary of our Company and an intermediate holding company of our Group; and (b) on October 4, 2021, Hong Kong True Value Limited was incorporated as a limited li",
+   "rejected": []
+  },
+  {
+   "path": "roles.ULT.attrs.group_revenue_eur",
+   "kind": "derived",
+   "gold": 120885764.78,
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "roles.OP.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "quote": "Shanghai Jushuitan was established in the PRC on September 26, 2014 as a limited liability company with a registered capital of RMB500,000.",
+   "rejected": []
+  },
+  {
+   "path": "roles.OP.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "quote": "“Shanghai Jushuitan” Shanghai Jushuitan Network Technology Co., Ltd. (上海聚水潭網絡科技有限公司), a limited liability company established under the laws of the PRC on September 26, 2014 and our wholly-owned subsidiary.",
+   "rejected": []
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "kind": "disclosed",
+   "gold": 100.0,
+   "value": 100.0,
+   "status": "correct",
+   "quote": "On the same day of 5 September 2023, HK True Value further acquired the remaining 8.6483% equity interests in Shanghai Jushuitan from Broad Street, StoneBridge, StoneBridge II and CICC Gongying Fund at an aggregate consideration of RMB 490,000,000 or equivalent US dollars and Shanghai Jushuitan beca",
+   "rejected": []
+  },
+  {
+   "path": "holds.ULT>OP.since",
+   "kind": "derived",
+   "gold": "2023-09-05",
+   "value": "2023-02-21",
+   "status": "wrong",
+   "quote": "On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte. Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund) transferred to Hong Kong True Value Limited their equity in",
+   "rejected": []
+  },
+  {
+   "path": "holds.ULT>OP.cost",
+   "kind": "missing",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "flows.out.foreign_taxed",
+   "kind": "derived",
+   "gold": true,
+   "value": null,
+   "status": "disagree",
+   "quote": null,
+   "rejected": [
+    "samples disagree: null / True"
+   ]
+  },
+  {
+   "path": "flows.out.foreign_headline_rate",
+   "kind": "disclosed",
+   "gold": 25,
+   "value": 25.0,
+   "status": "correct",
+   "quote": "The general corporate income tax rate in the PRC is 25%.",
+   "rejected": []
+  },
+  {
+   "path": "flows.out.deductible_at_payer",
+   "kind": "derived",
+   "gold": false,
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "present.HOLD",
+   "kind": "derived",
+   "gold": "NONE",
+   "value": "NONE",
+   "status": "correct",
+   "quote": "After the completion of the above transfers of equity interests, Shanghai Jushuitan has become a wholly foreign-owned enterprise wholly-owned by Hong Kong True Value Limited, and thus an indirect wholly-owned subsidiary of our Company.",
+   "rejected": []
+  },
+  {
+   "path": "event.on",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "event.dividend",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "quote": null,
+   "rejected": []
+  }
+ ],
+ "usage": {
+  "calls": 25,
+  "prompt_tokens": 347697,
+  "completion_tokens": 39114,
+  "cache_hit_tokens": 5247,
+  "seconds": 245.51384353637695,
+  "retries": 0
+ },
+ "wall": 245.7,
+ "error": null,
+ "notes": []
+}

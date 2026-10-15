@@ -1,0 +1,309 @@
+{
+ "model": "deepseek-flash",
+ "case": "K3-jst-2026",
+ "samples": 2,
+ "k": 3,
+ "locate": "retrieval",
+ "patterns": true,
+ "dense": true,
+ "temperature": 0.7,
+ "prompt_version": "2026-10-14c",
+ "rows": [
+  {
+   "path": "roles.ULT.loc",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "Upon completion of such allotment and issue, True Value\nLimited became directly wholly-owned by the Company.\n(c)\nIncorporation of an offshore subsidiary in Hong Kong\nHong Kong True Value Limited (“HK True Value”) was incorporated in Hong Kong with a limited\nliability on 4 October 2021 as an intermed",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 1,
+    "pattern_values": 1
+   }
+  },
+  {
+   "path": "roles.ULT.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "Upon completion of such allotment and issue, True Value\nLimited became directly wholly-owned by the Company.\n(c)\nIncorporation of an offshore subsidiary in Hong Kong\nHong Kong True Value Limited (“HK True Value”) was incorporated in Hong Kong with a limited\nliability on 4 October 2021 as an intermed",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 1,
+    "pattern_values": 1
+   }
+  },
+  {
+   "path": "roles.ULT.attrs.is_mne_member",
+   "kind": "derived",
+   "gold": true,
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 0,
+    "nulls": 3,
+    "rejects": 0
+   }
+  },
+  {
+   "path": "roles.ULT.attrs.group_revenue_eur",
+   "kind": "derived",
+   "gold": 120885764.78,
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 0,
+    "nulls": 3,
+    "rejects": 0
+   }
+  },
+  {
+   "path": "roles.OP.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "The Company and its subsidiaries (hereinafter collectively\nreferred to as the “Group”) are principally engaged in providing e-commerce SaaS ERP service in the People’s\nRepublic of China (the “PRC”) (the “Listing Business”).\n1.2\nReorganisation\nPrior to incorporation of the Company and the completion ",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 1,
+    "pattern_values": 1
+   }
+  },
+  {
+   "path": "roles.OP.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "The Company and its subsidiaries (hereinafter collectively\nreferred to as the “Group”) are principally engaged in providing e-commerce SaaS ERP service in the People’s\nRepublic of China (the “PRC”) (the “Listing Business”).\n1.2\nReorganisation\nPrior to incorporation of the Company and the completion ",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 1,
+    "pattern_values": 1
+   }
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "kind": "disclosed",
+   "gold": 100.0,
+   "value": null,
+   "status": "conflict",
+   "means": "pattern",
+   "quote": null,
+   "rejected": [
+    "conflict: 91.35 / 8.65"
+   ],
+   "conflict": [
+    {
+     "value": 91.35,
+     "doc": "K3-jst-2025",
+     "quote": "Ltd., StoneBridge 2020, L.P.,\nStoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund) transferred to Hong\nKong True Value Limited their equity interests in Shanghai Jushuitan equivalent to\nRMB3,484,473 of registered share capital, representing 91.35% of the then share capital of\nShanghai Jushuitan, at an aggregate consideration of RMB3,484,473.\nOn September 5, 2023, Broad Street Investments Holding (Singapore) Pte.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    },
+    {
+     "value": 8.65,
+     "doc": "K3-jst-2025",
+     "quote": "Ltd.,\nStoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying\nFund transferred to Hong Kong True Value Limited their equity interests in Shanghai Jushuitan\nequivalent to RMB329,878 of registered capital, representing 8.65% of the then share capital\nof Shanghai Jushuitan, at an aggregate consideration of RMB140 million and the USD\nequivalent of RMB350 million.\nAfter the completion of the above transfers of equity interests, Shanghai Jushuitan has\nbecome a wholly foreign-owned enterprise wholly-owned by Hong Kong True Value Limited,\nand thus an indirect wholly-owned subsidiary of our Company.\nHISTORY, REORGANIZATION AND CORPORATE STRUCTURE\n– 154 –",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    }
+   ],
+   "features": {
+    "pattern_hits": 2,
+    "pattern_values": 2
+   }
+  },
+  {
+   "path": "holds.ULT>OP.since",
+   "kind": "derived",
+   "gold": "2023-09-05",
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 0,
+    "nulls": 3,
+    "rejects": 0
+   }
+  },
+  {
+   "path": "holds.ULT>OP.cost",
+   "kind": "missing",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 0,
+    "nulls": 3,
+    "rejects": 0
+   }
+  },
+  {
+   "path": "flows.out.foreign_taxed",
+   "kind": "derived",
+   "gold": true,
+   "value": true,
+   "status": "correct",
+   "means": "model",
+   "quote": "According to the New Corporate Income Tax Law (“New EIT Law”), distribution of profits earned by PRC companies since 1 January 2008 to foreign investors is subject to withholding tax of 5% or 10%, depending on if the foreign investor is considered as the beneficial owner of the dividend according to",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 2,
+    "nulls": 1,
+    "rejects": 0,
+    "agree": 0.667,
+    "quote_len": 498,
+    "figures_in_quote": 4,
+    "score": 0.03154
+   }
+  },
+  {
+   "path": "flows.out.foreign_headline_rate",
+   "kind": "disclosed",
+   "gold": 25,
+   "value": 25.0,
+   "status": "correct",
+   "means": "model",
+   "quote": "The general corporate income tax rate in the PRC is 25%.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 2,
+    "nulls": 1,
+    "rejects": 0,
+    "agree": 0.667,
+    "quote_len": 56,
+    "figures_in_quote": 1,
+    "score": 0.03333
+   }
+  },
+  {
+   "path": "flows.out.deductible_at_payer",
+   "kind": "derived",
+   "gold": false,
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 0,
+    "nulls": 3,
+    "rejects": 0
+   }
+  },
+  {
+   "path": "present.HOLD",
+   "kind": "derived",
+   "gold": "NONE",
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 0,
+    "nulls": 3,
+    "rejects": 0
+   }
+  },
+  {
+   "path": "event.on",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 0,
+    "nulls": 3,
+    "rejects": 0
+   }
+  },
+  {
+   "path": "event.dividend",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 0,
+    "nulls": 3,
+    "rejects": 0
+   }
+  }
+ ],
+ "usage": {
+  "calls": 30,
+  "prompt_tokens": 17105,
+  "completion_tokens": 11520,
+  "cache_hit_tokens": 3840,
+  "seconds": 101.24338793754578,
+  "retries": 0,
+  "cached": 0
+ },
+ "wall": 143.4,
+ "error": null,
+ "notes": []
+}

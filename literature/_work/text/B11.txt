@@ -1,0 +1,2650 @@
+=== [p.1] ===
+NBER WORKING PAPER SERIES
+THE MISSING PROFITS OF NATIONS
+Thomas R. Tørsløv
+Ludvig S. Wier
+Gabriel Zucman
+Working Paper 24701
+http://www.nber.org/papers/w24701
+NATIONAL BUREAU OF ECONOMIC RESEARCH
+1050 Massachusetts Avenue
+Cambridge, MA 02138
+June 2018, Revised April 2020
+We thank Alan Auerbach, Johannes Becker, Olivier Blanchard, David Bradbury, Richard 
+Bolwijn, Iain Campbell, Kimberly Clausing, Alex Cobham, Mihir Desai, Michael Devereux, Fritz 
+Foley, Maya Forstater, Teresa Fort, Roger Gordon, Martin Hearson, Niels Johannesen, Petr 
+Janský, Michael Keen, Edward Kleinbard, Claus Kreiner, Paul Krugman, Gaetan Nicodeme, 
+Mitchell Petersen, Thomas Piketty, Nadine Riedel, Dani Rodrik, Emmanuel Saez, Juan Carlos 
+Suárez Serrato, Felix Tintelnot, John Van Reenen, Eric Zwick, and numerous seminar and 
+conference participants for helpful comments and reactions. Zucman acknowledges financial 
+support from Arnold Ventures and the FRIPRO program of the Research Council of Norway. The 
+authors retain sole responsibility for the views expressed in this research. An appendix and all 
+data and code are available online at http://missingprofits.world  The authors retain sole 
+responsibility for the views expressed in this research, which do not necessarily reflect the views 
+of the National Bureau of Economic Research.
+NBER working papers are circulated for discussion and comment purposes. They have not been 
+peer-reviewed or been subject to the review by the NBER Board of Directors that accompanies 
+official NBER publications.
+© 2018 by Thomas R. Tørsløv, Ludvig S. Wier, and Gabriel Zucman. All rights reserved. Short 
+sections of text, not to exceed two paragraphs, may be quoted without explicit permission 
+provided that full credit, including © notice, is given to the source.
+=== [p.2] ===
+The Missing Profits of Nations
+Thomas R. Tørsløv, Ludvig S. Wier, and Gabriel Zucman 
+NBER Working Paper No. 24701
+June 2018, Revised April 2020
+JEL No. F23,H26,H87
+ABSTRACT
+By exploiting new macroeconomic data known as foreign affiliates statistics, we show that 
+affiliates of foreign multinational firms are an order of magnitude more profitable than local firms 
+in low-tax countries. By contrast, affiliates of foreign multinationals are less profitable than local 
+firms in high-tax countries. Leveraging this differential profitability, we estimate that close to 
+40% of multinational profits are shifted to tax havens globally. We analyze how the location of 
+corporate profits would change if all countries adopted the same effective corporate tax rate, 
+keeping global profits and investment constant. Profits would increase by about 15% in high-tax 
+European Union countries, 10% in the United States, while they would fall by 60% in today's tax 
+havens. We provide a new international database of GDP, trade balances, and factor shares 
+corrected for profit shifting, showing that the rise of the corporate capital share is significantly 
+under-estimated in high-tax countries.
+Thomas R. Tørsløv
+University of Copenhagen,
+Øster Farimagsgade 5
+DK-1353 Copenhagen
+thomas.torslov@econ.ku.dk
+Ludvig S. Wier
+UC Berkeley
+530 Evans Hall #3880
+Berkeley, CA 94720
+ludvig.wier@econ.ku.dk
+Gabriel Zucman
+Department of Economics
+University of California, Berkeley
+530 Evans Hall, #3880
+Berkeley, CA 94720
+and NBER
+zucman@berkeley.edu
+Appendix and Data are available at http://gabriel-zucman.eu/missingprofits/
+=== [p.3] ===
+1
+Introduction
+Perhaps the most striking development in tax policy throughout the world over the last few
+decades has been the decline in corporate income tax rates. Between 1985 and 2018, the global
+average statutory corporate tax rate has fallen by about half, from 49% to 24%. In 2018, the
+United States cut its rate from 35% to 21%.
+One reason for this decline is international tax competition. By cutting their tax rates,
+countries can attract capital and proﬁts from abroad (see Keen and Konrad, 2013, for a survey
+of the large literature on tax competition). Despite the prominence of tax competition in both
+the academic literature and the public debate, however, we do not currently have comprehensive
+estimates of how much proﬁt each country loses or attracts because of international diﬀerences
+in corporate tax rates. Although there are excellent data on U.S. multinationals, which have
+been used extensively to study the location and tax-optimization choices of U.S. ﬁrms,1 until
+recently there was no similar data covering the multinationals of other countries. As a result,
+we do not currently have a clear view of the extent to which globalization and tax competition
+are redistributing proﬁts across nations.
+Our paper attempts to ﬁll this gap by drawing on new data. In recent years, the statistical
+institutes of most of the world’s developed countries—including the major tax havens—have
+started releasing new macroeconomic data known as foreign aﬃliates statistics. Following new
+international guidelines, these statistics record the wages and proﬁts of foreign ﬁrms, deﬁned
+as ﬁrms more than 50% owned by foreign shareholders (i.e., typically subsidiaries of foreign
+multinational companies). By combining these data with existing national accounts aggregates
+which cover all ﬁrms incorporated in a given country, we can estimate the proﬁts made and
+wages paid in each country by local ﬁrms (i.e., all ﬁrms incorporated in a given country which
+are not foreign) and foreign ﬁrms separately. This makes it possible to obtain a comprehensive
+view of where multinational companies book their proﬁts, and in particular to estimate the
+amount of proﬁt booked in tax havens globally.2
+Using our new database, we consider the following thought experiment. Imagine that all
+countries agreed tomorrow to a perfect international tax harmonization, i.e., agreed to apply
+the same eﬀective corporate income tax rate, keeping global proﬁts and the global capital stock
+1See, e.g., Gravelle (2009), Clausing (2009, 2016), Guvenen et al. (2018).
+2A number of papers attempt to estimate the amount of proﬁts shifted globally (Crivelli, de Mooij and Keen,
+2015; Bolwijn et al., 2018, Cobham and Jansk´y, 2018) and the implied tax revenue losses. To our knowledge,
+however, it is the ﬁrst time that proﬁts gains and losses for each country are estimated based on directly
+observable data covering the activities of multinationals in tax havens.
+1
+=== [p.4] ===
+constant. By how much would proﬁts booked in the United States, the European Union, and de-
+veloping countries increase compared to today’s situation—and by how much would they fall in
+low-tax places like Ireland? And would a lot of capital move back to today’s high tax-countries
+(with potentially signiﬁcant eﬀect on wages, depending on the elasticity of substitution between
+capital and labor), or would ﬁrms merely change the location of paper proﬁts without many
+tangible assets moving across borders? In other words, how does tax competition redistribute
+proﬁts internationally and what is the relative importance of tax competition for tangible capital
+vs. tax competition for paper proﬁts? Answering these questions is important to better under-
+stand the redistributive impacts of globalization, that is, which countries (and social groups)
+have gained most from it, and which have gained less or lost.
+The new foreign aﬃliates statistics exploited in this paper have a number of strengths to
+address these questions. They are more comprehensive than ﬁnancial accounting data on which
+a lot of the literature is based (see Section 2). They provide direct information on the proﬁts
+booked in tax havens and do not double-count the proﬁts of indirectly-held aﬃliates. We stress
+at the outset, however, that we are well aware of the deﬁciencies of existing foreign aﬃliates
+statistics; in many ways, these statistics are still in their infancy.
+Despite their limitations
+(discussed in Section 4.2 below), these macro data are at present the most comprehensive that
+exist to study the activities of multinational corporations in a global perspective, a question
+so important that we cannot wait for perfect data before we start addressing it (and which
+has indeed been addressed in the past by many authors using less comprehensive data than we
+presently have). In addition, we feel that a useful way for scholars to contribute to future data
+improvement is to use the existing statistics in a systematic manner, so as to better identify
+their limits and how these limits could be overcome. Our article, therefore, can also be viewed as
+an attempt to assess the internal consistency of the foreign aﬃliates statistics of all the world’s
+countries, and to pinpoint the areas in which progress needs to be made.
+Using our new database, we document a simple but striking fact: Foreign ﬁrms are sys-
+tematically more proﬁtable than local ﬁrms in low-tax countries, while the opposite is true in
+high-tax countries. More precisely, for local ﬁrms (i.e., ﬁrms that are not subsidiaries of a foreign
+multinational group) the ratio of pre-tax proﬁts to wages is typically around 30%–40% in both
+high-tax and low-tax countries. For foreign ﬁrms, the ratio of pre-tax proﬁts to wages is an
+order of magnitude higher than 30%–40% in low-tax countries, while it is lower than 30%–40%
+in high-tax countries. For example, foreign ﬁrms in Ireland (a low-tax country) have a proﬁts-
+to-wage ratio of 800%: for $1 of wage paid to Irish employees, foreign multinationals report $8
+2
+=== [p.5] ===
+in pre-tax proﬁts in Ireland.3 In the UK by contrast, foreign ﬁrms have a proﬁts-to-wage ratio
+of 26% only. Global macro data thus show a large redistribution of proﬁts within divisions of
+multinational companies, away from high-tax countries and towards low-tax places.
+To better understand the high proﬁts booked in tax havens, we provide decompositions
+into real eﬀects (more tangible capital used by foreign ﬁrms in tax havens) and proﬁt shifting
+eﬀects (above-normal returns to capital and receipts of interest).
+This distinction matters
+because these two processes have diﬀerent distributional implications. Movements of tangible
+capital across borders aﬀect wages, to the extent that tangible capital has a ﬁnite elasticity of
+substitution with labor. By contrast, movements of paper proﬁts (i.e., proﬁt shifting) don’t: for
+a given global proﬁtability, whether proﬁt is booked in the United States or in Bermuda has no
+reason to aﬀect workers’ productivity in either of these places. Our results show that the high
+proﬁts-to-wage ratios of multinationals in tax havens are primarily explained by shifting eﬀects.
+Tangible capital is internationally mobile—and there is evidence that this mobility has become
+slightly more correlated with tax rates over the last twenty years—but globally, machines have
+not massively moved to low-tax places; paper proﬁts have.
+Using the diﬀerential proﬁtability of foreign ﬁrms in high- vs. low-tax countries, and new
+bilateral balance of payments data recently published by tax havens, we develop a methodology
+to estimate the amount of proﬁt shifted into each haven and the proﬁt loss for individual high-
+tax countries. Our computations are relative to a benchmark in which, keeping global proﬁt
+ﬁxed, all countries had the same eﬀective corporate tax rate (for instance, all countries applied
+the current global average eﬀective corporate tax rate).4 Globally, we ﬁnd that close to 40%
+of multinational proﬁts—deﬁned as proﬁts made by multinational companies outside of the
+country where their parent is located—are shifted to tax havens in 2015. The governments of
+the (non-haven) European Union countries appear to be the prime losers of this shifting, with
+a reduction in proﬁt of about 20% relative to our benchmark. The governments of tax havens
+derive sizable beneﬁts from this phenomenon: by taxing the large amount of paper proﬁts they
+attract at very low rates (typically less than 5%), they generate more tax revenue, as a fraction
+of their national income, than the United States and non-haven European countries that have
+much higher rates. We also ﬁnd that U.S. multinationals shift comparatively more proﬁts than
+3This corresponds to a capital share of corporate value-added of 80%–90% in foreign ﬁrms operating in
+Ireland, vs. around 25% in local Irish ﬁrms.
+4We do not have anything to say in this paper about the eﬀect of increasing or cutting the global eﬀective
+corporate tax rate, a question studied by the large literature on the eﬃciency costs of capital taxation. Instead,
+we take the global eﬀective corporate tax rate as given, and ask how the geography of proﬁts and capital would
+change if all countries applied it.
+3
+=== [p.6] ===
+multinationals from other countries.
+Our estimate for the amount of proﬁt shifted globally—close to 40% of multinational proﬁts—
+is sizable, but it appears to be well founded empirically. In particular, we ﬁnd similar magnitudes
+using two fully independent methodologies and data sources: our benchmark “above-normal
+proﬁtability” methodology, based on the high proﬁts-to-wage ratios recorded in foreign aﬃli-
+ates statistics by foreign ﬁrms in tax havens, and an “above-normal cross-border transactions”
+methodology, based on the high exports of services and receipts of intra-group interest recorded
+in the balances of payments of tax havens. In 2015, the “above normal proﬁtability” yields
+an estimate of $616 billion for the amount of proﬁt shifted to tax havens globally, while the
+“above-normal cross-border transactions” methodology yields an estimate of $646 billion.
+We discuss two main implications of these ﬁndings.
+First, our results suggest that the
+headline economic indicators—including GDP, trade balances, and corporate labor and capital
+shares—of a number of countries are distorted. The ﬂip side of the proﬁts shifted to tax havens
+is that output, net exports and proﬁts recorded in non-haven countries are too low. We provide
+a new database of corrected macro statistics for all OECD countries and the largest emerging
+economies. Adding back the proﬁts shifted out of high-tax countries increases the corporate
+capital share signiﬁcantly. By our estimates, the rise in the European corporate capital share
+since the early 1990s is twice as large as recorded in the oﬃcial national accounts (used, e.g.,
+by Karabarbounis and Neiman, 2014). This ﬁnding has implications for current debates about
+the changing nature of technology and inequality.
+Second, our results can be used to quantify the tax revenues that individual countries could
+gain under diﬀerent corporate tax reform scenarios. We consider one such scenario, the taxation
+of shifted proﬁts by source countries, and ﬁnd that corporate tax receipts could increase by
+up to 15% in the United States and 20% in a number of European countries compared to
+today. Looking forward, our data could be used to quantify the revenue implications of more
+fundamental reforms, such as the use of a formulary apportionment system (e.g., Gordon and
+Wilson, 1986; Avi-Yonah and Clausing, 2007), or a destination-based corporate cash ﬂow tax
+(Auerbach, 2010). We also plan to update our database and estimates annually, making it
+possible for researchers and policy-makers to track the eﬀects of ongoing policy eﬀorts aimed at
+reducing corporate proﬁt shifting, such as the OECD “base erosion and proﬁt shifting” (BEPS)
+initiative, or the eﬀect of tax changes such as the 2017 US tax reform.5
+The rest of this paper proceeds as follows. In Section 2 we relate our work to the literature.
+5Preliminary updated estimates for 2016 and 2017 are available in Tørsløv et al. (2020).
+4
+=== [p.7] ===
+Section 3 outlines our conceptual framework and methodology, and Section 4 describes the data.
+We present our estimates of the amount of proﬁts shifted to each tax haven in Section 5, before
+analyzing the implications of this phenomenon for non-haven countries in Section 6. Section 7
+discusses our corrected estimates of factor shares and trade balances.
+We provide concrete
+proposals to improve economic statistics and the monitoring of global activity in the conclusion
+(Section 8). This paper is supplemented by an Online Appendix that enables the reader to
+reproduce all our estimates step by step starting from publicly available data. All the data used
+in this research are available online.6
+2
+Related Literature
+We start by relating our work to previous attempts to estimate global proﬁt shifting and to the
+literature on international tax competition.
+2.1
+Microeconometric Estimates of Proﬁt Shifting
+A large body of work studies international proﬁt shifting using accounting micro-data, collected
+in the Orbis database of Bureau van Dijk.7 Proﬁt shifting is estimated by running regressions
+of the following form:
+log(πic) = α + β(τp −τc) + δFirmi + γCountryc + ϵic
+(1)
+where πic denotes the pre-tax proﬁts booked by company i in country c, τc the tax rate in
+country c, τp the tax rate in the parent’s country (or the average tax rate of foreign aﬃliates),
+and Firmi and Countryc ﬁrm and country controls.8 A positive ˆβ is interpreted as evidence
+of proﬁt shifting, and the global amount of proﬁts shifted for tax reasons is extrapolated from
+the estimated β. The OECD (2015) uses this methodology for its oﬃcial estimate of the size of
+base erasion and proﬁt shifting (Johansson et al., 2017).
+6The Appendix and dataset, as well as updated estimates and visualizations, are available at http:
+//missingprofits.world.
+7See Kalemli-¨Ozcan et al. (2015) for a presentation of these data.
+8The literature considers four measures for the incentives to shift proﬁts: (1) the diﬀerential with the tax rate
+of the parent’s country (e.g., Dharmapala and Riedel, 2013); (2) the weighted tax rate diﬀerential with all other
+subsidiaries (e.g., Huizinga and Laeven, 2008); (3) the unweighted tax rate diﬀerential with other subsidiaries
+(e.g., Johansson et al. 2017), and (4) the statutory corporate tax rate (e.g., Lohse and Riedel, 2013). On a priori
+ground, it is unclear which of these measures is preferable. Heckemeyer and Overesch (2017) give an overview
+of 26 studies using this approach; see also de Mooij and Ederveen (2008), Riedel (2018), Wier and Reynolds
+(2018), and Beer, de Mooij and Liu (2019). A number of studies (e.g., Egger et al. 2010) use the Bureau van
+Dijk Amadeus database, which is the European subset of Orbis.
+5
+=== [p.8] ===
+Although this methodology has generated important insights, it also faces limitations. First,
+little micro-data exists about the proﬁts booked by multinationals in low-tax countries. Orbis
+provides accurate information about the global consolidated proﬁts of most of the world’s multi-
+nationals (see, e.g., Cobham and Loretz, 2014). Multinational companies, however, are generally
+not required to publish their proﬁts country by country (or subsidiary by subsidiary). Orbis
+relies on administrative information in public business registries to record the proﬁts made by
+multinationals in their various subsidiaries. Because countries such as France maintain compre-
+hensive registries, almost all the proﬁts made by French resident ﬁrms (including subsidiaries
+of foreign multinationals) can be seen in Orbis.9 But in many countries public registries either
+do not exist (e.g., Bermuda), or contain no income information (e.g., United States, Ireland,
+Switzerland).10 Proﬁts booked by multinationals in these countries are not visible in Orbis.
+For instance, as shown by Figure 1, Orbis correctly reports that the worldwide consolidated
+proﬁts of Apple were 55.3 billion euros in 2016. If one adds up all the proﬁts recorded in Orbis by
+all of Apple’s subsidiaries throughout the world, however, then one ﬁnds only 2.0 billion euros.
+None of the proﬁts made by Apple in the United States or in Ireland, Jersey, or similar tax
+havens are visible.11 Similarly large discrepancies are observed for Google Alphabet, Facebook,
+and Nike. In Figure 2, we compare the consolidated global proﬁts of each multinational in
+Orbis to the sum of its subsidiary-by-subsidiary proﬁts. In 2012, 17% of the global proﬁts of
+multinationals could be traced in Orbis. That is, 83% were booked in subsidiaries unknown to
+Orbis, or for which no proﬁts data was available. The problem is particularly acute for low-
+and zero-tax countries.12
+The limited reporting of data in tax havens has two main implications. First, it means that
+estimating equation 1 with publicly available accounting micro-data can deliver estimates of
+9In 2010 for instance, the national accounts of France report that French resident corporations made $240
+billion in pre-tax proﬁts after net interest payments. In Orbis one ﬁnds a very close ﬁgure, $237 billion.
+10In the Spring of 2017, the United Kingdom announced that it would mandate its overseas territories (e.g.,
+Bermuda, the British Virgin Islands, and the Cayman Islands) to develop public registries of the owners of
+companies formed there by the end of 2020. It is unclear whether income or balance sheet information will
+be made available in these registries. This initiative doesn’t capture the Crown Dependencies (such as Jersey,
+Guernsey and Isle of Man).
+11The use of tax havens by Apple is documented in, e.g., U.S. Senate (2014).
+12A number of papers study shifting by U.S. multinationals using data from the Bureau of Economic Analysis
+on the activities of U.S. multinationals abroad (see, e.g., Clausing, 2009; Guvenen et al., 2018) and IRS data
+(e.g., Altshuler and Grubert, 2005; Grubert, 2013; Dowd, Landefeld and Moore, 2017, and De Simone, Mills
+and Stomberg, 2017). These data do not suﬀer from the problems in Orbis, as U.S. multinationals have to
+(conﬁdentially) report information on all their subsidiaries to the BEA and to the IRS. These data can only
+be used to study shifting by U.S. multinationals, while we are interested in shifting by all multinationals. See
+Section 4.2 below for how our data relate to the Bureau of Economic Analysis statistics on the activities of U.S.
+multinationals abroad.
+6
+=== [p.9] ===
+β that are downwards biased. It is only in the special case where the semi-elasticity of proﬁt
+shifting with respect to tax rate diﬀerentials is constant that the estimated β is unbiased.13
+There is evidence in the literature, however, that the shifting elasticity is nonlinear, with more
+responsiveness at lower tax rates than at higher ones.14 One may also imagine that multina-
+tional companies try to shift proﬁts in a discreet manner (e.g., for public relation reasons). In
+the extreme case where they only shift proﬁts to subsidiaries that do not publish income state-
+ments, the estimated β in Orbis is zero, while in actual facts it is positive and possibly large.15
+Second, estimating equation 1 with accounting micro-data can lead to biased inferences about
+the location of shifted proﬁts. If only high-tax countries have public registries, then one can
+ﬁnd that all proﬁt shifting takes place between high-tax countries, whereas in actual facts this
+shifting may be second-order relative to the shifting to low-tax countries.
+The main diﬀerence between our work and the micro-econometric estimates of global proﬁt
+shifting is that we rely on direct (macro) data on the proﬁts booked by multinationals in tax
+havens, namely foreign aﬃliates statistics. These macro data are more comprehensive than the
+data available in Orbis or similar databases, for one simple reason. While Orbis has to rely
+on publicly available corporate registries, statistical authorities have access to a much broader
+set of information to compile their foreign aﬃliates and national account statistics: corporate
+income tax returns, censuses of the activities of domestic and foreign corporations, and private
+income statements and balance sheets. As a result, the ﬂow of proﬁts recorded in these macro
+data is much larger than the one in Orbis. These macro data are not perfect however; they have
+limitations and sometimes need to be corrected, as we discuss in Section 4.2 below.
+2.2
+Macro Estimates of Proﬁt Shifting
+A nascent literature takes a macro perspective to study proﬁt shifting. The OECD (2015) itself,
+although it used Orbis for its oﬃcial BEPS estimate, suggested that global macro data be used
+to estimate proﬁt shifting.
+Most of this macro literature uses U.S. statistics, hence focuses on U.S. multinationals only
+(Clausing, 2009, 2016; Gravelle, 2009; Zucman, 2014; Guvenen et al., 2018). In this paper, we
+take a global perspective: we estimate proﬁt shifting by all the world’s multinationals and the
+13Even in this case, extrapolating the global amount of proﬁts shifted from ˆβ requires to be able to observe in
+which countries multinationals have subsidiaries—which is not possible in Orbis, since subsidiaries in countries
+with no public corporate registry are not visible.
+14For instance, using U.S. corporate income tax data, Dowd et al. (2017) ﬁnd tax semi-elasticities of 4.7 at
+corporate tax rates of 5 percent and 0.6 at tax rates of 30 percent. See also Wier and Reynolds (2018).
+15Relatedly, Bilicka (2019) studies proﬁt shifting outside of the United Kingdom using UK tax data, and ﬁnds
+that accounting data underestimate the true size of proﬁt shifting relative to more comprehensive tax data.
+7
+=== [p.10] ===
+implications of this phenomenon for each OECD country, the main emerging economies, and
+tax havens. This global perspective allows us to estimate how tax competition redistributes
+proﬁts internationally, thus shedding light on the redistributive eﬀects of globalization. Our
+database and results are relevant for policy-makers across the world and make it possible to
+put the United States in an international perspective. For example, we can study whether U.S.
+multinationals shift more proﬁt than multinationals from other countries.16
+Two pioneering recent studies, Crivelli, de Mooij and Keen (2015) and Bolwijn et al. (2018),
+use global macro data to study proﬁt shifting and are the most closely related to our work.17
+The main diﬀerence is that we rely on diﬀerent methodology and data (namely, foreign aﬃliates
+statistics and bilateral balances of payments).18 The foreign aﬃliates statistics we use allow
+us to observe the proﬁts booked by multinationals in tax havens and to compute factor shares
+in foreign vs. local ﬁrms across the world. This enables us to produce an estimate of proﬁt
+shifting based on the abnormally high capital share reported by foreign ﬁrms in tax havens.19
+One advantage of this methodology is that it produces estimates of proﬁt shifting that can be
+easily tracked by policy makers on a year-to-year basis. Moreover, the new bilateral balance of
+payments we use enable us to provide bilateral estimates of proﬁt shifting (i.e., how much proﬁts
+are shifted by French ﬁrms to Luxembourg, by German ﬁrms to the Netherlands, etc.), which
+was not possible with earlier approaches. Bilateral estimates are a necessary input to calibrate
+quantitative models of international tax competition and multinational production with proﬁt
+shifting (e.g., Wang, 2018). Our database, available online at http://missingprofits.world,
+could be used to calibrate such models in the future.
+16Methodological similarities and diﬀerences with the important work of Clausing (2009) and Guvenen et al.
+(2018) are further discussed in Section 3.3 below.
+17These studies are replicated and tested for robustness in Jansk´y and Palansk´y (2017) and Cobham and
+Jansk´y (2018).
+18Bolwijn et al. (2018) rely on the balance of payments and FDI statistics of non-haven countries; Crivelli,
+de Mooij and Keen use corporate income tax revenue data. A number of papers in international ﬁnance (e.g.,
+Lane and Milesi-Ferretti, 2018) use tax havens’ international investment positions, but this literature attempts
+to characterize patterns in international investment, not to estimate the size of proﬁt shifting as we do here.
+19Crivelli, de Mooij and Keen (2015) infer the tax revenue losses due to international corporate tax avoidance
+for developing vs. advanced economies from the correlation between corporate tax revenue collected and the
+statutory tax rates of other countries estimated in a panel model. We view their approach and ours as comple-
+mentary. Using the methodology in Crivelli, de Mooij and Keen (2015), Cobham and Jansk´y (2018) estimate
+country-level tax revenue losses due to international corporate tax avoidance. As in Crivelli, de Mooij and Keen
+(2015), these estimates are based on the estimated cross-country correlation between corporate income tax rev-
+enue and foreign countries’ tax rates. A systematic reconciliation of their ﬁndings with ours is a fruitful avenue
+for future research.
+8
+=== [p.11] ===
+2.3
+Literature on Tax Competition
+Our paper is also related to the large theoretical literature on international tax competition. A
+large body of work focuses on competition for tangible capital (see Keen and Konrad, 2013). A
+number of studies also consider competition for paper proﬁts, its interaction with competition
+for tangible capital, the incentives of tax havens, and the costs involved for non-haven coun-
+tries.20 Our contribution to this literature is to provide a ﬁrst empirical quantiﬁcation of the
+international redistribution of proﬁts due to tax competition for paper proﬁts vs. capital.
+3
+Conceptual Framework and Methodology
+There are three main steps in our analysis. We ﬁrst compute the proﬁtability of local vs. foreign
+ﬁrms across countries, including, most importantly, in tax havens. Second, we estimate the
+extent to which the relatively high proﬁtability of foreign ﬁrms in tax havens can be explained by
+proﬁt shifting to tax havens vs. higher capital intensities in low-tax places. Third we apportion
+the shifted proﬁts to the countries where they would have been booked absent international
+diﬀerences in tax rates. We discuss each step in turn.
+3.1
+Macroeconomic Proﬁtability Ratios
+In the ﬁrst step of our analysis, we study the macroeconomic ratio π of pre-tax corporate proﬁts
+to wages.
+We are interested in how this statistic varies across countries, and how it varies
+within countries but across foreign-owned (πf) vs. local (πl) ﬁrms. The proﬁts-to-wage ratio is
+easy to compute and closely related to factor shares of output, which allows for straightforward
+interpretations of the economic forces at play. It is not the only relevant margin to compare
+local and foreign ﬁrms: proﬁts-to-assets and eﬀective tax rates are also relevant and ideally all
+need to be analyzed together, as we do below.
+We deﬁne π at the country level as follows. Using standard notations, we denote by Y the
+corporate output (or value-added) of a country, obtained by combining eﬀective labor AL and
+capital K.21 We include in the corporate sector all resident corporations, both non-ﬁnancial
+and ﬁnancial. Part of corporate output is paid to workers, and the rest, operating surplus,
+accrues to the owners of capital: Y = F(K, AL) = rK +wL. In this framework, r includes both
+the normal return to corporate capital and any above-normal return (i.e., r is not necessarily
+20See Slemrod and Wilson (2009); Hong and Smart (2010); Johannesen (2010); the application of the Kanbur
+and Keen (1993) model of commodity tax competition to proﬁt shifting in Keen and Konrad (2013).
+21Here and in what follows we consider output at factor cost, i.e., before indirect taxes.
+9
+=== [p.12] ===
+equal to the marginal product of capital). The capital share of corporate output is α = rK/Y
+and the ratio of operating surplus to wages is α/(1 −α). Corporations pay p percent of their
+operating surplus rK in net interest. We deﬁne (pre-tax) corporate proﬁts as (1 −p) · rK. Our
+ratio of interest π measures the proﬁts made by resident ﬁrms per dollar of wage paid: π =
+(1−p)·α/(1−α).22 We subtract net interest paid from corporations’ operating surplus because
+interest payments are typically deductible from the corporate tax base while interest received
+(e.g., by banks) is typically taxable. At the country level, net interest paid by corporations
+is generally small (interest paid by non-ﬁnancial corporations is oﬀset by interest received by
+ﬁnancial corporations), so π is usually close to α/(1 −α). As we shall see, the main exception
+involves tax havens which receive net interest from foreign countries; for them π > α/(1−α). We
+also subtract capital depreciation from proﬁts, because depreciation is deductible from taxable
+proﬁts. Thus Y , α, r, and π are all net of capital depreciation.
+Our main objective is to study how the proﬁts-to-wage ratio diﬀers for foreign corporations
+(πf) vs. local ﬁrms (πl) within each country. We deﬁne πf and πl analogously to π. That is,
+πf is equal to the pre-tax proﬁts (after net interest payments) made by foreign ﬁrms divided by
+the wages paid by these ﬁrms: πf = (1 −pf) · αf/(1 −αf), where αf is the net-of-depreciation
+capital share of the net value-added of foreign ﬁrms. In the data (described in Section 4.2 below),
+following internationally-agreed guidelines foreign ﬁrms include all ﬁrms where foreign investors
+own more than 50% of shares with voting rights. This condition is suﬃcient but not necessary:
+there are a few other ways ﬁrms can be classiﬁed as “foreign-controlled” (see Eurostat, 2012).
+Local ﬁrms are all ﬁrms that are not foreign. By deﬁnition, π = s · πf + (1 −s) · πl, where s is
+the share of wages paid by foreign ﬁrms.
+3.2
+Decomposing Tax Havens Proﬁts: Tangible Capital vs. Shifting
+In a perfectly competitive model where factors are paid their marginal product (an assumption
+we relax below), a high recorded proﬁts-to-wage ratio π in tax havens can have two reasons:
+either paper proﬁts are being shifted to tax havens, or there’s a lot of capital used in production
+and the elasticity of substitution between capital and labor is greater than 1. We are interested
+in quantifying the relative contributions of proﬁt shifting vs. movements of tangible capital to
+the high proﬁt-to-wage ratios π of tax havens.
+There are three forms of proﬁt shifting (see Heckemeyer and Overesch, 2017, for a survey),
+22Our measure of wage always include non-wage employee compensation (such as retirement beneﬁts, health
+beneﬁts, payroll taxes, etc.). That is, “wage” in this article always refers to what is called “employee compen-
+sation” in the national accounts (SNA code D.1).
+10
+=== [p.13] ===
+and each aﬀects the recorded proﬁt-to-wage ratio π. First, multinational groups can manipulate
+intra-group exports and import prices: subsidiaries in high-tax countries can try to export goods
+and services at low prices to related ﬁrms in low-tax countries, and import from them at high
+prices.23 Such transfer price manipulations increase the recorded πf (hence π) in tax havens.
+Second, multinationals can shift proﬁts using intra-group interest payments: aﬃliates in high-
+tax countries can borrow money (potentially at relatively high interest rates) from aﬃliates
+in low-tax countries, which again increase πf in tax havens.24 Last, multinationals can move
+intangibles—such as trademarks, patents, logos, algorithms, or ﬁnancial portfolios—produced
+or managed in high-tax countries to aﬃliates in low-tax countries. These aﬃliates then receive
+royalties, interest, or payments from ﬁnal customers, which boost πf.25 Movements of intangibles
+can be analyzed like transfer price manipulations and intra-group borrowing because they have
+the same distributional implications: for a given global stock of intangibles, these movements
+relocate proﬁts across countries (away from where R&D or ﬁnancial activity takes place) without
+aﬀecting wages.26 By contrast, if the elasticity of substitution between labor and tangible capital
+is ﬁnite, movements of tangible capital across borders aﬀect wages.27
+To identify what part of the proﬁts reported by foreign ﬁrms in tax havens reﬂects proﬁt
+shifting vs. movements of tangible capital, it is convenient to start by considering the simple
+case where all countries—havens and non-havens—have the same aggregate Cobb-Douglas pro-
+duction function Y = Kα(AL)1−α and factors are paid their marginal product. If net interest
+paid (p) is zero and α = 25%, then all countries have a true π = 33% and any deviation of the
+recorded π from this value reﬂects proﬁt shifting (countries with recorded π above 33% attract
+paper proﬁts from abroad, while countries with recorded π below 33% shift proﬁts abroad).
+With Cobb-Douglas production, the stock of tangible capital does not aﬀect π, because any
+23There is evidence of such transfer price manipulations in the literature; see, e.g., Clausing (2003); Bernard,
+Jensen and Schott (2006); Vicard (2015); Cristea and Nguyen (2016); Liu, Schmidt-Eisenlohr and Guo (2018).
+24See, e.g., Huizinga, Laeven, and Nicodeme (2008).
+25See Faulkender et al. (2017) for evidence suggestive of proﬁt shifting by U.S. multinationals through the
+relocation of intangibles in low-tax countries. See Langenmayr and Reiter (2017) for evidence of proﬁt shifting
+by German banks through the strategic relocation of ﬁnancial portfolios in tax havens.
+26One potential concern with our treatment of intangibles is that some of the intangibles booked in tax havens
+may not have been shifted there but produced locally, by workers employed in R&D. However the available
+evidence shows that more than 90% of R&D workers of multinational ﬁrms are employed in high-tax countries;
+see Section 5.3 below.
+27There is a view among some policy-makers (e.g., underlying “patent box” policies as in the United Kingdom
+and the related “foreign-derived intangible income” provisions introduced in the 2017 U.S. tax reform) that
+encouraging companies to locate intangible assets domestically, while beneﬁting the tax base, may also beneﬁt
+domestic productivity. One way to rationalize this view is that ﬁrms may be more likely to locate tangible assets
+(oﬃce space, headquarters, etc.) in places where they book their intangibles. But it is hard to come up with
+a plausible reason to believe that the location of intangibles per se may signiﬁcantly aﬀect productivity (for a
+given stock of intangible assets).
+11
+=== [p.14] ===
+increase in the capital stock is perfectly oﬀset by a corresponding fall in the marginal product
+of capital.
+In the more general case where countries have a constant elasticity of substitution (CES)
+production function, the eﬀect of the capital stock on the proﬁts-to-wage ratio is ambiguous.
+Namely, π varies with the capital stock depending on the value of the capital-labor elasticity of
+substitution σ. If σ > 1, then countries with a high capital intensity K/AL have high proﬁt-
+to-wage ratios π. Conversely, if σ < 1, then countries with high capital intensity have low π,
+as the marginal product of capital becomes very low. To identify the contribution of capital
+intensity to the high reported proﬁts-to-wage ratios of tax havens, we decompose the measured
+πf of these countries into three components:
+πf =
+ K
+wL
+
+f · rf · (1 −pf)
+(2)
+where rf is the measured return to capital used by foreign ﬁrms, including any abnormal
+return (above the marginal product of capital) due to tax-induced proﬁt shifting. We then
+make assumptions about the value of the elasticity of substitution σ in foreign ﬁrms to infer
+what fraction of the high πf of tax havens can be attributed to high capital intensities. A large
+micro literature ﬁnds σ < 1, while a nascent macro literature ﬁnds σ > 1 (Karabarbounis and
+Neiman, 2014; Piketty and Zucman, 2014).
+To form our central estimate of the amount of proﬁt shifted into each tax haven, we make
+two assumptions. First, we assume that the elasticity of substitution between capital and labor
+σ is equal to 1 (i.e., Cobb-Douglas production). We do not assume that countries have similar
+Cobb-Douglas parameters α. That is, we allow for the possibility, for instance, that tax havens
+have structurally higher α than non-haven countries due, e.g., to pro-capital policies, rents
+generated by speciﬁc institutional features such as ﬁnancial secrecy or lax regulation, or other
+deviations from perfect competition. Second, we assume that the reported proﬁtability of local
+ﬁrms in tax havens πl is not inﬂated by proﬁt shifting. This assumption is supported by our
+ﬁnding, described in Section 5.2, that local ﬁrms in tax havens are generally as proﬁtable as
+local ﬁrms in non-haven countries. Under these two assumptions, within a given tax haven, any
+excess of πf over πl reﬂects inward proﬁt shifting. In our central scenario we estimate proﬁt
+shifting by setting πf equal to πl in each tax haven.
+As we shall see in Section 5.4 below, the results we obtain will be robust to relaxing our
+two assumptions. First, our estimate of the amount of proﬁts shifted to tax havens will not
+signiﬁcantly depend on the assumed capital-labor elasticity of substitution σ, because it turns
+12
+=== [p.15] ===
+out that foreign ﬁrms in tax havens have similar capital intensity as local ﬁrms (and foreign
+ﬁrms in high-tax countries). As a result, for plausible values of σ, diﬀerences in capital intensity
+cannot explain more than 10% of the high πf −πl gap observed in tax havens. Second, relaxing
+the assumption that the measured proﬁtability of local ﬁrms in tax havens πl reﬂects their
+actual proﬁtability will lead us to ﬁnd even more proﬁt shifting than in our central scenario—
+but only slightly so. Although comparing foreign and local ﬁrms in tax havens is not perfect,
+our estimation procedure has the advantage that it can be implemented transparently using
+readily available macro data which are much more comprehensive than the data used so far to
+study global proﬁt shifting.
+3.3
+How we Allocate the Shifted Proﬁts
+In the third step of our analysis, we allocate the shifted proﬁts to the countries where they
+would be booked if all countries had the same eﬀective corporate tax rate. We proceed as fol-
+lows. First, we collect all existing bilateral balance of payments data, which include in particular
+bilateral service trade ﬂows by type of service, and bilateral foreign direct investment income
+(including bilateral intra-group interest payments and receipts). We then allocate the shifted
+proﬁts proportionally to the bilateral service exports and bilateral intra-group interest receipts
+recorded in the balances of payments of tax havens, summing both of these items. Among ser-
+vices, we only consider the speciﬁc types of services which have been found in the literature to be
+most conducive of proﬁt shifting: exports of the rights to use intellectual property (patents and
+trademarks), headquarter services (administration, management and advertising), information
+and communication technology services, and ﬁnancial services (Hebous and Johannesen, 2016).
+We disregard goods exports, which according to the existing literature seem to be quantitatively
+less important than other proﬁt shifting channels.28
+Our estimation procedure is motivated by the fact that tax havens record very large intra-
+group interest receipts and exports of services found to be conducive of shifting, way above
+what could be expected given the size of their economies. As shown by Appendix Figure G.1,
+these ﬂows amount to 5% of gross national income on average in non-haven European Union
+countries, but are as large as 350% of GNI in Luxembourg, 78% of GNI in Puerto Rico, and
+56% of GNI in Ireland. As with the excess of πf over πl in tax havens, we assume that these
+excess service exports and intra-group interest receipts reﬂect proﬁt shifting.
+A number of remarks about this methodology are in order. First, our procedure is con-
+28See Appendix Section D, where we discuss the evidence in the literature on the magnitude of proﬁt shifting
+through the mis-pricing of intra-group goods trade vs. other channels.
+13
+=== [p.16] ===
+sistent with how proﬁt shifting is perceived by policy-makers globally. Many countries have
+anti-avoidance policies whereby speciﬁc cross-border transactions (such as certain royalty pay-
+ments, interest, or services) are presumed to be motivated by tax avoidance and taxed accord-
+ingly.29 Second, our procedure is consistent with Clausing (2009), who estimates how much of
+the proﬁts booked oﬀshore by U.S. multinationals are shifted out of the United States by ap-
+portioning the oﬀshore proﬁts of U.S. ﬁrms proportionally to the amount of aﬃliate intra-ﬁrm
+transactions that occur with the United States.30 Third, our approach does not involve the
+use of an apportionment formula. We keep the current international tax system of subsidiary-
+by-subsidiary accounting and arm’s length pricing as is, and consider how the geography of
+global proﬁts would change if all countries applied the same eﬀective corporate tax rate (which
+would remove incentives to shift proﬁts).31 Because many of the transactions we consider are
+intra-group (not to ﬁnal customers), our allocation of the shifted proﬁts is not equivalent to a
+sales-based apportionment of shifted proﬁts. Last, and importantly, we ﬁnd that the amount of
+intra-group interest received by tax havens plus the amount of services (found in the literature
+to be conducive of shifting) exported by tax havens (above and beyond what could be expected
+given the size of their economies) matches our estimate of the amount of global proﬁt shifting
+obtained by setting πf = πl in tax havens: $646bn for the former and $616 billion for the latter
+in 2015.32 That is, we have two fully independent estimates of the amount of proﬁt shifting
+that deliver consistent results: one based on foreign aﬃliates statistics, setting πf = πl in tax
+havens; the other based on balance of payments data, tracking tax havens’ intra-group interest
+receipts and service exports. This consistency of ﬁndings obtained using completely diﬀerent
+data and methodologies lends support to the view that $600bn–650bn is indeed the correct order
+of magnitude for the amount of proﬁts shifted to tax havens in 2015.
+29For example, residence countries of multinational companies typically have controlled foreign company rules
+that tax certain forms of income (such as royalties and interest) reported in havens by their multinationals. In
+2017, the United States introduced a “base-erosion anti-abuse tax” (BEAT) that presumes that certain services
+transactions by multinational ﬁrms with related parties are motivated by tax avoidance.
+30We generalize this approach in three ways: (i) we apportion the proﬁts shifted by all (not only U.S.)
+multinationals; (ii) we use balance of payments data which capture all cross-border transactions (not only
+transactions within divisions of multinationals); (iii) we focus on the types of transaction identiﬁed in the
+literature as being particularly conducive of shifting.
+31Our approach diﬀers from Guvenen et al. (2018), who apportion the worldwide proﬁts of U.S. multina-
+tionals proportionally to labor compensation and sales to unaﬃliated parties in each country. Their allocation
+approximates how the proﬁts of U.S. ﬁrms would be split under a formulary apportionment system (with labor
+and sales as apportionment factors). We view their benchmark (formulary apportionment) and ours (tax rate
+harmonization) as both relevant. One advantage of the Guvenen et al. (2018) approach is that the adoption of
+apportionment formulas by individual countries may be more politically realistic than a full tax harmonization
+in the short run. One advantage of our approach is that it does not require us to model how ﬁrms would change
+their behavior if countries adopted apportionment systems.
+32See Appendix C.
+14
+=== [p.17] ===
+In addition to our main allocation of the shifted proﬁts, we also provide an alternative
+allocation of the proﬁts shifted oﬀshore, in which we assign these proﬁts to the countries where
+the ultimate parents of the oﬀshore aﬃliates are incorporated. This allocation makes it possible
+to estimate what fraction of the globally shifted proﬁts ultimately accrue to the shareholders of
+U.S. multinationals, European multinationals, etc.33
+4
+Data Sources and Global Summary Statistics
+Before presenting and analyzing our results (Section 5), this section describes our three main
+data sources: national accounts data, foreign aﬃliates statistics, and balance of payments data.
+All the data sources, references and step-by-step computations are described in a detailed man-
+ner in Appendix A (national accounts and foreign aﬃliate statistics) and B (balance of payments
+data); here we focus on the main conceptual and practical issues.
+4.1
+National Accounts Data
+We compute π in all tax havens, all OECD countries, and the main developing countries using
+harmonized national accounts data that follow the 2008 System of National Accounts (United
+Nations, 2009).
+The basic data source is the OECD’s detailed national accounts by sector
+(Table 14A). This source covers all OECD countries (which includes prominent corporate tax
+havens: Ireland, Luxembourg, Netherlands, Belgium, and Switzerland) and a number of large
+developing non-OECD countries (Brazil, China, Colombia, Costa Rica, India, Russia, and South
+Africa). We extend the OECD database to non-OECD tax havens (such as Singapore, Hong
+Kong, and Puerto Rico) by manually collecting the oﬃcial national accounts published by tax
+havens’ statistical institutes and central banks. We include all the tax havens listed by Hines
+and Rice (1994) in our database.
+The OECD detailed national accounts include all the necessary inputs needed to compute
+the proﬁts-to-wage ratio π: corporate operating surplus rK, net interest payments p, and wages
+paid wL, for both ﬁnancial and non-ﬁnancial corporations. A few countries only provide gross-
+of-depreciation operating surplus series, in which case we impute depreciation based on observed
+depreciation rates in similar economies.34 Some also do not isolate the corporate sector from
+33Yet another approach to allocate the shifted proﬁts would involve trying to ﬁgure where production has
+“truly” taken place and apportion proﬁts accordingly. However in many cases, it is impossible to determine
+where production takes place (e.g., the creation of intangibles occurs through the cooperation and interaction
+of subsidiaries in various countries). See Devereux and Vella (2017) for a discussion.
+34See Appendix Section A.2.2. Capital depreciation amounts to around 15% of corporate gross value-added
+with relatively little variation across countries, see Appendix Table A.2.
+15
+=== [p.18] ===
+other sectors of the economy (government and households) oﬃcial national accounts. In that
+case, we impute the share of all domestic wages that are paid by corporations based on the
+share observed in countries with similar level of development.35
+4.2
+Foreign Aﬃliates Statistics (FATS)
+We compute proﬁtability for foreign ﬁrms (πf) within each country using harmonized foreign
+aﬃliates statistics (FATS) recently released by the world’s largest economic and ﬁnancial cen-
+ters.36
+These statistics are based on exhaustive or quasi-exhaustive census-type surveys of
+multinational enterprises. There are both inward and outward FATS. The inward FATS of,
+say, France record the value-added Y , operating surplus rK, compensation of employees wL
+(among other indicators) of foreign ﬁrms operating in France and are tabulated by country of
+the foreign parent company.37 The outward FATS of France record the value-added, proﬁts,
+compensation of employees (etc.) of the aﬃliates of French multinationals operating abroad and
+are tabulated by country of aﬃliate.38 Firms report conﬁdentially to domestic statistical author-
+ities, which then publish tabulated statistics following international guidelines (Eurostat, 2012).
+Value-added, operating surplus, etc., are deﬁned and constructed like in the national accounts,
+the only diﬀerence being that FATS only capture a subset of ﬁrms (e.g., foreign corporations in
+the case of inward FATS) while the national accounts capture all resident corporations. FATS
+are disseminated by Eurostat, the OECD, and national statistical agencies. A number of points
+are worth noting about these data.
+Double-counting issues.
+Although in most European countries the publication of foreign
+aﬃliates statistics started only around 2010, in the United States, outward FATS—called “Ac-
+tivities of US Multinational Enterprises”—have been compiled as far back as the mid-1960s
+35See Appendix Section A.2.1 and Appendix Table A.1. By deﬁnition all proﬁts originate from the corporate
+sector so generally speaking no imputation is required for proﬁts (see, however, Section 4.2 below for the case
+of Ireland, Netherlands, and Luxembourg).
+36Once we have π and πf, the proﬁtability of local ﬁrms πl is obtained as a residual, since by deﬁnition,
+π = s · πf + (1 −s) · πl, where s is the share of wages paid by foreign ﬁrms.
+37Other indicators include, e.g., turnover, number of employees, investments ﬂows, R&D expenditure, and in
+some countries (such as the United States) tangible capital stocks. When capital stocks are not available, we
+estimate them by cumulating past investment ﬂows; see Appendix E.
+38This is in contrast to direct investment income statistics that are tabulated by country of the immediate
+counterpart. For instance, if a French parent owns a German aﬃliate through a holding company in Luxembourg,
+direct investment income received by the French parent is recorded as coming from Luxembourg in the French
+balance of payment (OECD 2008, Paragraph 218). FATS, by contrast, are tabulated by country of aﬃliates’
+primary activity. In the above example, proﬁts are recorded as made in Germany (not Luxembourg).
+16
+=== [p.19] ===
+by the Bureau of Economic Analysis.39
+A large literature has used these data for research
+purposes.40
+A concern with some of the BEA data on the activities of US multinational enterprises is that
+they double-count foreign income (Blouin and Robinson, 2019). More precisely, “net income”
+as reported in the BEA Income Statement tables (D1–D13) double-counts the income of US
+aﬃliates going through chains of holding companies. However, we do not use “net income” in
+this paper. We use the BEA Value Added tables (F1–F9), which are the tables that report our
+statistics of interest as deﬁned in Section 3.1: the (net-of-depreciation) value-added Y , employee
+compensation wL, (net-of-depreciation) operating surplus rK, net interest paid p·rK, and (net-
+of-depreciation) pre-tax proﬁts (1−p)·rK of the majority-owned aﬃliates of US multinationals
+abroad.
+Pre-tax proﬁt in the BEA Value Added Tables (called “proﬁt-type return” by the
+BEA) does not double-count proﬁts, because in contrast to “net income” it does not count
+as proﬁt equity income received.41 As shown in Appendix D.5, the total pre-tax proﬁts made
+by US multinationals in tax havens recorded in the BEA Value Added tables very closely
+tracks the preferred estimate of Blouin and Robinson (2019).42 The foreign aﬃliates statistics
+compiled internationally and used in this paper are the analogue of the BEA Value Added
+Tables. Following common guidelines, pre-tax proﬁt in these statistics always excludes equity
+income received and does not-double count proﬁts.43
+39Detailed tabulations starting in 1983 are available online at https://www.bea.gov/international/
+di1usdop, for instance for 2015 at https://www.bea.gov/international/usdia2015r
+40See Section 2 above. See also Wright and Zucman (2018) for an analysis of these data back to the mid-1960s.
+41Consider for instance the case a US parent that owns a German aﬃliate through a Bermuda holding company.
+Assume the German aﬃliate makes $100 in proﬁt and pays $100 in dividends to the Bermuda holding. In the
+Income Statement Table D1 (not used in this paper), $100 in “net income” is assigned to Germany and $100
+in “net income” is also assigned to Bermuda: foreign income is counted twice. But in the Value-Added Table
+F1 (used in this paper), $100 in proﬁt is assigned to Germany and $0 proﬁt is assigned to Bermuda. Indeed,
+to the extent that it has no other activity than to act as a paper intermediary between the US and Germany,
+the Bermuda aﬃliate has zero economic value added: for this aﬃliate, wL = 0, (1 −p) · rK = 0, Y = 0. In
+2015, the total amount of pre-tax proﬁts (1 −p) · rK recorded by the BEA for the majority-owned aﬃliates of
+US multinationals operating in Bermuda was only $7.1 billion (Table F1), much less than the “net income” of
+these aﬃliates ($72.1 billion, Table D1).
+42In 2016, according to the BEA Value Added tables, 48% of the pre-tax proﬁt (1 −p) · rK of majority-owned
+aﬃliates of US multinationals were made in tax havens. The preferred estimate of Blouin and Robinson (2019),
+“adjusted pre-tax income,” is 42% in 2016 (their Figure 3, right panel). Note that the balance of payments data
+used in Zucman (2014, 2015) tend to overstate the share of proﬁts made by US multinationals in tax havens,
+because in balance of payments statistics transactions are assigned to the country with which the US has an
+immediate link (in the above example, $100 in income is assigned to Bermuda and $0 to Germany in the balance
+of payments); see Wright and Zucman (2018) for a detailed discussion. The FATS used in this paper do not suﬀer
+from this bias. Note also that the U.S. FATS under-estimate the share of proﬁts made by U.S. multinationals in
+tax havens because they exclude Puerto Rico (which is not treated as a foreign country in the BEA data on the
+activities of US multinational enterprises). Including Puerto Rico, 54% of the pre-tax proﬁt of majority-owned
+aﬃliates of U.S. multinationals were made in tax havens in 2016 (Saez and Zucman, 2019).
+43Paragraph 1.3.4 of the Eurostat (2012) FATS manual states: “Income and expenditure classiﬁed as ﬁnancial
+17
+=== [p.20] ===
+Imputations for missing countries.
+The main OECD economies including key havens (such
+as Ireland, Luxembourg, the Netherlands, and Switzerland) publish foreign aﬃliates statistics.
+For these countries, we compute πf using their inward FATS. For the countries that do not
+publish FATS yet (which is the case for smaller, non-OECD havens, e.g., Bermuda, the Cayman
+Islands, Hong Kong), we impute the proﬁts and wages of foreign ﬁrms in two steps.
+First, we estimate the pre-tax proﬁts of foreign ﬁrms using the amount of inward direct
+investment income reported in the balance of payments and making systematic adjustments.
+Almost all countries publish direct investment statistics, which follow common international
+guidelines codiﬁed in the OECD (2008) benchmark deﬁnition of direct investment.
+Direct
+investment income is closely related to the pre-tax proﬁts of foreign ﬁrms studied in this paper.
+Direct investment income is the net-of-depreciation, net-of-corporate income tax proﬁts of ﬁrms
+that are more than 10% owned by foreign investors, pro-rated by the ownership stake of the
+foreign investor. Pre-tax proﬁts in FATS is the net-of-depreciation, gross-of-corporate-income-
+tax proﬁt of ﬁrms that are more than 50% owned by foreign investors, with no pro-rating. We
+adjust direct investment income data accordingly.44
+Second, we estimate the wages paid by foreign ﬁrms by applying the wage/proﬁt ratio seen
+in the outward FATS of counterpart countries. We rely particularly on the outward FATS of
+the United States which provide data on the foreign operations of US multinationals in small
+tax havens in isolation, such as Barbados, Bermuda, Panama, etc. We have checked that our
+procedure closely approximates the true amount of foreign proﬁts and wages by implementing
+it for the sample of tax havens that publish inward FATS, suggesting that the margin of error
+involved with these imputations is limited.
+Bilateral discrepancies.
+If foreign aﬃliates statistics were perfect, the inward FATS of host
+countries (where aﬃliates are located) would be fully consistent with the mirror outwards FATS
+of partner countries (where parents are headquartered). We conducted a systematic comparison
+of the available data to assess the consistency of existing FATS.45 We found that while inward
+and outward data are generally consistent, there is one notable discrepancy. In the inward FATS
+of Ireland, the Netherlands, and Luxembourg one ﬁnds less proﬁt made by US aﬃliates than
+in the mirror outwards FATS of the United States. A similar gap (of $95 billion in 2015) is
+in company accounts according to the 4th Accounting Directive (78/660) is excluded from value added.”
+44See Appendix Section A.3 for a step-by-step description of these computations. See Wright and Zucman
+(2018) for a detailed reconciliation of FATS and balance of payments statistics in the U.S. case.
+45See Appendix A.4.1 (results summarized in Appendix Table A.8) and Appendix Section B.3.3 (results
+summarized in Appendix Table B.11).
+18
+=== [p.21] ===
+observed in bilateral balance of payments data, where less direct investment income is paid to
+the United States by aﬃliates located in Ireland, Netherlands, and Luxembourg than received
+by the United States from these havens.
+There are two possible reasons for this discrepancy. First, Ireland, Netherlands, and Lux-
+embourg may underestimate the proﬁts that aﬃliates of US ﬁrms book in their territory. In
+particular, these three countries may miss some of the proﬁts booked in special purpose entities
+due to a lack of comprehensive enough corporate registries, non-response to surveys, or other
+data issues (Angulo and Hierro, 2017; Damgaard and Elkjaer, 2017). Alternatively, the United
+States may overestimate the proﬁts booked by its multinationals in Ireland, Netherlands, and
+Luxembourg. For example, U.S. statisticians may wrongly assign to Ireland proﬁts that in fact
+have been booked in other tax havens such as Bermuda (CSO, 2016).
+Although it is not possible to settle this issue deﬁnitively with the available data, the evidence
+suggests that Ireland, Netherlands, and Luxembourg under-estimate the proﬁts booked by US
+multinationals. As shown by Appendix Figure N.4, for non-haven countries, the proﬁts recorded
+by the US abroad match the data reported by the partner country.46 It is only for tax havens
+that US data exceed the estimate of partner countries, so that globally the proﬁts of US aﬃliates
+recorded by US statisticians in all foreign countries combined (as measured in the US balance
+of payments) exceed the proﬁts of US aﬃliates recorded by all foreign countries combined (as
+measured in their balances of payments).47
+In our central scenario, we force global inward investment income to match global outward
+investment income by upgrading the inward data of Ireland, Luxembourg, and the Netherlands
+so that they match the counterpart outward data reported by the United States.48 We discuss
+two alternative corrections in the Appendix. First, we consider the hypothesis that the inward
+data of Ireland, Luxembourg, and the Netherlands are correct and that US statisticians over-
+estimate the total amount of foreign proﬁts made by US multinationals.
+Taking the Irish,
+46For instance, Canada reports $17.9 billion in direct investment income paid to the US in 2015, while the US
+records $18.5 billion in DI income received from Canada. Japan reports $8.6 billion in DI income paid to the
+US in 2015, while the US records $9.7 billion in DI income received from Japan. Australia reports $6.1 billion
+in DI income paid to the US in 2015, while the US records $6.5 billion in DI income received from Australia.
+47See Appendix Figure A.14. This imbalance is the main driver of the imbalance in global direct investment
+income recorded in the world balance of payments by the IMF. Globally, more direct investment income is
+received (in the form of dividends and reinvested earnings) by the parents of multinational ﬁrms than paid by
+aﬃliates. This direct investment income gap reaches about $200 billion in 2015 (Appendix Figure B.3b). In
+Appendix B, we decompose this gap by leveraging the bilateral direct investment income data of all the world’s
+countries and ﬁnd that the bulk of the gap comes from missing payments made by aﬃliates of US multinationals.
+48This adds $95 billion in foreign proﬁts to Ireland, Luxembourg and the Netherlands. We allocate the residual
+inward/outward global income gap (of the order of $100 billion in 2015) by upgrading the inward data whenever
+the sum of outward proﬁts exceeds reported inward proﬁt; see Appendix A.3.3.
+19
+=== [p.22] ===
+Dutch and Luxembourg data at face value still leaves a diﬀerence of an order of magnitude
+between the proﬁtability of foreign ﬁrms (πf) and the proﬁtability of local ﬁrms (πl) in these
+three havens and reduces our estimate of global proﬁt shifting by 15%.49 Second, we consider
+the hypothesis that the US statistics do not over-estimate the total amount of foreign proﬁts
+made by US multinationals but wrongly assign to Ireland, Netherlands and Luxembourg proﬁts
+in fact booked in Bermuda and other havens without inward investment income data. This
+correction does not aﬀect our estimate of the amount of proﬁts globally shifted, but only their
+location (with Bermuda featuring more prominently, and Ireland less prominently).
+4.3
+Bilateral balances of payments
+For our main allocation of the shifted proﬁts (i.e., to source countries), we rely on the bilateral
+balances of payments disseminated by the IMF and Eurostat.
+While balance of payments
+statistics traditionally only reported transactions with all non-residents as a total, following the
+adoption of the 6th edition of the IMF (2009) Balance of Payments Manual, most countries have
+started publishing bilateral balances of payments. Among tax havens, the data are particularly
+good for Switzerland and the European Union tax havens (Ireland, Luxembourg, Belgium,
+Netherlands, Malta, and Cyprus) which must report harmonized statistics to Eurostat.
+When two estimates of the same haven-to non-haven ﬂow are available (e.g., exports of
+services from Luxembourg to Germany as recorded by Luxembourg, and imports of services
+by Germany from Luxembourg as recorded by Germany), we use the statistics reported by tax
+havens, because the bilateral data reported by tax havens tend to be more comprehensive than
+those recorded by counterpart countries. As shown in Appendix B, the service exports recorded
+by the 6 E.U. tax havens (Ireland, Luxembourg, Netherlands, Belgium, Malta, Cyprus) to the
+22 non-haven E.U. countries exceed the recorded imports by more than 30% (and more than
+50% for Luxembourg). One likely explanation for this gap is that importers’ data miss (at least
+some of) the services that are exported by tax-haven corporations directly to foreign customers,
+such as digital music subscriptions, ride-sharing services, and various Internet services (server
+space, voice over IP, etc.).
+There is evidence that the typical business structure of digital
+services multinationals involves shifting intellectual property to tax haven subsidiaries and then
+directly selling services to ﬁnal customers without involving any non-haven subsidiary (see, e.g.,
+Pomeroy, 2016). The associated service ﬂows seem at this stage better captured in the tax
+havens’ trade statistics than in the customer countries’ statistics.50
+49See Appendix Figure N.1.
+50When a ﬁrm incorporated in Luxembourg directly exports digital services to French customers without
+20
+=== [p.23] ===
+For our alternative allocation of the shifted proﬁts (i.e., to the countries where headquarters
+are located), we use the bilateral direct investment statistics on an ultimate ownership basis
+compiled by Damgaard and Elkjaer (2017), who exploit the data made available by OECD
+countries following the implementation of the 6th edition of the IMF (2009) Balance of Payments
+Manual.51
+4.4
+Global Summary Statistics
+Table 1 presents our database of corporate proﬁts by showing its global totals in 2015, our
+benchmark year. In 2015, global gross value-added (i.e., global GDP) reached $75 trillion and
+global net value-added (i.e., after capital depreciation) about $63 trillion. About 54% of global
+net value-added was produced by corporations; the rest was produced by governments, house-
+holds, and non-corporate businesses. Within corporations, the capital share of net value-added
+was about 1/3 and the labor share about 2/3. Out of the $11.5 trillion in net-of-depreciation
+corporate proﬁts, close to 15% ($1.7 trillion) were made in foreign ﬁrms. This $1.7 trillion
+number includes all the proﬁts made by, say, Apple in France, Germany, Ireland, Jersey, etc.,
+but not by Apple in the United States (where its headquarter is located). It is what we call
+“multinational proﬁts.” That is, multinational proﬁts include all the proﬁts made by multina-
+tional companies outside of the country where their parent is located. Our estimate (detailed
+in Section 5.4 below) is that out of these $1.7 trillion in multinational proﬁts, about 36%, i.e.,
+about $600 billion, were shifted to tax havens.52
+Table 1 also shows that corporations paid $2.15 trillion in corporate income taxes globally
+in 2015.53 Thus the global eﬀective corporate income tax rate was 19% (2.15 trillion divided by
+going through a French subsidiary, French statistical authorities cannot rely on corporate income statements
+to capture such ﬂows, and have to use other—typically less comprehensive—data sources, such as household
+consumption surveys. Beginning 2014, value-added taxes have started to be imposed in France (and other E.U.
+countries) on direct foreign-business-to-consumer sales. In principle, VAT returns could be used as inputs to
+better estimate French imports of services. Looking forward, systematically using VAT returns could help ﬁx
+the imports-exports service mismatch between havens and non-havens countries.
+51See Appendix Section C.2 for a detailed presentation and discussion of these data.
+52Our list of tax havens is the one in Hines and Rice (1994) to which we add Belgium and the Netherlands. The
+Netherlands was not considered as a tax haven by Hines and Rice (1994) because U.S. multinationals reported
+paying relatively high tax rates there in 1982; but as we show in Appendix Table A.11, this is not the case
+anymore: the tax rate paid by aﬃliates of U.S. multinationals in the Netherlands was 12% in 2015. Belgium is
+a borderline case that is sometimes considered a tax haven in the literature (e.g., because of the deductibility
+of notional interest on equity). As shown in Figure 3 below, Belgium’s proﬁtability ratio is only barely higher
+than that of non-havens, and we estimate that only $13 billion were shifted to Belgium in 2015 (Table 2 below).
+Hence excluding Belgium from our list of tax havens would not make any signiﬁcant diﬀerence to our results.
+53Corporate income tax data also come from OECD detailed national accounts (current taxes on income and
+wealth paid by non-ﬁnancial and ﬁnancial corporations, code D.5 in the System of National Accounts) and
+individual countries’ statistical authorities and central banks. Note that some countries include central bank
+21
+=== [p.24] ===
+net-of-depreciation, pre-tax global proﬁts of $11.5 trillion). This rate is smaller than the global
+GDP-weighted statutory tax rate of about 26% because the tax base in most countries is smaller
+than the full economic base (e.g., due provisions such as accelerated depreciation) and because
+of tax credits (e.g., for R&D expenditure). If all countries jointly adopted an eﬀective corporate
+tax rate of 19% (as a fraction of the full economic base), the taxation of global corporate income
+would be unchanged, hence global investment and the global capital stock would not change,
+at least to a ﬁrst-order approximation.54 What would change is the location of capital and
+proﬁt—which is what we are concerned with in this paper.
+5
+The Level and Rise of Global Proﬁt Shifting
+We now present and analyze our results. We start by discussing our core results on global
+proﬁtability in local vs. foreign ﬁrms, before turning to the implications of this phenomenon for
+non-haven countries and tax revenues (Section 6) and for macroeconomic statistics (Section 7).
+5.1
+Proﬁtability in Tax Havens vs. Non-Haven Countries
+Figure 3 shows how the proﬁt-to-wage ratio π varies across countries in 2015. Among the main
+non-haven countries displayed in Figure 3, π average 36% in 2015. That is, for any dollar of
+wage paid, corporations made 36 cents in pre-tax proﬁts. This corresponds to a capital share of
+net corporate value-added α = 26%, and net interest paid p = -3% of net operating surplus. The
+proﬁts-to-wage ratio π does not vary much across developed, non-haven countries; for instance
+it is 31% in the United States, 39% in Sweden, 42% in the United Kingdom.55 These results
+are consistent with existing studies of corporate capital shares, which ﬁnd net-of-depreciation
+corporate capital shares α of about 25% (corresponding to proﬁts-to-wage ratio π of 33% if net
+proﬁts under D.5; we always exclude central bank proﬁts and our series thus only include corporate income taxes
+paid (see Appendix Table A.3). Business property taxes are treated as taxes on production in the SNA (code
+D2–D3).
+54Small changes in investment are possible if elasticities of corporate investment are not constant. In this
+paper we do not attempt to compute the harmonized eﬀective tax rate that would keep global investment
+perfectly constant, but simply note that such a rate exists (and is probably close to 19%). The level of the global
+harmonized tax rate that would keep global investment constant is not relevant for our purposes. Note that this
+rate could in principle be higher than 19%, for instance if, at the same time they harmonized their tax rates, all
+countries also increased public investment complementing private capital. Modeling the diﬀerent ways in which
+global proﬁts could be kept ﬁxed with a perfect international coordination of economic policies falls outside the
+scope of this research.
+55As reported in Appendix Table A.2., proﬁtability ratios are higher in developing countries. This reﬂects the
+fact that the capital share of corporate output is typically higher in poorer countries, potentially due, e.g., to
+the presence of rents generated by natural resources and to lower labor bargaining power (lower unionization
+rates, low or no minimum wages).
+22
+=== [p.25] ===
+interest p is zero), with modest variation across time and across countries, of the order of 5–10
+percentage points (e.g., Blanchard, 1997; Karabarbounis and Neiman, 2014; Cette, Koehl and
+Philippon, 2019; Guti´errez and Piton, 2019).
+Tax havens, by contrast, are abnormally proﬁtable.
+In Singapore and Hong Kong, the
+macroeconomic proﬁt-to-wage ratio exceeds 100%; in Ireland, Puerto Rico, and Luxembourg,
+it exceeds 200%. That is, tax havens appear to have extraordinarily high proﬁt-to-wage ratios
+π. As shown by Appendix Table A.2, the high π of tax havens are mostly driven by their high
+recorded capital shares, not by net interest.56 For instance, the net capital share of net corporate
+value-added is 62% in Ireland, 68% in Puerto Rico, 66% in Panama. The main exception is
+Luxembourg, where net intra-group interest receipts are the key driver of the high recorded π.
+Overall, 15% of our estimated amount of proﬁts shifted oﬀshore comes from interest, consistent
+with the literature that suggests that debt-shifting is second-order relative to transfer pricing
+and the strategic location of intangibles (Heckemeyer and Overesch, 2017).57
+Next, we analyze how the proﬁtability of tax havens has changed over time. Due to data
+availability constraints, our global database is for the year 2015, and we cannot yet present time
+series of π for all countries (future releases of FATS will allow us to build comprehensive time
+series starting in 2015). However, we can already provide time series of π for speciﬁc tax havens.
+The tax haven for which the longest and highest quality time series exist is Ireland. As shown in
+the top panel of Figure 4, in Ireland π was around 25–30% in the early 1970s, a level similar to
+that recorded in the United States. Proﬁtability started rising in the 1980s and then increased
+sharply in the mid-1990s and then again in the 2010s to reach 250% in 2015.58 By contrast,
+in the United States π never dramatically varies. Proﬁtability has tended to slightly increase
+since the 1980s (from 18% in 1980 to 31% in 2015), driven by the rise in the capital share of
+corporate value-added; but this increase is small compared to the upsurge in the proﬁtability of
+tax havens’ corporations. Trends are similar for other non-haven countries for which time series
+56Throughout this article, we exclude oﬀshore mutual funds (i.e., mutual funds with mostly foreign investors
+and foreign investments) from our π, πf, and πl ratios, because oﬀshore mutual funds otherwise distort the
+proﬁtability ratios of tax havens. By convention mutual funds have an apparently high proﬁtability as deﬁned in
+our paper (i.e., after net interest payments), but for purely accounting reasons. All income paid by mutual funds
+to their shareholders is recorded as dividends in the national accounts, even for mutual funds that only invest in
+bonds; as a result bond funds are large receivers of net interest. Among OECD countries oﬀshore mutual funds
+are only signiﬁcant in Luxembourg, Ireland, and to a much lesser extent the Netherlands. Estimating the net
+interest received by mutual funds involves a margin of error, but this uncertainty is very small compared to the
+large π and πf of tax havens; see Appendix Section A.3 for a discussion.
+57Intra-group interest received by tax havens amount to $101 billion in 2015 (15.7%) vs. $545 billion for the
+exports of services most conducive of proﬁt shifting (84.3%); see Appendix Table C.2.
+58In 2015, the proﬁts-to-wage ratios recorded by Ireland increased particularly strongly. That year, recorded
+real GDP grew 26.3%—largely reﬂecting transfers of multinational intangible assets to the island (see e.g.,
+OECD, 2016).
+23
+=== [p.26] ===
+are available.59
+In the bottom panel of Figure 4, we can see that the rise in the proﬁtability of tax havens
+over time is not speciﬁc to Ireland. When we look at all the majority-owned aﬃliates of U.S.
+multinationals throughout the world (using the outward FATS of the United States, which as
+already noted have been compiled since the 1960s), a similar pattern emerges. In the early 1970s,
+the haven and non-haven aﬃliates of U.S. multinationals were as proﬁtable. In both cases, the
+proﬁts-to-wage ratio was around 50%. Since the 1970s, proﬁtability for haven aﬃliates has
+sharply increased.
+In 2015, the proﬁts-to-wage ratio of US aﬃliates located in tax havens
+exceeds 350%, while the proﬁts-to-wage ratio of US aﬃliates located in high-tax countries has
+stayed constant since the 1970s (45% in 2015).
+5.2
+Proﬁtability in Local vs. Foreign Firms
+Figure 5 displays the proﬁts-to-wage ratios for foreign ﬁrms (πf) and local ﬁrms (πl) separately
+within each country in 2015. By construction the aggregate proﬁt-to-wage ratio π shown in
+Figure 3 for a given country is the average of πf and πl shown in Figure 5, with πf weighted
+by the share s of wages paid to workers employed by foreign ﬁrms and πl weighted by 1 −s.
+A key result emerges: the high overall proﬁts-to-wage ratios π of tax havens are entirely driven
+by the high proﬁtability of foreign ﬁrms (high πf). Foreign ﬁrms in tax havens are an order of
+magnitude more proﬁtable than local ﬁrms in tax havens.
+There are three other main take-aways from Figure 5. First, the reported proﬁtability of
+foreign ﬁrms in tax havens is truly exceptional, with πf ratios of 800% (which corresponds to a
+capital share of corporate value-added α of close to 90%) in Ireland and as high as 1,625% in
+Puerto Rico (corresponding to a capital share of more than 94%, i.e., a corporate labor share
+of less than 6%).60
+Second, while foreign ﬁrms are an order of magnitude more proﬁtable than local ﬁrms in
+tax havens, the opposite is true in high-tax countries: in these countries foreign ﬁrms are less
+proﬁtable than local ﬁrms. For instance, in the United Kingdom the proﬁts-to-wage ratio is 26%
+for foreign ﬁrms (πf) vs. 48% for local ﬁrms (πl); in Japan πf equals 24% while πl reaches 44%,
+etc.61 There are several possible reasons for the low proﬁtability of foreign ﬁrms in high-tax
+59See, e.g., Karabarbounis and Neiman (2014) and Piketty and Zucman (2014).
+60Puerto Rico is a U.S. possession, but is treated as a foreign country for purposes of U.S. taxation and in
+some (but not all) U.S. macroeconomic statistics. In this paper we treat it as a foreign country. Almost all the
+proﬁts shifted to Puerto Rico accrue to U.S. multinationals. See Su´arez Serrato (2018) for an analysis of the
+evolution of proﬁt shifting by U.S. multinationals to Puerto Rico.
+61The lower proﬁtability of foreign ﬁrms in the United Kingdom compared to local ﬁrms, by a factor of about
+2, is consistent with Bilicka (2019) who ﬁnds that foreign multinational subsidiaries in the UK under-report their
+24
+=== [p.27] ===
+countries (relative to local ﬁrms in these countries). For instance foreign ﬁrms may be younger,
+or they could operate in less proﬁtable industries. The fact that πf < πl in high-tax countries
+while πf >> πl in tax havens (Figure 5) suggests that proﬁt shifting is also part of the reason
+why foreign ﬁrms appear unproﬁtable in high-tax places. That is, there is a clear trace in global
+macro data of movements of proﬁts within divisions of multinational groups, away from high-tax
+aﬃliates and towards low-tax aﬃliates. Precisely quantifying the relative importance of proﬁt
+shifting (vs. other factors such as ﬁrm age) in the low πf observed in high-tax countries falls
+outside the scope of this research.62
+Third, local ﬁrms in tax havens are generally as proﬁtable as local ﬁrms in non-haven
+countries. The high overall proﬁts-to-wage ratio π of tax havens is entirely driven by the high
+proﬁtability of their foreign ﬁrms πf. Local ﬁrms in tax havens do not seem to be abnormally
+proﬁtable, which could in principle be the case if low-tax countries also had pro-capital or anti-
+labor institutions (such as bans on unions or no minimum wage) or if the reported proﬁtability
+of local haven ﬁrms was inﬂated by inward proﬁt shifting. This suggests that the πl ratios of
+tax havens are a useful reference point to estimate what fraction of the large πf of tax havens
+can be attributed to proﬁt shifting.
+5.3
+Decomposing The High Proﬁts of Haven Aﬃliates
+What is the relative contribution of high capital intensities vs.
+proﬁt shifting to the high
+recorded πf of tax havens?
+As shown by the top panel of Figure 6, on aggregate ﬁrms have similar capital stocks K
+(relative to wages wL) in tax havens and non-havens. Within tax havens, moreover, foreign
+ﬁrms have similar capital stocks (again relative to wages) as local ﬁrms on average. For the main
+tax havens (Ireland, Puerto Rico, Netherlands, Singapore, Belgium, Luxembourg, Switzerland,
+and Hong Kong) the ratio of the capital stock to wages averages 274% for foreign ﬁrms and
+303% for local ﬁrms. For the main non-havens countries (US, Italy, Germany, UK, Australia,
+Spain, France, and Japan) the average capital-stock-to-wage ratios are similar: 291% for foreign
+ﬁrms and 320% for local ﬁrms.
+These averages conceal some heterogeneity, however. In Ireland and Puerto Rico, foreign
+ﬁrms have large capital stocks, while the converse appears to be true in Switzerland, Hong Kong,
+and Luxembourg. This suggests that diﬀerences in capital intensities could explain some of the
+taxable proﬁts by about 50 percent relative to domestic standalone.
+62See, e.g., Lupo et al. (1978) and Mataloni (2000) for an analysis of the relatively low proﬁtability of foreign
+ﬁrms operating in the United States.
+25
+=== [p.28] ===
+variation in πl and πf across countries. The bottom panel of Figure 6 quantiﬁes the contribution
+of diﬀerences in capital intensity to the observed diﬀerences in proﬁts-to-wage ratios. The ﬁgure
+shows how applying the capital/labor K/L ratio of foreign ﬁrms to local ﬁrms would modify the
+observed proﬁts-to-wage ratio of local ﬁrms πl, for diﬀerent values of the capital/labor elasticity
+of substitution σ. For plausible values of σ, diﬀerences in capital intensities can explain only a
+small fraction of the πf −πl gap. For instance in Ireland, if local ﬁrms were as capital intensive
+as foreign ﬁrms, then with σ = 1.3, πl would equal 100% instead of the observed value of 68%.
+This would still be almost an order of magnitude less than the observed πf of 800%. The same
+conclusion holds true for each other tax haven.
+We obtain similar results when we focus on the aﬃliates of U.S. multinationals throughout
+the world (using the outward FATS of the United States). Figure 7) decomposes the proﬁt-
+to-wage ratio of the foreign aﬃliates of U.S. multinationals following equation 2 above. The
+haven aﬃliates of U.S. multinationals have higher capital intensities than non-haven aﬃliates,
+but only slightly so. For a given amount of wages paid, haven aﬃliates use a 1.4 times larger
+stock of tangible capital than non-haven aﬃliates in 2015. Haven aﬃliates also receive slightly
+more interest in 2015 (1.1 time more than non-haven aﬃliates, relative to operating surplus),
+but the diﬀerence is not large. By contrast, haven aﬃliates have much higher recorded rates of
+return on capital than non-haven aﬃliates today. In 2015, the recorded rate of return to capital
+rf is close to ﬁve times higher in haven aﬃliates than in non-haven aﬃliates. The bulk of the
+sevenfold diﬀerence in proﬁts-to-wage ratios between havens and non-haven aﬃliates (bottom
+panel of Figure 4) is thus due to higher recorded returns to capital in haven aﬃliates—not high
+intra-group interest receipts or high capital intensities.
+The high rates of return of haven aﬃliates can be seen as the product of two eﬀects. First,
+multinationals book intangibles in low-tax aﬃliates. These intangibles are not included in our
+measure of corporations’ capital stocks, for lack of data about their market value—which in
+many cases is impossible to assess, given that many of these intangibles are ﬁrm-speciﬁc and
+never exchanged on markets between unrelated parties.
+Second, for a given stock of total
+capital (tangible plus intangible), haven aﬃliates can report high proﬁts because of intra-group
+transfer price manipulations. With the macro data at our disposal, we cannot separate the role
+of intangibles vs. intra-group transfer prices in explaining the high rates of returns recorded by
+haven aﬃliates. This distinction is not relevant for our purposes, however, since both of these
+techniques have similar redistributive implications: for a given global amount of proﬁts, both
+redistribute proﬁts across countries without aﬀecting wages.
+26
+=== [p.29] ===
+One potential concern with our treatment of intangibles is that some of the intangibles
+booked in tax havens may not have been shifted there but produced locally, by workers employed
+in R&D. To shed light on this question, we use the fact that foreign aﬃliates statistics include
+data on R&D personnel. The US outward FATS show that out of the 308,100 employees of the
+majority-owned foreign aﬃliates of US multinationals engaged in R&D in 2014, only 8% were
+employed in tax havens; 92% were employed in non-haven aﬃliates (primarily in Germany, the
+U.K., Canada, etc.).63 The FATS of other countries show similar patterns. By and large, the
+intangibles booked in low-tax countries have been produced in high-tax countries.64
+One advantage of using the outward FATS of the United States is that we can study how the
+contribution of rates of return to capital vs. capital intensity vs. interest payments has changed
+over time, back to 1966. The main driver of the rise in the proﬁts-to-wage ratio of the haven
+aﬃliates of US multinationals since the mid-1960s has been the rise in their rate of return. Up to
+the late 1970s, aﬃliates in tax havens had roughly the same recorded rate of return to tangible
+capital, same capital intensity, and same net interest receipts than other aﬃliates. Since the
+1980s, their relative rate of return has increased by a factor of about 5. By contrast, the relative
+capital intensity of these two groups of aﬃliates has remained close to 1, with only a mild rising
+trend. Some capital has moved towards low-tax places. But what the data suggest is that, so
+far, proﬁt shifting seems to have swamped tax-driven movements of tangible capital.65
+5.4
+Estimates of Proﬁts Shifted to Tax Havens
+To form our estimate of the amount of proﬁts shifted to tax havens, we set πf equal to πl in
+each tax haven. That is, we assume that absent proﬁt shifting, foreign ﬁrms in Ireland would be
+as proﬁtable as local Irish ﬁrms, foreign ﬁrms in Luxembourg as proﬁtable as local Luxembourg
+ﬁrms, etc. In total, we ﬁnd that more than $616 billion in proﬁts were shifted to tax havens
+in 2015, close to 40% of multinational proﬁts ($616 billion out of $1.7 trillion). We present our
+estimate of the amount of proﬁts shifted into each tax haven in the bottom panel of Table 2.
+Ireland appears as the number one shifting destination, accounting for more than $100 billion
+63See BEA, “Activities of US Multinationals Abroad,” Table II-I.1. These tabulations are only made available
+during benchmark-year surveys (the latest of which was in 2014).
+64A related issue is that high-tax countries require that intangibles be sold by the parent ﬁrm to a low-tax
+subsidiary at an arm’s length price. We do not have data on the prices charged at the time of the transfer.
+For our main purpose in that paper—quantifying the international mobility of proﬁts—whether fair prices are
+enforced at the time of the transfer is not relevant. To quantify the tax revenue implications of proﬁt shifting
+this issue is relevant, however; See Section 6 below.
+65This conclusion is consistent with the ﬁrm-level analysis of Grubert and Slemrod (1998) in the context of
+US investments in Puerto Rico.
+27
+=== [p.30] ===
+alone. Singapore, the Netherlands, Caribbean tax havens, and Switzerland come next. We stress
+that due to the complex structures used by multinationals and to the data limitations discussed
+in Section 4.2, allocating the shifted proﬁts to speciﬁc jurisdictions involves a margin of error
+(for instance, the frontier between Ireland and Bermuda is not always clear). This uncertainty,
+however, does not aﬀect our estimate of the global amount of proﬁts shifted oﬀshore.
+It is worth noting that our estimate of global proﬁt shifting, $616 billion, is at the low-end
+of the scale of available estimates. Using foreign direct investment data, Bolwijn et al. (2018)
+estimates that $700 billion in proﬁts where shifted in 2012. Using data from the Forbes Global
+2000 list of the world’s largest corporations, Clausing (2016) ﬁnds $1,076 billion in shifted
+proﬁts, again for the year 2012. Our estimates of the implied tax revenue losses (described in
+Section 6 below) are also at the low-end of the scale.66 We now discuss a number of robustness
+tests.
+Robustness with respect to σ.
+In our central scenario, the capital/labor elasticity of sub-
+stitution σ is set to 1 and thus by construction diﬀerences in capital intensities explain none of
+the πf −πl gap within tax havens. With σ = 1.3, 4% of the abnormal proﬁtability of foreign
+ﬁrms in tax havens (relative to local ﬁrms in tax havens) can be explained by diﬀerences in
+capital intensity (and 96% by proﬁt shifting); with σ= 1.7, the contribution of diﬀerences in
+capital intensity rises to 7%. With an elasticity of substitution less than 1, proﬁt shifting would
+be even higher than our preferred estimate, for instance $660 billion in 2015 with σ = 0.7.67
+Controlling for sectoral composition.
+One potential concern with comparing proﬁtability
+in foreign vs. local ﬁrms is that foreign ﬁrms in tax havens may be in other sectors than local
+ﬁrms, and proﬁts-to-wage ratios may vary across sectors. To address this issue, we use the fact
+that in some countries, foreign aﬃliates statistics are available by sector of economic activity.
+Appendix Figure L.1 focuses on the case of U.S. multinationals, using the outward foreign
+aﬃliates statistics of the United States. We ﬁnd that the haven aﬃliates of U.S. multinationals
+are an order of magnitude more proﬁtable than non-haven aﬃliates in the same sector. In
+non-haven countries, U.S. aﬃliates are typically less proﬁtable than local ﬁrms operating in the
+same sector; while in tax havens they are an order of magnitude more proﬁtable than local ﬁrms
+operating in the same sector—consistent with the pattern depicted in Figure 5. Controlling for
+sectoral diﬀerences in local vs. foreign ﬁrms does not quantitatively aﬀect our ﬁndings.
+66See Appendix Table D.1a
+67See Appendix Table E.3
+28
+=== [p.31] ===
+Another take-away from Appendix Figure L.1 is that proﬁt shifting is not limited to just a
+few sectors of the economy, such as information and communication technology. Proﬁt shifting
+appears to be an across-the-board phenomenon, observable even in industries where intangibles
+play a relatively minor role in the production process (such as manufacturing). There are several
+potential explanations for this ﬁnding. Firms across all industries may shift proﬁts by using
+intra-group trade and borrowing. It could also be that multinationals in all sectors can create
+ﬁrm-speciﬁc intangibles (such as logos), book these in low-tax places, and charge royalties to
+high-tax subsidiaries for the right to use these intangibles.
+Firm size.
+Another potential concern with our estimation procedure is that local ﬁrms in
+tax havens may be smaller than foreign ﬁrms, and smaller ﬁrms may have lower proﬁts-to-wage
+ratios, leading us to over-estimate global proﬁt shifting. Currently available foreign aﬃliates
+statistics do not enable us to control for ﬁrm size. We note, however, that being a local ﬁrm
+does not imply being small. There are many large multinationals headquartered in tax havens
+(for instance, after “inverting” from the United States). In our data, such ﬁrms are treated
+as local ﬁrms in tax havens, as they are not owned by foreign parents. Looking forward, our
+estimation procedure could be reﬁned by drawing on more detailed foreign aﬃliates statistics
+(e.g., tabulated by ﬁrm size) and global micro-data on the operations of foreign ﬁrms.
+Inward proﬁt shifting by local ﬁrms in tax havens.
+Another concern is that by using the
+local ﬁrms of tax havens as point reference, we may actually under-estimate the extent of global
+proﬁt shifting, since ﬁrms headquartered in tax havens may shift foreign proﬁts inward, inﬂating
+πl. This phenomenon could explain the relatively high proﬁts-to-wage ratio of Irish local ﬁrms
+reported in Figure 5, and suggests that our estimates of global proﬁt shifting should probably
+be viewed as conservative.68 We have run robustness tests where we make the proﬁtability of
+local haven ﬁrms vary and assess the impact on our results, and found only second-order eﬀects,
+however. The reason is that the bulk of our estimated $616bn in shifted proﬁts comes from
+tax havens where πf is an order of magnitude higher than πl (hence where the exact level of
+πl does not matter much). Only a small fraction of our estimated $616 billion comes from tax
+havens such as Netherlands and Belgium where πf is only slightly higher than πl (hence where
+the exact level of πl matters more); see Table 2. If we assumed that local ﬁrms in tax havens are
+68Ideally we would like to be able to compare the foreign ﬁrms of tax havens to local ﬁrms of comparable size
+and without foreign aﬃliates. Existing foreign aﬃliates statistics, however, do not currently make it possible to
+decompose local ﬁrms into ﬁrms with aﬃliates abroad vs. ﬁrms with only domestic operations.
+29
+=== [p.32] ===
+in reality as proﬁtable as local ﬁrms are on average in the OECD (πl = 41%), then our estimate
+of global proﬁt shifting would rise by about 3%.69
+Abnormal proﬁtability vs. abnormal cross-border transactions.
+Last, we compare our
+estimate of the amount of proﬁt shifted into each tax haven based on setting πf equal to πl in each
+haven to our estimate based on the abnormal level of high-risk cross-border transactions recorded
+in the balances of payments of tax havens. “High-risk” transactions are service exports found in
+the literature to be conducive of proﬁt shifting plus intra-group receipts of interest; “excessive”
+means that we partial out the average transaction level for countries with similar levels of GDP.
+Figure 8 shows the result of this comparison. Despite being based on totally diﬀerent and fully
+independent data, our two methodologies deliver very consistent results. In 2015, the “above
+normal proﬁtability” methodology yields an estimate of $616 billion for the amount of proﬁt
+shifted to tax havens globally, while the “above-normal cross-border transactions” methodology
+yields an estimate of $646 billion. Strikingly, the estimates also match almost perfectly at the
+haven level.
+6
+The Redistributive Implications of Proﬁt Shifting
+6.1
+Allocating the Shifted Proﬁts Across Countries
+The pink bar in the top panel of Figure 9 allocates the $616bn in excess proﬁts in tax havens
+across source countries, proportionally to the bilateral intra-group interest received by tax
+havens and their bilateral exports of services conducive of proﬁt shifting (such as rights to
+use intellectual property).
+We ﬁnd that about 35% of the shifted proﬁts come from E.U. (non-haven) countries, close to
+30% from developing countries, and about 25% from the United States. European countries are
+particularly aﬀected. According to our estimates, under a perfect tax harmonization scenario,
+proﬁts would be 17% higher than they currently are in France (Table 1, col. 4 divided by col.
+1), 14% higher in the UK, versus close to 10% higher in the United States. Proﬁts in the main
+developing countries, by contrast, would be around 5% higher, and proﬁts in Japan only 1%
+higher. Proﬁts would be reduced by 60% in tax havens. About 80% of the proﬁts shifted out
+of the European Union are shifted to the E.U. tax havens, primarily Ireland, Luxembourg, and
+the Netherlands, while the proﬁts shifted out of the United States are primarily shifted to the
+69See Appendix Table A.7.
+30
+=== [p.33] ===
+non-E.U. havens.70
+We also allocate the proﬁts shifted to tax havens to the countries where the parents of
+the tax haven subsidiaries are located (blue bar in the top panel of Figure 9). Multinationals
+from all countries shift proﬁts, but we ﬁnd that U.S. multinationals are the main “shifters”:
+about half of all the shifted proﬁts ultimately accrue to U.S. parents, while about 30% accrue
+to E.U. parents. The higher shifting intensity of U.S. multinationals can be explained by the
+speciﬁc provisions contained in the U.S. tax code before 2018 and by U.S. policies adopted in the
+mid-1990s that facilitated shifting from foreign high-tax countries to tax havens (check-the-box
+regulations); see Wright and Zucman (2018).
+6.2
+The Redistribution of Tax Revenues
+Table 2 presents estimates of the losses of corporate income tax revenues in high-tax countries.
+These estimates are obtained by applying the statutory income tax rate to the amount of proﬁts
+shifted outward. At the outset, it is worth stressing two caveats. First, countries attempt to
+tax proﬁts that are shifted outward through controlled foreign corporations rules. This means
+that a dollar of lost proﬁt does not necessarily translate into τ cents lost in tax revenue, if τ
+is the statutory corporate tax rate. Second, it is possible that with better enforcement there
+would be more real responses to taxation, such as more mobility of tangible capital to low-tax
+places. Our tax revenue loss computations keep everything else constant, as is standard in the
+literature on the size of tax evasion (e.g., Johns and Slemrod, 2010; Alstadsæter et al., 2019).
+With these caveats in mind, we ﬁnd that proﬁt shifting reduces the corporate tax revenue of
+the European Union by around 20%. For the world as a whole, the tax revenue loss is around
+10% (bottom panel of Figure 9). The revenue losses vary signiﬁcantly across countries and are
+positively correlated with the corporate income tax rate. Within the European Union, higher
+tax countries (such as France and Italy) experience higher losses than lower tax countries (such
+as Eastern European countries), consistent with the notion that higher corporate tax rates give
+more incentives to shift.
+Using our estimates of the amount of proﬁts shifted into each haven, we can compute how
+much tax revenue tax havens have been able to generate by taxing these proﬁts. Although some
+havens like Bermuda have 0% corporate tax rates, most others, like Ireland, Singapore, and
+Luxembourg, have low but positive rates. A striking fact, depicted on the top panel of Figure 10,
+is that tax havens, although they have low statutory tax rates (and even lower eﬀective rates)
+70See Appendix Figure C.1
+31
+=== [p.34] ===
+generate much more revenue than non-haven countries (relative to the size of their economy).
+Malta collects about 8% of its national income in corporate tax revenue, Luxembourg 7%, and
+Ireland more than 5%. By contrast, in the United States, Germany, and Italy (three of the
+countries with the highest statutory tax rates in 2015), corporate tax revenue amount to less
+than 3% of national income. Globally, for each $1 avoided in high-tax countries, about 20 cents
+in tax revenues are generated in tax havens.
+How do tax havens manage to collect so much tax revenue? As shown by the bottom panel
+of Figure 10, most of their revenue derive from taxes collected on foreign ﬁrms. With source
+taxation and no international coordination, tax havens can generate sizable revenue by taxing
+the huge foreign proﬁts they attract at low but positive rates. The havens that collect the largest
+amount of revenue appear to be those that impose the lowest tax rate on foreign proﬁts: the
+revenue-maximizing tax rate appears to be very low, less than 5%. The low revenue-maximizing
+rate of tax havens can explain the rise of the supply of tax avoidance schemes documented in
+the literature—such a favorable tax rulings granted to speciﬁc multinationals—and in turn the
+rise of proﬁt shifting since the 1980s.71
+Figure 11 considers the case of Ireland, the country that by our estimates attracts the largest
+amount of shifted proﬁts (more than $100 billion in 2015). As shown in the top panel of this
+Figure, until the 1990s Ireland used to collect relatively little corporate income tax revenue,
+about 1.5%–2% of national income—signiﬁcantly less than the United States. Then, as proﬁt
+shifting surged (Figure 4), so did tax collection: since the mid-1990s, Ireland has collected
+signiﬁcantly more corporate tax revenue (as a fraction of national income) than the United
+States—about twice as much in 2015. Tax collection is strongly negatively correlated with the
+statutory corporate tax rate (bottom panel of Figure 11): when the tax rate was high (around
+50% until the late 1980s), tax collection was low; since the rate was cut to 12.5% in the 1990s,
+tax collection has been high. Whenever they choose non-zero rates—even rates eﬀectively quite
+close to zero—tax havens derive clear beneﬁts from attracting paper proﬁts.
+It is worth noting that gains in tax revenue are not the only way tax havens beneﬁt from
+tax competition. As we have seen a number of tax havens (including Ireland) have high capital
+intensities, i.e., they also attract capital-intensive industries (which can boost wages). Even
+when capital intensities are not higher, foreign ﬁrms can account for a large share of employment
+in tax havens and bring important economic beneﬁts.72
+Our analysis does not allow us to
+71See for instance the case between the E.U. Commission and Apple in Ireland. The E.U. Commission contends
+that the Irish tax authorities have allowed Apple to pay particularly low rates, of as little as 0.001%, over years.
+72One potential explanation is that it may be easier for multinationals to shift proﬁts into the countries where
+32
+=== [p.35] ===
+quantify the complete gains that tax havens derive from international capital mobility. Such an
+analysis would require an explicit model of how movements of tangible capital aﬀect the host
+economies, which we leave to future research.
+7
+Macro Statistics Corrected for Proﬁt Shifting
+The ﬂip side of the high proﬁts recorded in tax havens is that proﬁts recorded in non-haven
+countries are too low. In both cases, core macroeconomic statistics are distorted. In the coun-
+tries where shifted proﬁts are booked (i.e., tax havens), GDP, corporate proﬁts, the capital
+share of corporate value-added, and trade balances are over-estimated. In non-haven countries,
+by contrast, these indicators are under-estimated. In this section, we present macroeconomic
+statistics corrected for the eﬀect of proﬁt shifting for all OECD countries, all tax havens, and
+the main emerging economies. All our estimates are available online in Appendix Tables C.5
+and C.5b; in this section we focus on discussing the methodology and main results.
+To adjust the oﬃcial statistics, we proceed as follows. We add the proﬁts shifted through
+transfer prices and the strategic location of intangibles (85% of the total) to the recorded
+operating surplus rK of their source country. We then correct the full sequence of economic
+accounts of the source countries accordingly (i.e., we increase the value-added Y of the corporate
+sector, GDP, exports, and the trade balance by the same amount) and compute corrected
+corporate capital shares α = rK/Y and labor shares 1 −α.73 Proﬁts shifted through the use of
+intra-group interest payments (15% of the total) do not aﬀect recorded operating surplus rK
+but only the breakdown of operating surplus into corporate proﬁts (1 −p) · rK and net interest
+payments p; we adjust corporate proﬁts and net interest payments accordingly.
+Table 3 presents our estimates of capital shares and trade balances corrected for proﬁt
+shifting. A number of results are worth noting. First, accounting for proﬁt shifting increases
+the capital share of corporate value-added in non-haven countries signiﬁcantly.74 Consistent
+they also have sizable real activity. According to our estimates, foreign ﬁrms pay 24% of all wages in Ireland
+(Appendix Table A.4), while they account for as much as 78% of all proﬁts (Appendix Table A.7). Note, however,
+that there are countries where foreign ﬁrms account for an even larger fraction of the total wage bill and yet there
+was little proﬁt shifting in 2015. This includes most Eastern European countries, where foreign ﬁrms account
+for around 40% of both wages and proﬁts. These countries had corporate tax rates close to 20% in 2015.
+73Bruner, Rassier, and Ruhl (2018) discuss how the eﬀect of proﬁt shifting cascades through the economic
+accounts and present US macroeconomic statistics corrected for proﬁt shifting; see also Avdjiev et al. (2018).
+74Note that it does not necessarily increase the capital share of national income, as the proﬁts of the oﬀshore
+subsidiaries that belong to domestic shareholders enter national income in the form of direct investment income
+received from the rest of the world. We focus here on correcting corporate factor shares (which are the focus of
+most of the literature on the decline of the labor share, e.g., Karabarbounis and Neiman, 2014; Guti´errez and
+Piton, 2019).
+33
+=== [p.36] ===
+with our earlier result that European countries are particularly aﬀected, we ﬁnd that the capital
+share is under-estimated by about 2 to 2.5 points in the main E.U. countries (Germany, United
+Kingdom, France, Italy), vs. 1.1 point in the United States. Because there was almost no
+proﬁt shifting before the 1980s (see, e.g., Figure 4) the higher level of the capital share implies
+a higher rise in the capital share over the last few decades. By our estimates, the rise in the
+European corporate capital share since the early 1990s is twice as large as recorded in the oﬃcial
+national accounts. This ﬁnding is important in light of a recent literature that suggests that
+after excluding real estate, European labor shares may not have declined much since the 1970s
+(Guti´errez and Piton, 2019) relative to the United States. Whether labor shares have declined
+globally (or only in a few countries) is critical for teasing out the role of technological change
+(vs. country-speciﬁc policies) in driving factor shares and inequality.
+Proﬁt shifting also has signiﬁcant eﬀect on trade balances. For instance, after accounting for
+proﬁt shifting, Japan, the U.K., France, and Greece turn out to have trade surpluses in 2015,
+in contrast to the published data that record trade deﬁcits. According to our estimates, the
+true trade deﬁcit of the United States was 2.1% of GDP in 2015, instead of 2.8% in the oﬃcial
+statistics—that is, a quarter of the recorded trade deﬁcit of the United States is an illusion of
+multinational corporate tax avoidance.75
+8
+Conclusion
+What have we learned from this paper? In our view the main ﬁnding is that one can obtain
+a clear picture of global proﬁt shifting by exploiting the foreign aﬃliates statistics recently
+made available by many countries. These data show that the capital share of corporate value-
+added is extremely high in the foreign ﬁrms of tax havens, while it is low in the foreign ﬁrms
+of other countries compared to the capital share of local ﬁrms.
+By exploiting this pattern
+of diﬀerential proﬁtability as well as new bilateral balance of payments data recently made
+available by tax havens, our paper estimates how much each tax haven, each OECD country,
+and the main emerging economies gain or lose in proﬁts compared to a benchmark of global
+tax harmonization. We ﬁnd that the redistributive eﬀects of tax competition are large: by our
+estimates, close to 40% of multinational proﬁts are shifted to tax havens in 2015. Non-haven
+European Union countries appear to be the largest losers from this phenomenon.
+Our ﬁndings have implications for policy. First, they suggest that cutting corporate tax
+rates, as the United States has done at the end of 2017, is less likely to generate quick positive
+75See Sandholtz (2018) for an estimation based on U.S. bilateral trade data.
+34
+=== [p.37] ===
+eﬀects on wages than textbook economic models suggest. For wages to rise, factors of production
+that complement labor need to increase, which can happen fast if tangible capital ﬂows from
+abroad, less so if it is mostly paper proﬁts that move across borders. Second, proﬁt shifting
+raises challenges in a number of policy areas. It reduces the eﬀective rates paid by multinationals
+compared to local ﬁrms, which could adversely aﬀect competition. It reduces the taxes paid by
+the wealthy—as ownership of these ﬁrms is concentrated—which might call for oﬀsetting changes
+in individual income taxation, or changes in the way multinational companies are taxed.
+We stress that our estimates of the amount of proﬁts shifted by multinationals globally is
+conservative. Our investigation has uncovered statistical gaps that limit our ability to monitor
+global economic activity and constrain tax enforcement. Statistical improvements are neces-
+sary. To solve the asymmetries in bilateral foreign aﬃliates and direct investment statistics (in
+particular between the United States and European tax havens), national statistical authorities
+need to be authorized to exchange micro-data. The foreign aﬃliates statistics that we exploited
+in this paper need to be compiled by more countries and expanded to include more informa-
+tion, such as interest payments, corporate income taxes paid, and capital stocks (as the United
+States, for example, already does). A number of Caribbean tax havens do not currently publish
+comprehensive enough national accounts. Last and maybe most importantly, many countries—
+including the United States and a number of tax havens—could improve their public corporate
+registries so that all ﬁrms are included and proﬁt information is made publicly available at
+the subsidiary level. Altogether, these improvements would signiﬁcantly improve our ability to
+study globalization and its distributional eﬀects.
+Our analysis has focused on how tax competition redistributes tax bases across countries.
+In future research, it would be good to introduce the inequality dimension in the analysis,
+i.e., to quantify how much the various income and wealth groups in each country have gained
+or lost from tax competition. According to our estimates, about half of the globally shifted
+proﬁts accrue to the shareholders of U.S. multinationals (a majority of which, but not all, are
+Americans). Because equity ownership is concentrated (see e.g., Saez and Zucman, 2016, for
+evidence on equity wealth concentration in the United States), proﬁt shifting tends, everything
+else equal, to reduce the eﬀective tax rate of the wealthy, which may contribute to increasing
+inequality.
+A quantitative analysis of these redistributive eﬀects across income and wealth
+groups would make it possible to make progress towards a full-ﬂedged macro-distributional
+analysis of globalization.
+This raises major conceptual and empirical challenges for future
+research.
+=== [p.38] ===
+References
+Alstadsæter, Annette, Niels Johannesen, and Gabriel Zucman. 2019. “Tax Evasion
+and Inequality”. American Economic Review, 109(6): 2073–2103.
+Altshuler, Rosanne and Grubert, Harry. 2005. “The Three Parties in the Race to the Bot-
+tom: Host Governments, Home Governments and Multinational Companies”. CESifo Working
+Paper Series No. 1613
+Angulo, Emma and Alicia Hierro. 2014. “Asymmetries in the Coordinated Direct Invest-
+ment Survey: What Lies Behind?”. IMF working paper.
+Auerbach, Alan J. 2010.
+“A Modern Corporate Tax.” The Hamilton Project/Center for
+American Progress, December.
+Avdjiev Stefan, Mary Everett, Philip R. Lane, and Hyun Song Shin. 2018. “Tracking
+the international footprints of global ﬁrms”, BIS Quarterly Review, March, p. 47-66.
+Avi-Yonah, Reuven S., and Kimberly A. Clausing. 2007. “Reforming Corporate Taxa-
+tion in a Global Economy: A Proposal to Adopt Formulary Apportionment”, Hamilton Paper
+Discussion project 2007-08.
+Becker, Johannes and Ronald B. Davies. 2014. “A Negotiation-Based Model of Tax-
+Induced Transfer Pricing”. CESifo working paper #4892.
+Beer, Sebastian, Ruud de Mooij and Li Liu. 2019. “International Corporate Tax Avoid-
+ance: A review of the channels, magnitudes and blind spots.” IMF Working paper no. 168.
+Bernard, Andrew B., J. Bradford Jensen, and Peter K. Schott.
+2006.
+“Transfer
+Pricing by U.S. Based Multinational Firms”. NBER working paper #12493.
+Bilicka, Katarzyna Anna.. 2019. “Comparing UK Tax Returns of Foreign Multinationals to
+Matched Domestic Firms,” American Economic Review, 119(8): 2921–2953.
+Blanchard, Olivier.. 1997. “The Medium Run,” Brookings Papers on Economic Activity,
+1997, n2.
+Blouin, Jennifer and Leslie Robinson.. 2019. “Double Trouble: How Much of U.S. Multi-
+nationals’ Proﬁts are really in Tax Havens?,” working paper.
+Bolwijn Richard, Bruno Casella and Davided Rigo. 2018. “An FDI-driven approach to
+measuring the scale and economic impact of BEPS.” Transnational Corporations, 25(2).
+Bruner, Jennifer, Dylan G. Rassier, and Kim J. Ruhl. 2018. “Multinational Proﬁt
+Shifting and Measures throughout Economic Accounts”, working paper.
+Central Statistics Oﬃce.
+2016.
+“Explaining Ireland’s FDI Asymmetry with the United
+States.” technical paper, available online at http://www.cso.ie/en/media/csoie/methods/
+balanceofinternationalpayments/FDIAsymmetry.pdf
+Cette, Gilbert, Lorraine Koehl, and Thomas Philippon. 2019. “Labor Shares in Some
+Advanced Economies”. NBER working paper #26136.
+Clausing, Kimberly A. 2003. “Tax-motivated transfer pricing and US intraﬁrm trade prices”.
+Journal of Public Economics, 87: 2207–2223.
+Clausing, Kimberly A. 2009. “Multinational ﬁrm tax avoidance and tax policy”. National
+Tax Journal, 62 (4): 703–725.
+Clausing, Kimberly A. 2011. “The revenue eﬀects of multinational ﬁrm income shifting.”
+Tax Notes, p.1580–1586.
+36
+=== [p.39] ===
+Clausing, Kimberly A. 2016. “The Eﬀect of Proﬁt Shifting on the Corporate Tax Base in
+the United States and Beyond.” National Tax Journal, 69(4), 905–934.
+Cobham, Alex and Petr Jansk´y. 2018. “Global distribution of revenue loss from corporate
+tax avoidance: reestimation and country results.” Journal of International Development, 30(2),
+206–232.
+Cobham, Alex and Simon Loretz. 2014. “International Distribution of the Corporate Tax
+Base: Implications of Diﬀerent Apportionment Factors under Unitary Taxation.” ICTD working
+paper #27.
+Cristea, Anca D. and Daniel X. Nguyen. 2016. “Transfer Pricing by Multinational Firms:
+New Evidence from Foreign Firm Ownerships.” American Economic Journal: Economic Policy,
+8(3): 170–202.
+Crivelli, Ernesto, Ruud de Mooij, and Michael Keen.
+2015.
+“Base Erosion, Proﬁt
+Shifting and Developing Countries,” IMF working paper 15/118.
+Damgaard Jannick, and Thomas Elkjaer. 2017. “The Global FDI Network: Searching for
+Ultimate Investors”, working paper, Danmarks Nationalbank.
+de Mooij, Ruud and Sjef Ederveen. 2008. “Corporate Tax Elasticities: A Readers Guide
+to Empirical Findings.” Oxford Review of Economic Policy 24, 680–697.
+De Simone, Lisa, Lillian F. Mills, and Bridget Stomberg. 2017. “Using IRS Data to
+Identify Income Shifting to Foreign Aﬃliates.” Working paper.
+Devereux, Michael P. and John Vella. 2017. “Implications of digitalization for interna-
+tional corporate tax reform.” Oxford University Center for Business Taxation Working paper
+17/07.
+Dharmapala, Dhammika, and Nadine Riedel. 2013. “Earnings shocks and tax-motivated
+income-shifting: evidence from European multinationals.” Journal of Public Economics 97:
+95–107.
+Dowd, Tim, Paul Landefeld, and Anne Moore. 2017. “Proﬁt Shifting of U.S. Multina-
+tionals.” Journal of Public Economics, 148: 1–13
+Eurostat. 2012. “Foreign AﬃliaTes Statistics (FATS) Recommendations Manual.”
+Egger, Peter, Wolfgang Eggert, and Hannes Winner. 2010. “Saving taxes through
+foreign plant ownership,” Journal of International Economics, 81(1): 99–108.
+Faulkender, Michael W., Kristine W. Hankins, and Mitchell A. Peterson. 2017.
+“Understanding the Rise in Corporate Cash: Precautionary Savings or Foreign Taxes, NBER
+working paper No. 23799
+Gordon, Roger H. and John Wilson. 1986. “An Examination of Multijurisdictional Cor-
+porate Income Taxes Under Formula Apportionment,” Econometrica, Nov. 1986, 1357–73.
+Gravelle, Jane G. 2009. “Tax Havens: International Tax Avoidance and Evasion .” National
+Tax Journal, 62(4): 727–753.
+Grubert, Harry. 2013. “Foreign taxes and the growing share of U.S. multinational company
+income abroad: proﬁts, not sales, are being globalized.” National Tax Journal, 65(2): 247–281.
+Grubert, Harry and Joel Slemrod. 1998. “The Eﬀect of Taxes on Investment and Income
+Shifting to Puerto Rico.” Review of Economics and Statistics 80(3): 365–73.
+Guvenen, Fatih, Raymond J. Mataloni Jr., Dylan G. Rassier, and Kim J. Ruhl.
+2018.
+“Oﬀshore Proﬁt Shifting and Domestic Productivity Measurement”, Federal Reserve
+37
+=== [p.40] ===
+Bank of Minneapolis working paper #751.
+Guti´errez, German and Sophie Piton. 2019. “Revisiting the Global Decline of the (Non-
+Housing) Labor Share,” Bank of England StaﬀWorking Paper No. 811.
+Heckemeyer, Jost H., and Michael Overesch. 2017. “Multinationals? Proﬁt Response to
+Tax Diﬀerentials: Eﬀect Size and Shifting Channels.” Canadian Journal of Economics, 50(4):
+965–994.
+Hines, James R. Jr and Eric Rice.
+1994.
+“Fiscal Paradise: Foreign Tax Havens and
+American Business.” The Quarterly Journal of Economics, 109(1): 149-182.
+Hong, Qing, and Michael Smart.
+2010.
+“In Praise of Tax Havens: International Tax
+Planning and Foreign Direct Investment.” European Economic Review, 54(1): 82–95.
+Huizinga, Harry, and Luc Laeven. 2008. “International proﬁt shifting within multination-
+als: a multi- country perspective.” Journal of Public Economics, vol. 92, 1164–1182.
+Huizinga, Harry, Luc Laeven, and Gaetan Nicodeme. 2008. “Capital Structure and
+International Debt Shifting,” Journal of Financial Economics, 88(1), 80–118
+International Monetary Fund. 2009. “Balance of Payments Manual,” 6th Edition.
+Jansk´y, Peter and Miroslav Palansk´y. 2019. “Estimating the scale of proﬁt shifting and
+tax revenue losses related to foreign direct investment,” International Tax and Public Finance,
+26, 1048–1103.
+Johannesen, Niels. 2010. “Imperfect Tax Competition for Proﬁts, Asymmetric Equilibrium
+and Beneﬁcial Tax Havens.” Journal of International Economics, 81(2): 253–64.
+Johansson, Asa, Øystein Bieltvedt Skeie, St´ephane Sorbe, and Carlo Menon. 2017.
+“Tax Planning by Multinational Firms: Firm-Level Evidence from a Cross-Country Database”,
+OECD Economics Department working paper 1355.
+Johns, Andrew and Joel Slemrod. 2010. “The Distribution of Income Tax Noncompliance,”
+National Tax Journal, 63(3), 397–418.
+Kalemli-¨Ozcan, S¸ebnem, Bent Sørensen, Carolina Villegas-Sanchez, Vadym Volosovych,
+and Sevcan Ye¸silta¸s. 2015. “How to Construct Nationally Representative Firm Level Data
+from the ORBIS Global Database.” NBER Working Paper No. 21558.
+Kanbur, Ravi and Keen, Michael. 1993. “Jeux Sans Fronti`eres: Tax Competition and Tax
+Coordination When Countries Diﬀer in Size.” American Economic Review, 83(4): 877–892
+Karabarbounis, Loukas and Brent Neiman. 2014. “The Global Decline of the Labor
+Share.” Quarterly Journal of Economics 129(1), 61-103.
+Keen, Michael, and Kai Konrad. 2013. “The Theory of International Tax Competition
+and Coordination,” Handbook of Public Economics, vol. 5.
+Lane, Philip R. and Gian Maria Milesi-Ferretti. 2018. “The External Wealth of Nations
+Revisited: International Financial Integration in the Aftermath of the Global Financial Crisis,”
+IMF Economic Review, 66:189–222.
+Langenmayr, Dominika and Franz Reiter. 2017. “Trading Oﬀshore: Evidence on Banks’
+Tax Avoidance,” CESifo Working Paper Series No. 6664.
+Liu, Li, Tim Schmidt-Eisenlohr and Dongxian Guo.
+2018.
+“International Transfer
+Pricing and Tax Avoidance: Evidence from Linked Trade-Tax Statistics in the UK,” forthcoming
+in Review of Economics and Statistics.
+38
+=== [p.41] ===
+Lohse, Theresa, and Nadine Riedel. 2013. “Do Transfer Pricing Laws Limit International
+Income Shifting? Evidence from European Multinationals”, working paper.
+Lupo, L., Gilbert, A., Liliestedt, M., 1978. “The relationship between age and rate of
+return of foreign manufacturing aﬃliates of U.S. manufacturing parent companies.” Survey of
+Current Business, 58, 60-66.
+Markle, Kevin S. 2012. “A Comparison of Tax Motivated Income Shifting of Multinationals
+in Territorial and Worldwide Countries.” Contemporary Accounting Research, 33(1): 7–43.
+Mataloni Jr., Ray., 2000. “An examination of the low rates of return of foreign-owned U.S.
+companies.” Survey of Current Business, 80, 55-73.
+Organization for Economic Co-operation and Development.. 2008. “OECD Benchmark
+Deﬁnition of Foreign Direct Investment, Fourth Edition”, available online at https://www.
+oecd.org/daf/inv/investmentstatisticsandanalysis/40193734.pdf.
+Organization for Economic Co-operation and Development.. 2015. “Base Erosion and
+Proﬁt Shifting, Final Report”,
+Organization for Economic Co-operation and Development. 2016. “Irish GDP up by
+26.3% in 2015?”, available online at http://www.oecd.org/sdd/na/Irish-GDP-up-in-2015-OECD.
+pdf.
+Piketty, Thomas, and Gabriel Zucman. 2014. “Capital is Back: Wealth-Income Ratios in
+Rich Countries, 1700–2010,” Quarterly Journal of Economics, 129(3), 1255–1310.
+Pomeroy, James. 2016. “The Rise of the Digital Natives.” HSBC report, September.
+Riedel, Nadine. 2018. “Quantifying International Tax Avoidance: A Review of Academic
+Literature,” Review of Economics, 69(2), 169–181.
+Saez, Emmanuel and Gabriel Zucman. 2016. “Wealth Inequality in the United States
+since 1913: Evidence from Capitalized Income Tax Data,” Quarterly Journal of Economics,
+131(2), 519–578.
+Saez, Emmanuel and Gabriel Zucman. 2019. The Triumph of Injustice: How the Rich
+Dodge Taxes and How to Make Them Pay, W.W. Norton.
+Sandholtz, William H. 2018. “Corporate Tax Rate Diﬀerentials and Transfer Mispricing:
+Evidence from Bilateral Trade Data”, working paper.
+Slemrod, Joel and John D. Wilson. 2009. “Tax competition with parasitic tax havens.”
+Journal of Public Economics, 93, 1261–1270.
+Su´arez Serrato, Juan Carlos. 2018. “Unintended Consequences of Eliminating Tax Havens,”
+working paper.
+Tørsløv, Thomas, Ludvig Wier, and Gabriel Zucman. 2020. “The Missing Proﬁts of
+Nations: 2017 Estimates,” available online at missingprofits.world
+United Nations. 2009. “System of National Accounts 2008.”
+Vicard, Vincent. 2015. “Proﬁt Shifting through Transfer Pricing: Evidence form French
+Firm Level Trade Data.” Banque de France Working Paper no. 555.
+Wang, Zi. 2018. “Multinational Production and Corporate Taxes: A Quantitative Assess-
+ment”, working paper.
+Wier, Ludvig and Hayley Reynolds. 2018. “Big and “Unproﬁtable”: How 10% of Multi-
+national Firms Do 98% of Proﬁt Shifting”, working paper.
+39
+=== [p.42] ===
+Wright, Thomas, and Gabriel Zucman. 2018. ‘The Exorbitant Tax Privilege”, NBER
+working paper #24983.
+Zucman, Gabriel. 2014. “Taxing Across Borders: Tracking Personal Wealth and Corporate
+Proﬁts,” Journal of Economic Perspectives, 28(4), 121–148.
+Zucman, Gabriel. 2015. The Hidden Wealth of Nations: The Scourge of Tax Havens, Chicago:
+University of Chicago Press.
+40
+=== [p.43] ===
+Figure 1: Consolidated Global Proﬁts vs. Observable Proﬁts Across Subsidiaries
+0 
+5 
+10 
+15 
+20 
+25 
+2013 
+2014 
+2015 
+2016 
+€ Bn. 
+Google's profits in Orbis 
+True global profits 
+Sum of observable profits 
+0 
+10 
+20 
+30 
+40 
+50 
+60 
+70 
+2013 
+2014 
+2015 
+2016 
+€ Bn. 
+Apple's profits in Orbis  
+True global profits 
+Sum of observable profits 
+0 
+2 
+4 
+6 
+8 
+10 
+12 
+2013 
+2014 
+2015 
+2016 
+€ Bn. 
+Facebook's profits in Orbis 
+True global profits 
+Sum of observable profits 
+0 
+1 
+2 
+3 
+4 
+5 
+6 
+2013 
+2014 
+2015 
+2016 
+€ Bn. 
+Nike's profits in Orbis 
+True global profits 
+Sum of observable profits 
+Notes: This graph shows the diﬀerence between Apple’s, Facebook’s, Alphabet’s, and Nike’s global consolidated proﬁts, and the sum of the proﬁts made
+by Apple’s, Facebook’s, Alphabet’s, and Nike’s subsidiaries, as recorded in Orbis. The diﬀerence is due to the fact that the subsidiaries where these ﬁrms
+make the bulk of their proﬁts are not visible in Orbis. Source: authors’ computations using Orbis data.
+=== [p.44] ===
+Figure 2: Fraction of Global Proﬁts That Can be Observed in Orbis
+Weighted average = 0.172
+0
+.1
+.2
+.3
+0
+.2
+.4
+.6
+.8
+1
+Share of profits found in 2012
+Weighted average: 0.17
+Share of global profits found in 2012
+0%                     20%                   40%
+60%                  80%
+100%
+30%
+20%
+10%
+0%
+Weighted average: 17%
+Notes: This graph shows the density of the following ratio. For each multinational ﬁrm in Orbis, we compute the sum of the unconsolidated pre-tax proﬁts
+of all subsidiaries (code U1), and we divide this sum by the consolidated global proﬁts of the ﬁrm (code C1). Whenever the ratio is less than 1, this means
+that only part of the global proﬁts of the ﬁrm are visible at the subsidiary level in Orbis. In 28% of the cases, no proﬁts are visible at the subsidiary level.
+The weighted average of 17% is weighed by proﬁt. Source: authors’ computations using Orbis data.
+=== [p.45] ===
+Figure 3: Pre-tax Corporate Proﬁts (% Compensation of Employees)
+0% 
+50% 
+100% 
+150% 
+200% 
+250% 
+Luxembourg 
+Ireland 
+Puerto Rico 
+Singapore 
+Hong Kong 
+Netherlands 
+Belgium 
+Germany 
+Italy 
+United Kingdom 
+Japan 
+Spain 
+Australia 
+United States 
+Switzerland 
+Canada 
+France 
+Average among non-havens: 36% 
+Notes: the bar shows the ratio of pre-tax corporate proﬁts (net of interest and depreciation) to compensation of employees in 2015, as recorded in national
+accounts data. Source: Appendix Table A.7.
+=== [p.46] ===
+Figure 4: The Rise of Proﬁt Shifting
+0% 
+50% 
+100% 
+150% 
+200% 
+250% 
+1970 
+1975 
+1980 
+1985 
+1990 
+1995 
+2000 
+2005 
+2010 
+2015 
+Pre-tax corporate profits  
+(% of compensation of employees) 
+Ireland 
+United States 
+0% 
+50% 
+100% 
+150% 
+200% 
+250% 
+300% 
+350% 
+1966 
+1971 
+1976 
+1981 
+1986 
+1991 
+1996 
+2001 
+2006 
+2011 
+2016 
+Pre-tax profits of  affiliates of  U.S. multinationals  
+(% of compensation of employees) 
+Tax haven affiliates 
+Non-haven affiliates 
+Notes: in the bottom panel, tax havens include: Ireland, Luxembourg, Netherlands, Switzerland, Bermuda and
+Caribbean tax havens (“Other Western Hemisphere” in the BEA data), and Singapore. Non-havens include
+all other countries. Sources: For top panel, national accounts of Ireland and the United States and authors’
+computations; for bottom panel: BEA survey of the activities of U.S. multinationals abroad, Tables II.F.1 and
+II.F.2, column “proﬁt-type return” and “compensation of employees” .
+=== [p.47] ===
+Figure 5: Proﬁtability in Foreign vs. Local Firms
+1675% 
+0% 
+200% 
+400% 
+600% 
+800% 
+Puerto Rico 
+Ireland 
+Luxembourg 
+Switzerland 
+Singapore 
+Hong Kong 
+Netherlands 
+Belgium 
+United States 
+Australia 
+United Kingdom 
+Spain 
+Japan 
+France 
+Germany 
+Italy 
+Pre-tax corporate profits                                         
+(% of compensation of employees) 
+Foreign firms 
+Local firms 
+Notes: data are for 2015. Source: Appendix Table A.7.
+=== [p.48] ===
+Figure 6: Capital Intensities in Tax Havens
+0%
+100%
+200%
+300%
+400%
+500%
+600%
+700%
+800%
+Ireland
+Puerto Rico
+Netherlands
+Singapore
+Belgium
+Luxembourg
+Switzerland
+Hong Kong
+United States
+Italy
+Germany
+United Kingdom
+Australia
+Spain
+France
+Japan
+Tangible assets
+(% of compensation of employees)
+Foreign firms
+Local firms
+1675%
+0%
+200%
+400%
+600%
+800%
+Puerto Rico
+Ireland
+Luxembourg
+Switzerland
+Singapore
+Hong Kong
+Netherlands
+Belgium
+US
+Australia
+UK
+Spain
+Japan
+France
+Germany
+Italy
+Pre-tax corporate profits                                         
+(% of compensation of employees)
+Foreign firms
+Local firms (observed)
+Local firms (with K/L of foreign firms and σ = 1.3)
+Local firms (with K/L of foreign firms and σ = 0.7)
+Source: Appendix Table E.1 .
+=== [p.49] ===
+Figure 7: The Proﬁtability of the Aﬃliates of US Multinationals
+0%
+100%
+200%
+300%
+400%
+500%
+1966
+1971
+1976
+1981
+1986
+1991
+1996
+2001
+2006
+2011
+2016
+Ratio haven affiliates / non-haven affiliates
+Tangible capital / wage (K/wL)
+Operating surplus / tangible capital (r)
+Net interest received (1-p)
+Notes: see notes to the bottom panel of Figure 4. Source: BEA survey of the activities of U.S. multinationals abroad, Tables II.B 1-2 (column “Plant,
+property, and equipment (net)” and II.F.1.
+=== [p.50] ===
+Figure 8: Comparing estimates of proﬁt shifted into each haven: excess proﬁtability vs. excessive
+cross-border transactions (billions of US$)
+0
+20
+40
+60
+80
+100
+120
+140
+160
+180
+Belgium
+Cyprus
+Ireland
+Luxembourg
+Malta
+Netherlands
+Switzerland
+Singapore
+Hong Kong
+Puerto Rico
+Other havens
+Excessive cross-border high-risk transactions
+Excessive profits-to-wage ratio in foreign firms
+Source: Appendix Tables A7 and C2.
+=== [p.51] ===
+Figure 9: Allocating the Shifted Proﬁts
+0% 
+10% 
+20% 
+30% 
+40% 
+50% 
+EU 
+US 
+Developing countries 
+Rest of OECD 
+% of total profits shifted to tax havens 
+Allocating the profits shifted to tax havens 
+Where the shifted profits come from 
+To whom the shifted profits accrue 
+0% 
+2% 
+4% 
+6% 
+8% 
+10% 
+12% 
+14% 
+16% 
+18% 
+20% 
+EU 
+US 
+Developing countries 
+Rest of OECD 
+Tax revenue lost due to profit shifting  
+(% of corporate tax revenue collected)  
+Global average: 10% 
+Note: Estimates are for 2015. Source: Appendix Tables C.4b, C.4c, and C.4d.
+=== [p.52] ===
+Figure 10: Corporate Tax Revenue in Tax Havens
+0% 
+1% 
+2% 
+3% 
+4% 
+5% 
+6% 
+7% 
+8% 
+Malta 
+Luxembourg 
+Cyprus 
+Hong Kong 
+Japan 
+Australia 
+Ireland 
+Canada 
+Belgium 
+Switzerland 
+Korea 
+Singapore 
+Mexico 
+United Kingdom 
+Netherlands 
+France 
+Puerto Rico 
+Spain 
+Germany 
+United States 
+Italy 
+Poland 
+Corporate income tax revenue 
+(% of national income) 
+Average among non-havens: 3.5% 
+0% 
+20% 
+40% 
+60% 
+80% 
+100% 
+Malta 
+Puerto Rico 
+Ireland 
+Luxembourg 
+Cyprus 
+Singapore 
+Hong Kong 
+Netherlands 
+Switzerland 
+Corporate tax revenue collected & tax rate on shifted profits 
+Revenue collected on shifted profits, % of total revenue 
+Tax rate on shifted profits 
+Notes: data are for 2015. Source: Appendix Tables A.3., A.6., A.7, and A.11.
+=== [p.53] ===
+Figure 11: The Redistribution of Corporate Income Tax Revenue
+0% 
+1% 
+2% 
+3% 
+4% 
+5% 
+1970 
+1975 
+1980 
+1985 
+1990 
+1995 
+2000 
+2005 
+2010 
+2015 
+Corporate income tax revenue                                   
+(% net national income) 
+Ireland 
+United States 
+0 
+10 
+20 
+30 
+40 
+50 
+0% 
+1% 
+2% 
+3% 
+4% 
+5% 
+1970 
+1975 
+1980 
+1985 
+1990 
+1995 
+2000 
+2005 
+2010 
+2015 
+Corporate income tax revenue vs. tax rate in Ireland 
+Tax revenue (left) 
+(% of national income) 
+Nominal tax rate (right) 
+Source: national accounts of Ireland and the United States; see text.
+=== [p.54] ===
+Table 1: Global Output, Corporate Output, and Corporate Taxes Paid (2015)
+Billions of 
+current US$
+% of net 
+corporate 
+profits
+Global gross output (GDP)
+75,038
+Depreciation
+11,940
+Net output
+63,098
+Net corporate output
+34,083
+296%
+Net corporate profits
+11,515
+100%
+   Net profits of foreign-controlled corp.
+1,703
+15%
+       Of which: shifted to tax havens
+616
+5%
+   Net profits of local corporations
+9,812
+85%
+Corporate income taxes paid
+2,154
+19%
+Notes: Proﬁts of foreign corporations include all the proﬁts made by companies more than 50% owned by a foreign country; proﬁts of local
+corporations equal all corporate proﬁts minus the proﬁts of foreign corporations. Source: Appendix Tables C.5 and A.3.
+=== [p.55] ===
+Table 2: Shifted Proﬁts: Country-by-Country Estimates (2015)
+Reported 
+pre-tax 
+profits
+Of  which: 
+Local firms
+Of  which: 
+Foreign firms
+Shifted 
+profits
+Effective 
+corporate 
+tax rate
+Corp. tax 
+revenue 
+loss/gain (% 
+collected)
+Australia
+179
+151
+28
+12
+30%
+7%
+Austria
+48
+37
+11
+4
+18%
+11%
+Canada
+143
+96
+47
+17
+35%
+9%
+Chile
+68
+58
+10
+5
+15%
+11%
+Czech Republic
+34
+16
+17
+2
+20%
+5%
+Denmark
+52
+47
+5
+3
+15%
+8%
+Estonia
+4
+3
+1
+0
+12%
+10%
+Finland
+25
+21
+4
+3
+20%
+11%
+France
+188
+156
+32
+32
+27%
+21%
+Germany
+553
+510
+43
+55
+11%
+28%
+Greece
+23
+21
+1
+1
+19%
+7%
+Hungary
+21
+11
+10
+2
+11%
+21%
+Iceland
+2
+2
+0
+0
+19%
+22%
+Israel
+54
+48
+6
+1
+17%
+2%
+Italy
+212
+199
+13
+23
+18%
+19%
+Japan
+634
+602
+32
+28
+26%
+6%
+Korea
+248
+246
+3
+4
+18%
+2%
+Latvia
+4
+3
+1
+0
+10%
+7%
+Mexico
+325
+302
+23
+12
+12%
+10%
+New Zealand
+44
+37
+6
+1
+18%
+5%
+Norway
+76
+69
+7
+5
+22%
+8%
+Poland
+88
+68
+19
+4
+10%
+8%
+Portugal
+27
+22
+5
+3
+23%
+9%
+Slovakia
+12
+6
+5
+1
+25%
+5%
+Slovenia
+3
+2
+1
+0
+18%
+6%
+Spain
+159
+138
+21
+14
+18%
+14%
+Sweden
+63
+39
+24
+9
+23%
+13%
+Turkey
+213
+209
+4
+5
+6%
+8%
+United Kingdom
+425
+353
+72
+61
+17%
+18%
+United States
+1,889
+1,737
+153
+142
+21%
+14%
+Brazil
+274
+245
+30
+13
+20%
+8%
+China
+2,069
+1,906
+162
+55
+20%
+3%
+Colombia
+59
+52
+7
+1
+29%
+2%
+Costa Rica
+13
+12
+1
+1
+12%
+19%
+India
+376
+368
+8
+9
+10%
+8%
+Russia
+290
+253
+37
+11
+14%
+5%
+South Africa
+76
+68
+9
+4
+25%
+6%
+Belgium
+80
+48
+32
+-13
+19%
+16%
+Ireland
+174
+58
+116
+-106
+4%
+58%
+Luxembourg
+91
+40
+51
+-47
+3%
+50%
+Malta
+14
+1
+13
+-12
+5%
+90%
+Netherlands
+195
+106
+89
+-57
+10%
+32%
+Caribbean
+102
+4
+98
+-97
+2%`
+100%
+Bermuda
+25
+1
+25
+-24
+0%
+Singapore
+120
+30
+90
+-70
+8%
+41%
+Puerto Rico
+53
+10
+43
+-42
+3%
+79%
+Hong Kong
+95
+45
+50
+-39
+18%
+33%
+Switzerland
+95
+35
+60
+-58
+21%
+20%
+Other
+-51
+OECD countries
+Main developing countries
+Tax havens
+Notes: amounts are in current billion US$. All data are for 2015. Source: Appendix Tables A.6., A.7,
+C.4d, and C.4.
+=== [p.56] ===
+Table 3: Macro Statistics Corrected for Proﬁt Shifting (2015)
+Corrected 
+capital share
+Difference with 
+published data
+Corrected 
+trade balance
+Difference with 
+published data
+Australia
+26%
++1.1%
+-1.4%
++0.8%
+Austria
+29%
++1.3%
+4.1%
++0.8%
+Canada
+24%
++1.4%
+-1.4%
++0.9%
+Chile
+51%
++1.5%
+1.8%
++1.8%
+Czech Republic
+39%
++1.0%
+6.5%
++0.7%
+Denmark
+31%
++1.2%
+8.2%
++0.8%
+Estonia
+35%
++1.1%
+5.0%
++0.9%
+Finland
+28%
++1.6%
+0.9%
++1.0%
+France
+19%
++2.1%
+0.4%
++1.1%
+Germany
+31%
++1.8%
+9.2%
++1.2%
+Greece
+43%
++1.1%
+0.3%
++0.5%
+Hungary
+39%
++2.3%
+10.4%
++1.5%
+Iceland
+33%
++3.4%
+9.5%
++2.0%
+Israel
+37%
++0.2%
+3.2%
++0.2%
+Italy
+30%
++1.9%
+3.9%
++1.0%
+Japan
+28%
++0.8%
+0.0%
++0.5%
+Korea
+37%
++0.4%
+8.0%
++0.2%
+Latvia
+31%
++0.9%
+-0.5%
++0.6%
+Mexico
+71%
++0.6%
+-1.2%
++0.9%
+New Zealand
+44%
++0.7%
+1.4%
++0.7%
+Norway
+41%
++1.2%
+6.5%
++1.0%
+Poland
+45%
++0.9%
+3.7%
++0.6%
+Portugal
+33%
++1.8%
+2.8%
++1.1%
+Slovakia
+35%
++1.1%
+3.4%
++0.6%
+Slovenia
+18%
++0.9%
+9.1%
++0.4%
+Spain
+29%
++1.6%
+3.4%
++1.0%
+Sweden
+31%
++2.2%
+6.3%
++1.4%
+Turkey
+55%
++0.4%
+-2.3%
++0.5%
+United Kingdom
+31%
++2.5%
+0.2%
++1.8%
+United States
+27%
++1.1%
+-2.1%
++0.7%
+Brazil
+26%
++1.0%
+-0.3%
++0.5%
+China
+44%
++0.5%
+3.7%
++0.4%
+Colombia
+54%
++0.5%
+-5.9%
++0.4%
+Costa Rica
+45%
++1.9%
+1.6%
++1.7%
+India
+56%
++0.5%
+-2.6%
++0.4%
+Russia
+40%
++0.8%
+8.9%
++0.7%
+South Africa
+39%
++1.4%
+0.0%
++1.0%
+OECD countries
+Main developing countries
+Source: Appendix Tables C.5 and C.5b.

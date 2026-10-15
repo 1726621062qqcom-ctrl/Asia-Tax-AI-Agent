@@ -9,6 +9,23 @@ from .facts import facts_for, source_of
 from .model import Graph
 from .rules.eval import Flow, matches, valid_on
 
+DERIVED = frozenset((   # what facts.py derives from the graph or other facts (抽取改造.md §1 channel A): never asked of a model
+    "payee_in_source_jur", "income", "date_of_payment", "consideration", "indirect_cn_target", "bo_via_100pct_owner",
+    "cn_related", "hk_associated", "sg_related", "payee_is_government", "payee_is_financial_institution", "claim_is_for_prior_year",
+    "onpay_ratio_12m", "hk_resident_or_pe", "is_mne_member", "is_relevant_group_entity", "service_performed_in_source", "service_performed_in_residence",
+    "hk_tp_small_entity", "cfc_tax_burden_ratio", "cfc_profit_total", "cfc_whitelisted", "cfc_share_control", "p2_etr",
+    "p2_additional", "payee_resident_in_cn", "reorg_step", "reorg_control_ratio", "reorg_acquired_ratio", "reorg_same_residence",
+    "reorg_buyer_resident_in_cn", "associated_ratio", "cn_cost_basis", "reorg_special_applied", "reorg_horizon_years", "shares_cancelled",
+    "asset_disposed_within_2y", "unwind_step", "amount_unknown", "p2_iir", "ip_parties_100pct_held", "ip_parties_100pct_sisters",
+    "cn_party", "seller_had_sg_creation_deductions", "ip_horizon_years", "ip_transfer_step", "ip_transfer_mode", "accrued_in_fsie_regime",
+    "disposed_in_s10l_regime", "cn_income_only", "parties_treaty", "trading_resale", "purchase_price", "purchase_arms_length_value",
+    "purchase_arms_length_low", "purchase_arms_length_max", "purchase_supplier_jur", "purchase_treaty", "purchase_cn_related", "purchase_hk_associated",
+    "purchase_sg_related", "goods_exported_from_cn", "goods_imported_into_cn", "goods_imported_into_sg", "parties_linked", "hk_cost_basis",
+    "hk_holding_months", "hk_carried_foreign_tax", "subject_income_taxed_abroad", "sg_group_ratio", "reinvestment_withdrawn_on", "branch_flow",
+    "property_residential", "property_non_residential", "stamp_borne_by_payer", "acquired_before_2016_05", "lease_year", "lease_first_year",
+))
+
+
 CORE = {
     "EVENT": ("flows", "horizon", "budget"),
     "ENTITY": ("id", "type", "loc"),

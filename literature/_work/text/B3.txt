@@ -1,0 +1,794 @@
+=== [p.1] ===
+RESEARCH ARTICLE
+Navigating optimal treaty-shopping routes
+using a multiplex network model
+Sung Jae Park1,2☯, Kyu-Min Lee3☯, Jae-Suk YangID1*
+1 Graduate School of Future Strategy, Korea Advanced Institute of Science and Technology, Daejeon,
+Republic of Korea, 2 Johns Hopkins Carey Business School, Baltimore, MD, United States of America,
+3 College of Business, Korea Advanced Institute of Science and Technology, Seoul, Republic of Korea
+☯These authors contributed equally to this work.
+* yang@kaist.ac.kr
+Abstract
+The international tax treaty system is a highly integrated and complex network. In this sys-
+tem, many multinational enterprises (MNEs) explore ways of reducing taxes by choosing
+optimal detour routes. Treaty abuse by these MNEs causes significant loss of tax revenues
+for many countries, but there is no systematic way of regulating their actions. However, it
+may be helpful to find a way of detecting the optimal routes by which MNEs avoid taxes and
+observe the effects of this behavior. In this paper, we investigate the international tax treaty
+network system of foreign investment channels based on real data and introduce a novel
+measure of tax-routing centrality and other centralities via network analysis. Our analysis of
+tax routing in a multiplex network reveals not only various tax-minimizing routes and their
+rates, but also new paths which cannot be found by navigating a single network layer. In
+addition, we identify strongly connected components of the multiplex tax treaty system with
+minimal tax shopping routes; more than 80 countries are included in this system. This
+means that there are far more pathways to be observed than can be detected on any given
+individual single layer. We provide a unified framework for analyzing the international tax
+treaty system and observing the effects of tax avoidance by MNEs.
+Introduction
+One of the major points on the agenda of the Organization for Economic Cooperation and
+Development (OECD) in past decades has been tax avoidance by multinational enterprises
+(MNEs). Countries lose about 100–240 billion US dollars in tax revenues annually due to global
+profit shifting, equivalent to between 4% and 10% of global corporate income tax revenues [1–
+4]. MNEs exploit provisions of interjurisdictional tax arrangements, not hesitating to direct
+income flows surreptitiously or through various financial vehicles [5–8]. Tax avoidance by big
+companies such as Google, Apple, Facebook, Microsoft, and Starbucks has been reported in the
+media over the past few years, but no fundamental solution has yet been found [9].
+The international tax treaty system is a complex regime composed of thousands of bilateral
+tax treaties. Treaty shopping, in this context, refers to the conduct of MNEs that deliberately
+seek to benefit from the statutes of a tax treaty by making foreign investments [5, 6, 10].
+PLOS ONE
+PLOS ONE | https://doi.org/10.1371/journal.pone.0256764
+August 27, 2021
+1 / 16
+a1111111111
+a1111111111
+a1111111111
+a1111111111
+a1111111111
+OPEN ACCESS
+Citation: Park SJ, Lee K-M, Yang J-S (2021)
+Navigating optimal treaty-shopping routes using a
+multiplex network model. PLoS ONE 16(8):
+e0256764. https://doi.org/10.1371/journal.
+pone.0256764
+Editor: Gareth J. Baxter, University of Aveiro, NEW
+ZEALAND
+Received: April 5, 2021
+Accepted: August 13, 2021
+Published: August 27, 2021
+Copyright: © 2021 Park et al. This is an open
+access article distributed under the terms of the
+Creative Commons Attribution License, which
+permits unrestricted use, distribution, and
+reproduction in any medium, provided the original
+author and source are credited.
+Data Availability Statement: All relevant data are
+within the manuscript and its Supporting
+information files.
+Funding: The authors received no specific funding
+for this work.
+Competing interests: The authors have declared
+that no competing interests exist.
+=== [p.2] ===
+Though there are several anti-treaty shopping policies such as beneficial ownership, main pur-
+pose test, and limitation on benefits provisions, the current tax system prevents neither the
+establishment of paper companies in countries or regions where favorable tax rates are
+imposed under tax treaties, nor the avoidance of taxes using differences between tax laws and
+treaties [6, 11–14]. As a countermeasure, the OECD 2015 final report to prevent Base Erosion
+and Profit Shifting (BEPS) was adopted at the G20 Summit held in Turkey on November 16,
+2015 [15]. The BEPS report focused on preventing abuse of tax treaties, neutralizing the effects
+of hybrid mismatch arrangements, limiting base erosion involving interest deductions, pre-
+venting harmful tax competition, and documenting transfer pricing. However, the efficacy of
+these measures is still questioned.
+A tax treaty is basically a bilateral treaty between two countries. Treaty abuse refers to the
+case where an individual or corporation that is not eligible for tax reduction benefits under the
+tax treaty establishes intermediary entities that are eligible, thus enabling them to receive tax
+reductions or exemptions unfairly. MNEs avoid taxes by implementing the following business
+strategies: transferring income from the global market to countries with lower tax rates in the
+form of dividends, interest, and royalties, or by using the interest deduction system. It was
+reported that around 40% of MNE profits worldwide were artificially shifted to tax havens in
+2015 [16]. MNEs also take advantage of loopholes between domestic tax laws and tax treaties
+between countries in their cross-border transactions. Capitalizing on discrepancies, MNEs can
+create transactional structures that allow them not to pay taxes in any country in the world.
+Treaty shopping involves searching for favorable tax treaties for the purpose of tax avoid-
+ance. This is possible because there are significant differences between tax treaty rates and
+domestic withholding tax rates. Hybrid mismatch arrangements can be made that involve
+changing the form of income (dividends, interest, and royalties) as a tool for tax avoidance. In
+addition, the complexity of tax routing makes it difficult for governments to track and respond
+to treaty-shopping behavior. Huge profit shifting by MNEs connotes this problem.
+Previous literature on tax avoidance
+As a complex network, the international tax treaty system should be considered using a com-
+plex network approach. However, only a few pioneering studies have examined the tax system
+and avoidance behavior using network analysis [17–19]. Hong constructed a tax rate matrix of
+dividends to represent a network of tax treaties between 70 countries, creating a computational
+algorithm to study tax-minimizing investment routes in the network [17]. He found a treaty-
+shopping rate, defined as the difference between the direct route and a tax-minimizing route,
+of about 3.66%p on average [17]. van’t Riet and Lejour found that treaty shopping leads to a
+reduction of the tax burden on repatriated dividends of about 6%p. In that study, the UK, Lux-
+embourg, and the Netherlands were the most important conduit countries in the tax network
+[18]. They also found that unlike tax haven financial centers, low-tax havens did not have an
+important role in reducing dividend repatriation taxes [18]. Petkova et al. investigated the
+effects of tax treaties on foreign direct investment (FDI) after controlling for their relevance in
+the presence of treaty shopping and showed that relevant tax treaties increased FDI by about
+18%p [19]. These previous studies, however, all had some limitations, as follows:
+1. The analyses only included a limited number of tax treaties. Optimal treaty shopping routes
+cannot be captured with limited data.
+2. They focused on dividends; interest and royalties were not included in the analyses.
+3. The authors assumed that the intermediate station in a given network route includes only
+one [18] or two [17, 19] countries. One recent study [20] expanded the scope of its analysis
+PLOS ONE
+Navigating optimal treaty-shopping routes using a multiplex network model
+PLOS ONE | https://doi.org/10.1371/journal.pone.0256764
+August 27, 2021
+2 / 16
+=== [p.3] ===
+of investment (ownership) structures to three countries. However, in reality, an intermedi-
+ate station in a tax treaty network can include any number of countries.
+Treaty shopping as discussed in the OECD/G20 BEPS report is closely related to large
+MNEs. The global transaction structures of companies such as Apple, Google, and Starbucks
+[21, 22] and international investment channels such as Lone Star [23] are multi-tiered and
+complicated. These companies are statistical outliers; thus, though the number of companies
+engaging in treaty shopping is not many, the scale of tax avoidance is very large. Moreover,
+real tax avoidance occurs through use of multiple income channels (dividends, interest, and
+royalties) rather than single channels in isolated incidents [24]. In many cases, companies
+choose a kind of portfolio approach or strategy of mixing multiple types of income. In the
+OECD Action 2 Final Report, for example, hybrid mismatch cases included hybrid instru-
+ments (for example, treating an instrument as debt in one territory and equity in another)
+and hybrid transfer arrangements (mismatches resulting from the differing ways that parties
+treat arrangements such as stock loans and repos for tax purposes). Therefore, to investigate
+the complexity of the system fully, a multiplex network framework is required. Multiplex net-
+work studies have been conducted of the transport system, as follows: navigating the shortest
+paths in a multiplex network to model real transportation systems [25], controlling conges-
+tion [26], observing navigability on random failures [27], and validating origin-destination
+demand from empirical data [28]. The tax treaty system is an ideal setting in which to apply a
+multiplex network approach.
+Multiplex network of the tax treaty system
+Based on the background provided here and to address the limitations of previous works, in
+this study, we investigate the issue of treaty shopping with a comprehensive list of countries as
+well as multiple channels of taxable income. Since MNEs use multiple channels to navigate
+optimal treaty shopping routes, we believe that multiple channels of the tax treaty system can
+best be modeled using a multiplex network framework [29–32]. In such complex systems, sev-
+eral dynamic phenomena may be observed, such as catastrophic cascading failures [33, 34],
+super-spreading events in epidemic processes [35, 36], and synergistic activations in behavior
+spreading [37–39], which cannot be reproduced in a single-layer network framework.
+To construct a multiplex network of the tax treaty system, we collect and analyze data on
+tax treaty rates and domestic tax rates for 217 countries in the 2015–2016 fiscal year (see S1
+Appendix for details; note that no interest deduction system is included in the model). When a
+company tries to move its investment resources from country i to country j, there are two
+main considerations: the domestic tax rate of country i (Di) and the bilateral tax treaty rate
+between the two countries i and j (Wij) (Fig 1A). Following international taxation law, the tax
+rate applied to the company is the lower of the two given rates Di and Wij. Additionally, corpo-
+rate income tax and company maintenance fees are associated with each event, so we consider
+one more cost α as a simple proxy for the additional tax rate of individual companies. Finally,
+we define the direct route tax rates (DTR) between countries i and j as
+DTRij ¼ MinðDi; WijÞ þ a:
+ð1Þ
+where the value of α is given by 0.01 (as 1%) for a certain minimum value.
+Moreover, in the tax treaty system, there are countries with zero-level domestic tax rates (Di
+= 0), such that the value of DTR is always minimal (DTRij = α) to all target countries j when a
+company departs from a given source country i. We identify those countries as “minimum
+tax-rate countries”; notably, these countries play a crucial role in navigating optimal treaty-
+PLOS ONE
+Navigating optimal treaty-shopping routes using a multiplex network model
+PLOS ONE | https://doi.org/10.1371/journal.pone.0256764
+August 27, 2021
+3 / 16
+=== [p.4] ===
+shopping routes because they can reach any other countries at minimal cost α. In reality, some
+(but not all) of them are traditional “tax-haven” countries designated by multiple organizations
+or research firms (see S1 Appendix for more details).
+Due to the highly complex nature of the tax treaty system and differences in rates among
+countries, direct routing from country i to country j (Fig 1B, dotted arrow) is not always opti-
+mal. When a company in country i decides to select a route to country j, even if the chosen
+path requires more than one step (Fig 1B, solid arrows), it may be the most efficient route, the
+most rational choice in terms of avoiding taxes. In this study, we identify optimal routes by
+adjusting the algorithm to find the shortest paths between nodes in networks.
+Moreover, since we consider three income layers (dividends, interest, and royalties) of the
+tax treaty system, the optimal path may include different combinations of all three. Therefore,
+the problem can be stated as finding the shortest paths in a multiplex network when the opti-
+mal route may necessitate crossing different network layers. To construct a multiplex network
+of the tax treaty system, we therefore consider each layer as complementary to the navigating
+issue, such that two nodes that are not connected in a single layer may be linked via other lay-
+ers (Fig 1C). The possibility that optimal paths may exist across different income layers implies
+that finding the optimal treaty shopping route is more complex than can be modelled by con-
+sidering only a single income layer.
+Fig 1. Treaty-shopping routes and the multiplex network framework. (A) The components in a dyadic tax treaty between two countries i and j. Di
+denotes the domestic tax rate of a country i and Wij means the withholding tax rates between the two countries. (B) Schematic example of tax-routing
+routes: direct (dotted arrow) and treaty shopping routes (solid arrows). (C) Schematic diagram of multiplex tax treaty networks. Layers 1, 2, and 3 represent
+different types of income (dividends, royalties, and interest, respectively). In identifying tax-minimizing routes from country i to country j, we see there are
+no routes between these two countries when the system is considered as as a series of isolated single layers. However, when we consider it as a multiplex
+network system, we can find the optimal route by crossing layers (depicted in red). Additional tax-minimizing routes may also be available in this multiplex
+framework of the tax treaty system. (D) Tax-routing centrality value of single layers (dividends, royalties, and interest) and the multiplex network for both
+route types (direct and shopping).
+https://doi.org/10.1371/journal.pone.0256764.g001
+PLOS ONE
+Navigating optimal treaty-shopping routes using a multiplex network model
+PLOS ONE | https://doi.org/10.1371/journal.pone.0256764
+August 27, 2021
+4 / 16
+=== [p.5] ===
+Materials and methods
+Data sources
+The tax data used in this paper is a compilation of data on tax treaty rates and domestic tax
+rates in each country in reports published by PwC, Deloitte, KPMG, and EY in the 2015–2016
+fiscal year. Details of the sources of the collected data are presented in the S1 Appendix, where
+the dataset we used is also provided.
+After-withholding-tax-income rate (ATR)
+By determining the rate of savings due to tax routing in each network, the effects of treaty
+shopping can be quantified. When moving funds from a specific country i to country j, a com-
+pany chooses a direct route; therefore, the after-withholding-tax-income rate (ATR) is
+ATRdirect
+ij
+¼ 1   DTRij
+ð2Þ
+that is, when a company moves a fund with initial value Finitial from country i to country j
+directly (Fig 1B, dashed arrow), then the final value of the fund after withholding tax becomes
+Fafter ¼ Finitial  ATRdirect
+ij
+¼ Finitialð1   DTRijÞ, where DTRij denotes the direct tax rate between i
+and j (Eq 1).
+Now, let’s assume that a company tries to find a route to maximize tax savings through
+treaty shopping (Fig 1B, solid arrows). Given the tax minimizing route (i ! k1 ! k2 ! k3 !
+j), then the ATR becomes
+ATR
+shopping
+ij
+¼ ð1   DTRik1Þð1   DTRk1k2Þð1   DTRk2k3Þð1   DTRk3jÞ
+ð3Þ
+where n is the number of places (countries) through which the fund arrives at destination j. As
+above, the initial fund Finitial becomes Fafter ¼ Finitial  ATR
+shopping
+ij
+¼ Finitialð1   DTRik1Þ
+ð1   DTRk1k2Þð1   DTRk2k3Þð1   DTRk3jÞ
+In most cases, companies search for routes that enable them to avoid paying taxes; that is,
+ATRdirect
+ij
+< ATR
+shopping
+ij
+. Generally, companies choose a treaty-shopping route (multiple steps
+with ATRshopping) rather than moving their funds directly. Thus, we can say that MNEs seeking
+tax benefits through treaty shopping find the route that maximizes the value of ATR
+shopping
+ij
+and
+move their funds accordingly.
+Algorithm for finding tax-minimizing routes
+To identify tax-minimizing routes from country i to country j on each single network layer, we
+apply the Dijkstra’s algorithm that finds the shortest paths between two nodes in a given net-
+work [40]. Since the ATR is determined by the multiplicative method of calculating tax rates
+(Eq 3), we perform the logarithmic transformation to all link weights 1 −DTRik in the additive
+way, as follows:
+DTR0
+ik ¼ logð1   DTRikÞ
+  1
+ð4Þ
+then, we must find the minimum value of ATR0
+ij (i ! k1 ! k2 !    ! kn ! j),
+ATR
+0shopping
+ij
+¼ DTR0
+ik1 þ DTR0
+k1k2 þ    þ DTR0
+knj
+ð5Þ
+PLOS ONE
+Navigating optimal treaty-shopping routes using a multiplex network model
+PLOS ONE | https://doi.org/10.1371/journal.pone.0256764
+August 27, 2021
+5 / 16
+=== [p.6] ===
+Then, we apply the standard Dijkstra’s algorithm to find the shortest paths between two coun-
+tries. After identifying the transformed ATR
+0shopping
+ij
+, we retransform the value as e
+  ATR0
+ij, after
+which we can obtain the ATR
+shopping
+ij
+with the original Eq 3.
+For the multiplex network case, we overlay all network layers into one composite layer and
+then apply the same algorithm as in the single-layer case [25, 26]. When there are overlapped
+links between two countries across a single layer, we choose the minimum weights among
+them, as follows:
+DTR
+multiplex
+ij
+¼ MinðDTRdividends
+ij
+; DTR
+royalties
+ij
+; DTRinterest
+ij
+Þ:
+ð6Þ
+Tax-routing centrality (TRC)
+Since the value of ATR
+shopping
+ij
+can be obtained using all possible pairs of dyadic relations, we can
+identify and compare the shopping effects (and tax-savings effects as differences between
+direct and shopping routes) of individual countries by averaging the overall routes starting
+from a given country, as follows:
+TRCdirect
+i
+¼
+1
+N   1
+X
+j6¼i
+ATRdirect
+ij
+;
+ð7Þ
+TRC
+shopping
+i
+¼
+1
+N   1
+X
+j6¼i
+ATR
+shopping
+ij
+;
+ð8Þ
+depending on whether a company chooses the direct routing strategy (TRCdirect) or decides to
+go treaty shopping (TRCshopping). We label this variable tax-routing centrality (TRC), since the
+higher the value, the higher the savings when funds are moved from a given source country.
+We can consider this a measure of centrality, as it is similar to the closeness centrality of
+weighted networks. Also, we can quantify the shopping effect (and tax-savings effect) of the
+network as a whole by determining the sum of all TRC measures for all countries, as follows:
+TRCdirect ¼ 1
+N
+X
+i
+TRCdirect
+i
+;
+ð9Þ
+TRCshopping ¼ 1
+N
+X
+i
+TRC
+shopping
+i
+;
+ð10Þ
+We can then compare the tax-savings effects of different income layers in the network, that is,
+dividends, interest, and royalties, with a multiplex network including all three layers.
+Betweenness centrality
+Betweenness centrality is a measure in network analysis that quantifies how many shortest
+paths in a network pass through a given node. Therefore, not only is tax-routing centrality use-
+ful as defined above, but betweenness centrality is also useful to determine the importance of
+each node (country) in the problem of navigating treaty shopping.
+Betweenness centrality is defined by
+Bi ¼
+X
+s6¼i6¼t
+sstðiÞ
+sst
+ð11Þ
+PLOS ONE
+Navigating optimal treaty-shopping routes using a multiplex network model
+PLOS ONE | https://doi.org/10.1371/journal.pone.0256764
+August 27, 2021
+6 / 16
+=== [p.7] ===
+where σst is the total number of shortest paths from node s to node t and σst(i) is the number of
+those paths that passes through node i. In the problem of navigating treaty shopping, we con-
+sider the measure of σst as the total number of savings routes from node s to node t, and σst(i)
+is the number of those routes that passes through node i.
+Minimum treaty-shopping routes and the strongly connected component
+(SCC)
+In a directed network, a strongly connected component (SCC) can be identified when there
+exists a path in both directions between each pair of nodes in a network. We define a giant
+strongly connected component (g-SCC) as one that contains the maximum number of nodes
+among all components.
+In the tax treaty network, there exists a dyadic relation with the minimum rate, that is,
+DTRij = α, between country i and country j. Interestingly, the existence of this minimum-rate
+relationship implies that we can identify the shopping routes between country i and country j,
+such that ATR
+shopping
+ij
+¼ a. This means that companies would save almost 100% (99% in our
+model) of their funds from being taxed when moving them. Similarly, we can also define the
+g-SCC in the tax treaty system using minimum tax-rate routes. In doing so, we can observe
+any relations between countries through which companies can move their funds freely with
+minimal loss of funds due to taxation.
+Results
+From the measures introduced in the Materials and methods section, we first observe the
+treaty-shopping effect in tax treaty networks. For a given pair of nodes (countries), we can
+measure the ATR for both direct and shopping cases, summarizing the overall effect in Eqs 9
+and 10 respectively (Fig 1D). In the case of direct routes, all TRC values are close to 0.87 (exact
+values are presented in the S1 Appendix), whereas the values are greater than 0.9 in shopping
+route cases (Fig 1D). For the example of dividends, the shopping route rate is 0.94, but it is
+0.89 in the direct case, indicating that the shopping route would provide a savings of almost
+5%p in taxes using this strategy. For example, a company trying to move 500 million dollars of
+dividends via treaty shopping can save almost 25 million dollars in this examples. For the
+other income layers, the savings effect is similar (7%p in royalties, 6%p in interest; see S1
+Appendix for more detail).
+Moreover, in the multiplex network, the savings effect is even more amplified. The average
+TRC exceeds 0.96, indicating that a company can save an additional 2–3% in taxes compared
+with the case of single income layers. This is not a small amount of money for a company.
+Therefore, we can assume that companies will search for optimal shopping routes from the
+multiplex network perspective (that is, combining or making a portfolio of more than one
+income strategy) when moving funds internationally. In other words, MNEs have significant
+motivation to engage in treaty shopping.
+From the observations for TRC in the overall network, we can quantify and compare the
+savings effects of treaty shopping for each income layer and the multiplex network. We then
+conclude that the multiplex network provides additional savings opportunities for MNEs to
+avoid paying taxes. In addition, we can measure the TRC for individual countries and evaluate
+their roles in global treaty-shopping events. In Fig 2, we compare the TRC measures of individ-
+ual countries for direct and shopping routes in each income layer. Most countries are above
+the diagonal line in the figure (y = x), which means that the TRC value increases when a com-
+pany chooses a treaty shopping route starting from that country. Moreover, a large number of
+countries (more than 50%) have a TRCshopping value of 0.99, indicating that they would provide
+PLOS ONE
+Navigating optimal treaty-shopping routes using a multiplex network model
+PLOS ONE | https://doi.org/10.1371/journal.pone.0256764
+August 27, 2021
+7 / 16
+=== [p.8] ===
+minimum tax-rate tax routing (that is, the companies moving funds pay 1% of the tax-rate) in
+treaty-shopping cases. In multiplex networks, this savings effect is magnified, as we find that in
+the network as a whole (Fig 1D), the number of countries with a TRCshopping value of 0.99 has
+significantly increased (164 countries, more than 75% of the total number of nations). By
+Fig 2. Comparison between direct and shopping routes for (A) dividends, (B) royalties, (C) interest, and (D) the multiplex network. The inset tables
+present values for the top 10 countries with the largest differences between direct and shopping routes in each layer.
+https://doi.org/10.1371/journal.pone.0256764.g002
+PLOS ONE
+Navigating optimal treaty-shopping routes using a multiplex network model
+PLOS ONE | https://doi.org/10.1371/journal.pone.0256764
+August 27, 2021
+8 / 16
+=== [p.9] ===
+comparing the TRC value for each country for direct and shopping routes, we can quantify the
+benefits that can be obtained through choosing tax avoidance routes from that country, and
+compare countries. The top 10 countries with the largest differences between direct and shop-
+ping routes in each layer are presented in the tables in Fig 2.
+Additionally, we perform a pair-wise comparison between direct (ATRdirect
+ij
+) and shopping
+routes (ATR
+shopping
+ij
+) (Fig 3). The patterns of the scatter-plots are similar to the results for their
+TRC counterparts in Fig 2, although the points are greater.
+Now we compare the TRC values of the multiplex network with those of each single layer
+(Fig 4A–4C). First, for all countries, the TRC values in the multiplex layer are equal to or
+higher than those in the single layer. This shows that if a company engages in treaty shopping
+through the multiplex network, the tax savings are greater. By observing differences between
+the TRC values in the single layers and the multiplex network, it is possible to quantify how
+much tax savings can be achieved when moving money from country to country through
+Fig 3. Pairwise comparison between direct and shopping routes for (A) dividends, (B) royalties, (C) interest, and (D) the multiplex network.
+https://doi.org/10.1371/journal.pone.0256764.g003
+PLOS ONE
+Navigating optimal treaty-shopping routes using a multiplex network model
+PLOS ONE | https://doi.org/10.1371/journal.pone.0256764
+August 27, 2021
+9 / 16
+=== [p.10] ===
+treaty shopping in the multiplex network. The top 10 countries with the greatest savings effects
+(the ratio between the two measures; TRCmulti/TRCsingle) are listed in the tables in Fig 4. For
+example, in the case of Greenland in the dividends layer, if a company engages in treaty shop-
+ping using only dividends, the average TRC value is about 0.63, and a high tax of 37% on aver-
+age is imposed. However, if the company moves funds using the multiplex network, thereby,
+optimizing the route among all three income layers, then the TRC value is 0.99, and minimal
+taxes are paid. These routes are not captured when only a single layer is considered, which
+results in underestimation of Greenland’s role as a treaty-shopping route.
+As another measure of centrality, we now compare betweenness centrality for all three sin-
+gle layers and the multiplex network (Fig 4D–4F). In this case, the role of each country as a
+stopover can be measured by comparing the degree to which it is used as a stopover in each
+single layer and the multiplex network. In this way, we calculate the differences between their
+betweenness centrality values. We present values for 10 countries in order from largest to
+smallest in Fig 4. For example, in the case of Germany in the dividends layer, the route consid-
+ering only dividends is not widely used as a stopover, but it is widely used as a stopover in the
+multiplex network. In other words, considering only a single layer could lead to underestima-
+tion of the role of Germany in treaty shopping. Most existing studies of activities involved in
+designating and finding tax havens examined only one single layer. However, clearly treaty-
+shopping activities cross income types; MNEs make great efforts to find complex routes
+through which to move funds. In fact, there may be unidentified routes or countries located at
+the center that have not been identified in previous studies. Using our method with the multi-
+plex network, these activities can be clearly identified in more detail, as seen in Fig 4.
+In Fig 5, we consider the rank distribution of the values for TRC and betweenness centrality
+in the multiplex network. The peculiarity of the TRC distribution is that a significant number
+Fig 4. Comparison between the multiplex network and each single layer. Comparison of TRC values (A-C) and betweenness centrality (D-F) between
+the multiplex network and three income layers. The top 10 countries with the highest ratios between the multiplex network and each single layer are
+presented in the inset tables in order from largest to smallest values.
+https://doi.org/10.1371/journal.pone.0256764.g004
+PLOS ONE
+Navigating optimal treaty-shopping routes using a multiplex network model
+PLOS ONE | https://doi.org/10.1371/journal.pone.0256764
+August 27, 2021
+10 / 16
+=== [p.11] ===
+of countries are observed to have a maximum TRC value, which means that all of them have a
+TRC value of 0.99 (i.e., these are countries to which companies can move funds without paying
+taxes). Out of 217 countries in total, this is true for 164 countries. Companies seeking to move
+funds find that it is possible to move money to any country in the world through a so-called
+“minimum tax-rate route” that allows them to pay minimal taxes. Compared to the case of
+using a single type of income to move funds (dividends: 140, royalties: 117, interest: 116),
+when using the multiplex network, 20—50 more countries are identified as minimum tax-rate
+routes (Fig 5A). In addition, when comparing the ranking in terms of betweenness centrality,
+France, the United Kingdom, Mauritius, and the Netherlands are the top places, as these coun-
+tries are located on preferred stopover routes for treaty shopping (Fig 5B).
+While the results so far have demonstrated possible tax-minimizing routes in the multiplex
+networks for each country from a micro perspective, Fig 6 shows what new insights the multi-
+plex network approach can provide from a more macroscopic perspective. When a multiplex
+network that includes three layers together among the tax-minimizing route options is consid-
+ered, not only do we see the results of a simple combination, but we also see new tax-minimiz-
+ing routes that could not be found previously. For example, companies moving funds from the
+United States to Ireland may choose tax-minimizing routes that go through a wide variety of
+countries, as shown in Fig 6A; among them, new routes can be found by utilizing the multiplex
+network (e.g., the route through Armenia). Therefore, by considering the multiplex network
+in this way, it is possible to find new tax-minimizing routes that could not be found by utilizing
+only a single-layer framework. This finding has implications both for companies seeking such
+novel shopping routes and for governments or international organizations that want to pre-
+vent and regulate such treaty shopping.
+Furthermore, some countries have minimum domestic withholding tax rates; in these
+countries, there is a mechanism in place that allows them to send funds at a minimum rate, no
+matter which country they target. We name the cluster consisting of these countries the “mini-
+mum tax-rate cluster”. If a company in a given country not yet in the minimum tax-rate cluster
+Fig 5. Rank distributions of centralities of the multiplex network. Rank distribution of TRC (A) and betweenness centrality (B) in the multiplex network.
+https://doi.org/10.1371/journal.pone.0256764.g005
+PLOS ONE
+Navigating optimal treaty-shopping routes using a multiplex network model
+PLOS ONE | https://doi.org/10.1371/journal.pone.0256764
+August 27, 2021
+11 / 16
+=== [p.12] ===
+can move funds to a country in the minimum tax-rate cluster, it gains access to a tremendous
+number of shopping routes in that cluster, as indicated by the red and purple routes in
+(Fig 6B).
+Finally, we also identify bilateral zero-rate tax treaties between all countries (Wij = 0), not
+specifically countries that have zero-rate domestic withholding tax rates. In these cases, we
+extract from the entire network only the links consisting of these zero-rate relationships,
+Fig 6. The giant strongly connected component with zero-rate paths. (A) Example of tax-routing routes from the United States (US) to Ireland (IE). The
+figure presents the routes that can be found in each single layer (black) and those that can only be found in the multiplex network (red). (B) Due to the
+existence of countries with minimum withholding tax rates, there is a tremendously large number of routes with minimum tax-rates within a cluster (green
+area) and several steps (indicated by red and purple arrows). (C) The giant strongly connected component (g-SCC) consists of two countries with
+minimum tax-rates. Colors of nodes represent continents.
+https://doi.org/10.1371/journal.pone.0256764.g006
+PLOS ONE
+Navigating optimal treaty-shopping routes using a multiplex network model
+PLOS ONE | https://doi.org/10.1371/journal.pone.0256764
+August 27, 2021
+12 / 16
+=== [p.13] ===
+observing a strongly connected component in those relationships (Fig 6C). In this strongly
+connected component, any country belonging to the component can be connected to one or
+more countries with minimum tax rate treaty-shopping routes. Surprisingly, a large number of
+countries (80 countries) belong to this component. Because there are so many countries in this
+component, there is a wider range of routes for minimizing taxes.
+Discussion
+We comprehensively analyzed the tax treaty network system in this study. Unlike previous
+studies [17–19] analyzing tax data from around 100 countries/regions in terms of dividends
+only, we used tax data from 217 countries/regions for dividends, interest, and royalties. In
+addition to examining single routes in our network analysis, we also used a multiplex frame-
+work (Fig 1C) to examine combinations of income forms (dividends, interest, and royalties).
+As a result, we found more routes for tax minimization through multiplex detours and more
+dramatic tax-savings effects than is possible with a single-route network analysis (Figs 1–3).
+We measured the treaty-shopping effect in the tax treaty network by comparing direct
+route with various possible detours. In the multiplex network, a large tax-savings effect was
+found for royalties (7%p), dividends (5%p), and interest (6%p) (Fig 1D). Using the multiplex
+network, companies can change the form of income on the network path to obtain an addi-
+tional 2–3%p in tax savings. This is a very attractive amount for MNEs. According to previous
+studies [1–4], the amount of tax avoidance due to global profit shifting has reached 100–240
+billion US dollars annually over the past 5 years, equivalent to between 4% and 10% of global
+corporate income tax revenue. Zucman reported that around 40% of the profits of MNEs
+worldwide were artificially shifted to tax havens in 2015 [16]. Our study identified the specific
+tax avoidance pathways that back up the findings of previous studies.
+In our study, tax-routing centrality, which represents the amount of tax savings achievable
+via treaty shopping, was measured and the results presented by income type (dividends, inter-
+est, royalties, or the multiplex network). In treaty shopping, many countries find routes with a
+TRCshopping value of 0.99, thus allowing them to pay minimal taxes; in this study, this value was
+found for 164 countries in the multiplex network. This means that there are a great many
+routes that can be taken to avoid paying taxes. The specific role of individual countries in
+treaty shopping is sometimes not elucidated in analyses of single-route networks. However, we
+were able to detect these roles in our multiplex network analysis. In the case of Greenland, for
+example, it was found that the pathway of dividends plays a very important role in tax avoid-
+ance, as evidenced by the results of the multiplex network analysis (Fig 4A).
+In our study, several interesting points were found regarding the United States, where the
+scale of tax benefits from treaty shopping was large in terms of royalties, interest, and multiplex
+incomes; this was not true only for a single channel, dividends (Fig 3B–3D). Additionally, ana-
+lyzing the investment pathways from the United States to Ireland reveals the pathways through
+Armenia that would not appear in a single-route network analysis, but was very evident in our
+multiplex network analysis (Fig 6A).
+Our study confirmed that treaty-shopping routes are diverse. First, we created a minimum
+tax-rate cluster by gathering data for countries with a withholding tax rate of 0% (node cost
+1%) through which MNEs can move their funds while paying minimal taxes. Then, we found
+that various shopping routes could be created using these countries (Fig 6B). These countries
+are not generally known as tax havens. Next, we constructed a network including only the
+paths with a 0% tax rate (node cost 1%) for domestic taxes or treaty taxes on dividends, inter-
+est, and royalties from 217 countries. In this analysis, we observed a strongly connected com-
+ponent in these relationships (Fig 6C). All countries in this SCC have routes to one or more
+PLOS ONE
+Navigating optimal treaty-shopping routes using a multiplex network model
+PLOS ONE | https://doi.org/10.1371/journal.pone.0256764
+August 27, 2021
+13 / 16
+=== [p.14] ===
+countries through countries with a 0% tax rate (node cost 1%). It is very interesting that 80
+countries belong to this component; it suggests that there are more diversified pathways for
+tax minimization than the ones identified to date. Our findings signal governments and com-
+panies about various treaty-shopping routes that may have been heretofore unknown.
+Supporting information
+S1 Appendix. Description of the international tax treaty system. Detailed description of the
+international tax treaty system and observations.
+(ZIP)
+S1 Fig. Comparison between direct and shopping routes for restricted transition between
+layers.
+(PDF)
+S1 Data. Tax treaty data of three income types.
+(ZIP)
+S2 Data. Corporate tax rates.
+(ZIP)
+S3 Data. Withholding tax rates.
+(ZIP)
+Acknowledgments
+We thank the anonymous reviewers for their insightful comments and suggestions. We also
+acknowledge the East-West Center in Honolulu, Hawaii, USA, through the Visiting Scholars
+Program for giving us permission to access the EWC’s Resource Information Services.
+Author Contributions
+Conceptualization: Sung Jae Park, Jae-Suk Yang.
+Data curation: Sung Jae Park, Kyu-Min Lee.
+Formal analysis: Sung Jae Park, Kyu-Min Lee.
+Investigation: Sung Jae Park, Kyu-Min Lee.
+Methodology: Sung Jae Park, Kyu-Min Lee, Jae-Suk Yang.
+Project administration: Jae-Suk Yang.
+Resources: Jae-Suk Yang.
+Supervision: Jae-Suk Yang.
+Validation: Sung Jae Park, Kyu-Min Lee, Jae-Suk Yang.
+Visualization: Kyu-Min Lee.
+Writing – original draft: Sung Jae Park, Kyu-Min Lee.
+Writing – review & editing: Jae-Suk Yang.
+References
+1.
+Dharmapala D. What do we know about base erosion and profit shifting? A review of the empirical litera-
+ture. Fiscal Studies. 2014; 35(4):421–448. https://doi.org/10.1111/j.1475-5890.2014.12037.x
+PLOS ONE
+Navigating optimal treaty-shopping routes using a multiplex network model
+PLOS ONE | https://doi.org/10.1371/journal.pone.0256764
+August 27, 2021
+14 / 16
+=== [p.15] ===
+2.
+Brodzka A. Better Governance Through More Transparency on Advance Cross-Border Tax Rulings.
+Journal of Governance and Regulation/Volume. 2017; 6(1).
+3.
+Bradbury D, Hanappi T, Moore A. Estimating the fiscal effects of base erosion and profit shifting: data
+availability and analytical issues. Transnational Corporations Journal. 2018; 25(2).
+4.
+OECD TAX BEPS;. https://www.oecd.org/tax/beps/.
+5.
+Mintz J, Weichenrieder A. The Indirect Side of Direct Investment?Multinational Company Finance and
+Taxation.? CESifo Book Series; 2010.
+6.
+Weyzig F. Tax treaty shopping: structural determinants of Foreign Direct Investment routed through the
+Netherlands. International Tax and Public Finance. 2013; 20(6):910–937. https://doi.org/10.1007/
+s10797-012-9250-z
+7.
+Gerard M, Gillard MF. Taxation, financial intermodality and the least taxed path for circulating income
+within a multinational enterprise. Annales d’Economie et de Statistique. 2004; p. 89–107.
+8.
+Marian O. The state administration of international tax avoidance. Harv Bus L Rev. 2017; 7:1.
+9.
+Fonseca J. ESG Investing: How Corporate Tax Avoidance Affects Corporate Governance & ESG Anal-
+ysis. Illinois Business Law Journal. 2020;.
+10.
+Skinner M, Miles CA, Luttrell S. Access and advantage in investor-state arbitration: The law and prac-
+tice of treaty shopping. Journal of World Energy Law & Business. 2010; 3(3):260–285. https://doi.org/
+10.1093/jwelb/jwq007
+11.
+Avi-Yonah RS, Panayi CH. Rethinking Treaty-Shopping: Lessons for the European Union. 2010;.
+12.
+Baumgartner J. Treaty shopping in international investment law. Oxford University Press; 2016.
+13.
+Arel-Bundock V. The unintended consequences of bilateralism: Treaty shopping and international tax
+policy. International Organization. 2017; p. 349–371. https://doi.org/10.1017/S0020818317000108
+14.
+Egger P, Merlo V. Statutory corporate tax rates and double-taxation treaties as determinants of multina-
+tional firm activity. FinanzArchiv/Public Finance Analysis. 2011; p. 145–170. https://doi.org/10.1628/
+001522111X588754
+15.
+OECD. Explanatory Statement, OECD/G20 Base Erosion and Profit Shifting Project. 2015;.
+16.
+Tørsløv TR, Wier LS, Zucman G. The missing profits of nations. National Bureau of Economic
+Research; 2018.
+17.
+Hong S. Tax treaties and foreign direct investment: A network approach. International Tax and Public
+Finance. 2018; 25(5):1277–1320. https://doi.org/10.1007/s10797-018-9489-0
+18.
+van t Riet M, Lejour A. Optimal tax routing: Network analysis of FDI diversion. International Tax and
+Public Finance. 2018; 25(5):1321–1371. https://doi.org/10.1007/s10797-018-9491-6
+19.
+Petkova K, Stasio A, Zagler M. On the relevance of double tax treaties. International tax and public
+finance. 2020; 27(3):575–605. https://doi.org/10.1007/s10797-019-09570-9 PMID: 32624644
+20.
+Hong S. Tax treaties and foreign equity holding companies of multinational corporations. Review of
+Managerial Science. 2021; p. 1–38.
+21.
+Ting A. iTax-Apple’s international tax structure and the double non-taxation issue. British Tax Review.
+2014;(1).
+22.
+Commission E, et al. Commission decides selective tax advantages for Fiat in Luxembourg and Star-
+bucks in the Netherlands are illegal under EU state aid rules. European Commission–Press Release.
+2015;.
+23.
+Kim HJ, Chen AZ. Private Equity in Korea: History, Industry and Policy. In: Korean Business Law.
+Edward Elgar Publishing; 2012.
+24.
+OECD. OECD/G20 base erosion and profit shifting project 2015 final reports. 2015;.
+25.
+Kurant M, Thiran P. Extraction and analysis of traffic and topologies of transportation networks. Physical
+Review E. 2006; 74(3):036114. https://doi.org/10.1103/PhysRevE.74.036114 PMID: 17025715
+26.
+Morris RG, Barthelemy M. Transport on coupled spatial networks. Physical review letters. 2012; 109
+(12):128703. https://doi.org/10.1103/PhysRevLett.109.128703
+27.
+De Domenico M, Sole´-Ribalta A, Go´mez S, Arenas A. Navigability of interconnected networks under
+random failures. Proceedings of the National Academy of Sciences. 2014; 111(23):8351–8356. https://
+doi.org/10.1073/pnas.1318469111 PMID: 24912174
+28.
+Jiang S, Chodrow PS, Gonzalez MC. Demand and Congestion in Multiplex Transportation Networks.
+2016;.
+29.
+Kivela¨ M, Arenas A, Barthelemy M, Gleeson JP, Moreno Y, Porter MA. Multilayer networks. Journal of
+complex networks. 2014; 2(3):203–271. https://doi.org/10.1093/comnet/cnu016
+PLOS ONE
+Navigating optimal treaty-shopping routes using a multiplex network model
+PLOS ONE | https://doi.org/10.1371/journal.pone.0256764
+August 27, 2021
+15 / 16
+=== [p.16] ===
+30.
+Boccaletti S, Bianconi G, Criado R, Del Genio CI, Go´mez-Gardenes J, Romance M, et al. The structure
+and dynamics of multilayer networks. Physics reports. 2014; 544(1):1–122. https://doi.org/10.1016/j.
+physrep.2014.07.001 PMID: 32834429
+31.
+Mucha PJ, Richardson T, Macon K, Porter MA, Onnela JP. Community structure in time-dependent,
+multiscale, and multiplex networks. science. 2010; 328(5980):876–878. https://doi.org/10.1126/
+science.1184819 PMID: 20466926
+32.
+Lee KM, Min B, Goh KI. Towards real-world complexity: an introduction to multiplex networks. The Euro-
+pean Physical Journal B. 2015; 88(2):1–20. https://doi.org/10.1140/epjb/e2015-50742-1
+33.
+Buldyrev SV, Parshani R, Paul G, Stanley HE, Havlin S. Catastrophic cascade of failures in interdepen-
+dent networks. Nature. 2010; 464(7291):1025–1028. https://doi.org/10.1038/nature08932 PMID:
+20393559
+34.
+Radicchi F, Arenas A. Abrupt transition in the structural formation of interconnected networks. Nature
+Physics. 2013; 9(11):717–720. https://doi.org/10.1038/nphys2761
+35.
+Gomez S, Diaz-Guilera A, Gomez-Gardenes J, Perez-Vicente CJ, Moreno Y, Arenas A. Diffusion
+dynamics on multiplex networks. Physical review letters. 2013; 110(2):028701. https://doi.org/10.1103/
+PhysRevLett.110.028701 PMID: 23383947
+36.
+Dickison M, Havlin S, Stanley HE. Epidemics on interconnected networks. Physical Review E. 2012; 85
+(6):066109. https://doi.org/10.1103/PhysRevE.85.066109 PMID: 23005164
+37.
+Yağan O, Gligor V. Analysis of complex contagions in random multiplex networks. Physical Review E.
+2012; 86(3):036103. https://doi.org/10.1103/PhysRevE.86.036103 PMID: 23030976
+38.
+Brummitt CD, Lee KM, Goh KI. Multiplexity-facilitated cascades in networks. Physical Review E. 2012;
+85(4):045102. https://doi.org/10.1103/PhysRevE.85.045102 PMID: 22680529
+39.
+Lee KM, Brummitt CD, Goh KI. Threshold cascades with response heterogeneity in multiplex networks.
+Physical Review E. 2014; 90(6):062816. https://doi.org/10.1103/PhysRevE.90.062816 PMID:
+25615156
+40.
+Dijkstra EW, et al. A note on two problems in connexion with graphs. Numerische mathematik. 1959; 1
+(1):269–271. https://doi.org/10.1007/BF01386390
+PLOS ONE
+Navigating optimal treaty-shopping routes using a multiplex network model
+PLOS ONE | https://doi.org/10.1371/journal.pone.0256764
+August 27, 2021
+16 / 16

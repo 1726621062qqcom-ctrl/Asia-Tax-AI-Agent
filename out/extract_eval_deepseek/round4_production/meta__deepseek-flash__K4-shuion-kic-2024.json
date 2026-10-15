@@ -1,0 +1,63 @@
+{
+ "model": "deepseek-flash",
+ "case": "K4-shuion-kic-2024",
+ "tests": [
+  {
+   "path": "holds.ULT>OP.ratio",
+   "test": "substitute",
+   "token": "99%",
+   "new": "19%",
+   "replaced": 19,
+   "gold": 99.0,
+   "expected": 19.0,
+   "value": null,
+   "status": "missing",
+   "why": "conflict: 19.0 / 99.0",
+   "quote": null,
+   "conflict": [
+    {
+     "value": 19.0,
+     "doc": "K4-shuion-2024",
+     "quote": "KIC is directly owned as to 19% by Top Victory and 1% by Yangpu Knowledge Innovation.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    },
+    {
+     "value": 99.0,
+     "doc": "K4-shuion-2024",
+     "quote": "Top Victory Development Limited\n153,450.00\n99.00\nMonetary funds",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    }
+   ]
+  },
+  {
+   "path": "event.exit",
+   "test": "substitute",
+   "token": "2,668,000,000",
+   "new": "3,668,000,000",
+   "replaced": 2,
+   "gold": 2668000000.0,
+   "expected": 3668000000.0,
+   "value": 3668000000.0,
+   "status": "follows",
+   "why": null,
+   "quote": "(iii) the 99% equity interests in KIC will be transferred from Top Victory to the Limited Partnership at the consideration of approximately RMB3,668,000,000 (equivalent to approximately HK$2,925,000,000).",
+   "conflict": null
+  }
+ ],
+ "usage": {
+  "calls": 0,
+  "prompt_tokens": 0,
+  "completion_tokens": 0,
+  "cache_hit_tokens": 0,
+  "seconds": 0.0,
+  "retries": 0,
+  "cached": 13
+ },
+ "prompt_version": "2026-10-14c"
+}

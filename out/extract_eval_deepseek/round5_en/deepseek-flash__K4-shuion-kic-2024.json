@@ -1,0 +1,402 @@
+{
+ "model": "deepseek-flash",
+ "case": "K4-shuion-kic-2024",
+ "samples": 2,
+ "k": 5,
+ "locate": "retrieval",
+ "patterns": true,
+ "dense": true,
+ "temperature": 0.7,
+ "prompt_version": "2026-10-15-en",
+ "rows": [
+  {
+   "path": "roles.ULT.loc",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "Top Victory Development Limited, a company incorporated\nin Hong Kong and an indirect non-wholly owned subsidiary\nof the Company as at the Latest Practicable Date;",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 2,
+    "passages": 9,
+    "reads": 9,
+    "values": 3,
+    "nulls": 6,
+    "rejects": 0,
+    "agree": 0.333,
+    "quote_len": 162,
+    "figures_in_quote": 1,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 3
+  },
+  {
+   "path": "roles.ULT.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "Top Victory Development Limited, a company incorporated in Hong Kong and an indirect non-wholly owned subsidiary of the Company as at the Latest Practicable Date;",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 2,
+    "passages": 9,
+    "reads": 9,
+    "values": 3,
+    "nulls": 6,
+    "rejects": 0,
+    "agree": 0.333,
+    "quote_len": 162,
+    "figures_in_quote": 1,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "roles.OP.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "At the Latest Practicable Date, KIC, one of the Project Companies, is a company incorporated in the PRC with limited liability and is principally engaged in property investment and operation.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 3,
+    "pattern_values": 1,
+    "passages": 8,
+    "reads": 8,
+    "values": 5,
+    "nulls": 3,
+    "rejects": 0,
+    "agree": 0.625,
+    "quote_len": 191,
+    "figures_in_quote": 0,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 4
+  },
+  {
+   "path": "roles.OP.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "At the Latest Practicable Date, KIC, one of the Project Companies, is a company incorporated in the PRC with limited liability and is principally engaged in property investment and operation.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 3,
+    "pattern_values": 1,
+    "passages": 8,
+    "reads": 8,
+    "values": 4,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.5,
+    "quote_len": 191,
+    "figures_in_quote": 0,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 2
+  },
+  {
+   "path": "roles.BUYER.loc",
+   "kind": "derived",
+   "gold": "CN",
+   "value": null,
+   "status": "conflict",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [
+    "conflict: OTHER / CN"
+   ],
+   "conflict": [
+    {
+     "value": "OTHER",
+     "doc": "K4-shuion-2024",
+     "quote": "Wisdom Forever Limited Partnership, a limited partnership incorporated in the Cayman Islands and is owned as to 100% in aggregate by two wholly owned subsidiaries of Ningbo Fund as limited partners, with Shui On Knowledge and Innovation Partners (an indirect wholly owned subsidiary of the Company) being the general partner;",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "enum",
+     "explicit": true
+    },
+    {
+     "value": "CN",
+     "doc": "K4-shuion-2024",
+     "quote": "Ningbo Fund is a limited partnership established under the laws of the PRC and is principally engaged in investment management.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "enum",
+     "explicit": true
+    }
+   ],
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1,
+    "passages": 9,
+    "reads": 9,
+    "values": 3,
+    "nulls": 6,
+    "rejects": 0,
+    "agree": 0.222
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "kind": "disclosed",
+   "gold": 99.0,
+   "value": 99.0,
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "KIC\nis directly owned as to 99% by Top Victory and 1% by Yangpu Knowledge Innovation.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 3,
+    "pattern_values": 3,
+    "passages": 8,
+    "reads": 8,
+    "values": 8,
+    "nulls": 0,
+    "rejects": 0,
+    "agree": 1.0,
+    "quote_len": 85,
+    "figures_in_quote": 2,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 2
+  },
+  {
+   "path": "holds.ULT>OP.since",
+   "kind": "disclosed",
+   "gold": "2010-06-09",
+   "value": "2010-06-09",
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "Shanghai Knowledge and Innovation Community Development Co., Ltd., established on 9 June 2010 with a registered capital of HK$1,550,000,000, which was jointly contributed by Shanghai Yangpu Knowledge Innovation Zone Investment and Development Co., Ltd. and Top Victory Development Limited, accounting",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.2,
+    "quote_len": 345,
+    "figures_in_quote": 4,
+    "score": 0.03306,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "holds.ULT>OP.cost",
+   "kind": "missing",
+   "gold": null,
+   "value": 1149390000.0,
+   "status": "false_fill",
+   "means": "retrieved",
+   "quote": "Following the capital reduction, the registered capital of the Company was HK$1,128,000,000, of which Top Victory Development Limited adjusted its contribution amount from HK$1,149,390,000 to HK$1,116,720,000, accounting for 99% of the total registered capital, and Shanghai Yangpu Knowledge Innovati",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 3,
+    "rejects": 1,
+    "agree": 0.2,
+    "quote_len": 344,
+    "figures_in_quote": 4,
+    "score": 0.03037,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "flows.exit.immovable_ratio",
+   "kind": "derived",
+   "gold": 97.8,
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "flows.exit.listed_market_trade",
+   "kind": "derived",
+   "gold": false,
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "present.HOLD",
+   "kind": "derived",
+   "gold": "NONE",
+   "value": "NONE",
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "The interests of the Group in the Project Companies as at the Latest Practicable Date are held through its 51% equity interests in Bright Power and Merry Wave (which in turn (directly or indirectly) hold 100% of the shares of Bright Continental and Top Victory respectively which in turn hold 86.8% a",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.2,
+    "quote_len": 360,
+    "figures_in_quote": 4,
+    "score": 0.03075,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "present.exit_route",
+   "kind": "disclosed",
+   "gold": "DIRECT",
+   "value": "DIRECT",
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "In particular, restructuring through the formation of Limited Partnership and Equity Transfer creates an opportunity to obtain an onshore acquisition loan at Limited Partnership’s level, for the primary purpose of completing the Equity Transfer of the Project Companies.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.2,
+    "quote_len": 270,
+    "figures_in_quote": 0,
+    "score": 0.02821,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "event.exit",
+   "kind": "disclosed",
+   "gold": 2668000000.0,
+   "value": 2668000000.0,
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "(iii) the 99% equity interests in KIC will be transferred from Top Victory to the Limited Partnership at the consideration of approximately RMB2,668,000,000 (equivalent to approximately HK$2,925,000,000).",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.2,
+    "quote_len": 204,
+    "figures_in_quote": 3,
+    "score": 0.03,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "event.on",
+   "kind": "derived",
+   "gold": "2024-11-27",
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  }
+ ],
+ "usage": {
+  "calls": 5,
+  "prompt_tokens": 2857,
+  "completion_tokens": 916,
+  "cache_hit_tokens": 640,
+  "seconds": 13.065221786499023,
+  "retries": 0,
+  "cached": 86
+ },
+ "wall": 42.2,
+ "error": null,
+ "notes": [
+  "holds.ULT>OP.cost: a reading of another passage was refused (value not in the quote (quote states 153450, 1.5345e+08, 99, 99000)); the accepted reading stands on its verified quote"
+ ]
+}

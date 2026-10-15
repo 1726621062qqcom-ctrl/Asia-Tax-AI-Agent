@@ -1,0 +1,367 @@
+{
+ "model": "qwen3.8-flash",
+ "case": "K3-sunsine-2026",
+ "samples": 2,
+ "k": 5,
+ "locate": "retrieval",
+ "patterns": true,
+ "dense": true,
+ "temperature": 0.7,
+ "prompt_version": "2026-10-14c",
+ "rows": [
+  {
+   "path": "roles.ULT.loc",
+   "kind": "disclosed",
+   "gold": "SG",
+   "value": "SG",
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "China Sunsine Chemical Holdings Ltd. (the “Company”) is listed on the Singapore Exchange and incorporated and domiciled in Singapore.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 1,
+    "pattern_values": 0,
+    "passages": 6,
+    "reads": 6,
+    "values": 2,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.333,
+    "quote_len": 133,
+    "figures_in_quote": 0,
+    "score": 0.03182,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "roles.ULT.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "SG",
+   "value": null,
+   "status": "conflict",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [
+    "conflict: OTHER / SG"
+   ],
+   "conflict": [
+    {
+     "value": "OTHER",
+     "doc": "K3-sunsine-2024",
+     "quote": "The immediate and ultimate holding corporation of the Company is Success More Group Ltd (“Success More”), a company incorporated in the British Virgin Islands.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "enum",
+     "explicit": true
+    },
+    {
+     "value": "SG",
+     "doc": "K3-sunsine-2024",
+     "quote": "China Sunsine Chemical Holdings Ltd. (the “Company”) is listed on the Singapore Exchange and incorporated and domiciled in Singapore.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "enum",
+     "explicit": true
+    }
+   ],
+   "features": {
+    "pattern_hits": 1,
+    "pattern_values": 0,
+    "passages": 6,
+    "reads": 6,
+    "values": 5,
+    "nulls": 1,
+    "rejects": 0,
+    "agree": 0.667
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "roles.OP.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "Shandong Sunsine Chemical Co., Ltd. (Shanxian, Shandong, PRC)",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 3,
+    "nulls": 2,
+    "rejects": 0,
+    "agree": 0.6,
+    "quote_len": 61,
+    "figures_in_quote": 0,
+    "score": 0.0328,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "roles.OP.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "Shandong Sunsine Chemical Co., Ltd. (Shanxian, Shandong, PRC)",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 2,
+    "nulls": 3,
+    "rejects": 0,
+    "agree": 0.4,
+    "quote_len": 61,
+    "figures_in_quote": 0,
+    "score": 0.03229,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": 4
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "kind": "disclosed",
+   "gold": 100.0,
+   "value": 100.0,
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "100%\nShandong\nSunsine Chemical\nCo., Ltd.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 3,
+    "rejects": 1,
+    "agree": 0.2,
+    "quote_len": 40,
+    "figures_in_quote": 1,
+    "score": 0.03279,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "holds.ULT>OP.since",
+   "kind": "derived",
+   "gold": "2023-12-31",
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "holds.ULT>OP.cost",
+   "kind": "derived",
+   "gold": 350010000.0,
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "flows.up1.foreign_taxed",
+   "kind": "derived",
+   "gold": true,
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "flows.up1.foreign_headline_rate",
+   "kind": "disclosed",
+   "gold": 25,
+   "value": 25.0,
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "As such, the subsidiary corporation has accrued and paid its income tax for the financial year ended 31 December 2024 at the corporate headline tax rate of 25%.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.2,
+    "quote_len": 160,
+    "figures_in_quote": 3,
+    "score": 0.03333,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "flows.up1.deductible_at_payer",
+   "kind": "derived",
+   "gold": false,
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "present.HOLD",
+   "kind": "derived",
+   "gold": "NONE",
+   "value": "OTHER",
+   "status": "wrong",
+   "means": "retrieved",
+   "quote": "The immediate and ultimate holding corporation of the Company is Success More Group Ltd (“Success More”), a company incorporated in the British Virgin Islands.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.2,
+    "quote_len": 159,
+    "figures_in_quote": 0,
+    "score": 0.02807,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "present.financing",
+   "kind": "derived",
+   "gold": "EQUITY",
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "event.on",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "event.dividend",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  }
+ ],
+ "usage": {
+  "calls": 72,
+  "prompt_tokens": 41542,
+  "completion_tokens": 1220,
+  "cache_hit_tokens": 0,
+  "seconds": 225.44005727767944,
+  "retries": 0,
+  "cached": 0
+ },
+ "wall": 62.2,
+ "error": null,
+ "notes": [
+  "holds.ULT>OP.ratio: a reading of another passage was refused (quote not found in the document); the accepted reading stands on its verified quote"
+ ]
+}

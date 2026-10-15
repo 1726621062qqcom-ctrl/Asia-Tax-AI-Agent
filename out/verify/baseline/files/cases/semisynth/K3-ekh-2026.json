@@ -1,0 +1,55 @@
+{
+ "case_id": "K3-ekh-2026",
+ "kind": "K3",
+ "template": "holding",
+ "subject": "GROUP",
+ "members": ["ULT", "HOLD", "OP"],
+ "roles": {
+  "ULT": {"loc": "SG", "attrs": {"incorporated_in": "SG", "group_revenue_eur": 98891763.71}},
+  "HOLD": {"loc": "HK", "attrs": {"incorporated_in": "HK", "is_mne_member": true}},
+  "OP": {"loc": "CN", "attrs": {"incorporated_in": "CN"}}
+ },
+ "holds": [
+  {"holder": "ULT", "held": "HOLD", "ratio": 100.0, "since": "2012-12-31"},
+  {"holder": "HOLD", "held": "OP", "ratio": 100.0, "since": "2012-12-31"}
+ ],
+ "flows": {
+  "up1": {"foreign_taxed": true, "foreign_headline_rate": 25, "deductible_at_payer": false},
+  "up2": {"foreign_headline_rate": 16.5, "deductible_at_payer": false}
+ },
+ "present": {"HOLD": "HK", "financing": "EQUITY", "payment": false},
+ "settled": {},
+ "event": {"on": "2026-06-30", "years": 1, "dividend": 2000000.0, "onward": 2000000.0},
+ "synthetic_share": 0.2,
+ "provenance": {
+  "roles.ULT.loc": {"kind": "disclosed", "source": "K3-ekh-2026", "page": "pdf 1", "quote": "(Incorporated in the Republic of Singapore with limited liability)"},
+  "roles.ULT.attrs.incorporated_in": {"kind": "disclosed", "source": "K3-ekh-2026", "page": "pdf 1", "quote": "Incorporated in the Republic of Singapore with limited liability"},
+  "roles.ULT.attrs.group_revenue_eur": {"kind": "derived", "source": "K3-ekh-2026", "page": "pdf 305", "quote": "our revenue was approximately S$155.5 million, S$165.0 million and S$149.2 million, respectively", "formula": "2025 年收入 S$149.2m × 2025-12-31 新元兑人民币中间价 5.4586 ÷ 欧元兑人民币中间价 8.2355（official/fx/cny_central_parity.csv）= EUR98,891,763.71；2026 年门槛看 2022–2025 四年中至少两年，2023–2025 三年都远低于 7.5 亿欧元，故结论确定"},
+  "roles.HOLD.loc": {"kind": "disclosed", "source": "K3-ekh-2026", "page": "pdf 36", "quote": "Best China Development Limited (保昌發展有限公司), a limited liability company incorporated in Hong Kong on 26 October 2010 and our wholly-owned subsidiary"},
+  "roles.HOLD.attrs.incorporated_in": {"kind": "disclosed", "source": "K3-ekh-2026", "page": "pdf 36", "quote": "a limited liability company incorporated in Hong Kong on 26 October 2010"},
+  "roles.HOLD.attrs.is_mne_member": {"kind": "derived", "source": "K3-ekh-2026", "formula": "集团有新加坡、马来西亚、泰国、越南、香港、内地的子公司（pdf 144–145 子公司表），不只在香港——是跨国企业集团的成员（s15H MNE entity）"},
+  "roles.OP.loc": {"kind": "disclosed", "source": "K3-ekh-2026", "page": "pdf 44", "quote": "Shanghai Anxin Rong Cheng Container Logistics Co., Ltd.* (上海安信榮成集裝箱儲運有限公司), a limited liability company established in the PRC on 22 October 2004"},
+  "roles.OP.attrs.incorporated_in": {"kind": "disclosed", "source": "K3-ekh-2026", "page": "pdf 44", "quote": "a limited liability company established in the PRC on 22 October 2004 and our wholly-owned subsidiary"},
+  "holds.ULT>HOLD.ratio": {"kind": "derived", "source": "K3-ekh-2026", "page": "pdf 147", "quote": "Our simplified shareholding structure immediately before our Reorganisation was as follows (with arrows representing 100% ownership, unless indicated otherwise)", "formula": "结构图（pdf 147）中本公司直接以箭头指向 (HK) Best China，未注比例即 100%；重组只涉及 Gold Prime 与库存股（pdf 152），会计师报告列 Best China 权益 100%（pdf 454）"},
+  "holds.ULT>HOLD.since": {"kind": "derived", "source": "K3-ekh-2026", "page": "pdf 142", "quote": "We acquired (PRC) SH Anxin and expanded our container depot business to Shanghai, the PRC.", "formula": "大事记列于 2012 年：至迟 2012-12-31 起持有；只作持有期的下限"},
+  "holds.HOLD>OP.ratio": {"kind": "disclosed", "source": "K3-ekh-2026", "page": "pdf 44", "quote": "being owned as to 100% by (HK) Best China (our wholly-owned subsidiary)"},
+  "holds.HOLD>OP.since": {"kind": "derived", "source": "K3-ekh-2026", "page": "pdf 142", "quote": "We acquired (PRC) SH Anxin and expanded our container depot business to Shanghai, the PRC.", "formula": "同上：至迟 2012-12-31"},
+  "flows.up1.foreign_taxed": {"kind": "derived", "source": "K3-ekh-2026", "page": "pdf 450", "quote": "withholding tax at 10% or a lower applicable rate is imposed on dividends declared and payable to investors that are non-PRC tax resident enterprises", "formula": "股息付给香港公司，内地征预提所得税"},
+  "flows.up1.foreign_headline_rate": {"kind": "disclosed", "source": "K3-ekh-2026", "page": "pdf 326", "quote": "The provision for PRC Enterprise Income Tax is based on the estimated taxable income for the PRC taxation purposes at the applicable rate of 25%."},
+  "flows.up1.deductible_at_payer": {"kind": "derived", "formula": "股息是税后利润分配，支付方不得扣除（企业所得税法第十条第一项）"},
+  "flows.up2.foreign_headline_rate": {"kind": "disclosed", "source": "K3-ekh-2026", "page": "pdf 326", "quote": "The Hong Kong profit tax rate of our subsidiaries incorporated in Hong Kong is 16.5%."},
+  "flows.up2.deductible_at_payer": {"kind": "derived", "formula": "股息不是香港利得税的可扣除支出（《税务条例》第 16 条只准为产生应评税利润而招致的支出）"},
+  "present.HOLD": {"kind": "derived", "source": "K3-ekh-2026", "formula": "本公司（新加坡）→ (HK) Best China → (PRC) SH Anxin（pdf 44、147）：香港中间控股公司"},
+  "present.financing": {"kind": "derived", "source": "K3-ekh-2026", "formula": "各层是股权持有（pdf 44、147）；集团内借款未披露"},
+  "present.payment": {"kind": "synthetic", "basis": "股息支付是否跨年未披露；取当年支付"},
+  "event.on": {"kind": "synthetic", "basis": "合成：2026-06-30（招股书期间 2023–2025，未披露此链条上的股息）"},
+  "event.years": {"kind": "synthetic", "basis": "只算一年"},
+  "event.dividend": {"kind": "synthetic", "source": "K3-ekh-2026", "page": "pdf 450", "quote": "accumulated profits of the PRC subsidiaries amounting to S$20,668,000, S$29,103,000 and S$32,051,000", "basis": "SH Anxin 单家的利润未披露；内地子公司合计未分配利润 2025 年末 S$32,051,000，取 S$2,000,000 作一次股息"},
+  "event.onward": {"kind": "synthetic", "basis": "香港中间公司把收到的股息全数转付新加坡母公司"}
+ },
+ "notes": [
+  "来源：EKH Limited（2523.HK，新加坡注册）2026-06-30 招股书（cases/sources/K3-ekh-2026/source.pdf）。K3 半合成：链条与比例来自招股书，股息额与日期是合成值。",
+  "只建模一条链：本公司（新加坡，ULT）→ Best China（香港投资控股，HOLD）→ SH Anxin（上海集装箱堆场，OP）；Gold Prime 一支（经 BVI 半数持有）不在本例。",
+  "金额单位为新元。未披露、留给程序发问：香港公司是否纯股权持有实体、股息是否汇入香港及新加坡、新加坡与香港的税务居民证明、受益所有人判断所需事实。"
+ ]
+}

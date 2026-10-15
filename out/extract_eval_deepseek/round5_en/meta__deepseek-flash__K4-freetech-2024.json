@@ -1,0 +1,77 @@
+{
+ "model": "deepseek-flash",
+ "case": "K4-freetech-2024",
+ "tests": [
+  {
+   "path": "holds.ULT>OP.ratio",
+   "test": "substitute",
+   "token": "55%",
+   "new": "65%",
+   "replaced": 11,
+   "gold": 55.0,
+   "expected": 65.0,
+   "value": null,
+   "status": "missing",
+   "why": "conflict: 65.0 / 55.0",
+   "quote": null,
+   "conflict": [
+    {
+     "value": 65.0,
+     "doc": "K4-freetech-2024",
+     "quote": "As at the Latest Practicable Date, the Target Company is owned as to 65% by the Vendor and 45% by the Purchaser.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    },
+    {
+     "value": 55.0,
+     "doc": "K4-freetech-2024",
+     "quote": "Freetech Smart Road\nRecycling\nEngineering\nInvestment Limited\n2,444.44\n55.00\n2,444.44\n55.00",
+     "origin": "same document",
+     "modality": "table",
+     "kind": "number",
+     "explicit": true
+    }
+   ]
+  },
+  {
+   "path": "holds.ULT>OP.cost",
+   "test": "substitute",
+   "token": "46.8 million",
+   "new": "56.8 million",
+   "replaced": 2,
+   "gold": 46800000.0,
+   "expected": 56800000.0,
+   "value": 46802400.0,
+   "status": "old figure stated elsewhere",
+   "why": null,
+   "quote": "The parties completed this capital increase and share expansion by listing (掛牌) at the Property Rights Exchange, wherein Freetech Smart Road Recycling Engineering Investment Limited increased capital to the target company with offshore RMB in the amount of RMB46.8024 million, of which RMB24.4444 mil",
+   "conflict": null
+  },
+  {
+   "path": "event.exit",
+   "test": "substitute",
+   "token": "71,099,000",
+   "new": "81,099,000",
+   "replaced": 2,
+   "gold": 71099000.0,
+   "expected": 81099000.0,
+   "value": 81099000.0,
+   "status": "follows",
+   "why": null,
+   "quote": "3(a). The amount represents the cash consideration of RMB81,099,000 (equivalent to HK$76,360,000) for the Disposal which shall be received within one month after the Completion.",
+   "conflict": null
+  }
+ ],
+ "usage": {
+  "calls": 0,
+  "prompt_tokens": 0,
+  "completion_tokens": 0,
+  "cache_hit_tokens": 0,
+  "seconds": 0.0,
+  "retries": 0,
+  "cached": 19
+ },
+ "prompt_version": "2026-10-15-en"
+}

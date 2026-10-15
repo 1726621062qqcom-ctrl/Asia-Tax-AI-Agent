@@ -1,0 +1,430 @@
+{
+ "model": "deepseek-flash",
+ "case": "K3-jst-2026",
+ "samples": 2,
+ "k": 5,
+ "locate": "retrieval",
+ "patterns": true,
+ "dense": true,
+ "temperature": 0.7,
+ "prompt_version": "2026-10-14c",
+ "rows": [
+  {
+   "path": "roles.ULT.loc",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "Hong Kong True Value Limited (“HK True Value”) was incorporated in Hong Kong with a limited liability on 4 October 2021 as an intermediate holding company of the Group.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 1,
+    "pattern_values": 1,
+    "passages": 6,
+    "reads": 6,
+    "values": 6,
+    "nulls": 0,
+    "rejects": 0,
+    "agree": 1.0,
+    "quote_len": 168,
+    "figures_in_quote": 2,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 1
+  },
+  {
+   "path": "roles.ULT.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "Hong Kong True Value Limited (“HK True Value”) was incorporated in Hong Kong with a limited liability on 4 October 2021 as an intermediate holding company of the Group.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 1,
+    "pattern_values": 1,
+    "passages": 6,
+    "reads": 6,
+    "values": 5,
+    "nulls": 1,
+    "rejects": 0,
+    "agree": 0.833,
+    "quote_len": 168,
+    "figures_in_quote": 2,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "roles.ULT.attrs.is_mne_member",
+   "kind": "derived",
+   "gold": true,
+   "value": true,
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "The following Group companies were incorporated to act as intermediate holding companies under our Company to hold our operating subsidiaries: (a) on September 14, 2021, True Value Limited was incorporated as an exempted company with limited liability in BVI, a direct wholly-owned subsidiary of our ",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 4,
+    "nulls": 0,
+    "rejects": 1,
+    "agree": 0.8,
+    "quote_len": 535,
+    "figures_in_quote": 5,
+    "score": 0.03279,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "roles.ULT.attrs.group_revenue_eur",
+   "kind": "derived",
+   "gold": 120885764.78,
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "roles.OP.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "Shanghai Jushuitan was established in the PRC on September 26, 2014 as a limited\nliability company with a registered capital of RMB500,000.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1,
+    "passages": 9,
+    "reads": 9,
+    "values": 6,
+    "nulls": 3,
+    "rejects": 0,
+    "agree": 0.667,
+    "quote_len": 139,
+    "figures_in_quote": 3,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "roles.OP.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "Shanghai Jushuitan was established in the PRC on September 26, 2014 as a limited liability company with a registered capital of RMB500,000.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1,
+    "passages": 9,
+    "reads": 9,
+    "values": 7,
+    "nulls": 2,
+    "rejects": 0,
+    "agree": 0.778,
+    "quote_len": 139,
+    "figures_in_quote": 3,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "kind": "disclosed",
+   "gold": 100.0,
+   "value": null,
+   "status": "conflict",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [
+    "conflict: 91.35 / 8.65 / 91.3517 / 100.0"
+   ],
+   "conflict": [
+    {
+     "value": 91.35,
+     "doc": "K3-jst-2025",
+     "quote": "Ltd., StoneBridge 2020, L.P.,\nStoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund) transferred to Hong\nKong True Value Limited their equity interests in Shanghai Jushuitan equivalent to\nRMB3,484,473 of registered share capital, representing 91.35% of the then share capital of\nShanghai Jushuitan, at an aggregate consideration of RMB3,484,473.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    },
+    {
+     "value": 8.65,
+     "doc": "K3-jst-2025",
+     "quote": "StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund transferred to Hong Kong True Value Limited their equity interests in Shanghai Jushuitan equivalent to RMB329,878 of registered capital, representing 8.65% of the then share capital of Shanghai Jushuitan, at an aggregate consideration of RMB140 million and the USD equivalent of RMB350 million.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    },
+    {
+     "value": 91.3517,
+     "doc": "K3-jst-2025",
+     "quote": "HK True Value agreed to acquire their equity interests in Shanghai Jushuitan equivalent to RMB3,484,473 of registered share capital, representing 91.3517% of the then share capital of Shanghai Jushuitan, at an aggregate consideration of RMB3,484,473, which has been paid in 2023.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    },
+    {
+     "value": 100.0,
+     "doc": "K3-jst-2025",
+     "quote": "Hong Kong True Value Limited\n(Hong Kong)\nOffshore\n100%\n100%\n100%\n100%\n100%\n100%\n100%\n100%\n90%(1)\n85%(2)\n100%\nOnshore\nTrue Value Limited\n(BVI)\nOur Company\n(Cayman Islands)\nShanghai Jushuitan\n(PRC)",
+     "origin": "same document",
+     "modality": "table",
+     "kind": "number",
+     "explicit": true
+    }
+   ],
+   "features": {
+    "pattern_hits": 3,
+    "pattern_values": 3,
+    "passages": 8,
+    "reads": 8,
+    "values": 5,
+    "nulls": 3,
+    "rejects": 0,
+    "agree": 0.25
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "holds.ULT>OP.since",
+   "kind": "derived",
+   "gold": "2023-09-05",
+   "value": "2023-02-21",
+   "status": "wrong",
+   "means": "retrieved",
+   "quote": "On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte. Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund) transferred to Hong Kong True Value Limited their equity in",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.2,
+    "quote_len": 501,
+    "figures_in_quote": 7,
+    "score": 0.03175,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "holds.ULT>OP.cost",
+   "kind": "missing",
+   "gold": null,
+   "value": 3484473.0,
+   "status": "false_fill",
+   "means": "retrieved",
+   "quote": "On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte. Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund) transferred to Hong Kong True Value Limited their equity in",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.2,
+    "quote_len": 501,
+    "figures_in_quote": 7,
+    "score": 0.03227,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "flows.out.foreign_taxed",
+   "kind": "derived",
+   "gold": true,
+   "value": true,
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "According to the New Corporate Income Tax Law (“New EIT Law”), distribution of profits earned by PRC companies since 1 January 2008 to foreign investors is subject to withholding tax of 5% or 10%, depending on if the foreign investor is considered as the beneficial owner of the dividend according to",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 2,
+    "nulls": 3,
+    "rejects": 0,
+    "agree": 0.4,
+    "quote_len": 498,
+    "figures_in_quote": 4,
+    "score": 0.03154,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "flows.out.foreign_headline_rate",
+   "kind": "disclosed",
+   "gold": 25,
+   "value": 25.0,
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "The general corporate income tax rate in the PRC is 25%.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 2,
+    "nulls": 3,
+    "rejects": 0,
+    "agree": 0.4,
+    "quote_len": 56,
+    "figures_in_quote": 1,
+    "score": 0.03333,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "flows.out.deductible_at_payer",
+   "kind": "derived",
+   "gold": false,
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "present.HOLD",
+   "kind": "derived",
+   "gold": "NONE",
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "event.on",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "event.dividend",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  }
+ ],
+ "usage": {
+  "calls": 0,
+  "prompt_tokens": 0,
+  "completion_tokens": 0,
+  "cache_hit_tokens": 0,
+  "seconds": 0.0,
+  "retries": 0,
+  "cached": 88
+ },
+ "wall": 3.3,
+ "error": null,
+ "notes": [
+  "roles.ULT.attrs.is_mne_member: a reading of another passage was refused (quote not found in the document); the accepted reading stands on its verified quote"
+ ]
+}

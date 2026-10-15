@@ -1,0 +1,6599 @@
+=== [p.1] ===
+Int Tax Public Finance (2018) 25:1321–1371
+https://doi.org/10.1007/s10797-018-9491-6
+Optimal tax routing: network analysis of FDI diversion
+Maarten van ‘t Riet1
+· Arjan Lejour1,2
+Published online: 18 April 2018
+© Springer Science+Business Media, LLC, part of Springer Nature 2018
+Abstract The international corporate tax system is considered a network. Just like
+for transportation, “shortest” paths are computed, which minimize tax payments for
+multinational enterprises when they repatriate proﬁts. We include corporate income
+tax rates, withholding taxes on dividends, double tax treaties, and double taxation relief
+methods. We ﬁnd that treaty shopping leads to an average potential reduction of the tax
+burden on repatriated dividends of about 6% points. An indicator for centrality in the
+tax network identiﬁes the UK, Luxembourg, and the Netherlands as the most important
+conduit countries. Low-tax havens do not have a crucial role in reducing dividend
+repatriation taxes. By contrast, tax haven ﬁnancial centres do. In the regressions we
+ﬁnd that the centrality measures are robustly signiﬁcant explanatory variables for
+bilateral FDI stocks. This also holds for our treaty shopping indicator.
+Keywords Corporate taxation · Tax treaties · Treaty shopping · Tax havens · Shortest
+path
+JEL Classiﬁcation F23 · H25 · H26 · H87
+B Maarten van ‘t Riet
+mvtr@cpb.nl
+Arjan Lejour
+a.m.lejour@cpb.nl
+1
+CPB Netherlands Bureau for Economic Policy Analysis, P.O. Box 80510, 2508 GM The Hague,
+The Netherlands
+2
+Tilburg University, Tilburg, The Netherlands
+123
+=== [p.2] ===
+1322
+M. van ‘t Riet, A. Lejour
+1 Introduction
+Treaty shopping is the practice whereby multinational enterprises (MNEs), rather than
+investing directly in a host country, redirect the investment through a third country to
+take advantage of treaty provisions not found between the host and the home country of
+the investment (Davies 2004). These provisions are formulated in bilateral tax treaties
+to avoid double taxation of corporate income and to stimulate mutual foreign direct
+investment (FDI). These treaties are referred to as DTTs: double tax treaties. MNEs
+use these treaties to lower their tax burden.
+Little seems to be known quantitatively about treaty shopping as no readily available
+measure exists for its magnitude or the subsequent reduction of the MNE’s effective
+tax burden. In this paper we examine the extent to which treaty shopping may lead to
+FDI diversion and reduced repatriation tax rates on distributed dividends. This requires
+the construction of measures, or indicators, of treaty shopping. Circumventing the lack
+of direct data, we will construct these from publicly available national tax parameters.
+We examine whether these indicators contribute to explaining observed bilateral FDI
+positions.
+Table 1 illustrates the worldwide pattern of FDI positions. Relatively small
+economies account for large shares in FDI. For example, total inward FDI stocks into
+the Netherlands in 2013 equalled USD 4263 billion, accounting for 15% of worldwide
+inward FDI stocks. In the same year the Netherlands ranked 17th in terms of GDP
+(between brackets) with a share of about 1% of worldwide GDP. For Luxembourg the
+discrepancy is even more pronounced, as it is for the British Virgin Islands, ranking
+10th in outward FDI stocks.
+Table 1 Top 10 of inward and outward FDI stocks in 2013. Source: IMF Coordinated Direct Investment
+Survey data, 2013 reporting countries
+Country
+Inward FDI
+Country
+Outward FDI
+bln USD
+%
+bln USD
+%
+World
+27,668
+100.0
+World
+27,696
+100.0
+Netherlands (17)
+4263
+15.4
+Netherlands (17)
+5220
+18.8
+USA (1)
+2755
+10.0
+USA (1)
+4693
+16.9
+Luxembourg (73)
+2466
+8.9
+Luxembourg (73)
+2990
+10.8
+China (2)
+2331
+8.4
+UK (6)
+1717
+6.2
+UK (6)
+1536
+5.5
+France (5)
+1360
+4.9
+Hong Kong (41)
+1120
+4.3
+Germany (4)
+1252
+4.5
+Germany (4)
+907
+3.3
+Switzerland (20)
+1179
+4.3
+Switzerland (20)
+809
+2.9
+Japan (3)
+1118
+4.0
+France (5)
+796
+2.9
+Hong Kong (41)
+1098
+4.0
+Singapore (37)
+751
+2.7
+British Virgin Is.
+(190)
+1074
+3.9
+The totals of inward and outward stocks are not equal due to incomplete reporting and differences in
+registering stocks by home and host countries. Between brackets: GDP ranking (World Bank Data)
+123
+=== [p.3] ===
+Optimal tax routing: network analysis of FDI diversion
+1323
+According to OECD (2013), the worldwide pattern of FDI is suggestive of interna-
+tional tax planning. Treaty shopping is one of the practices that MNEs use to exploit
+the differences in the national tax codes of different jurisdictions. Other such practices
+are transfer pricing, thin capitalization, and hybrid mismatches.1
+To develop the treaty shopping indicators, we consider the international tax system
+as a network. We compute the optimal paths which minimize the tax burden of MNEs
+when they repatriate proﬁts. The methodology is similar to determining the shortest
+path in a transportation network. The network consists of 108 countries, and the tax
+burdens are calculated from the statutory rates of corporate income taxes, withholding
+taxes on dividends, and double tax relief methods. Typically, bilateral DTTs lower
+reciprocally withholding taxes and provide for more generous relief methods (Avi-
+Yonah and Panayi 2011).
+We use a multilateral dimension of corporate taxation for dividend ﬂows. In this
+respect, we follow Barrios et al. (2012) in combining host and home country taxation,
+including tax treaties and double tax relief. They ﬁnd that taxation of the home country,
+additional to that of the host country, has a signiﬁcant negative impact on the location
+of new subsidiaries. Egger et al. (2009) construct effective tax rates between country
+pairs, reﬂecting overall host and home country taxation, and ﬁnd that the bilateral
+effective tax rate has a negative impact on bilateral FDI stocks. However, they only
+construct these rates for direct routes and do not take account of treaty shopping. Their
+sample consists of OECD countries; for these countries the marginal and average
+effective tax rates (EMTR and EATR) are available. Lacking the data on effective tax
+rates for most of the non-OECD countries in our sample, we use statutory rates (see
+also Barrios et al. 2012).
+We consider a proﬁt repatriation optimization problem for a given subsidiary in a
+host country and the parent company in the home country. On tax-minimizing routes,
+which may involve FDI diversion, the tax parameters of other countries matter as
+well. All information is compiled and stored in a matrix describing the tax burden for
+incoming and outgoing dividends between each pair of the 108 countries. This matrix
+is entered into the Floyd–Warshall algorithm from graph theory, which efﬁciently
+performs the required minimizations. After a few minor adaptations, the algorithm
+computes the optimal tax routes. The difference between the tax costs on the direct
+route and on the optimal one yields the treaty shopping gain.
+Moreover, the network approach enables us to identify countries most likely to per-
+form the role of conduits, countries often accused of being accessories to tax avoidance
+by MNEs. A central position in the international tax network is a necessary condition
+for the role as a conduit. With a concept from graph theory, we compute measures of
+network centrality.
+We employ these measures in the econometric analysis. We regress bilateral FDI
+stocks on tax variables and the indicator from the network approach on treaty shopping
+gain.Inaddition,weaddthenetworkcentralitymeasuresforthehostandhomecountry.
+1 The growing international concern over the erosion of corporate income tax bases is addressed by the
+base erosion and proﬁt shifting (BEPS) initiative of the G20 and OECD (2013, 2015) and the Anti-Tax
+Avoidance Directive of the European Union (2016).
+123
+=== [p.4] ===
+1324
+M. van ‘t Riet, A. Lejour
+The FDI data are from the IMF CDIS database, and the tax parameters are obtained
+from different public sources. All data are for the year 2013.
+Direct evidence of treaty shopping and FDI diversion is scarce for two reasons. First,
+the FDI data list the investment from a home country into a host country. However,
+this does not imply that the investment stays in the host or that the home country is the
+actual origin of the investment. Hence, from these data, diverted and undiverted FDI
+cannot be disentangled. Second, treaty shopping may be considered as treaty abuse and
+be illegal: the granting of (tax) treaty beneﬁts in inappropriate circumstances (OECD
+2015).2 With the possibility of treaty shopping being illegal, direct evidence is even
+less likely. There are a few papers attempting to quantify treaty shopping. Weyzig
+(2013) makes use of micro-data of Dutch Special Purpose Entities (SPEs) from 2007.
+SPEs, in general, are entities with no or few employees, little or no physical presence
+in the host country and whose core business consists of group ﬁnancing or holding
+activities (OECD 2013). By comparing the FDI ﬂows via Dutch SPEs from a home
+to a host country to the direct FDI ﬂows between those countries, derived from the
+balance of payment statistics, he estimates the share of bilateral FDI that is passing the
+Netherlands. This share is 6% points higher with a tax treaty route via the Netherlands
+compared to routes without a treaty. This is a large effect because on average 11% of
+worldwide FDI stocks has passed the Netherlands. The low withholding tax rates on
+dividends also have a signiﬁcant impact on treaty shopping. Mintz and Weichenrieder
+(2010) construct the chains of corporate structures across various countries for German
+multinationals and relate these structures to the underlying ﬁscal motives. The level
+of withholding taxes is found to be important in determining which countries are used
+as a platform for investments.
+Wereport threemainﬁndings. First, treatyshoppingpotentiallyleads toasigniﬁcant
+reduction of the tax burden of MNEs. That reduction is 6% points on average. Second,
+the top 3 conduit countries according to our main measure of network centrality are
+the UK, Luxembourg, and the Netherlands. Low-tax havens, i.e. those countries with
+a low or zero corporate tax rate, are not relevant for dividend repatriation. Tax haven
+ﬁnancial centres, however, are important. Third, the coefﬁcients of the treaty shopping
+indicator and the centrality measures are robustly found to be signiﬁcant, statistically
+and in terms of economic impact on bilateral FDI stocks. A 1%-point tax gain due to
+treaty shopping raises the bilateral FDI stock by 1.0%. An increase of one standard
+deviation of the centrality measure raises bilateral FDI stocks by 10–20%. These
+results conﬁrm the relevance of the treaty shopping measures derived from the network
+approach.
+We contribute to the literature with a novel and fundamentally multilateral approach
+that pairs a rigorous optimization framework with basic tax parameters. It generates
+quantitative indicators on treaty shopping in a network of 108 countries, including tax
+havens. With the exception of Hong (2017), we are not aware of other work using
+this approach and quantiﬁed at this scale.3 Hong (2017) constructs tax-minimizing
+routes for a set of 70 economies, allowing a maximum of two conduit countries only.
+2 Preventing the Granting of Treaty Beneﬁts in Inappropriate Circumstances, BEPS Action 6—2015 Final
+Report.
+3 An early paper of Gerard and Gillard (2004) applies a related approach to only three countries.
+123
+=== [p.5] ===
+Optimal tax routing: network analysis of FDI diversion
+1325
+He focuses on the treaty-speciﬁc withholding taxes on dividends. The current paper
+differs by also including home country taxation. This contributes to the larger reduction
+in the repatriation tax burden of 6.0% points, instead of the 3.7% points of Hong
+(2017). Although home country taxation is not included in his network analysis, Hong
+(2017) does include corporate income tax rates and a dummy for foreign tax credit as
+determinants for bilateral FDI stocks in the regression analysis. He also introduces a
+variable indicating whether a direct route is optimal or not. This variable proves to be
+statistically signiﬁcant.
+An important limitation of both papers is the focus on dividends only. The network
+analysis takes the investment and proﬁt repatriation decisions between a parent com-
+pany and a subsidiary in another country as given. We allow for indirect ﬁnancing
+structures by which MNEs reduce the repatriation taxation of dividends. Mintz and
+Weichenrieder (2010) refer to this as the treaty shopping motive for setting up conduit
+entities in third countries. We neglect royalty and interest payments for tax planning
+structures, which are instrumental in stripping corporate earnings in high-tax host
+countries. The emphasis in this paper is on treaty shopping for dividends, reducing
+withholding taxes, and in some cases the taxation in home countries. Still, the network
+approach offers a rich multi-country framework to investigate the dividend repatriation
+tax rates facing MNEs.4
+The paper proceeds as follows. Section 2 describes the network approach to the
+international corporate tax system and deﬁnes the indicators. In Sect. 3 the data of
+the tax system are presented. Section 4 gives the effects of double tax relief methods
+and the DTTs on the double tax rates. The tax reduction results of treaty shopping are
+discussedinSect.5.Section6presentstheresultsofthecentralityindicator,identifying
+conduit countries. Section 7 tests these indicators with an econometric analysis. The
+concluding section summarizes and discusses directions for further research.
+2 A network approach to international corporate taxation
+This section sets out the main methodological framework. The international corporate
+tax system is considered as a network of countries where distance is deﬁned as the
+tax burden of repatriating corporate income from one country to another country.
+First, it is described how these distances are composed from different international
+taxes, following Barrios et al. (2012). As our sample contains 108 countries, we have
+more than 10 thousand bilateral relations. Next, the tax burdens of these relations
+are discussed, involving conduit countries and treaty shopping. Third, it is shown
+how the tax burdens ﬁt into efﬁcient algorithms for computing shortest paths over the
+whole network.5 Hence, the shortest paths are optimal tax routes. Fourth, a measure
+of network centrality is introduced to identify the most used conduit countries.
+4 We do use the withholding tax rates on royalties as explanatory variables in the regressions. Due to the
+strong correlation between the withholding tax rates for royalties and interest, we only include the former.
+5 For further discussion of the network algorithm and its tax application, see Appendix C1.
+123
+=== [p.6] ===
+1326
+M. van ‘t Riet, A. Lejour
+2.1 Tax burden, treaty shopping, and a network algorithm
+Consider a multinational with a subsidiary in a host country S and a parent company in
+home country P. Both countries may tax the income of the subsidiary. First, the host
+country levies a corporate income tax (CIT), at a rate tS. Next, the host country may
+also levy a general non-resident withholding tax on the dividends of the subsidiary.
+The tax is denoted with wS. However, the host and home country may have signed a
+tax treaty and a preferential rate wSP ≤wS may apply. The home country may tax
+the foreign-source income at its CIT rate, tP.
+The tax code of the home country may contain provisions to avoid double taxation.
+For instance, it may have a dividend participation exemption: under certain conditions
+all, or part, of the foreign-source dividend income is exempted from the corporate
+income tax. These conditions typically require a minimum share in the subsidiary and
+a minimum number of years that the shares are held. Some countries do not apply
+tax relief to dividend from low-tax countries or tax havens (CFC rules). Apart from
+exemption two other methods of double tax relief are taken into account: deduction
+and credits.6 Deduction is the most modest relief method where no taxes need to be
+paid over the taxes already paid. The latter are deducted from the tax base in the home
+country. With the credit system the tax base is the income of the subsidiary, but the
+corporate income tax is credited with taxes paid in the host country.7 Excess credit is
+not restituted. The credit method is less generous than exemption, but more so than
+deduction.
+Let rm P be the general double tax relief method applied by home country P. The
+tax treaties the country has signed may contain agreements to provide more generous
+double tax relief to treaty partner S. Thus, also the relief methods have a double country
+dimension: rmSP. The resulting combined tax rates after applying the relief method
+are fully in line with Barrios et al. (2012).
+te
+SP(deduction)  1 −(1 −tS)(1 −wSP)(1 −tP)
+te
+SP(credit)  max{1 −(1 −tS)(1 −wSP), tP}
+te
+SP(exemption)  1 −(1 −tS)(1 −wSP)
+Next, we deﬁne the direct tax distance or burden dSP between host S and home
+country P based on the relevant double taxes; the withholding tax rate and the CIT
+of the parent. The CIT of the host country is excluded, because this tax is always
+paid, irrespective of the relief method and therefore irrelevant for our treaty shopping
+analysis. Depending on the tax relief method, the tax distances are deﬁned as follows.
+dSP(deduction)  1 −(1 −wSP)(1 −tP)
+6 Thus no-relief-at-all, which does occur sparingly, is ignored.
+7 With an indirect tax credit both the host corporate income tax and the withholding tax are credited. With
+a direct tax credit only the withholding tax can be credited. We ignore the latter.
+123
+=== [p.7] ===
+Optimal tax routing: network analysis of FDI diversion
+1327
+S
+P
+C
+host country (subsidiary)
+tS , wSP , wSC
+home country (parent) tP , rmSP , rmCP
+conduit country
+tC , rmSC , wCP
+dSP
+dCP
+dSC
+Fig. 1 Treaty shopping—one conduit country
+dSP(credit)  max{wSP, (tP −tS)/(1 −tS)}
+dSP(exemption)  wSP
+The tax distances represent the double taxation of proﬁts of the subsidiary in the host
+country. Full double taxation for a given pair would be dmax
+SP
+ 1−(1−wS)(1−tP),
+with deduction as the standard relief method and application of the general withholding
+tax rate. Double tax relief then is the difference between the full and the actual tax
+distance, dmax
+SP
+−dSP.
+We refer to the tax distances dSP as the bilateral direct dividend repatriation tax
+rates.8
+Now consider the possibility of indirect repatriation of dividends, i.e. through a
+third, or conduit, country C; see Fig. 1. It is rational for the MNE to choose the
+indirect route over the direct route, ceteris paribus, when the tax burden is lower, i.e.
+1 −(1 −dSC)(1 −dC P) < dSP. As the CIT of host S is to be paid in both cases, it
+does not matter for the (absolute) comparison. The conduit country functions both as
+an intermediate host and as an intermediate home country.
+The CIT of an intermediate country is relevant when the next intermediate, or ﬁnal,
+home country at a tax route applies the credit method. Then it may not be clear which
+taxes can be credited; all the taxes of the preceding part of the tax route, or just the
+taxes paid in the previous country? In these conduit situations we take the rate of the
+world average corporate income tax to be credited.9 This weighted average excludes
+the CIT rate of the country involved. The withholding taxes of the previous country
+are always taken into account and are credited where required.
+8 Altshuler and Grubert (2002) also use the term ‘repatriation tax’. They analyse the repatriation decision,
+which we take as given.
+9 Alternative approaches are discussed in Appendix C1.
+123
+=== [p.8] ===
+1328
+M. van ‘t Riet, A. Lejour
+As an example of an indirect route, assume that home country P applies the deduc-
+tion method and conduit country C exempts foreign-source dividend income. The
+treaty shopping condition translates to wSC + wC P −wSCwC P < wSP; the combined
+withholding taxes on the indirect route must be less than on the direct route. This is
+only possible when the withholding tax rate to the conduit country is lower than the
+one to the parent, wSC < wSP.10
+The tax burden of an indirect tax route with a single conduit country is the usual
+combined effective rate of two tax rates. But a shortest path may go beyond the triangles
+above.Thus,ingeneral,foranytaxroute,withaninitialhost k  1andﬁnaldestination
+k  n, the total tax distance equals 1 −n
+k2 (1 −dk−1,k). Clearly, the order of the
+bilateral tax distances in the computation does not matter. This characteristic allows
+the use of standard and efﬁcient algorithms to determine the tax burden of the optimal
+route between all pairs of countries in the network; or rather the minimum tax costs
+of repatriating dividends for all country pairs. We use the elegant Floyd–Warshall
+algorithm.11 It stepwise builds up the matrix of shortest tax distances by consecutively
+adding and evaluating a new country, in arbitrary order, as an intermediate or conduit
+country. The efﬁciency of the algorithm is important as the number of possible routes
+over a network is huge.12 The algorithm generates the matrix of optimal tax rates in
+repatriating dividends from all host countries to all home countries, si j. A ﬁrst indicator
+from the network approach is the treaty shopping gain, deﬁned at the bilateral level as
+the difference between the direct and the optimal tax costs, dSP −sSP.
+2.2 A centrality measure for conduit countries
+The lowest tax burden for a particular country pair may be incurred on the direct
+route or on an indirect one. In the latter case the route contains intermediate coun-
+tries. We identify these conduit countries using a centrality measure from network
+theory: betweenness. Given all optimal paths between all country pairs in the network,
+betweenness centrality is deﬁned as follows: for a given country, count the number of
+times it is on an optimal path from S to P. Divide this number by the total number
+of optimal paths between S and P. Then sum these fractions over all pairs S and P,
+excluding those pairs where the given country is the initial host or home.
+We have performed the summation over country pairs for the betweenness centrality
+measure with double GDP weights. These weights are taken as a proxy for the relative
+size of undiverted dividend ﬂows, which ideally would have been used. However,
+these are unknown. Although the OECD has some sparse data on reported bilateral
+dividend payments, it must be realized that these data are burdened with the central
+10 Given that the undiverted investment also would have taken place without the treaty shopping, this
+implies that the host country loses tax revenue. This is usually the case, and the OECD concludes that treaty
+shopping is a harmful tax practice (OECD 1998). IMF (2014) warns that treaty shopping is particularly
+harmful for developing countries.
+11 See, for instance, Minieka (1978).
+12 For a simple network that has ten countries and is complete, meaning that all direct pairwise connections
+exist, there are almost 10 million simple routes.
+123
+=== [p.9] ===
+Optimal tax routing: network analysis of FDI diversion
+1329
+Table 2 Summary of tax variables
+Symbol/deﬁnition
+Variable name
+Text
+ti
+CITi
+Corporate income tax rate
+wi
+WHTdiv
+i
+Default (general) withholding tax rate on dividends
+WHTroy
+i
+Default (general) withholding tax rate on royalties
+wi j
+BWHTij
+Bilateral withholding tax rate (on dividends)
+di j
+DRCTij
+Bilateral direct dividend repatriation tax rate (i.e. on
+direct routes)
+di j −wi j
+RCITij
+Remaining cit rate in home country (on direct
+routes)
+si j
+OPTMij
+Bilateral optimal dividend repatriation tax rate (i.e.
+on optimal routes)
+di j −si j
+GAINij
+Treaty shopping gain/treaty shopping indicator
+CENTi
+Centrality measure
+issue of this article, the diversion for ﬁscal reasons. The same applies to FDI data.13 Not
+weighting the country pairs in the measure implicitly assumes equal bilateral ﬂows,
+which would be highly unrealistic given the different countries in the network. We
+will show the results with GDP-based weights ﬁrst, but present unweighted centrality
+as an alternative measure. Whatever weights are used, the betweenness centrality of a
+country can be interpreted as the share of total worldwide undiverted ﬂows that pass
+through it. This is shown in Appendix C2, as is the construction of the weights.
+All results on treaty shopping gain and the tax burden are derived at the level of the
+country pair. To present aggregate results the double GDP weights are used. We have
+country level results for the host (outbound dividends) and home countries (inbound
+dividends). Table 2 presents a summary of tax variables, also stating the names used
+in the regression analysis.
+3 Data: national tax parameters
+The selection of 108 jurisdictions contains all high- and upper-middle-income
+economies14 for which sufﬁcient tax data are available. This is augmented with lower-
+middle-income countries with relatively large economies, such as India, Indonesia, and
+the Philippines. The selection covers almost 95% of worldwide GDP in 2013. The full
+list is found in Appendix A1. The selection also includes many jurisdictions classiﬁed
+as a tax haven, because the latter are usually small and afﬂuent; see, for instance,
+Dharmapala and Hines (2009). The importance of including tax havens is evident:
+they are likely conduit countries if only for their characteristic of low or zero taxes
+(OECD 1998). Avoiding precise deﬁnitions we refer to the list of Gravelle (2013) as
+13 In an alternative exercise, in collaboration with the OECD, bilateral weights were constructed based on
+sparsely available but reported bilateral dividend ﬂows and FDI stocks; see Van ‘t Riet et al. (2015).
+14 World Bank Atlas method, based on 2013 GNI per capita data.
+123
+=== [p.10] ===
+1330
+M. van ‘t Riet, A. Lejour
+a benchmark for tax havens. In the end, we classify 26 countries in our list of 108
+countries as tax havens. As a subgroup we identify 10 low-tax havens with a CIT rate
+of 12.5% or less, which includes Bermuda, the Cayman Islands, and the British Virgin
+Islands. Another subgroup of ﬁve tax havens, for which we will ﬁnd different results,
+are ﬁnancial centres, Ireland, Jordan, Luxembourg, Singapore, and Switzerland (see
+Appendix A2).
+The tax data are mainly obtained from the Worldwide Corporate Tax Guide from EY
+(2013).Foreachcountry,wehavedataonthecorporateincometaxrate,thegeneralrate
+of the withholding tax on dividends, the general double tax relief method, possibly the
+more lenient tax relief method for treaty partners, and the treaty dividend withholding
+tax rates. For the dividend tax rates, we choose normally the lowest rate which is often
+conditional on a substantial participation in the daughter company.15 Quite often this
+is 10–25% of the stocks, but sometimes the lowest tax rate applies only if the parent
+owns the majority of the stocks. Although the data have been cross-checked with other
+public sources,16 still some errors and omissions are expected to remain. In addition,
+choices and interpretations are unavoidable as tax codes contain different rates and
+provisions that apply under different conditions, which may involve legal structures,
+the level of corporate income, the industry, ownership shares, etc. Our choices and best
+knowledge are found in Appendix A1 (except for the treaty withholding tax rates).
+Statutory rates of corporate income taxation have been used, where applicable
+including local taxes.17 We ignore the possibilities to reduce the tax base in the host
+countries and the effective tax rates for three reasons. First, as we are mainly interested
+in the routing decision of repatriating income given the ultimate host and home country,
+the deduction possibilities of these two countries may apply whatever the route chosen;
+statutory or effective rates then do not affect comparison. Second, reduced taxation
+in the host increases the proﬁt base to be repatriated and hence the scope for further
+tax reduction. This may be relevant when deduction or the credit method is involved.
+However, when intermediate or ﬁnal home countries apply dividend exemption as
+many countries do, neither effective (as in EATR) nor statutory rates are relevant. The
+tax minimization will make sure that the chosen routes include as much as possible
+countries with the dividend participation exemption. A third and practical reason for
+not using effective tax rates is that these are simply not available for most countries in
+our selection.
+The CIT rates are listed in the ﬁrst column of Table 3 for a selected number of coun-
+tries and in Appendix A1 for all countries. When foreign-source income is exempted
+from corporate taxation (xmp), the tax rate is irrelevant, for the other double tax relief
+methods it is not. The general tax relief method is indicated in the second column.
+Countries may provide more generous relief for foreign-source dividends coming from
+tax treaty partners, such as Canada; see column (3).
+The CFC column (controlled foreign corporation) indicates when a country applies
+anti-abuse provisions to counter tax deferral and avoidance through artiﬁcial foreign
+15 We have ignored lowest tax rates which only apply to non-proﬁt organizations, such as pension funds
+and government institutions.
+16 For instance, Deloitte (2013) and Loyens and Loeff (2013).
+17 OECD Tax Database and KPMG Tax Tools and Resources.
+123
+=== [p.11] ===
+Optimal tax routing: network analysis of FDI diversion
+1331
+Table 3 Tax data 2013—selected countries
+Country (unit)
+CIT rate
+(%)
+Relief
+method
+Treaty
+relief
+method
+CFC rule
+(dummy)
+WHTdiv
+(%)
+DTT
+(no.)
+Tax
+haven
+(dummy)
+GDP
+weight
+(%)
+(1)
+(2)
+(3)
+(4)
+(5)
+(6)
+(7)
+(8)
+Bermuda
+0.0
+xmp
+0
+0
+0
+1
+0.01
+Brazil
+34.0
+crd
+1
+15
+35
+0
+2.97
+Canada
+26.3
+crd
+xmp
+0
+25
+75
+0
+1.88
+China
+25.0
+crd
+1
+10
+64
+0
+15.66
+France
+34.3
+xmp*
+1
+30
+80
+0
+2.84
+Germany
+30.2
+xmp*
+1
+25
+71
+0
+4.04
+Hong Kong
+16.5
+xmp
+0
+0
+14
+1
+0.47
+Japan
+37.0
+xmp*
+0
+20
+48
+0
+5.84
+Luxembourg
+29.2
+xmp
+0
+15
+56
+1#
+0.05
+Malta
+35.0
+xmp
+0
+0
+40
+1
+0.01
+Netherlands
+25.0
+xmp
+0
+15
+72
+0
+0.89
+Switzerland
+21.1
+xmp
+0
+35
+71
+1#
+0.46
+United Arab
+Emirates
+0.0
+xmp
+0
+0
+21
+0
+0.34
+UK
+23.0
+xmp
+1
+0
+51
+0
+2.95
+USA
+39.1
+crd
+1
+30
+54
+0
+19.79
+crd credit system, xmp exemption, ded deduction system, xmp* exemption up to 95%
+#Tax haven ﬁnancial centre
+entities. For these countries we interpret tax relief for dividends from tax havens
+as deduction. This is the only instance where tax havens have a speciﬁc role in the
+network analysis. They are listed in column (7). The ﬁve tax haven ﬁnancial centres
+are excluded from CFC treatment.
+Tax havens are often low-tax countries, as is the case for Bermuda. Malta, listed as
+a tax haven, has a high nominal corporate income tax of 35%. For holding companies,
+however, this is irrelevant as Malta applies a dividend participation exemption. Tax
+havens tend to have a zero withholding tax on dividends. The general rates of this tax
+are found in the ﬁfth column of Table 3 and Appendix A1. The sixth column indicates
+the number of bilateral tax treaties a country has with partners within the selection of
+108 jurisdictions.18
+The bilateral withholding tax rates from the DTTs imply a matrix structure for the
+tax data; see Table 4. An important multilateral tax treaty is the Parent–Subsidiary
+directive of the EU.19 This stipulates intra-EU withholding tax rates of zero and
+dividend participation exemption.
+18 The number refers to treaties where at least one of the bilateral withholding tax rates has been reduced.
+19 European Union (1990). Next to the 27 EU member countries in 2013, also Iceland, Norway, and
+Switzerland are included.
+123
+=== [p.12] ===
+1332
+M. van ‘t Riet, A. Lejour
+Table 4 Bilateral dividend withholding tax matrix 2013—selected countries
+From \ To
+Bermuda
+China
+Germany
+Malta
+NLD
+Nigeria
+USA
+General
+Bermuda
+–
+0
+0
+0
+0
+0
+0
+0
+China
+10
+–
+10
+5
+10
+7.5
+10
+10
+Germany
+25
+10
+–
+0
+0
+25
+5
+25
+Malta
+0
+0
+0
+–
+0
+0
+0
+0
+Netherlands
+15
+10
+0
+0
+–
+12.5
+0
+15
+Nigeria
+10
+7.5
+10
+10
+7.5
+–
+10
+10
+USA
+30
+10
+0
+5
+0
+30
+–
+30
+4 Double taxation and double tax relief
+The bilateral direct dividend repatriation tax rates combine the withholding tax on
+dividends and taxation in the home country, as explained in Sect. 2. This section
+presents descriptive statistics on double tax relief.
+A multinational could face double taxation when repatriating proﬁts of a foreign
+subsidiary. Taking the CIT of the host country as given, there remains in theory about
+41% additional, i.e. double, taxation.20 In practice double tax relief methods and tax
+treaties reduce or even eliminate double taxation; the combined effect is that there
+remains a world average double taxation of 12%. We conclude that double tax relief
+methods and tax treaties do what they are supposed to do: they reduce double taxation
+substantially, by almost 30% points.
+Double taxation varies by country. We average the bilateral direct dividend repa-
+triation tax rates for the countries as home or as host of the investments. Low average
+tax rates for inbound dividends make a country attractive for corporate residence. The
+Netherlands and Finland head the ranking of countries in this respect, with average
+rates of 3.4 and 3.7%; see Table 5. By contrast, the average rate for the USA is 16.7%.
+This implies that when US corporations would switch their legal residence to one of
+these European countries they could reduce the tax burden on dividends from all over
+the world by more than 10% points. Ireland, often a candidate country for such a tax
+inversion, has an average repatriation tax rate of 5.6% and ranks 11th.21
+Exemption contributes to a low average inbound rate, certainly compared to coun-
+tries with only credits for taxes already paid. The number of bilateral tax treaties also
+matters for the inbound rates as they stipulate reduced withholding taxes for the host
+country of the repatriated proﬁts. The low-tax havens in general have no or few double
+tax treaties and therefore do not rank high. This is markedly different for the tax haven
+ﬁnancial centres.
+20 World average taxation equals 1−(1−0.17)(1−0.29)∼0.41.
+21 An example of a tax inversion was the planned 160 billion USD merger of the pharmaceutical companies
+Pﬁzer and Allergan, announced in November 2015. Pﬁzer is American but the legal residence of Allergan
+is in Ireland, which is also where the new company was supposed to reside. Measures in April 2016 taken
+by the US Treasury made the tax beneﬁts of the merger uncertain and the merger plan was abandoned. US
+tax reform plans in 2017 would remove the tax incentive for inversion.
+123
+=== [p.13] ===
+Optimal tax routing: network analysis of FDI diversion
+1333
+Table 5 Average direct repatriation tax rates for inward dividends—selected countries
+Country
+Relief method
+CIT
+DTT (no.)
+Avg. rate
+Rank
+Netherlands
+Exemption
+25.0
+74
+3.39
+1
+Finland
+Credit#
+24.5
+59
+3.65
+2
+UK
+Exemption
+23.0
+51
+3.75
+3
+Luxembourg
+Exemption
+29.2
+57
+4.03
+5
+Switzerland
+Exemption
+21.0
+71
+4.93
+9
+Ireland
+Credit
+12.5
+53
+5.58
+11
+Canada
+Credit#
+26.3
+75
+6.40
+18
+USA
+Credit
+39.1
+54
+16.67
+64
+Bahamas
+Exemption
+0.0
+0
+17.39
+75
+World average
+29.2
+11.88
+#Credit system but exemption for treaty partners
+As an illustration we present two examples of dividend repatriation tax rates. First
+consider repatriating dividends from a subsidiary in the USA to a mother company in
+China. The general non-resident withholding tax of the USA on dividends is 30%, and
+the CIT of China is 25%. The double taxation would be 47.5%.22 But China applies
+the credit method as double tax relief: the full credit leaves a double taxation of 30%.
+The tax treaty of the USA and China stipulates a withholding tax of 10%; see Table 3.
+So, the repatriation tax rate is 10% (DRCT). Next, consider repatriation of dividends
+from China to the USA. The withholding tax in China on dividends to the USA is
+10%; see Table 3. The USA also has a credit system. The CIT rate of 25% and the
+withholding tax rate in China do not exceed the CIT of the USA. The repatriation tax
+rate therefore is equal to the difference between the CIT rates, expressed on the tax
+base after the CIT in China, amounting to 18.8%.23 Below we will discover that this
+rate cannot be lowered by treaty shopping.
+5 The gains of treaty shopping
+So far only direct routes between the host and home countries were considered, but
+ﬁrms also use indirect routes for investment and dividend repatriation. By establishing
+conduit entities in third countries, multinationals can lower their tax burden. This
+section computes the gains of treaty shopping. We ﬁnd that for 67% of all country
+pairs this gain exists.
+Treaty shopping involves deliberate diversion of investment, which will not always
+take place. The use of tax treaties could be bounded by the limitation of beneﬁts articles
+in the treaties, although it is not very clear whether these limitations are very effective.
+Therefore, the gains are potential reductions. We ﬁnd that the overall gain by treaty
+22 0.475=1−(1−0.30)*(1−0.25).
+23 0.188=(0.391−0.25)/(1−0.25); see Sect. 3 for the formula of this tax rate.
+123
+=== [p.14] ===
+1334
+M. van ‘t Riet, A. Lejour
+Table 6 World average dividend
+repatriation tax rates (%) and the
+distribution of the double tax
+revenue
+Direct
+Optimal
+WTH div
+7.7
+2.1
+CIT home
+4.5
+3.8
+Double
+11.9
+5.9
+Host
+7.7
+2.1
+Conduit
+0.3
+Home
+4.2
+3.4
+shopping is 6% points. This lowers the worldwide average double taxation from 12 to
+6%. This ﬁnding suggests that treaty shopping is a relevant mechanism for lowering
+the dividend repatriation tax.
+Treaty shopping lowers the repatriation tax rates for two reasons. The ﬁrst is that
+ﬁrms beneﬁt from routes with lower withholding taxes, explaining the major part
+of the tax reduction. The second reason is that ﬁrms choose routes such that they
+beneﬁt from more generous double tax relief methods in the home country. The lat-
+ter mechanism is reﬂected in the fall of the average rate for the CIT of the home
+country; see the third line of Table 6. Table 6 also presents the split of the double
+tax revenue over the host, conduit and home countries. Only 0.3% of worldwide
+repatriated dividend ﬂows is cashed by the tax authorities of conduit countries when
+the multinationals use optimal routes. Van ‘t Riet and Lejour (2014) show that for
+individual countries the consequences of indirect routing on tax revenues diverge
+widely.
+As we did for the direct tax routes, country average repatriation tax rates are com-
+puted, for both inbound and outbound dividend ﬂows. These results are given in
+Appendices B1 and B2. Starting with the tax rates for incoming dividends, Fig. 2
+demonstrates the impact of treaty shopping on the average double tax rates of the
+home countries. The top, dashed, line shows the repatriation tax rates for direct routes,
+discussed in Sect. 4. The solid line below shows the optimal tax rates including treaty
+shopping. For both lines the countries have been ordered, from left to right, in ascend-
+ing rates. As these two rankings are different, countries have different positions at both
+lines, as is indicated for the USA.
+Treaty shopping lowers the ﬂoor in the average dividend repatriation tax rates.
+There is a distinct group of 82 jurisdictions with an average optimal tax rate of 1.8%,
+or even lower, on inbound dividends. The EU members are all in this group as they can
+transfer dividends within the EU without any tax cost because of the Parent-Subsidiary
+directive. The USA, for instance, is not part of this group. It applies the credit method,
+instead of exemption, and levies a high CIT rate. There are no detours to avoid this,
+given that repatriation of the foreign-source income is assumed, as we do not consider
+deferral of taxation.
+A similar pattern can be seen for host countries and the average repatriation tax
+rates on outbound dividends. Here the MNEs face a tax rate of 5.5% or lower when
+repatriating proﬁts from another group of 82 countries (68 of them identical to those
+82 for inbound ﬂows, explained below). Again treaty shopping seems to equalize
+123
+=== [p.15] ===
+Optimal tax routing: network analysis of FDI diversion
+1335
+0
+5
+10
+15
+20
+25
+30
+35
+40
+45
+50
+1
+6
+11 16 21 26 31 36 41 46 51 56 61 66 71 76 81 86 91 96 101106
+Direct
+Opmal routes
+.
+.
+USA
+USA
+Fig. 2 Rankings of average inbound dividend repatriation tax rates
+the dividend repatriation tax rates for a large group of countries including again the
+EU members. Tax havens are also within this cluster as they often levy no with-
+holding taxes. Countries like Canada, China, Japan, and the Russian Federation have
+higher dividend repatriation tax rates on outbound dividends, because they always
+levy a withholding tax rate of at least 5%, even to their most favoured treaty part-
+ners.
+The country averages with a lower ﬂoor in the repatriation tax rates are best under-
+stood considering bilateral rates. At the bilateral level this ﬂoor is rock bottom: zero
+repatriation tax rates. Even without treaty shopping non-taxed repatriation of proﬁts
+exists. The initial tax distance matrix contains 2240 cells with value zero.24 Treaty
+shopping increases the number of zero cells to 6212, which is 54% of all country pairs.
+These zero tax rates imply that within the international tax network there is a strongly
+connected component of 68 countries. This group is characterized by tax free dividend
+ﬂows between all these countries.
+A treaty shopping gain is not possible on direct routes that are already tax free; this
+holds for 19.4% of all country pairs; see Table 7. For another 15.5% no gain can be real-
+ized either. Complete elimination of the tax burden is possible for 34.4% of the pairs,
+and for 32.7% there is a partial treaty shopping gain. The latter two categories make
+up the two-thirds of all pairs for which an indirect repatriation tax route is optimal.
+The average treaty shopping gain for individual countries is given in Appendices B1
+and B2 for inbound and outbound dividends, respectively. The tax reduction by treaty
+shopping for MNEs residing in the Netherlands is small because the average repatria-
+tion rate on direct routes is already low. The opposite holds for the gains on outbound
+dividends from low-tax havens. As the average direct repatriation tax rates are high
+for these jurisdictions, treaty shopping allows for a reduction of more than 20%.
+24 The EU’s Parent–Subsidiary directive alone is responsible for (27+3) * (27+3−1)=870 zero cells.
+123
+=== [p.16] ===
+1336
+M. van ‘t Riet, A. Lejour
+Table 7 Distribution over
+country pairs of treaty shopping
+gain
+No. pairs
+%
+No gain possible
+2240
+19.4
+Direct routes tax free
+No gain
+1564
+15.5
+Optimal tax is direct tax,
+both positive
+Partial gain
+3780
+32.7
+Optimal tax lower than
+direct tax, both positive
+Full gain
+3972
+34.4
+Optimal route tax free,
+but direct route not
+Table 8 Top 10 conduit countries—betweenness centrality
+Country
+WHTdiv (%)
+DTT (no.)
+BTWNS (%)
+1
+UK
+0
+51
+13.4
+2
+Luxembourg
+15
+57
+8.4
+3
+Netherlands
+15
+74
+7.7
+4
+Estonia
+0
+36
+6.7
+5
+Hungary
+0
+47
+6.2
+6
+Singapore
+0
+40
+6.1
+7
+Ireland
+20
+53
+5.6
+8
+Slovak Republic
+0
+42
+5.3
+9
+Finland
+24.5
+59
+4.7
+10
+Cyprus
+0
+35
+4.5
+For dividends repatriated from China to the USA, no treaty shopping gain
+is possible; the 18.8% repatriation tax rate on the direct route remains. For
+dividends in the opposite direction, the result is diametrical; the treaty shop-
+ping gain completely eliminates the repatriation tax rate. There are 12 coun-
+tries which can receive dividends from the USA without additional taxation.
+Next there is a group of 22 countries from which dividends to China are not
+taxed. The intersection of these groups consists of two countries. Hence, there
+are two optimal routes between the USA and China with exactly one con-
+duit country with zero dividend repatriation taxes. These countries are the UK
+and Luxembourg which frequently are used as conduit countries, as is shown
+below.
+6 Tax network centrality results: identifying conduit countries
+In this section we identify the countries most often used for channelling FDI, and
+being on optimal dividend repatriation routes. We ﬁrst discuss the results of our main
+centrality measure. Next we present some alternative centrality measures and establish
+the robustness of the results. Table 8 gives the top 10 country ranking of betweenness
+centrality. The full ranking can be found in Appendix B3.
+The value of the betweenness measure (BTWNS) is a weighted fraction: the UK
+is on 13.4% of the optimal tax routes of the world average country pair. The UK
+123
+=== [p.17] ===
+Optimal tax routing: network analysis of FDI diversion
+1337
+ranks high because it is an EU member and it levies no non-resident withholding
+tax on dividends (WHTdiv). These two characteristics it has in common with Cyprus,
+Estonia, Hungary, and the Slovak Republic, all in the top 10. But the UK has signed
+more bilateral tax treaties, and multinationals face on average a lower withholding
+tax on incoming dividends. The impact of a zero withholding tax rate on this ranking
+is evident. Luxembourg, the Netherlands, Ireland and Finland do levy a withholding
+tax on dividends, but have agreed to lower or to eliminate the rate in many DTTs.25
+Singapore is the only non-EU country in the top 10.
+Most of the island low-tax havens also do not levy a non-resident withholding tax
+on dividends. Nevertheless, with the exception of Cyprus, they do not rank high on the
+centrality measure. This is caused by the fact that they have no or only a few DTTs.
+Low-tax havens do not signiﬁcantly contribute to the conduit function for repatriating
+dividends. This is because the other countries apply relatively high withholding taxes
+on proﬁt ﬂows towards them. Tax haven ﬁnancial centres rank higher; Luxembourg,
+Singapore, and Ireland are in the top 10.
+Although conduit countries are important for diverting FDI and optimizing the taxes
+on dividend ﬂows, their impact on the average repatriation tax rate is very modest. If
+we exclude the top 10 conduit countries from Table 7 in the network analysis the world
+average dividend repatriation tax rate is only raised from 5.9 to 6.0%. The elimination
+of a group of countries as conduits has little impact as long as there remains a large
+group of well-connected countries. This seems to imply that large-scale international
+cooperation would be required to combat treaty shopping.
+6.1 Multiplicity of shortest paths and alternative centrality measures
+Centrality measures are calculated using all optimal paths. The total number of optimal
+paths can be much larger than the number of country pairs. In fact, multiplicity of
+optimal paths in the international corporate tax network is abundant. A potential source
+of huge multiplicity is direct routes with a zero tax rate; no double taxation at all on
+dividend repatriation which is the case for 2240 country pairs. A consequence of these
+zeros is that there are costless detours possible which are also optimal routes. However,
+in practice ﬁrms face costs setting up a holding, even if it is a shell company. The zero-
+cost detours have been countered by introducing a small penalty, initially epsilon, for
+each additional conduit country on a route. This reduces the average multiplicity, but
+it is still about 5.5 paths per country pair.
+Another reason for multiplicity is that multinationals may prefer routes with
+slightly higher costs than the strictly optimal routes because of non-tax charac-
+teristics of the conduit countries. These may include the quality of the ﬁnancial
+25 Luxembourg and the Netherlands are attractive for other tax reasons too. Liquidation of a company
+in Luxembourg is treated as a capital transaction and is not subject to a dividend withholding tax. The
+Netherlands has a general rate of zero on royalties and interest. Such characteristics have not been taken
+into account in the analysis. To avoid arbitrariness we stick to the bare tax parameters.
+123
+=== [p.18] ===
+1338
+M. van ‘t Riet, A. Lejour
+Table 9 Distribution of lengths of shortest paths
+Total
+paths
+Multiplicity
+Length=no. of conduit countries
+0
+1
+2
+3
+4
+Strict
+Number
+63,424
+5.5
+3804
+50,664
+8683
+273
+0
+%
+6.0
+79.9
+13.7
+0.4
+0
+Range
+Number
+1,050,030
+90.9
+3825
+50,758
+729,764
+256,860
+8823
+%
+0.4
+4.8
+69.5
+24.5
+0.8
+sector and government institutions; see Dyreng et al. (2015). We have allowed
+for a half percentage point on top of the optimal tax rate of the strictly opti-
+mal paths. This, however, reintroduces the possibility of zero-cost detours in the
+optimal routes. Hence, we raise the penalty to slightly below the range. This
+penalty, modelled as an additional tax, could represent the cost of setting up a
+conduit entity in a new country. Although the half percentage point is to some
+extent arbitrary, experimenting with combinations of the range and penalty shows
+a stable ranking of conduit countries.26 Thus, paths within this range are con-
+sidered as optimal paths and are included in computing the centrality measures.
+The average multiplicity per pair increases to 91 different relevant paths. The
+distribution of lengths of strictest optimal paths and those within a range of
+a half percentage point is given in Table 9. Length is denoted in number of
+conduit countries.
+For 3804 country pairs, about 33% of all pairs, the direct route is among the relevant
+paths. These are 6% of all strictly optimal paths. In about 80% of the optimal paths
+there is exactly one conduit country. With a range of optimal paths, this is different. The
+extra paths on top of the strictly optimal paths are those with two or three countries.
+The maximum number of conduit countries encountered is 4. For most country pairs,
+however, the shortest paths contain at most two conduits. The two corresponding
+centrality rankings, i.e. for strictly optimal and those within range, are found not to be
+very different.
+We ﬁnd two strictest optimal paths for the USA to China, each with exactly one
+conduit, the UK and Luxembourg. With the range, however, there are 55 relevant paths
+added, all with two conduits, among them again the UK and Luxembourg, but also
+the Netherlands, Ireland and Finland.
+Up to now we have deﬁned two centrality measures: the one with the range of
+a half percentage point and the one without, respectively, Betweenness (BTWNS)
+and Strict (STRCT). A next centrality measure counts whether a jurisdiction is at
+all on an optimal path of a pair, i.e. Occurrence (OCCUR). This is a binary indi-
+cator instead of a fraction. By country the indicators are again summed over the
+pairs. When there would be a unique optimal path for each pair the two measures
+26 We take the ranking with range=0.005 and penalty=0.00499 as reference. Experimental rankings were
+generated with a higher range (0.05, 0.0499) and with a lower penalty (0.005, 0.002). These rankings yield
+Kendall’s (tau) correlation coefﬁcients of 0.918 and 0.934, respectively.
+123
+=== [p.19] ===
+Optimal tax routing: network analysis of FDI diversion
+1339
+Table 10 Rank positions for
+alternative betweenness
+centrality measures
+Country
+OCCUR
+STRCT
+UNWTD
+1
+UK
+4
+1
+1
+2
+Luxembourg
+2
+2
+10
+3
+Netherlands
+8
+4
+2
+4
+Estonia
+3
+5
+7
+5
+Hungary
+1
+7
+5
+6
+Singapore
+7
+3
+4
+7
+Ireland
+5
+6
+14
+8
+Slovak
+Republic
+6
+8
+11
+9
+Finland
+11
+12
+28
+10
+Cyprus
+17
+10
+3
+would coincide; this is, however, not the case at all as explained above. In addition,
+an Unweighted (UNWTD) betweenness measure for relevant paths within range is
+created.
+The main variant which we present is Betweenness. Its weighting and the range,
+with a cost for conduit entities, make it the most realistic measure. Besides we use the
+three extra measures to test whether the assumptions of BTWNS affect the outcomes.
+Table 10 presents the positions of the main top 10 in the alternative centrality rankings.
+In Appendix B3 the full list can be found.
+The UK heads three of the four variants of the centrality measures. Hungary
+ranks ﬁrst in the alternative measure of occurrence. This ranking, however, is not
+very different from the reference ranking of betweenness. The ranking with the strict
+optimal paths also does not differ much from that with a range. The same applies
+for the unweighted measure, which has the UK, the Netherlands, and Cyprus as
+top 3. Thus, with respect to the ranking the results of the centrality measures are
+robust.27
+7 The impact of treaty shopping and centrality on FDI stocks
+This section presents the effects of conduit countries and treaty shopping on bilateral
+FDI stocks using the indicators for the treaty shopping gain and centrality developed
+above. The results conﬁrm the relevance of our indicators.28
+27 Kendall’s (tau) rank correlation coefﬁcients with BTWNS are 0.85 for OCCUR, 0.83 for STRCT and
+0.82 for UNWTD.
+28 This analysis builds upon a huge empirical literature on macro-FDI and taxation. See for some surveys De
+Mooij and Ederveen (2003) and Feld and Heckemeyer (2011). Besides there are various papers estimating
+the effect of bilateral tax treaties on FDI (Blonigen and Davies 2004, 2005; Egger et al. 2006; Sauvant and
+Sachs 2009; Blonigen et al. 2014).
+123
+=== [p.20] ===
+1340
+M. van ‘t Riet, A. Lejour
+We conduct regressions for the 108 countries in our network, using the IMF/CDIS
+data for 2013 which include FDI via SPEs.29 SPEs are likely vehicles for FDI diversion
+(OECD 2013). The CDIS database includes the bilateral FDI positions of about 100
+countries reporting inward stocks and 80 countries reporting outward stocks. We start
+with the inward stocks and add outward stocks if the corresponding inward stocks are
+missing. We end up with 6422 observations of the possible 11,556 ones. The other
+observations are missing, by either non-reporting or reported “conﬁdential data.” It
+is likely that the missing values represent mainly smaller FDI stock values. Egger
+et al. (2009) ﬁnd that the missing values in their sample are not randomly distributed
+using a Heckman selection model. As robustness check we run the regressions in a
+smaller sample with relatively fewer missing observations. This does not alter our
+main conclusions.
+We explain the variation in bilateral FDI stocks (FDI) in a gravity model, using
+GDP in the host and home country and the quality of institutions in both countries as
+basic explanatory variables.30 These data come from the World Bank Development
+Indicators, sometimes added with GDP data of tax havens from the CIA factbook.
+We add geographic variables from CEPII; distance, dummies for a common language,
+former colony, contiguity, former common country, both OECD countries, regional
+trade agreement, and a common legal system. CEPII distinguishes ﬁve legal systems:
+French, British, socialist, German, and Scandinavian. Except for distance, we expect
+positive coefﬁcients for these dummies.
+All these variables are part of the vectors G in Eq. (1). The subscripts refer to the
+home country, host country, and a bilateral relation. The vectors T refer to the tax
+variables.
+(1)
+FDIi j  α0 + αi Gi + α j G j + αi j Gi j + βi Ti + β j Tj
++ βi j Ti j + γi j G AI Ni j + γi C E NTi + γ j C E NTj + εi j
+We add dummy variables for tax havens (TAXH), for which we expect a positive
+coefﬁcient. These dummies are based on the Gravelle (2013) list discussed in Sect. 3.
+We include the CIT rates of both countries (CIT), the standard withholding taxes on
+royalties (WHTroy), the bilateral withholding taxes (BWHT) in tax treaties, and the
+remaining double taxation in the home country (RCITij). The tax data come from the
+sources mentioned in Sect. 3.
+The variable GAINij reﬂects the gains of lower taxation by using indirect routes
+for FDI. If the direct route between countries i and j is the cheapest one, GAINij is
+equal to zero. If there are cheaper options, GAINij has a positive value. We take the
+values of GAIN from the network analysis in Sect. 5. We expect a negative sign for
+the coefﬁcient. CENT reﬂects the centrality indicator. In our main speciﬁcation we
+29 See the deﬁnition of SPEs in Sect. 1.
+30 We have used the average of the six governance indicators for this purpose.
+123
+=== [p.21] ===
+Optimal tax routing: network analysis of FDI diversion
+1341
+use the results from the betweenness indicator, Sect. 6. εij represents the error terms
+which are assumed to be independent and identically distributed.31
+A well-known problem in estimating gravity equations is the number of zero values
+for the dependent variable. This problem is extensively discussed in the trade literature
+(Head and Mayer 2014) with the many zeros for bilateral trade values in samples
+with developing countries. The zero values create missing values with a standard log
+transformation. This also applies for bilateral FDI stocks. The most common solution
+is a transformation of log(1+x) in which x is the bilateral trade value. This does not
+solve all problems. Because trade values cannot be negative, the error distribution is
+truncated and could depend on the explanatory variables. Santos-Silva and Terenyro
+(2006) argue for that reason to use a Poisson pseudo-maximum likelihood (PPML)
+method. The problem of our data sample is the extremely skewed distribution of the
+FDI values ranging from many zero values to values of more than 100 billion USD.
+About 1% of the observations exceeds 100 billion USD, and these cover 50% of the
+value of the aggregated bilateral FDI stocks in the sample.32 To correct for the skewed
+distribution, we use the log transformation in an OLS estimation and present the results
+of the PPML estimator as a robustness analysis.
+Another issue is the potential endogeneity of various explanatory variables with
+bilateral FDI stocks. The literature on the impact of bilateral tax treaties on FDI treats
+these treaties often as endogenous33; increased investment could raise the necessity of
+a treaty. Many conduit countries indeed signed many treaties. Moreover, the withhold-
+ing tax rates could be endogenous. Chisik and Davies (2004) show theoretically and
+empirically that larger asymmetric FDI between countries implies higher tax rates.
+However, since the network centrality of a conduit country is measured as an average
+over all its 107 partner countries, the impact of a speciﬁc bilateral treaty and its nego-
+tiated tax rates on the network centrality of a country is only limited. This suggests
+that the potential endogeneity between network centrality and bilateral FDI is very
+indirect and small and therefore of minor importance in this study.
+Table 11 presents the summary statistics.34 FDI stocks and GDP are measured in
+logs. The corporate income tax rate varies from zero to 46% and is on average 23%.
+Of the 108 countries 23% is deﬁned as a tax haven. The default withholding tax on
+royalties varies between 0 and 34% with an average of 15%. The bilateral withholding
+tax rates on dividends are on average 9%. The remaining CIT paid in the home country
+is on average 7%, but varies between nothing and 40%. The bilateral direct repatriation
+tax rate is 15% in this sample and is somewhat larger than the double GDP-weighted
+average tax rate in Sect. 5 for all country pairs. Quite often the direct repatriation tax
+31 Our empirical speciﬁcation resembles Hong (2017). He also uses an OLS estimator in a cross section
+with the same geographic variables. We add the level of institutional quality and add more tax variables, such
+as the withholding tax rates on royalties and the bilateral withholding tax rate on dividends. Moreover, we
+combine the bilateral gains from treaty shopping and the centrality indicators in one speciﬁcation. Another
+difference is our choice of using 2013 IMF/CDIS data, inclusive of SPEs, whereas Hong (2017) primarily
+uses 2012 UNCTAD data.
+32 Many of these bilateral FDI stocks have the USA, Luxembourg, or the Netherlands as resident or host
+country. This corresponds to the ordering of aggregated inward and outward FDI stocks in Table 1.
+33 Some references are Blonigen and Davies (2004, 2005) and Egger et al. (2006).
+34 Statistics and results for the non-tax variables, other than GDP, are presented in Appendix D1.
+123
+=== [p.22] ===
+1342
+M. van ‘t Riet, A. Lejour
+Table 11 Summary statistics
+Variable
+Mean
+Std. dev.
+Min
+Max
+Log FDI
+3.31
+3.43
+0.00
+13.92
+Tax variables
+CIT rate
+0.23
+0.09
+0.00
+0.46
+Tax haven dummy
+0.23
+0.42
+0.00
+1.00
+Withholding tax on royalties (WHTroy)
+0.15
+0.10
+0.00
+0.34
+Bilateral withholding tax (BWHT)
+0.09
+0.09
+0.00
+0.35
+Remaining CIT (RCIT)
+0.07
+0.11
+0.00
+0.40
+Direct repatriation tax rate (DRCT)
+0.15
+0.13
+0.00
+0.58
+Treaty shopping indicators
+Optimal repatriation tax rate (OPTM)
+0.05
+0.08
+0.00
+0.47
+Gain treaty shopping (GAIN)
+0.10
+0.11
+0.00
+0.50
+Betweenness indicator
+1.61
+2.48
+0.00
+12.79
+Occurrence indicator
+27.73
+25.44
+0.00
+76.90
+Strict indicator
+0.74
+1.78
+0.00
+13.82
+Unweighted indicator
+1.73
+2.48
+0.00
+12.79
+Number of observations is 6422. The summary statistics of the gravity variables are presented in Appendix
+D
+rate is zero, e.g. between the EU member states, but it could also be 58%, suggesting
+no double tax relief at all. In about two-thirds of the cases, it is optimal to divert FDI
+via other countries. This reduces the average bilateral tax rate to 5%. The average
+unweighted gain of treaty shopping is 10% points.
+7.1 Regression results
+The outcomes of the OLS regressions are found in Table 12. The standard errors are
+corrected for heteroscedasticity using the Huber–White estimator. Tax havens have
+larger inward and outward FDI stocks; the coefﬁcients are positive and signiﬁcant
+in both home and host countries. The coefﬁcient of about 1 suggests that bilateral
+FDI stocks are twice as large if the home or host country is a tax haven. Tax havens
+distinguish themselves from other countries, not only because of low or negligible
+tax rates on proﬁts, but also because of characteristics such as a lack of transparency,
+bank secrecy, lack of information sharing, and requiring little or no economic activity
+for an entity to obtain legal status (Gravelle 2013). These characteristics suggest that
+tax haven dummies and corporate tax rates are not strongly correlated. This proves
+also to be the case. CIT rates in the home country have a negative impact on the FDI
+stocks. The coefﬁcient for the CIT rate of the host country is also signiﬁcant. The
+semi-elasticity is about 3, suggesting an increase in the corporate tax rate of 1% points
+lowers the FDI stock by about 3%.
+The default withholding taxes on royalties have a negative effect on bilateral FDI
+stocks for both countries. We have added these variables in column (2) because also tax
+treatment of royalty and interest payments affect FDI. Because of the multicollinearity
+123
+=== [p.23] ===
+Optimal tax routing: network analysis of FDI diversion
+1343
+Table 12 Explaining FDI stocks with indicators for treaty shopping and conduit countries
+(1)
+(2)
+(3)
+(4)
+(5)
+(6)
+(7)
+Dummy TAXH_home
+1.537***
+1.364***
+1.353***
+1.334***
+1.350***
+1.340***
+1.545***
+(0.0840)
+(0.0849)
+(0.0844)
+(0.0842)
+(0.0849)
+(0.0844)
+(0.0832)
+Dummy TAXH_host
+1.069***
+0.867***
+0.879***
+0.952***
+0.869***
+0.880***
+0.944***
+(0.0872)
+(0.0888)
+(0.0888)
+(0.0878)
+(0.0887)
+(0.0887)
+(0.0884)
+CIT_home
+−1.863***
+(0.430)
+CIT_host
+−3.066***
+−2.347***
+−2.506***
+−3.016***
+−2.283***
+−2.437***
+−2.619***
+(0.432)
+(0.445)
+(0.452)
+(0.439)
+(0.450)
+(0.457)
+(0.455)
+WHTroy_home
+−3.849***
+−3.790***
+−3.720***
+−3.743***
+−3.685***
+(0.332)
+(0.334)
+(0.334)
+(0.336)
+(0.338)
+WHTroy_host
+−0.765**
+−0.750**
+−1.073***
+−0.669*
+−0.657*
+(0.370)
+(0.370)
+(0.365)
+(0.366)
+(0.366)
+BWHT
+−3.383***
+−2.612***
+−3.029***
+−2.299***
+−2.160***
+(0.376)
+(0.492)
+(0.386)
+(0.501)
+(0.495)
+RCIT
+−1.006***
+−0.599*
+−0.942***
+−0.553
+−0.822**
+(0.296)
+(0.337)
+(0.297)
+(0.338)
+(0.339)
+GAIN Treaty shopping
+−0.993**
+−2.548***
+−0.948**
+−1.351***
+(0.433)
+(0.305)
+(0.433)
+(0.433)
+CENT_home
+0.0297**
+0.0299**
+0.0569***
+(0.0149)
+(0.0149)
+(0.0148)
+CENT_host
+0.0541***
+0.0530***
+0.0557***
+(0.0172)
+(0.0172)
+(0.0175)
+Constant
+−6.874***
+−7.379***
+−7.358***
+−7.315***
+−7.654***
+−7.631***
+−7.262***
+(0.450)
+(0.441)
+(0.440)
+(0.440)
+(0.450)
+(0.449)
+(0.456)
+Adjusted R2
+0.528
+0.545
+0.545
+0.543
+0.546
+0.546
+0.538
+The regressions are estimated with OLS and Huber–White robust standard errors. There are 6422 observations. Robust standard errors are in parentheses, ***p <0.01; **p <0.05; *p
+<0.1. The coefﬁcients for the gravity variables are presented in Appendix D
+123
+=== [p.24] ===
+1344
+M. van ‘t Riet, A. Lejour
+of both variables, we have only included the withholding tax rates on royalties. The
+semi-elasticities are about 3.8 and 0.8 for the home and host country, respectively. We
+also include the bilateral withholding taxes (BWHT) agreed upon in tax treaties. We
+ﬁnd a negative signiﬁcant effect; the semi-elasticity is 3.4, suggesting that 1%-point
+lower tax rates increase the bilateral FDI stock by nearly 3.4%. A 1%-point lower
+bilateral remaining CIT rate (RCIT) in the home country raises bilateral FDI by 1%.
+In column (3) of Table 12 we add the treaty shopping gain indicator (GAIN). If
+the direct route is not the optimal one, the bilateral FDI stock is lower; the coefﬁcient
+is statistically signiﬁcant. If the repatriation tax is lowered by 1% point due to treaty
+shopping (GAIN >0), the bilateral FDI stock decreases by 1%. The coefﬁcients of
+the bilateral withholding tax on dividends and the remaining CIT rate are lower now,
+which is probably due to correlation with treaty shopping. The correlation between
+BWHT and GAIN is 0.63 and between RCIT and GAIN 0.47. There are two reasons
+for this result. First, in many bilateral relations both tax rates are zero: no withholding
+tax in the host country and exemption in the home country. By deﬁnition, then there
+is no cheaper tax route, so the treaty shopping variable is zero. Second, the higher the
+withholding tax rate and the remaining CIT rate are, the higher is the probability that
+there is an optimal route with lower tax rates. If we ignore both taxes in the regression
+the coefﬁcient of the treaty shopping gain is much larger as can been seen in column
+(4). However, in this case the coefﬁcient also includes the beneﬁcial investment effects
+of a zero withholding tax rate and exemption. It is one of our contributions that we
+want to distinguish these effects. Therefore, we include all variables in the remaining
+speciﬁcations.
+Next, we switch to the role of conduit countries in column (4). Our preferred
+network centrality indicator is Betweenness. A high value of this indicator implies
+that the country is often used as a conduit country for diverting FDI and proﬁt ﬂows,
+because the value reﬂects the share of tax-minimizing routes on which the country is
+present as conduit. We expect that a conduit country receives much FDI and diverts
+much FDI to other countries. These could be other conduit countries or ﬁnal host
+countries. The centrality indicators in the host country and in the home country have
+a positive and signiﬁcant impact on FDI. An increase of one standard deviation of the
+centrality indicator raises the bilateral FDI stock by about 10% in the home country
+and 20% in the host country. This conﬁrms our intuition; if the home or host country
+of the bilateral FDI stock is a conduit, FDI stocks are larger.
+Although a high value of the centrality indicator suggests that a country is used
+for treaty shopping, we also include GAINij in the regression to evaluate the impact
+of treaty shopping between both countries on bilateral FDI. When a particular direct
+investment route is not optimal, in spite of a conduit country on this direct route, treaty
+shopping has still a negative effect on the bilateral FDI. This is conﬁrmed with the
+regression shown in column (5).
+Conduit countries are not only attractive because of exemption as double tax relief
+method and low taxes on dividends, but also because of low withholding taxes on roy-
+alties and interest. The negative correlation between the withholding taxes on royalties
+and the centrality indicator is large. Therefore, we exclude the withholding taxes on
+royalties from the regression. Then the coefﬁcient for the centrality indicator of the
+home country is twice as large, suggesting indeed multicollinearity.
+123
+=== [p.25] ===
+Optimal tax routing: network analysis of FDI diversion
+1345
+7.2 Robustness analysis
+The coefﬁcients of the centrality indicators for the home and host country have a
+positive and signiﬁcant impact on bilateral FDI stocks. Moreover, we also ﬁnd that
+bilateral FDI stocks are larger if the direct proﬁt repatriation route is also the optimal
+tax route. We verify that these conclusions also hold for other speciﬁcations.
+First, we estimate the impact of the treaty shopping gain with ﬁxed effects for
+the home and host countries. This excludes the possibility of omitted country-speciﬁc
+variables, but also throws the baby out with the bathwater. The centrality indicators are
+our maininterest. Theyarecountryspeciﬁcandtherefore“included”intheﬁxedeffects
+in this speciﬁcation. The coefﬁcient for the treaty shopping gain is still negative and
+signiﬁcant at the 90% level. Due to the correlation with the other bilateral tax variables
+discussed above, the standard errors are quite large now. As an alternative we have
+replaced the treaty shopping gain by a dummy, which is one if the direct route is the
+optimal one and zero if it is not. Hong (2017) also uses this dummy. This reduces the
+correlation and the coefﬁcient for BWHT becomes signiﬁcant. The coefﬁcient for the
+dummy is positive and signiﬁcant.35
+Second, we apply the PPML estimator instead of OLS. The dependent variable
+is FDI and includes all zero values. Now, the variance of the dependent variable is
+much larger, because the log transformation reduces the skewed distribution of the
+FDI values ranging from many zero values to values below 100 billion USD. About
+1% of the observations exceeds 100 billion USD and covers 50% of the value of the
+aggregated bilateral FDI stocks in sample. The coefﬁcients of treaty shopping gain
+and the centrality indicators are still signiﬁcant and have the expected sign. Neither
+the coefﬁcient for the CIT rate in the host country nor the coefﬁcient for the bilateral
+withholding tax is signiﬁcant now. The coefﬁcient of the remaining CIT rate in the
+home country is positive. The log transformation reduces the impact of the large FDI
+stocks of the US, which are positively correlated with the high effective tax rates in
+the US. With PPML, we ﬁnd a large correlation between bilateral FDI and these high
+effective tax rates. The effects of the treaty shopping gain on FDI are larger, and the
+centrality indicator in the home country also has more impact on FDI (Table 13).
+Many empirical papers on FDI stocks focus only on the OECD countries as home
+and host countries of foreign investment; see Egger et al. (2009) and Benassy-Quere
+et al. (2007) among others. These are the most important outward investing countries.
+An advantage is that the data selection contains fewer missing observations and fewer
+zero values for bilateral stocks.36 This is also a check to see whether the large share of
+missing and zero values in the full sample affects the regression results. We restrict our
+country sample for the home countries to 34 OECD countries and all 108 countries as
+host countries for investment. The coefﬁcients of the centrality indicators are larger,
+35 The results are available upon request. We have also eliminated BWHT and RCIT. Then the coefﬁcient
+for GAIN is −2.721 and statistically signiﬁcant.
+36 After correcting for missing values for GDP, institutions, and geographic variables, we have 10609
+observations in the full sample. 4187 observations do not have a value for the bilateral FDI stock (about
+40%). 1902 observations have a zero value for the FDI stock (18%). In the smaller OECD sample we miss
+719 observations of the possible 3502 observations which is 20%. The number of zero values for FDI is
+484, 14% of the total.
+123
+=== [p.26] ===
+1346
+M. van ‘t Riet, A. Lejour
+Table 13 Robustness analyses
+Robustness
+(1)
+(2)
+(3)
+(4)
+(5)
+(6)
+(7)
+Fixed effects
+PPML
+OECD sample
+Tax haven
+Occurrence
+Strict
+Unweighted
+Dummy TAXH_home
+0.988***
+1.543***
+1.457***
+1.351***
+1.326***
+1.278***
+(0.165)
+(0.166)
+(0.0965)
+(0.0849)
+(0.0844)
+(0.0838)
+Dummy TAXH_host
+0.642***
+0.713***
+0.835***
+0.939***
+0.859***
+0.824***
+(0.194)
+(0.132)
+(0.0977)
+(0.0902)
+(0.0887)
+(0.0883)
+CIT_host
+0.207
+−2.518***
+−2.548***
+−2.059***
+−2.494***
+−2.239***
+(1.329)
+(0.649)
+(0.463)
+(0.477)
+(0.453)
+(0.457)
+WHTroy_home
+−1.308**
+−2.785***
+−4.033***
+−3.693***
+−3.664***
+−3.275***
+(0.574)
+(0.462)
+(0.330)
+(0.336)
+(0.335)
+(0.335)
+WHTroy_host
+−3.188***
+0.0976
+−0.900**
+−0.749**
+−0.707*
+−0.509
+(0.710)
+(0.482)
+(0.364)
+(0.369)
+(0.368)
+(0.362)
+BWHT
+−0.872
+−1.948
+−1.705*
+−2.153***
+−1.863***
+−2.442***
+−1.559***
+(1.833)
+(1.428)
+(0.875)
+(0.500)
+(0.515)
+(0.496)
+(0.505)
+RCIT
+2.314
+4.071***
+0.143
+−0.499
+−0.354
+−0.542
+−0.220
+(1.769)
+(1.134)
+(0.722)
+(0.339)
+(0.347)
+(0.337)
+(0.337)
+GAIN Treaty shopping
+−3.558*
+−3.647**
+−1.257
+−1.034**
+−1.179***
+−0.925**
+−1.100**
+(1.943)
+(1.514)
+(0.785)
+(0.434)
+(0.436)
+(0.433)
+(0.431)
+CENT_home
+0.0798***
+0.0904***
+0.0704***
+0.00351**
+0.0669***
+0.0987***
+(0.0218)
+(0.0162)
+(0.0148)
+(0.00155)
+(0.0165)
+(0.0140)
+CENT_host
+0.0629***
+0.0722***
+0.0784***
+0.00755***
+0.0525**
+0.105***
+(0.0241)
+(0.0208)
+(0.0176)
+(0.00176)
+(0.0206)
+(0.0167)
+Constant
+8.889***
+10.66***
+−15.34***
+−7.862***
+−8.211***
+−7.453***
+−7.997***
+(0.651)
+(1.365)
+(0.756)
+(0.453)
+(0.481)
+(0.440)
+(0.444)
+Adjusted R2
+0.732
+0.434
+0.638
+0.544
+0.547
+0.547
+0.552
+The regressions are estimated with OLS, except for column (2). There are 6422 observations, except in the OECD sample where we have 2783 observations. Robust standard errors are
+in parentheses, ***p <0.01; **p <0.05; *p <0.1. The coefﬁcients for the gravity variables are presented in Appendix D
+123
+=== [p.27] ===
+Optimal tax routing: network analysis of FDI diversion
+1347
+but the coefﬁcient on treaty shopping is not signiﬁcant now. The coefﬁcient on the
+bilateral tax rate is hardly signiﬁcant. This could be due to a lack of variation of these
+variables. The sample is much smaller and a large share of the country pairs is EU
+countries. Because of the Parent–Subsidiary directive, the bilateral tax rates and the
+gains of treaty shopping are zero.
+Column (4) presents another deﬁnition of the tax haven variable. The deﬁnition of
+a tax haven comprised of many conduit countries, which we try to represent with the
+centrality indicator. So we exclude the ﬁnancial centres Ireland, Jordan, Luxembourg,
+Singapore, and Switzerland as tax havens. Three of these countries are in the top 10
+of countries with highest inward FDI stocks (Table 1). The quantitative impact of
+centrality on FDI stocks is somewhat larger now, as is the impact of the tax haven
+dummy on outward FDI stocks. All other results are comparable suggesting that the
+precise deﬁnition of tax haven does not matter for our conclusions.
+Section 6 deﬁnes other centrality indicators: Strict, Occurrence, and Unweighted.37
+With these other centrality indicators, the coefﬁcients for centrality are again positive
+and signiﬁcant, except for occurence in the home country. Columns (5) to (7) show that
+the impact of a conduit country on the bilateral FDI stocks is robust. For all indicators
+we ﬁnd the same pattern. The coefﬁcient for treaty shopping gain is also negative and
+signiﬁcant.
+8 Conclusion
+We have presented a novel perspective by applying a network analysis to international
+corporatetaxation.ThisyieldsthecontributionofFDIdiversion,andthecorresponding
+dividend ﬂows, to the reduction of the tax burden of multinational enterprises. At the
+same time it provides insight into the central position of particular countries in the
+international tax network. We have modelled corporate taxation in host and home
+countries, double tax relief methods, and the withholding tax on dividends for all pairs
+in a sample of 108 countries. The direct effect of double tax relief and tax treaties
+lowers the world average repatriation tax rate from a theoretical 41–12%.
+Our ﬁrst result is that the possibility of treaty shopping allows for a further reduction
+of 6% points, leaving, on average, a double taxation on repatriated dividends of 6%.
+For about two-thirds of the country pairs examined, there exists an indirect tax route
+that is more attractive in terms of lower taxes than the direct route. A large cluster of
+68 countries exists that are well interconnected through zero tax routes. These results
+imply that it can be very beneﬁcial for multinational companies to restructure their
+investments over various countries in such a way that tax payments are minimized.
+Centrality in the network is used to identify candidates for the role of conduit coun-
+try. This leads to the second result. The UK heads the ranking of network centrality,
+followed by Luxembourg and the Netherlands. The top 10 has only one non-EU coun-
+try: Singapore. Ireland is the third tax haven ﬁnancial centre in the top 10. In contrast,
+37 We use in the main regressions the network centrality indicator Betweenness which is double GDP-
+weighted. The weighting involves all bilateral ﬂows except those with the country concerned as a starting
+or endpoint. Therefore, own GDP is not part of the measure and there is no endogeneity problem.
+123
+=== [p.28] ===
+1348
+M. van ‘t Riet, A. Lejour
+low-tax havens such as Bermuda, the Cayman Islands and the British Virgin Islands
+are not crucial conduit countries for the treaty shopping motive. The centrality results
+are robust with respect to alternative measures of centrality.
+The third result concerns the empirical relevance of our indicators. We regress
+bilateral FDI stocks on the outputs of the network analysis, the treaty shopping gain
+indicator, and the (unilateral) network centrality measures for both host and home
+country. These explanatory variables are found to be signiﬁcant, statistically and in
+terms of economic impact. An increase of one standard deviation of the centrality
+indicator raises the bilateral FDI stock by about 10% in the home country and 20% in
+the host country. If ﬁrms can reduce bilateral taxation by 1% point by treaty shopping,
+the bilateral FDI stock decreases by 1%. Moreover, the indicators are signiﬁcant in an
+array of robustness checks.
+This brings us to the limitations of the study and directions for further research.
+We take the proﬁts in the host country as given and focus on dividend ﬂows. More
+generally, a broader ﬁscal and juridical environment will affect the holding deci-
+sions of multinationals and the size of taxable proﬁt incomes. These activities may
+involve intra-company ﬁnancing and the location of intellectual property rights so
+that deductibility of interest and royalty payments matter and the withholding taxes
+for these categories. We ignore the possibilities to reduce the tax base with interest
+and royalty payments. Next, our analysis lacks dynamics and we require proﬁts to be
+repatriated to the home country. Thus, deferral is no option, and we miss out on the
+parking function associated with traditional low-tax havens, as discussed by Mintz
+and Weichenrieder (2010). Finally, the econometric analysis could go beyond cross-
+sectional regressions. The impact of the centrality measure on FDI stocks could be
+analysed in a panel setting with country-pair ﬁxed effects, although the time varia-
+tion with respect to the tax parameters is limited. Another possibility would be to
+investigate the relationship between FDI stocks and ﬂows in more depth using spatial
+regression analysis as in Blonigen et al. (2007). Even without FDI diversion these
+authors argue that FDI stocks in various regions could be interdependent. For FDI
+stocks via conduit countries, the interdependence of stocks between various regions
+could be even stronger.
+Acknowledgements The authors thank Leon Bettendorf, Sijbren Cnossen, Egbert Jongen, Simon Loretz,
+Guido Schäfer, Eric Vermeulen, and Hendrik Vrijburg for helpful comments and feedback. Celine Azemar,
+Steven Brakman, Julia Braun, Marcel Gérard, Fuad Hasanov, David Saltzman, and Marcel Timmer are
+thanked for their discussions of our work. Moreover, we thank the participants of the Bank of Italy workshop
+in Perugia, ZEW Public Finance Conference in Mannheim, Economic Conference on International Taxation
+and Information Exchange in Mons, IIPF Conference in Dublin, and NTA Conference in Boston, all in 2015,
+and the IIPF conference in Tokyo 2017. Ali Aouragh, Arie ten Cate, Sara Delgado, and Sven Polak are
+thanked for programming and data compilation. We thank two anonymous referees and Ron Davies for
+their constructive comments. The usual disclaimer applies.
+123
+=== [p.29] ===
+Optimal tax routing: network analysis of FDI diversion
+1349
+Tax
+variable
+(unit)
+CIT rate
+(%)
+Relief
+method
+Treaty
+relief
+method
+CFC rule
+(dummy)
+WHTdiv
+(%)
+DTT (no.)
+Tax haven
+(dummy)
+GDP
+weight (%
+point)
+(1)
+(2)
+(3)
+(4)
+(5)
+(6)
+(7)
+(8)
+Albania
+10
+3
+3
+0
+10
+26
+0
+0.03
+Algeria
+25
+0
+0
+0
+15
+23
+0
+0.34
+Angola
+35
+0
+0
+0
+10
+0
+0
+0.16
+Argentina
+35
+3
+3
+0
+35
+14
+0
+0.94
+Aruba
+28
+4
+4
+0
+10
+1
+1
+0.00
+Australia
+30
+3
+3
+1
+30
+40
+0
+1.23
+Austria
+25
+4
+4
+0
+25
+66
+0
+0.45
+Azerbaijan
+20
+3
+3
+0
+10
+29
+0
+0.12
+Bahamas
+0
+4
+4
+0
+0
+0
+1
+0.01
+Bahrain
+46
+3
+3
+0
+0
+10
+1
+0.04
+Barbados
+25
+3
+3
+0
+15
+23
+1
+0.01
+Belarus
+18
+3
+3
+0
+12
+44
+0
+0.19
+Belgium
+34
+5
+5
+0
+25
+70
+0
+0.53
+Bermuda
+0
+4
+4
+0
+0
+0
+1
+0.01
+Botswana
+22
+2
+2
+0
+7.5
+8
+0
+0.04
+Brazil
+34
+3
+3
+1
+15
+35
+0
+2.97
+Brunei
+Darus-
+salam
+20
+4
+4
+0
+0
+1
+0
+0.03
+Bulgaria
+10
+3
+3
+0
+5
+50
+0
+0.13
+Canada
+26.3
+3
+4
+0
+25
+75
+0
+1.88
+Cayman
+Islands
+0
+4
+4
+0
+0
+0
+1
+0.00
+Chile
+20
+2
+3
+0
+35
+24
+0
+0.40
+China
+25
+3
+3
+1
+10
+61
+0
+15.66
+Colombia
+25
+3
+3
+0
+0
+4
+0
+0.63
+Costa Rica
+30
+2
+3
+0
+15
+1
+1
+0.07
+Croatia
+20
+3
+3
+0
+12
+44
+0
+0.10
+Curacao
+27.5
+4
+4
+0
+0
+0
+0
+0.00
+Cyprus
+12.5
+4
+4
+0
+0
+35
+1
+0.03
+Czech
+Republic
+19
+2
+3
+0
+35
+66
+0
+0.36
+Denmark
+25
+3
+4
+1
+27
+61
+0
+0.27
+Dominican
+Rep.
+29
+3
+3
+0
+10
+1
+0
+0.12
+Ecuador
+22
+0
+0
+0
+0
+10
+0
+0.19
+Appendix A1: Collected tax data 2013—108 jurisdictions
+123
+=== [p.30] ===
+1350
+M. van ‘t Riet, A. Lejour
+Tax
+variable
+(unit)
+CIT rate
+(%)
+Relief
+method
+Treaty
+relief
+method
+CFC rule
+(dummy)
+WHTdiv
+(%)
+DTT (no.)
+Tax haven
+(dummy)
+GDP
+weight (%
+point)
+(1)
+(2)
+(3)
+(4)
+(5)
+(6)
+(7)
+(8)
+Egypt
+25
+2
+3
+0
+0
+23
+0
+0.68
+Equatorial
+Guinea
+35
+0
+0
+0
+25
+1
+0
+0.02
+Estonia
+21
+3
+4
+0
+0
+36
+0
+0.04
+Finland
+24.5
+3
+4
+1
+24.5
+59
+0
+0.25
+France
+34.3
+5
+5
+1
+30
+80
+0
+2.84
+Gabon
+35
+2
+3
+0
+15
+4
+0
+0.03
+Germany
+30.2
+5
+5
+1
+25
+71
+0
+4.04
+Greece
+26
+3
+3
+0
+10
+42
+0
+0.35
+Guernsey
+0
+4
+4
+0
+0
+0
+1
+0.00
+Hong
+Kong
+16.5
+4
+4
+0
+0
+14
+1
+0.47
+Hungary
+19
+4
+4
+1
+0
+47
+0
+0.25
+Iceland
+20
+3
+3
+0
+18
+38
+0
+0.02
+India
+34
+3
+3
+0
+0
+40
+0
+5.91
+Indonesia
+25
+3
+3
+0
+20
+52
+0
+1.54
+Ireland
+12.5
+3
+3
+0
+20
+53
+1
+0.24
+Isle of
+Man
+0
+4
+4
+0
+0
+0
+1
+0.01
+Israel
+25
+3
+3
+1
+20
+43
+0
+0.31
+Italy
+31.4
+5
+5
+1
+20
+69
+0
+2.31
+Jamaica
+25
+2
+3
+0
+33.33
+15
+0
+0.03
+Japan
+37
+5
+5
+0
+20
+47
+0
+5.84
+Jersey
+0
+4
+4
+0
+0
+0
+1
+0.01
+Jordan
+14
+2
+3
+0
+0
+13
+1
+0.05
+Kazakhstan
+20
+3
+3
+0
+15
+35
+0
+0.29
+Korea
+Republic
+24.2
+3
+3
+0
+20
+67
+0
+2.04
+Kuwait
+15
+2
+2
+0
+15
+40
+0
+0.19
+Latvia
+15
+3
+3
+0
+10
+45
+0
+0.05
+Lebanon
+15
+2
+3
+0
+10
+13
+1
+0.08
+Libya
+20
+0
+3
+0
+0
+1
+0
+0.10
+Liechtenstein12.5
+4
+4
+0
+0
+3
+1
+0.00
+Lithuania
+15
+3
+4
+0
+15
+44
+0
+0.08
+Luxembourg 29.2
+4
+4
+0
+15
+57
+1
+0.05
+Macao
+12
+0
+0
+0
+0
+0
+1
+0.06
+Malaysia
+25
+4
+4
+0
+0
+34
+0
+0.63
+Malta
+35
+4
+4
+0
+0
+38
+1
+0.01
+Mauritius
+15
+3
+3
+0
+0
+15
+1
+0.03
+Mexico
+30
+2
+2
+0
+0
+36
+0
+2.22
+123
+=== [p.31] ===
+Optimal tax routing: network analysis of FDI diversion
+1351
+Tax
+variable
+(unit)
+CIT rate
+(%)
+Relief
+method
+Treaty
+relief
+method
+CFC rule
+(dummy)
+WHTdiv
+(%)
+DTT (no.)
+Tax haven
+(dummy)
+GDP
+weight (%
+point)
+(1)
+(2)
+(3)
+(4)
+(5)
+(6)
+(7)
+(8)
+Mongolia
+25
+2
+3
+0
+20
+27
+0
+0.02
+Namibia
+34
+3
+3
+0
+10
+9
+0
+0.02
+Netherlands 25
+4
+4
+0
+15
+74
+0
+0.89
+New
+Zealand
+28
+3
+3
+1
+30
+36
+0
+0.17
+Nigeria
+30
+3
+3
+0
+10
+11
+0
+0.57
+Norway
+28
+3
+3
+1
+25
+64
+0
+0.35
+Oman
+12
+3
+3
+0
+0
+8
+0
+0.11
+Pakistan
+35
+3
+3
+0
+10
+31
+0
+0.65
+Panama
+25
+0
+0
+0
+17
+14
+1
+0.07
+Peru
+30
+3
+3
+1
+4.1
+3
+0
+0.41
+Philippines
+30
+3
+3
+0
+15
+29
+0
+0.54
+Poland
+19
+3
+4
+0
+19
+64
+0
+1.01
+Portugal
+31.5
+3
+3
+0
+25
+53
+0
+0.31
+Puerto
+Rico
+30
+3
+3
+0
+10
+0
+0
+0.08
+Qatar
+10
+2
+3
+0
+7
+36
+0
+0.24
+Romania
+16
+3
+3
+0
+16
+66
+0
+0.35
+Russian
+Federa-
+tion
+20
+3
+3
+0
+15
+59
+0
+3.17
+Saudi
+Arabia
+20
+0
+3
+0
+5
+18
+0
+1.14
+Serbia and
+Mont.
+15
+3
+3
+0
+20
+42
+0
+0.10
+Seychelles
+33
+0
+0
+0
+15
+12
+1
+0.00
+Singapore
+17
+4
+4
+0
+0
+40
+1
+0.41
+Slovak
+Republic
+23
+2
+3
+0
+0
+42
+0
+0.17
+Slovenia
+17
+3
+3
+0
+15
+46
+0
+0.07
+South
+Africa
+28
+3
+3
+1
+15
+55
+0
+0.74
+Spain
+30
+4
+4
+1
+21
+71
+0
+1.78
+Suriname
+36
+3
+3
+0
+25
+1
+0
+0.01
+Sweden
+22
+3
+3
+1
+30
+67
+0
+0.50
+Switzerland 21.1
+4
+4
+0
+35
+71
+1
+0.46
+Taiwan
+Province
+17
+3
+3
+1
+20
+19
+0
+1.14
+Thailand
+20
+2
+3
+0
+10
+34
+0
+0.82
+Trinidad
+and Tob.
+25
+3
+3
+0
+10
+16
+0
+0.03
+Tunisia
+30
+0
+0
+0
+0
+26
+0
+0.13
+Turkey
+20
+3
+3
+1
+15
+59
+0
+1.42
+123
+=== [p.32] ===
+1352
+M. van ‘t Riet, A. Lejour
+Tax
+variable
+(unit)
+CIT rate
+(%)
+Relief
+method
+Treaty
+relief
+method
+CFC rule
+(dummy)
+WHTdiv
+(%)
+DTT (no.)
+Tax haven
+(dummy)
+GDP
+weight (%
+point)
+(1)
+(2)
+(3)
+(4)
+(5)
+(6)
+(7)
+(8)
+Ukraine
+19
+3
+3
+0
+15
+56
+0
+0.42
+United
+Arab
+Emirates
+0
+4
+4
+0
+0
+21
+0
+0.34
+UK
+23
+4
+4
+0
+0
+51
+0
+2.95
+USA
+39.1
+3
+3
+1
+30
+54
+0
+19.79
+Uruguay
+25
+2
+2
+0
+7
+6
+0
+0.07
+Venezuela
+34
+3
+3
+0
+34
+28
+0
+0.51
+Virgin
+Islands
+USA
+38.5
+3
+3
+0
+11
+0
+1
+0.00
+Virgin
+Islands
+UK
+0
+4
+4
+0
+0
+0
+1
+0.00
+Columns (2) and (3): 0=no relief, 2=deduction, 3=credit, 4=exemption, 5=exemption 95%
+Columns (4) and (7) are dummy variables: 1=yes, 0=no
+Appendix A2: Tax havens
+The ﬁrst three columns give the intersection of the Gravelle (2013) list of 50 tax havens
+with our selection of 108 jurisdictions. The ﬁrst column presents the low-tax havens,
+i.e. those with a corporate income tax rate in 2013 of 12.5% or less. Most of them
+are islands. Malta could have been included in the list of low-tax havens because the
+effective rate may be reduced to 10% or even less by a refund mechanism, although
+it has a nominal rate of 35% (Loyens and Loeff 2013). We refrain from using such
+characteristics and stick to the bare tax parameters (Table 14).
+The second column indicates the ﬁve countries from the Gravelle list that we have
+treated differently with respect to the CFC rules. We believe these ﬁve countries are
+not subjected to the same anti-abuse scrutiny as are the jurisdictions in the ﬁrst and
+third column. The Gravelle list is based on an overview of other papers classifying
+tax havens. The ﬁrst four appear only in the list of Dharmapala and Hines (2009) and
+Hines and Rice (1994), and Singapore is often considered as another ﬁnancial centre,
+different from other tax havens (OECD “grey” list).
+The third column contains the other tax havens in our analysis that are deprived of
+preferential tax relief by those countries indicated to apply CFC rules. These are neither
+low-tax havens nor ﬁnancial centres. The fourth column contains, for comparison, the
+other countries in the country set with a low tax rate, i.e. a CIT of 12.5% or less.
+123
+=== [p.33] ===
+Optimal tax routing: network analysis of FDI diversion
+1353
+Table 14 Tax haven lists
+Low-tax havens
+Tax haven ﬁnancial
+centres
+Other tax havens
+Other low-tax countries
+Bahamas
+Ireland
+Aruba
+Albania
+Bermuda
+Jordan
+Bahrain
+Bulgaria
+Cayman Islands
+Luxembourg
+Barbados
+Oman
+Cyprus
+Singapore
+Costa Rica
+Qatar
+Guernsey
+Switzerland
+Hong Kong
+United Arab Emirates
+Isle of Man
+Lebanon
+Jersey
+Malta
+Liechtenstein
+Mauritius
+Macao
+Panama
+Virgin Islands UK
+Seychelles
+Virgin Islands USA
+Tax variables
+(unit)
+Avg. BWHT
+inward (%)
+Direct routes
+(%)
+Optimal routes
+(%)
+Gain TS (%)
+Rank optimal
+(no.)
+Albania
+13.72
+13.76
+1.64
+12.12
+29
+Algeria
+13.35
+35.01
+26.23
+8.78
+103
+Angola
+17.39
+46.31
+36.06
+10.25
+107
+Argentina
+14.76
+17.83
+8.19
+9.65
+90
+Aruba
+17.38
+17.38
+1.64
+15.74
+12
+Australia
+6.38
+8.01
+1.77
+6.24
+78
+Austria
+4.82
+4.82
+1.65
+3.17
+58
+Azerbaijan
+13.93
+14.08
+1.63
+12.45
+10
+Bahamas
+17.39
+17.39
+1.64
+15.75
+22
+Bahrain
+15.35
+27.11
+23.26
+3.86
+98
+Barbados
+9.87
+10.27
+1.64
+8.63
+21
+Belarus
+9.96
+10.09
+1.64
+8.45
+43
+Belgium
+4.28
+5.56
+1.65
+3.91
+62
+Bermuda
+17.38
+17.38
+1.64
+15.75
+14
+Botswana
+16.56
+34.92
+23.28
+11.64
+99
+Brazil
+15.08
+17.84
+7.20
+10.64
+88
+Brunei
+Darussalam
+16.60
+16.60
+1.64
+14.97
+26
+Bulgaria
+6.69
+6.72
+1.64
+5.08
+40
+Canada
+6.25
+6.40
+1.57
+4.83
+5
+Appendix B1: Average dividend repatriation for home countries
+123
+=== [p.34] ===
+1354
+M. van ‘t Riet, A. Lejour
+Tax variables
+(unit)
+Avg. BWHT
+inward (%)
+Direct routes
+(%)
+Optimal routes
+(%)
+Gain TS (%)
+Rank optimal
+(no.)
+Cayman
+Islands
+17.38
+17.38
+1.64
+15.74
+15
+Chile
+14.71
+26.60
+1.62
+24.98
+7
+China
+7.74
+8.59
+1.01
+7.58
+1
+Colombia
+16.44
+16.88
+1.65
+15.23
+64
+Costa Rica
+17.10
+41.46
+6.55
+34.91
+84
+Croatia
+11.74
+11.94
+1.64
+10.30
+38
+Curacao
+17.38
+17.38
+1.64
+15.74
+16
+Cyprus
+7.52
+7.52
+1.64
+5.88
+27
+Czech
+Republic
+5.41
+6.70
+1.64
+5.06
+55
+Denmark
+4.20
+4.58
+1.64
+2.94
+48
+Dominican
+Rep.
+17.26
+18.12
+1.63
+16.50
+8
+Ecuador
+15.27
+33.91
+23.28
+10.63
+100
+Egypt
+9.71
+17.85
+1.65
+16.20
+65
+Equatorial
+Guinea
+17.38
+46.30
+36.06
+10.24
+108
+Estonia
+6.56
+6.72
+1.64
+5.08
+30
+Finland
+3.38
+3.65
+1.64
+2.01
+46
+France
+3.29
+4.91
+1.69
+3.23
+74
+Gabon
+16.71
+44.29
+16.30
+27.99
+96
+Germany
+4.66
+6.08
+1.71
+4.37
+76
+Greece
+11.29
+11.75
+1.64
+10.11
+53
+Guernsey
+17.38
+17.38
+1.64
+15.74
+17
+Hong Kong
+13.80
+13.80
+1.65
+12.15
+60
+Hungary
+5.63
+5.79
+1.64
+4.15
+47
+Iceland
+6.42
+6.56
+1.64
+4.92
+23
+India
+10.56
+13.57
+7.56
+6.01
+89
+Indonesia
+9.23
+9.64
+1.66
+7.97
+71
+Ireland
+5.53
+5.58
+1.64
+3.94
+45
+Isle of Man
+17.38
+17.38
+1.64
+15.75
+18
+Israel
+9.54
+10.17
+1.64
+8.53
+50
+Italy
+5.56
+7.00
+1.68
+5.32
+73
+Jamaica
+10.23
+20.30
+1.64
+18.66
+31
+Japan
+5.99
+7.73
+3.56
+4.17
+82
+Jersey
+17.38
+17.38
+1.64
+15.75
+19
+Jordan
+15.42
+25.30
+6.56
+18.74
+85
+Kazakhstan
+7.51
+7.67
+1.63
+6.04
+9
+Korea Republic
+6.66
+7.10
+1.57
+5.53
+3
+Kuwait
+12.05
+25.24
+16.40
+8.85
+97
+Latvia
+6.24
+6.31
+1.64
+4.67
+33
+123
+=== [p.35] ===
+Optimal tax routing: network analysis of FDI diversion
+1355
+Tax variables
+(unit)
+Avg. BWHT
+inward (%)
+Direct routes
+(%)
+Optimal routes
+(%)
+Gain TS (%)
+Rank optimal
+(no.)
+Lebanon
+17.39
+28.82
+1.64
+27.18
+36
+Libya
+17.36
+33.81
+6.56
+27.25
+86
+Liechtenstein
+16.32
+16.32
+1.64
+14.68
+20
+Lithuania
+6.25
+6.31
+1.64
+4.67
+37
+Luxembourg
+4.03
+4.03
+1.64
+2.39
+34
+Macao
+17.39
+27.31
+13.44
+13.86
+94
+Malaysia
+11.81
+11.81
+1.65
+10.16
+63
+Malta
+6.59
+6.59
+1.64
+4.95
+24
+Mauritius
+14.78
+14.86
+1.64
+13.22
+28
+Mexico
+4.12
+32.88
+31.10
+1.78
+104
+Mongolia
+13.30
+23.59
+1.64
+21.95
+25
+Namibia
+15.55
+18.10
+6.99
+11.11
+87
+Netherlands
+3.39
+3.39
+1.65
+1.74
+67
+New Zealand
+8.46
+9.46
+1.64
+7.82
+41
+Nigeria
+16.06
+17.07
+1.78
+15.30
+79
+Norway
+7.01
+7.77
+1.64
+6.12
+54
+Oman
+16.11
+16.16
+1.64
+14.52
+39
+Pakistan
+10.68
+13.89
+8.27
+5.63
+91
+Panama
+15.56
+36.67
+26.23
+10.44
+101
+Peru
+16.61
+17.76
+1.79
+15.97
+80
+Philippines
+11.49
+12.57
+1.76
+10.81
+77
+Poland
+6.26
+6.29
+1.66
+4.64
+68
+Portugal
+8.51
+9.66
+1.64
+8.01
+49
+Puerto Rico
+17.39
+18.38
+1.80
+16.58
+81
+Qatar
+14.59
+20.20
+1.64
+18.55
+44
+Romania
+7.46
+7.54
+1.64
+5.89
+51
+Russian
+Federation
+6.49
+6.68
+1.53
+5.15
+2
+Saudi Arabia
+12.96
+22.62
+1.66
+20.96
+70
+Serbia and
+Mont.
+13.04
+13.12
+1.64
+11.48
+11
+Seychelles
+16.35
+43.96
+34.10
+9.86
+106
+Singapore
+10.84
+10.84
+1.65
+9.19
+56
+Slovak
+Republic
+5.60
+13.05
+1.64
+11.41
+42
+Slovenia
+6.42
+6.51
+1.64
+4.87
+35
+South Africa
+5.44
+6.63
+1.65
+4.98
+66
+Spain
+6.50
+6.76
+1.67
+5.09
+72
+Suriname
+17.38
+20.69
+9.77
+10.91
+92
+123
+=== [p.36] ===
+1356
+M. van ‘t Riet, A. Lejour
+Tax variables
+(unit)
+Avg. BWHT
+inward (%)
+Direct routes
+(%)
+Optimal routes
+(%)
+Gain TS (%)
+Rank optimal
+(no.)
+Sweden
+3.48
+3.83
+1.65
+2.18
+61
+Switzerland
+4.92
+4.92
+1.65
+3.27
+59
+Taiwan
+Province
+14.95
+15.18
+1.66
+13.52
+69
+Thailand
+10.00
+18.47
+1.57
+16.90
+4
+Trinidad and
+Tob.
+9.56
+9.96
+1.64
+8.32
+32
+Tunisia
+11.44
+38.01
+31.15
+6.86
+105
+Turkey
+10.58
+10.91
+1.59
+9.32
+6
+Ukraine
+6.24
+6.37
+1.65
+4.73
+57
+United Arab
+Emirates
+13.19
+13.19
+1.64
+11.54
+52
+UK
+3.75
+3.75
+1.69
+2.06
+75
+USA
+6.29
+16.67
+14.61
+2.06
+95
+Uruguay
+16.05
+37.04
+26.23
+10.81
+102
+Venezuela
+7.95
+10.86
+6.49
+4.37
+83
+Virgin Islands
+USA
+17.38
+22.18
+13.23
+8.95
+93
+Virgin Islands
+UK
+17.38
+17.38
+1.64
+15.74
+13
+Column (1) is the average withholding tax on dividends in the host countries repatriated to the home country
+Column (4) is the difference between columns (2) and (3). The results in both columns follow from the
+network analysis
+The high rankings of China, Russia, and South Korea are explained by their relatively high outbound
+repatriation tax rates. Given the size of their economies, these rates contribute to higher inbound rates for
+the other countries and thus the three stand out with lower average inbound rates
+Tax
+variables
+(unit)
+Avg. BWHT
+outward (%)
+Min. BWHT
+outward (%)
+Direct routes
+(%)
+Optimal
+routes (%)
+Gain TS (%)
+Rank
+optimal (no.)
+Albania
+9.00
+0
+19.91
+5.40
+14.51
+45
+Algeria
+11.67
+0
+13.99
+5.34
+8.66
+22
+Angola
+10.00
+10
+11.72
+10.88
+0.83
+98
+Argentina
+30.42
+10
+31.73
+14.84
+16.89
+104
+Aruba
+9.96
+5
+28.53
+10.04
+18.48
+89
+Australia
+10.77
+0
+15.14
+4.69
+10.45
+13
+Austria
+6.79
+0
+11.26
+5.42
+5.84
+70
+Azerbaijan
+9.58
+5
+15.29
+10.13
+5.16
+92
+Appendix B2: Average dividend repatriation tax rates for host countries
+123
+=== [p.37] ===
+Optimal tax routing: network analysis of FDI diversion
+1357
+Tax
+variables
+(unit)
+Avg. BWHT
+outward (%)
+Min. BWHT
+outward (%)
+Direct routes
+(%)
+Optimal
+routes (%)
+Gain TS (%)
+Rank
+optimal (no.)
+Bahamas
+0.00
+0
+26.37
+5.40
+20.98
+39
+Bahrain
+0.00
+0
+20.57
+4.89
+15.67
+16
+Barbados
+9.78
+0
+28.77
+5.40
+23.37
+38
+Belarus
+10.05
+0
+15.60
+5.41
+10.20
+57
+Belgium
+6.19
+0
+9.10
+3.46
+5.64
+6
+Bermuda
+0.00
+0
+26.37
+5.40
+20.97
+35
+Botswana
+7.29
+5
+13.29
+10.12
+3.16
+90
+Brazil
+7.01
+0
+8.71
+4.61
+4.10
+11
+Brunei
+Darus-
+salam
+0.00
+0
+11.21
+5.40
+5.81
+43
+Bulgaria
+4.00
+0
+17.46
+5.40
+12.06
+55
+Canada
+8.76
+5
+12.93
+9.48
+3.44
+86
+Cayman
+Islands
+0.00
+0
+26.37
+5.40
+20.97
+30
+Chile
+27.86
+0
+29.58
+10.15
+19.43
+94
+China
+9.41
+5
+13.77
+10.70
+3.07
+97
+Colombia
+0.00
+0
+7.70
+5.43
+2.28
+75
+Costa Rica
+14.83
+5
+32.41
+19.16
+13.25
+107
+Croatia
+8.63
+0
+13.75
+5.40
+8.34
+53
+Curacao
+0.00
+0
+6.65
+5.31
+1.33
+21
+Cyprus
+0.00
+0
+19.93
+5.40
+14.54
+44
+Czech
+Republic
+7.50
+0
+14.37
+5.42
+8.95
+67
+Denmark
+7.24
+0
+12.71
+5.41
+7.30
+62
+Dominican
+Rep.
+10.00
+10
+12.72
+11.89
+0.83
+100
+Ecuador
+0.00
+0
+9.67
+5.37
+4.30
+23
+Egypt
+0.00
+0
+7.56
+5.43
+2.13
+76
+Equatorial
+Guinea
+25.00
+15
+26.45
+25.76
+0.69
+108
+Estonia
+0.00
+0
+10.07
+5.40
+4.67
+48
+Finland
+5.87
+0
+11.69
+5.41
+6.28
+61
+France
+5.23
+0
+8.07
+3.41
+4.65
+4
+Gabon
+15.00
+15
+16.65
+15.87
+0.78
+106
+Germany
+8.11
+0
+11.18
+4.76
+6.42
+14
+Greece
+6.72
+0
+9.91
+5.42
+4.49
+66
+Guernsey
+0.00
+0
+26.37
+5.40
+20.97
+31
+Hong Kong
+0.00
+0
+23.37
+5.42
+17.95
+72
+Hungary
+0.00
+0
+11.35
+5.41
+5.94
+60
+Iceland
+7.66
+0
+14.06
+5.40
+8.66
+40
+India
+0.00
+0
+3.86
+2.97
+0.88
+3
+123
+=== [p.38] ===
+1358
+M. van ‘t Riet, A. Lejour
+Tax
+variables
+(unit)
+Avg. BWHT
+outward (%)
+Min. BWHT
+outward (%)
+Direct routes
+(%)
+Optimal
+routes (%)
+Gain TS (%)
+Rank
+optimal (no.)
+Indonesia
+11.05
+0
+14.54
+5.48
+9.06
+81
+Ireland
+2.66
+0
+16.20
+5.41
+10.79
+59
+Isle of Man
+0.00
+0
+26.37
+5.40
+20.97
+32
+Israel
+12.24
+0
+14.76
+5.41
+9.35
+63
+Italy
+8.04
+0
+10.60
+4.33
+6.27
+9
+Jamaica
+20.06
+0
+23.36
+5.40
+17.96
+46
+Japan
+7.25
+0
+9.24
+2.48
+6.77
+2
+Jersey
+0.00
+0
+26.37
+5.40
+20.97
+36
+Jordan
+0.00
+0
+14.96
+5.40
+9.57
+33
+Kazakhstan
+8.56
+5
+15.04
+10.14
+4.90
+93
+Korea
+Republic
+8.89
+0
+12.21
+9.95
+2.26
+87
+Kuwait
+10.10
+0
+17.26
+5.38
+11.88
+24
+Latvia
+5.62
+0
+15.35
+5.40
+9.95
+49
+Lebanon
+9.47
+0
+29.30
+5.40
+23.90
+51
+Libya
+0.00
+0
+11.19
+5.40
+5.80
+37
+Liechtenstein
+0.00
+0
+24.15
+5.40
+18.75
+34
+Lithuania
+6.64
+0
+16.10
+5.40
+10.69
+52
+Luxembourg
+1.79
+0
+6.92
+4.86
+2.06
+15
+Macao
+0.00
+0
+24.26
+5.39
+18.86
+27
+Malaysia
+0.00
+0
+7.61
+5.43
+2.19
+74
+Malta
+0.00
+0
+16.89
+4.90
+11.99
+17
+Mauritius
+0.00
+0
+23.62
+5.40
+18.23
+42
+Mexico
+0.00
+0
+4.86
+4.05
+0.81
+7
+Mongolia
+13.73
+0
+15.14
+5.40
+9.74
+41
+Namibia
+9.49
+5
+11.25
+7.64
+3.61
+85
+Netherlands
+4.47
+0
+10.05
+5.44
+4.61
+77
+New
+Zealand
+12.90
+0
+17.80
+5.19
+12.61
+18
+Nigeria
+9.31
+7.5
+11.67
+9.96
+1.71
+88
+Norway
+10.64
+0
+11.94
+5.20
+6.74
+19
+Oman
+0.00
+0
+16.32
+5.40
+10.92
+54
+Pakistan
+8.12
+3.75
+10.27
+6.79
+3.48
+83
+Panama
+15.61
+0
+32.98
+5.39
+27.60
+25
+Peru
+4.10
+4.1
+8.12
+7.30
+0.82
+84
+Philippines
+13.04
+10
+14.52
+12.60
+1.92
+102
+Poland
+7.80
+0
+13.75
+5.45
+8.31
+78
+Portugal
+9.28
+0
+12.00
+4.22
+7.78
+8
+Puerto Rico
+10.00
+10
+12.44
+11.61
+0.83
+99
+Qatar
+6.13
+0
+19.15
+5.41
+13.74
+58
+Romania
+8.74
+0
+14.83
+5.42
+9.41
+65
+123
+=== [p.39] ===
+Optimal tax routing: network analysis of FDI diversion
+1359
+Tax
+variables
+(unit)
+Avg. BWHT
+outward (%)
+Min. BWHT
+outward (%)
+Direct routes
+(%)
+Optimal
+routes (%)
+Gain TS (%)
+Rank
+optimal (no.)
+Russian
+Federation
+8.62
+5
+15.20
+10.29
+4.91
+96
+Saudi Arabia
+4.78
+0
+12.71
+5.46
+7.26
+80
+Serbia and
+Mont.
+13.04
+5
+18.75
+10.13
+8.62
+91
+Seychelles
+13.00
+0
+30.82
+5.40
+25.43
+28
+Singapore
+0.00
+0
+13.00
+5.42
+7.58
+68
+Slovak
+Republic
+0.00
+0
+8.79
+5.41
+3.39
+56
+Slovenia
+6.75
+0
+14.98
+5.40
+9.58
+50
+South Africa
+6.68
+0
+10.42
+5.22
+5.20
+20
+Spain
+7.84
+0
+9.88
+4.69
+5.19
+12
+Suriname
+24.86
+7.5
+26.32
+12.49
+13.83
+101
+Sweden
+5.97
+0
+12.50
+5.42
+7.08
+73
+Switzerland
+7.31
+0
+13.03
+5.42
+7.61
+71
+Taiwan
+Province
+17.71
+0
+21.29
+5.46
+15.83
+79
+Thailand
+10.00
+10
+15.56
+14.70
+0.86
+103
+Trinidad and
+Tob.
+8.95
+0
+12.95
+5.40
+7.55
+47
+Tunisia
+0.00
+0
+5.39
+4.56
+0.83
+10
+Turkey
+10.29
+0
+15.05
+10.20
+4.85
+95
+Ukraine
+7.14
+0
+14.19
+5.42
+8.77
+69
+United Arab
+Emirates
+0.00
+0
+22.59
+5.41
+17.18
+64
+UK
+0.00
+0
+8.92
+5.55
+3.37
+82
+USA
+10.26
+0
+11.99
+2.20
+9.79
+1
+Uruguay
+6.75
+0
+11.79
+5.39
+6.41
+26
+Venezuela
+14.12
+0
+16.03
+3.44
+12.59
+5
+Virgin
+Islands
+USA
+11.00
+11
+29.35
+15.35
+14.00
+105
+Virgin
+Islands UK
+0.00
+0
+26.37
+5.40
+20.97
+29
+Column (1) is the average withholding tax on dividends in the host countries
+Column (2) presents the minimum withholding tax rates on dividends
+Column (5) is the difference between columns (3) and (4). The results in both columns follow from the
+network analysis
+The high rankings of the USA, Japan, and India are explained by their relatively high inbound repatriation
+tax rates. Given the size of their economies, these rates contribute to higher outbound rates for the other
+countries and thus the three stand out with lower average outbound rates
+123
+=== [p.40] ===
+1360
+M. van ‘t Riet, A. Lejour
+BTWNS
+OCCUR
+STRCT
+UNWTD
+%
+Rank
+%
+Rank
+%
+Rank
+%
+Rank
+Albania
+0.2
+55
+14.9
+57
+0.1
+47
+0.2
+57
+Algeria
+0.0
+81
+0.0
+81
+0.0
+84
+0.0
+83
+Angola
+0.0
+74
+0.0
+82
+0.0
+85
+0.0
+84
+Argentina
+0.0
+75
+0.0
+83
+0.0
+86
+0.0
+85
+Aruba
+0.0
+73
+0.0
+84
+0.0
+87
+0.0
+74
+Australia
+1.3
+35
+27.1
+50
+0.1
+44
+0.2
+56
+Austria
+2.1
+22
+46.8
+26
+0.6
+25
+3.0
+18
+Azerbaijan
+0.1
+59
+5.8
+66
+0.0
+64
+0.0
+69
+Bahamas
+0.8
+41
+35.7
+46
+0.0
+53
+2.1
+30
+Bahrain
+0.0
+76
+0.0
+85
+0.0
+88
+0.0
+76
+Barbados
+0.2
+56
+16.5
+54
+0.1
+43
+1.9
+37
+Belarus
+0.1
+60
+13.1
+60
+0.0
+60
+0.1
+58
+Belgium
+1.1
+38
+36.5
+38
+0.1
+45
+1.5
+42
+Bermuda
+0.8
+42
+35.8
+40
+0.0
+54
+2.1
+31
+Botswana
+0.0
+77
+0.0
+86
+0.0
+89
+0.0
+86
+Brazil
+0.1
+61
+3.4
+77
+0.0
+74
+0.1
+65
+Brunei Darussalam
+2.6
+18
+65.1
+9
+1.2
+14
+2.8
+20
+Bulgaria
+2.0
+23
+47.8
+25
+0.5
+30
+2.2
+29
+Canada
+0.1
+62
+5.8
+67
+0.1
+48
+0.2
+55
+Cayman Islands
+0.8
+43
+35.8
+41
+0.0
+55
+2.1
+32
+Chile
+0.0
+78
+7.0
+65
+0.0
+71
+0.0
+78
+China
+0.0
+79
+5.7
+70
+0.0
+70
+0.0
+75
+Colombia
+1.9
+27
+60.5
+15
+0.3
+33
+2.3
+23
+Costa Rica
+0.0
+80
+0.0
+87
+0.0
+90
+0.0
+87
+Croatia
+0.4
+52
+29.5
+48
+0.2
+39
+0.6
+51
+Curacao
+1.7
+30
+61.8
+14
+0.3
+34
+2.7
+21
+Cyprus
+4.5
+10
+59.2
+17
+1.8
+10
+8.1
+3
+Czech Republic
+1.4
+33
+41.3
+32
+0.2
+35
+1.4
+45
+Denmark
+4.0
+13
+55.4
+19
+1.1
+15
+2.2
+25
+Dominican Rep.
+0.1
+63
+5.8
+68
+0.0
+77
+0.0
+71
+Ecuador
+0.0
+82
+0.0
+88
+0.0
+91
+0.0
+88
+Egypt
+0.4
+51
+39.8
+33
+0.0
+61
+0.4
+53
+Equatorial Guinea
+0.0
+84
+0.0
+89
+0.0
+92
+0.0
+89
+Estonia
+6.7
+4
+76.0
+3
+3.1
+5
+6.3
+7
+Finland
+4.7
+9
+63.4
+11
+1.6
+12
+2.2
+28
+France
+1.5
+32
+36.4
+39
+0.5
+31
+2.2
+27
+Gabon
+0.0
+83
+0.0
+90
+0.0
+93
+0.0
+90
+Appendix B3: Centrality measures
+123
+=== [p.41] ===
+Optimal tax routing: network analysis of FDI diversion
+1361
+BTWNS
+OCCUR
+STRCT
+UNWTD
+%
+Rank
+%
+Rank
+%
+Rank
+%
+Rank
+Germany
+0.8
+44
+29.3
+49
+0.1
+51
+1.0
+49
+Greece
+1.7
+31
+45.2
+28
+0.4
+32
+1.4
+46
+Guernsey
+0.8
+45
+35.8
+42
+0.0
+56
+2.1
+33
+Hong Kong
+2.3
+19
+42.8
+29
+0.9
+20
+4.1
+12
+Hungary
+6.2
+5
+76.9
+1
+2.3
+7
+6.9
+5
+Iceland
+1.9
+28
+48.3
+24
+0.6
+26
+1.4
+44
+India
+0.3
+53
+2.6
+78
+0.1
+46
+0.3
+54
+Indonesia
+0.1
+64
+8.9
+62
+0.0
+69
+0.0
+70
+Ireland
+5.6
+7
+70.1
+5
+2.9
+6
+3.8
+14
+Isle of Man
+0.8
+46
+35.8
+43
+0.0
+57
+2.1
+34
+Israel
+0.1
+65
+9.8
+61
+0.0
+68
+0.1
+62
+Italy
+0.8
+47
+32.2
+47
+0.1
+52
+0.9
+50
+Jamaica
+0.0
+85
+4.3
+74
+0.0
+72
+0.1
+63
+Japan
+0.0
+87
+0.0
+91
+0.0
+94
+0.0
+91
+Jersey
+0.8
+48
+35.8
+44
+0.0
+58
+2.1
+35
+Jordan
+0.0
+86
+0.0
+92
+0.0
+95
+0.0
+92
+Kazakhstan
+0.1
+66
+5.8
+69
+0.0
+62
+0.0
+79
+Korea Republic
+0.1
+67
+7.4
+63
+0.0
+66
+0.0
+66
+Kuwait
+0.0
+88
+0.0
+93
+0.0
+96
+0.0
+93
+Latvia
+2.0
+24
+49.3
+22
+0.6
+23
+1.7
+40
+Lebanon
+0.0
+89
+0.1
+79
+0.0
+97
+0.0
+80
+Libya
+0.0
+90
+0.0
+94
+0.0
+98
+0.0
+94
+Liechtenstein
+1.0
+39
+37.3
+36
+0.2
+40
+2.3
+22
+Lithuania
+2.3
+20
+51.4
+20
+0.8
+21
+1.7
+41
+Luxembourg
+8.4
+2
+76.4
+2
+7.6
+2
+5.2
+10
+Macao
+0.0
+91
+0.0
+95
+0.0
+99
+0.0
+95
+Malaysia
+4.0
+14
+62.7
+13
+1.0
+17
+5.6
+8
+Malta
+4.3
+12
+60.5
+16
+1.7
+11
+6.6
+6
+Mauritius
+1.3
+36
+36.8
+37
+0.2
+37
+3.4
+15
+Mexico
+0.0
+92
+0.0
+96
+0.0
+100
+0.0
+96
+Mongolia
+0.2
+57
+13.6
+59
+0.0
+65
+0.1
+60
+Namibia
+0.0
+93
+0.0
+97
+0.0
+78
+0.0
+97
+Netherlands
+7.7
+3
+66.7
+8
+3.5
+4
+9.6
+2
+New Zealand
+0.2
+58
+14.0
+58
+0.0
+67
+0.1
+64
+Nigeria
+0.0
+94
+0.0
+98
+0.0
+79
+0.0
+98
+Norway
+2.0
+25
+42.7
+30
+0.6
+24
+1.9
+38
+Oman
+2.3
+21
+63.4
+12
+0.5
+29
+3.1
+16
+Pakistan
+0.0
+95
+0.0
+99
+0.0
+80
+0.0
+99
+Panama
+0.0
+96
+0.0
+100
+0.0
+101
+0.0
+100
+123
+=== [p.42] ===
+1362
+M. van ‘t Riet, A. Lejour
+BTWNS
+OCCUR
+STRCT
+UNWTD
+%
+Rank
+%
+Rank
+%
+Rank
+%
+Rank
+Peru
+0.0
+97
+0.0
+101
+0.0
+75
+0.0
+101
+Philippines
+0.0
+98
+0.0
+102
+0.0
+81
+0.0
+102
+Poland
+1.4
+34
+39.8
+34
+0.2
+38
+1.9
+39
+Portugal
+1.0
+40
+37.4
+35
+0.1
+42
+1.0
+48
+Puerto Rico
+0.0
+99
+0.0
+103
+0.0
+82
+0.0
+103
+Qatar
+1.3
+37
+22.6
+51
+1.1
+16
+3.1
+17
+Romania
+1.8
+29
+41.6
+31
+0.5
+28
+2.2
+26
+Russian Federation
+0.1
+68
+5.1
+72
+0.1
+50
+0.0
+67
+Saudi Arabia
+0.1
+69
+15.3
+56
+0.6
+27
+0.1
+59
+Serbia and Mont.
+0.1
+71
+5.2
+71
+0.2
+41
+0.0
+73
+Seychelles
+0.0
+101
+0.0
+104
+0.0
+102
+0.0
+104
+Singapore
+6.1
+6
+67.4
+7
+4.3
+3
+7.4
+4
+Slovak Republic
+5.3
+8
+68.2
+6
+2.1
+8
+4.7
+11
+Slovenia
+2.0
+26
+49.3
+23
+0.7
+22
+1.5
+43
+South Africa
+0.1
+72
+16.1
+55
+0.0
+76
+0.1
+61
+Spain
+3.6
+15
+45.7
+27
+2.0
+9
+5.4
+9
+Suriname
+0.0
+100
+0.0
+105
+0.0
+103
+0.0
+105
+Sweden
+4.5
+11
+57.6
+18
+1.4
+13
+2.3
+24
+Switzerland
+3.2
+16
+50.9
+21
+1.0
+19
+3.0
+19
+Taiwan Province
+0.0
+104
+4.9
+73
+0.0
+83
+0.0
+77
+Thailand
+0.0
+102
+3.5
+76
+0.0
+104
+0.0
+82
+Trinidad and Tob.
+0.1
+70
+7.3
+64
+0.0
+63
+0.4
+52
+Tunisia
+0.0
+103
+0.0
+106
+0.0
+105
+0.0
+106
+Turkey
+0.6
+50
+19.6
+53
+0.1
+49
+0.0
+68
+Ukraine
+0.3
+54
+20.9
+52
+0.2
+36
+1.1
+47
+United Arab Emirates
+2.8
+17
+64.2
+10
+1.0
+18
+4.1
+13
+UK
+13.4
+1
+74.4
+4
+13.8
+1
+12.8
+1
+USA
+0.0
+106
+0.1
+80
+0.0
+106
+0.0
+81
+Uruguay
+0.0
+105
+0.0
+107
+0.0
+107
+0.0
+107
+Venezuela
+0.0
+107
+3.7
+75
+0.0
+73
+0.0
+72
+Virgin Islands USA
+0.0
+108
+0.0
+108
+0.0
+108
+0.0
+108
+Virgin Islands UK
+0.8
+49
+35.8
+45
+0.0
+59
+2.1
+36
+123
+=== [p.43] ===
+Optimal tax routing: network analysis of FDI diversion
+1363
+Appendix C1: The adapted shortest path algorithm
+This appendix describes the adaptations to the standard shortest path algorithm
+required to ﬁt the optimal tax routes. Although this material is mainly theoretical,
+we also include the results of computations to motivate the choice we made concern-
+ing the credit method in conduit situations.
+The standard all-pair shortest path problem (APSP) is solved with the Floyd–War-
+shall algorithm.38 The core of this algorithm is the next comparison, where dm
+i j is the
+length of the shortest path from i to j allowing only the ﬁrst m vertices (countries) as
+intermediate stations.
+dm
+i j  min{dm−1
+im
++ dm−1
+mj
+, dm−1
+i j
+}
+The algorithm is initialized with the distance matrix, which contains all the relevant
+information (D0  D). By consecutively allowing an additional vertex as intermediate
+station, the length of the shortest path over the whole network is computed for all
+possible pairs (S  DN). The efﬁciency of the algorithm is that with a ﬁxed and limited
+number of additions and comparisons, each of the order N3, hence not polynomial, it
+completes the job.
+The core comparison of the algorithm reﬂects that in the world of transportation
+distances simply can be added. This is obviously not the case for tax rates, as the
+base for taxation with a second rate, are the proﬁts after the ﬁrst tax. The ﬁrst adap-
+tation makes the switch to the multiplicative character of taxes and corresponds with
+deduction as the method for double taxation relief.
+dm
+i j  min{dm−1
+im
++ dm−1
+mj
+−dm−1
+im
+dm−1
+mj
+, dm−1
+i j
+}
+or dm
+i j  min{1 −(1 −dm−1
+im
+)(1 −dm−1
+mj
+), dm−1
+i j
+}
+The tax rates include the non-resident withholding taxes, which are given for a
+country pair, i.e. from i to j. The country-speciﬁc corporate income taxes (CITs) are
+included as part of the compounded tax distances for inward income ﬂows (see Sect. 2).
+This is the second adaption.
+There is a convenient consequence of including the CIT of a home country in the
+tax distances applying to its inward ﬂows. For countries with exemption as their double
+tax relief method, it amounts to having a CIT of zero. Their actual CIT only matters
+when these countries are the initial host on a repatriation path.
+In general, for any tax route, with an initial host k  1 and ﬁnal destination k  n,
+the full combined effective tax rate equals 1 −(1 −t1)
+n
+k2 (1 −dk−1,k)
+
+. Here t1
+denotes the CIT of country 1, and d1,2  w1,2 is the bilateral withholding tax rate
+from 1 to 2. The other tax distances are either the bilateral withholding tax rates,
+dk−1,k  wk−1,k, when country k applies exemption, or they include the CIT of the
+intermediate home country k, dk−1,k  1 −(1 −wk−1,k)(1 −tk), when it applies
+deduction as double tax relief. The adapted Floyd–Warshall takes care of the product
+38 See, for instance, Minieka (1978).
+123
+=== [p.44] ===
+1364
+M. van ‘t Riet, A. Lejour
+of the tax distances, in which the order is inconsequential.39 Thus, a basic method is
+deﬁned, with a deduction “metric”, covering both deduction and exemption as double
+tax relief methods.40
+Incorporating the credit method introduces a complexity which requires two ﬁnal
+adaptations. The question is which taxes can be credited against the corporate tax in
+the ﬁnal or intermediate, home country. Roughly three possibilities can be identiﬁed:
+(1) all taxes paid on the preceding tax route are credited, (2) only the taxes actually
+paid in the last preceding jurisdiction are credited, and (3) the nominal CIT rate of
+the last preceding jurisdiction is credited, whether this CIT is paid or not. In the latter
+case also the withholding tax would be credited.41
+The option of crediting the nominal CIT of the last preceding country, option iii),
+has the advantage that nothing needs to be known of the route before that last country
+visited. Moreover, it ﬁts into the method described above, with the deﬁnition of tax
+distance also given in the main text:
+dk−1,k(credit)  max{wk−1,k, (tk −tk−1)/(1 −tk−1)}
+The ﬁrst option may be most in line with the philosophy of the credit method, i.e.
+capital export neutrality. In practice it may be difﬁcult, or undesirable, to account for
+all the accumulated taxes paid on a tax route. These total taxes include the treatment of
+the CIT of the evaluated jurisdiction. However, it must be realized that the treatment of
+the CIT in the jurisdiction under consideration is based on the initial distance matrix,
+so that the credit is based on the nominal tax rate of the previous jurisdiction on the
+path instead of the actual total taxes paid. This excludes implementing the ﬁrst two
+options.
+Acknowledging that the practice of the credit method is complex and that we have
+no structural information on the actual operation of the method we decided on the next
+implementation: we let the world average CIT be credited,42 in combination with the
+actual withholding tax of the last conduit jurisdiction preceding the parent jurisdiction
+with the credit method.
+We believe this solution is the most realistic among possible alternatives. A ﬁrst
+alternative approach would be to assume that no taxes at all were paid so that no
+credits are applied. This would seriously underestimate the potential reduction of the
+tax burden for MNEs by treaty shopping. We ﬁnd a world average optimal dividend
+repatriation tax of 9.87% instead of 5.75%. On the other hand, taking the statutory
+CIT of a conduit country as the basis for tax credit would overestimate the poten-
+tial reduction as this CIT is not likely to be paid in full because of double tax relief.
+Moreover, with this alternative, the optimal tax routes would make use of those con-
+39 This is the commutative property.
+40 Strictly speaking it is not a metric, since, for instance, the property of symmetry is not satisﬁed.
+41 This is the indirect tax credit system; see below.
+42 Speciﬁcally, the world average CIT excludes the one of the countries under consideration.
+123
+=== [p.45] ===
+Optimal tax routing: network analysis of FDI diversion
+1365
+duit countries that apply exemption but which have a high nominal CIT, which then
+would be credited. The world average optimal rate found for this alternative is 3.26%,
+reﬂecting the underestimation compared to the 5.75% when the world average CIT is
+credited.
+Furthermore, it must be observed that the world average tax rate is only applied in
+those conduit situations where a jurisdiction with the credit method follows a conduit
+country. When the last preceding jurisdiction is the starting point of a tax route, the
+corporate income tax is paid in the initial host and is credited in the next stop of a tax
+route.
+This gives rise to the ﬁnal adaptation of the shortest path algorithm. Let di j denote
+the usual tax distance between i and j when i is the ﬁrst node of a path, and let pi j
+denote the distance between i and j when i is an intermediate node on a path. This
+second distance incorporates the assumption dealing with the credit method.
+pk−1,k(credit)  max{ wk−1,k, (tk −¯t)/(1 −¯t)},
+with ¯t : world average CIT
+Let pN
+i j be the output of the Floyd–Warshall algorithm with the deduction “metric”
+applied to distances for intermediate stations. Thus, all shortest distances are known
+for the inner work of tax routes, i.e. when the ﬁrst vertex of the route eventually is the
+second. Then the outer work of initial vertices (jurisdictions) can be added as follows.
+d N
+i j  min{di j, min
+m (dim + pN
+mj)}
+Finally, we brieﬂy discuss two relief options that we have not covered. Instead
+of allowing both the corporate tax of the host country and the withholding tax to be
+credited, some countries only allow the withholding tax to be credited against their
+corporate tax. The latter method is referred to as a direct foreign tax credit whereas
+the former is the indirect tax credit method. For conduit situations we use the indirect
+credit method. The direct credit method could also easily have been implemented;
+it sufﬁces to deﬁne the tax distance for i as a ﬁrst vertex of a tax route; see below.
+We have, however, not collected information on countries applying direct rather than
+indirect credits.
+di j(direct credit)  max{wi j, t j}
+Some countries provide no-relief-at-all for double taxation; the combined tax rate
+for a direct route equals:
+te
+SP(no relief)  tS + wSP −tSwSP + tP
+In conduit situations problems similar to those with indirect credits occur, although
+no-relief-at-all is not likely to occur in conduit situations. Nevertheless, we have not
+covered it.
+123
+=== [p.46] ===
+1366
+M. van ‘t Riet, A. Lejour
+Generating all shortest paths, and all those within range
+The Floyd–Warshall algorithm is an efﬁcient method to compute the value of the
+strict shortest paths for all pairs of nodes of a network. With a small addition to the
+algorithm, the so-called penultimate vertex matrix (PVM) can be maintained. Upon
+completion of the Floyd–Warshall algorithm, shortest paths for all country pairs can
+be reconstructed from this matrix. The PVM method generates only a single strict
+shortest path for a given pair. We, however, require all shortest paths of a given pair,
+to be able to compute centrality measures. In addition, we are also interested in those
+paths for a given pair with a length that is within a prespeciﬁed admissible range on
+top of the value of the strictly shortest path. The PVM method is not suitable for
+generating all those relevant paths.
+Instead we implement a branch and bound method. The branching consists of a full,
+depth-ﬁrst enumeration of all possible combinations. The bounding is accomplished
+with the values of the strict shortest paths which were computed with the Floyd–War-
+shall algorithm, executed beforehand. This implementation is a brute-force approach.
+It is only possible because the relevant paths are not too long, with a sequence of ﬁve or
+six countries as a maximum. Polak (2015) describes a relative efﬁcient implementation
+of the brute-force method.
+Appendix C2: The betweenness centrality measure and ﬂows
+Country—weights wi are deﬁned as wi  GDPi/ 
+k
+GDPk. Of course, 
+i
+wi  1.
+Double GDP—weights on the ﬂows (i, j) are:
+wi j  wi
+GDPj
+
+k
+GDPk −GDPi
+ wiw j
+1
+(1 −wi).
+By construction 
+i
+
+j̸i
+wi j  1. The weights are the ﬂows when 1 euro or dollar is
+run through the network; they are the shares of the total of the ﬂows.
+The measure of betweenness centrality for vertex k, Bk, is computed from the
+number of times vertex k is on a relevant path from i to j, excluding k as start and end
+point, nki j, as a share in the total number of relevant paths from i to j, Ni j, and then
+these fractions are weighted over all pairs i and j. Bk  
+i̸k
+
+j̸i,k
+wi j
+nki j
+Ni j
+The assumption is that each of the relevant paths between i and j takes the same
+share, i.e. 1/Ni j, of the total ﬂow of the pair ij, whose share is wi j. The weights can
+be given the interpretation of the relative size of the undiverted bilateral ﬂows. By
+construction betweenness centrality then measures the share of total undiverted ﬂows
+that run through a vertex, excluding all the ﬂows that start or end at the given vertex k.
+123
+=== [p.47] ===
+Optimal tax routing: network analysis of FDI diversion
+1367
+Table 15 Summary statistics—gravity variables
+Variable
+Mean
+Std. dev.
+Min
+Max
+Log GDP
+12.07
+1.98
+6.80
+16.63
+Average institutional quality
+0.57
+0.83
+−1.37
+1.86
+Log distance
+8.55
+0.94
+4.09
+9.89
+Contiguity dummy
+0.03
+0.17
+0.00
+1.00
+Common language dummy
+0.11
+0.31
+0.00
+1.00
+Colony dummy
+0.02
+0.15
+0.00
+1.00
+Dummy former common country
+0.01
+0.09
+0.00
+1.00
+Dummy both OECD countries
+0.15
+0.36
+0.00
+1.00
+Common regional trade agreement
+0.26
+0.44
+0.00
+1.00
+Common legal system
+0.27
+0.44
+0.00
+1.00
+Number of observations: 6422
+Appendix D1: Gravity variables
+This appendix presents summary statistics and results for the gravity variables. GDP
+and distance (in kilometres) are measured in logs. The indicator for institutional qual-
+ity is an average of the Worldwide Governance Indicators (World Bank 2016), each
+ranked between −2.5 and 2.5. A higher value implies higher institutional quality. The
+geographic variables are downloaded from CEPII. Countries are only in 3% of the
+cases close neighbours. Of the country pairs 11% has a common language, 2% has a
+colonial relation, 26% a common regional trade agreement, and 27% has a common
+legal system (Table 15).
+The coefﬁcients for the gravity variables in the OLS regressions are found in
+Table 16. GDP in the host and home country has a positive impact on the bilateral FDI
+stock. This is also the case for institutional quality in both countries. Benassy-Quere
+et al. (2007) and Egger et al. (2009), among others, use GDP per capita instead of
+institutional quality. Both variables are heavily correlated. We have chosen for insti-
+tutional quality because the explanatory power is higher in our sample. Distance has
+the expected negative effect on the size of the bilateral FDI stock; a common language
+increases bilateral investments, as is also the case for contiguity, a colonial relation-
+ship in the past, OECD membership of both countries and a common legal system. A
+regional trade agreement RTA and a former common country also increase FDI, but
+the coefﬁcients of these variables are not signiﬁcant.
+The results for the gravity variables in the robustness analysis are given in Table 17.
+123
+=== [p.48] ===
+1368
+M. van ‘t Riet, A. Lejour
+Table 16 Explaining FDI stocks with indicators for FDI diversion—gravity variables
+(1)
+(2)
+(3)
+(4)
+(5)
+(6)
+(7)
+Log(GDP_home)
+0.761***
+0.759***
+0.759***
+0.769***
+0.759***
+0.759***
+0.708***
+(0.0189)
+(0.0193)
+(0.0193)
+(0.0191)
+(0.0192)
+(0.0192)
+(0.0193)
+Log(GDP_host)
+0.652***
+0.637***
+0.636***
+0.641***
+0.632***
+0.631***
+0.627***
+(0.0188)
+(0.0188)
+(0.0188)
+(0.0187)
+(0.0187)
+(0.0187)
+(0.0186)
+INST_home
+1.163***
+1.072***
+1.083***
+1.115***
+1.044***
+1.054***
+1.037***
+(0.0395)
+(0.0399)
+(0.0403)
+(0.0386)
+(0.0442)
+(0.0445)
+(0.0446)
+INST_host
+0.323***
+0.338***
+0.353***
+0.363***
+0.268***
+0.284***
+0.306***
+(0.0420)
+(0.0411)
+(0.0416)
+(0.0417)
+(0.0449)
+(0.0454)
+(0.0460)
+Log distance
+−0.879***
+−0.730***
+−0.728***
+−0.755***
+−0.710***
+−0.708***
+−0.746***
+(0.0398)
+(0.0413)
+(0.0413)
+(0.0408)
+(0.0416)
+(0.0416)
+(0.0418)
+Dummy contiguity
+0.600***
+0.730***
+0.735***
+0.709***
+0.803***
+0.807***
+0.801***
+(0.188)
+(0.187)
+(0.186)
+(0.185)
+(0.187)
+(0.186)
+(0.184)
+Dummy language
+1.376***
+1.495***
+1.493***
+1.490***
+1.528***
+1.526***
+1.436***
+(0.120)
+(0.119)
+(0.119)
+(0.119)
+(0.119)
+(0.119)
+(0.120)
+Dummy colony
+1.543***
+1.460***
+1.453***
+1.467***
+1.324***
+1.318***
+1.279***
+(0.203)
+(0.194)
+(0.194)
+(0.195)
+(0.200)
+(0.200)
+(0.204)
+Dummy former
+common country
+0.384
+0.465
+0.466
+0.434
+0.457
+0.459
+0.462
+(0.305)
+(0.317)
+(0.316)
+(0.312)
+(0.319)
+(0.318)
+(0.314)
+Dummy OECD pair
+0.630***
+0.574***
+0.556***
+0.568***
+0.583***
+0.566***
+0.513***
+(0.111)
+(0.108)
+(0.108)
+(0.107)
+(0.107)
+(0.107)
+(0.108)
+Dummy RTA
+0.0491
+0.0714
+0.0729
+0.0976
+0.0390
+0.0407
+−0.0674
+(0.0843)
+(0.0821)
+(0.0821)
+(0.0819)
+(0.0827)
+(0.0827)
+(0.0835)
+Dummy common
+legal system
+0.223***
+0.263***
+0.262***
+0.268***
+0.267***
+0.266***
+0.228***
+(0.073)
+(0.072)
+(0.072)
+(0.072)
+(0.072)
+(0.072)
+(0.072)
+The regressions are estimated with OLS. There are 6422 observations. Robust standard errors are in parentheses, ***p <0.01; **p <0.05; *p <0.1
+123
+=== [p.49] ===
+Optimal tax routing: network analysis of FDI diversion
+1369
+Table 17 Robustness analyses—gravity variables
+Robustness
+(1)
+(2)
+(3)
+(4)
+(5)
+(6)
+(7)
+Fixed effect
+PPML
+OECD sample
+Tax haven
+Occurence
+Strict
+Unweighted
+Log(GDP_home)
+0.478***
+1.190***
+0.779***
+0.768***
+0.753***
+0.758***
+(0.0778)
+(0.0325)
+(0.0194)
+(0.0195)
+(0.0192)
+(0.0192)
+Log(GDP_host)
+0.527***
+0.815***
+0.634***
+0.641***
+0.629***
+0.626***
+(0.0694)
+(0.0289)
+(0.0193)
+(0.0188)
+(0.0188)
+(0.0186)
+INST_home
+0.880***
+1.365***
+1.069***
+1.042***
+1.049***
+0.991***
+(0.105)
+(0.0887)
+(0.0446)
+(0.0469)
+(0.0413)
+(0.0428)
+INST_host
+0.445***
+0.664***
+0.296***
+0.233***
+0.318***
+0.230***
+(0.112)
+(0.0765)
+(0.0457)
+(0.0493)
+(0.0424)
+(0.0440)
+Log distance
+−0.947***
+−0.316***
+−0.822***
+−0.705***
+−0.697***
+−0.710***
+−0.694***
+(0.0436)
+(0.100)
+(0.0610)
+(0.0415)
+(0.0421)
+(0.0413)
+(0.0411)
+Dummy contiguity
+0.300*
+0.265
+0.0637
+0.836***
+0.795***
+0.823***
+0.906***
+(0.175)
+(0.232)
+(0.272)
+(0.182)
+(0.187)
+(0.186)
+(0.184)
+Dummy language
+0.801***
+0.551***
+0.588***
+1.652***
+1.562***
+1.502***
+1.549***
+(0.112)
+(0.209)
+(0.185)
+(0.117)
+(0.120)
+(0.119)
+(0.119)
+Dummy colony
+1.249***
+0.0840
+1.245***
+1.081***
+1.385***
+1.249***
+1.117***
+(0.182)
+(0.219)
+(0.240)
+(0.200)
+(0.194)
+(0.205)
+(0.198)
+Dummy former
+common country
+0.336
+1.611***
+0.834**
+0.388
+0.445
+0.473
+0.435
+(0.304)
+(0.325)
+(0.388)
+(0.324)
+(0.320)
+(0.317)
+(0.322)
+Dummy OECD pair
+0.713***
+0.294
+−0.388***
+0.567***
+0.581***
+0.560***
+0.604***
+(0.105)
+(0.180)
+(0.146)
+(0.110)
+(0.108)
+(0.107)
+(0.107)
+Dummy RTA
+0.510***
+−0.882***
+0.307***
+0.0702
+0.0231
+0.0508
+−0.00920
+(0.0775)
+(0.213)
+(0.118)
+(0.0827)
+(0.0826)
+(0.0823)
+(0.0825)
+Dummy common
+legal system
+0.365***
+−0.0589
+0.664***
+0.261***
+0.264***
+0.268***
+0.253***
+(0.0600)
+(0.199)
+(0.105)
+(0.0717)
+(0.0717)
+(0.0718)
+(0.0711)
+The regressions are estimated with OLS and robust Huber–White standard errors, except for column (2). There are 6422 observations, except in the OECD sample where we have 2783
+observations. ***p <0.01; **p <0.05; *p <0.1
+123
+=== [p.50] ===
+1370
+M. van ‘t Riet, A. Lejour
+References
+Altshuler, R., & Grubert, H. (2002). Repatriation taxes, repatriation strategies and multinational ﬁnancial
+policy. Journal of Public Economics, 87(2002), 73–107.
+Avi-Yonah, R. S., & Panayi, C. H. J. I. (2011). Rethinking treaty shopping: Lessons for the European Union.
+In M. Lang, P. Stone, J. Schuch, C. Staringer, A. Storck, & M. Zagler (Eds.), Tax treaties: Building
+bridges between law and economics (pp. 21–50). Amsterdam: IBFD.
+Barrios, S., Huizinga, H., Laeven, L., & Nicodème, G. (2012). International taxation and multinational ﬁrm
+location decisions. Journal of Public Economics, 96(2012), 946–958.
+Benassy-Quere, A., Coupet, M., & Mayer, T. (2007). Institutional determinants of foreign direct investment.
+The World Economy, 30(5), 764–782.
+Blonigen, B. A., & Davies, R. B. (2004). The effects of bilateral tax treaties on U.S. FDI activity. Interna-
+tional Tax and Public Finance, 11, 601–622.
+Blonigen, B., & Davies, R. B. (2005). Do bilateral tax treaties promote foreign direct investment? In E.
+Kwan Choy & J. Harrigan (Eds.), Handbook of international trade: Economic and legal analysis of
+laws and institutions. New York: Blackwell.
+Blonigen, B. A., Davies, R. A., Waddell, G. R., & Naugthon, H. T. (2007). FDI in space: Spatial autore-
+gressive relationships in foreign direct investment. European Economic Review, 51, 1303–1325.
+Blonigen, B. A., Oldenski, L., & Sly, N. (2014). The differential effects of bilateral tax treaties. American
+Economic Journal: Economic Policy, 6(2), 1–18.
+Chisik, R., & Davies, R. B. (2004). Asymmetric FDI and tax-treaty bargaining: Theory and evidence.
+Journal of Public Economics, 88, 1119–1148.
+Davies, R. B. (2004). Tax treaties and foreign direct investment: Potential versus performance. International
+Tax and Public Finance, 11, 775–802.
+De Mooij, R. A., & Ederveen, S. (2003). Taxation and foreign direct investment: A synthesis of empirical
+research. International Tax and Public Finance, 10, 673–693.
+Deloitte. (2013). Deloitte international tax source | Country guides and highlights.
+Dharmapala, D., & Hines, J. R., Jr. (2009). Which countries become tax havens? Journal of Public Eco-
+nomics, 93, 1058–1068.
+Dyreng, S. D., Lindsey, B. P., Markle, K. S., & Shackelford, D. A. (2015). The effect of tax and nontax
+country characteristics on the global equity supply chains of U.S. multinationals. Journal of Accounting
+and Economics, 59(2–3), 182–202.
+Egger, P., Larch, M., Pfaffermayr, M., & Winner, H. (2006). The impact of endogenous tax treaties on
+foreign direct investment: Theory and evidence. Canadian Journal of Economics, 39(3), 901–931.
+Egger, P., Loretz, S., Pfaffermayr, M., & Winner, H. (2009). Bilateral effective tax rates and foreign direct
+investment. International Tax and Public Finance, 16, 822–849.
+European Union. (1990). Council Directive 90/435/EEC of 23 July 1990 on the common system of taxation
+applicable in the case of parent companies and subsidiaries of different Member States.
+European Union. (2016). Council Directive (EU) 2016/1164 of 12 July 2016 laying down rules against tax
+avoidance practices that directly affect the functioning of the internal market (ATAD).
+EY. (2013). Worldwide corporate tax guide 2013.
+Feld, L. P., & Heckemeyer, J. (2011). FDI and taxation: A meta study. Journal of Economic Surveys, 29(2),
+233–272.
+Gerard, M., & Gillard, M.-F. (2004). Taxation, ﬁnancial intermodality and the least taxed path for circulating
+income within a multinational enterprise. Annales d’Economie et de Statistiques, 75/76, 89–107.
+Gravelle, J. G. (2013). Tax havens: International tax avoidance and evasion. Congressional Research Service.
+Head, K., & Mayer, T. (2014). Gravity equations workhorse toolkit and cookbook. In G. Gopinath, E. Help-
+man, & K. Rogoff (Eds.), Handbook of international economics (pp. 131–195). New York: Elsevier.
+Hines, J. R., Jr., & Rice, E. M. (1994). Fiscal paradise: Foreign tax havens and American business. Quarterly
+Journal of Economics, 109, 149–182.
+Hong, S. (2017). Tax treaties and foreign direct investment: A network approach. International Tax and
+Public Finance (forthcoming).
+IMF. (2014). Spillovers in international corporate taxation, IMF policy paper, May 9 2014.
+Loyens & Loeff. (2013). Holding regimes 2013—Comparison of selected countries.
+Minieka, E. (1978). Optimization algorithms for networks and graphs. New York: Marcel Dekker Inc.
+Mintz, J. M., & Weichenrieder, A. J. (2010). The indirect side of direct investment—Multinational company
+ﬁnance and taxation, CESifo Book Series.
+123
+=== [p.51] ===
+Optimal tax routing: network analysis of FDI diversion
+1371
+OECD. (1998). Harmful tax competition: An emerging global issue.
+OECD. (2013). Addressing base erosion and proﬁt shifting.
+OECD. (2015). Final BEPS package for reform of the international tax system to tackle tax avoidance.
+Polak, S. (2015). Algorithms for the network analysis of bilateral tax treaties, Master Thesis University of
+Amsterdam, under supervision of Guido Schäfer, CWI Centrum Wiskunde & Informatica Amsterdam.
+https://esc.fnwi.uva.nl/thesis/centraal/ﬁles/f1020945453.pdf.
+Santos-Silva, J. M. C., & Terenyro, S. (2006). The log of gravity. Review of Economics and Statistics, 88(4),
+641–658.
+Sauvant, K. P., & Sachs, L. E. (Eds.). (2009). The effects of treaties on foreign direct investment: Bilateral
+investment treaties, double tax treaties, and investment ﬂows. Oxford: Oxford University Press.
+Van ‘t Riet, M., & Lejour, A. (2014). Ranking the stars; Network analysis of bilateral tax treaties. CPB
+discussion paper 290.
+Van ‘t Riet, M., Lejour, A., & Hanappi, T. (2015). Network analysis of tax treaty shopping using dividend-
+based weights. CPB Notitie August 28, 2015.
+Weyzig, F. (2013). Tax treaty shopping: Structural determinants of Foreign Direct Investment routed through
+the Netherlands. International Tax and Public Finance, 20(6), 910–937.
+World Bank. (2016). Worldwide governance indicators.
+123

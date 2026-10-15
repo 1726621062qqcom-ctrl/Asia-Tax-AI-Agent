@@ -44,7 +44,7 @@ def gain(consideration=1000.0, cost=600.0, ratio=20, months=30, trading_stock=Fa
             ("payee", "sch17k_elected"): elected}
 
 
-# a transfer of Hong Kong stock between parties the facts do not relate: the SDO s45 relief stays open (口径 D18)
+# a transfer of Hong Kong stock between parties the facts do not relate: the SDO s45 relief stays open (decision D18)
 S45 = {"flow.associated_ratio", "flow.clawback_event_within_2y", "flow.stamp_relief_claimed"}
 
 # (name, payer, payee, income, facts, lo, hi, pending under lo, cite)

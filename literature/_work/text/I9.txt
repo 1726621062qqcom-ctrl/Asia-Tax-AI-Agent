@@ -1,0 +1,1507 @@
+=== [p.1] ===
+Findings of the Association for Computational Linguistics: EMNLP 2024, pages 10658–10671
+November 12-16, 2024 ©2024 Association for Computational Linguistics
+STARD: A Chinese Statute Retrieval Dataset Derived from Real-life
+Queries by Non-professionals
+Weihang Su*1, Yiran Hu†2, Anzhe Xie3, Qingyao Ai‡1, Zibing Que2, Ning Zheng4, Yun Liu2,
+Weixing Shen2, and Yiqun Liu1
+1Department of Computer Science and Technology, Tsinghua University
+2School of Law, Tsinghua University
+3School of Electronics Engineering and Computer Science, Peking University
+4Department of Automation, Tsinghua University
+Abstract
+Statute retrieval aims to find relevant statutory
+articles for specific queries. This process is the
+basis of a wide range of legal applications such
+as legal advice, automated judicial decisions,
+legal document drafting, etc. Existing statute
+retrieval benchmarks focus on formal and pro-
+fessional queries from sources like bar exams
+and legal case documents, thereby neglecting
+non-professional queries from the general pub-
+lic, which often lack precise legal terminology
+and references. To address this gap, we intro-
+duce the STAtute Retrieval Dataset (STARD), a
+Chinese dataset comprising 1,543 query cases
+collected from real-world legal consultations
+and 55,348 candidate statutory articles1. Unlike
+existing statute retrieval datasets, which primar-
+ily focus on professional legal queries, STARD
+captures the complexity and diversity of real
+queries from the general public. Through a
+comprehensive evaluation of various retrieval
+baselines, we reveal that existing retrieval ap-
+proaches all fall short of these real queries
+issued by non-professional users.
+The best
+method only achieves a Recall@100 of 0.907,
+suggesting the necessity for further exploration
+and additional research in this area.
+1
+Introduction
+Statutes are written laws formally created and ap-
+proved by a legislative body, such as a parliament
+or congress (Livingston, 1990). They set out spe-
+cific rules and guidelines within a certain area or
+jurisdiction. Therefore, statutes are the primary
+source of legal authority in civil law countries and
+also play a significant role in common law jurisdic-
+tions.
+Statute retrieval involves finding relevant statu-
+tory articles or sections of laws for a specific query.
+*swh22@mails.tsinghua.edu.cn
+†Equal Contribution.
+‡Corresponding Author: aiqy@tsinghua.edu.cn
+1All
+the
+codes
+and
+datasets
+are
+available
+at:
+https://github.com/oneal2000/STARD/tree/main
+Question: Is disclosing the medical case information of
+a patient considered an invasion of privacy?
+Relevant Statute Articles
+Personal Information Protection Law, Article 28: Sen-
+sitive personal information refers to information that, if
+leaked or illegally used, could easily harm an individ-
+ual’s dignity or endanger their personal or property safety.
+This includes biometric data, religious beliefs, specific
+identities, medical health, financial accounts, tracking
+information, and personal information of minors under
+the age of fourteen.
+Civil Code, Article 1032: Individuals have the right to
+privacy. No organization or individual may infringe upon
+another’s privacy rights through snooping, harassment,
+disclosure, or publicization. Privacy encompasses the
+tranquility of an individual’s private life and the private
+spaces, activities, and information they wish to keep un-
+known to others.
+Civil Code, Article 1226: Medical institutions and their
+medical personnel must keep patients’ privacy and per-
+sonal information confidential. Those who disclose pa-
+tients’ private and personal information or publish their
+medical records without the patient’s consent must bear
+infringement liability.
+Table 1: An example of the query and relevant statute
+articles in the STARD dataset.
+This process is vital in the legal field and supports
+a wide range of applications, including legal ad-
+vice services, automated judicial decisions, and
+logical legal analysis. This task is challenging for
+the following reasons: (1) Statutes use complex
+legal terminology and linguistic structures rarely
+found in open-domain corpus. As a result, tra-
+ditional retrieval models that lack domain-specific
+knowledge may struggle to capture the meanings of
+these specialized terms accurately. (2) The criteria
+for assessing information relevance in the legal do-
+main differ greatly from those used in open-domain
+search tasks. General search tasks focus mainly on
+textual similarity, while legal tasks involve legal
+reasoning that requires the understanding of dif-
+ferent areas of law, the relations between them, as
+well as the relevance of specific legal principles
+and their practical applications.
+Due to the challenging nature of statute retrieval
+10658
+=== [p.2] ===
+and its paramount importance in civil law systems,
+significant progress has been made in this field. For
+example, the annual COLIEE competitions intro-
+duce a series of statute retrieval tasks using the
+questions extracted from the Japanese legal bar
+exams (Goebel et al., 2023; Kim et al., 2022; Ra-
+belo et al., 2022). These tasks aim to retrieve rel-
+evant statute law from the Japanese Civil Code
+Article according to the question from bar exams.
+AILA (Bhattacharya et al., 2019) competitions also
+introduce a series of statute retrieval datasets. The
+queries from AILA are case documents that were
+judged by the Supreme Court of India. The can-
+didate statutes are part of the set of statutes from
+Indian law.
+Despite these advancements, a significant gap
+persists in addressing real queries from non-
+professional people, who represent a large pop-
+ulation of legal advice service users. The current
+statute retrieval benchmarks are primarily based on
+queries from formal legal documents, such as bar
+exam questions or Supreme Court case documents,
+which differ significantly from the everyday lan-
+guage used by the general public. However, queries
+from non-professionals often lack precise legal ter-
+minology and may include ambiguous references
+to legal concepts, which significantly complicate
+the task of statute retrieval.
+To address the limitations of existing bench-
+marks, we propose STAtute Retrieval Dataset
+(STARD) i.e. STARD, a Chinese statute retrieval
+dataset based on real legal consultation questions
+from the general public. The STARD dataset com-
+prises 1,543 query cases collected from real-world
+legal consultations and 55,348 candidate statutory
+articles extracted from all official Chinese legal reg-
+ulations and judicial interpretations. Table 1 shows
+an example of our dataset. To the best of our knowl-
+edge, STARD is the first statute retrieval dataset
+where queries are from real-world legal consulting
+proposed by the general public.
+We conduct experiments on a wide range of in-
+formation retrieval (IR) baselines on the STARD
+dataset, including traditional lexical matching mod-
+els, open-domain neural retrieval models, legal do-
+main neural retrieval models, and a dense retriever
+trained with data annotated by GPT-4. The experi-
+mental results show that all existing baselines fall
+short of accurately and comprehensively retrieving
+the relevant statutes, leaving significant room for
+future work. Additionally, our experimental results
+show that employing STARD as an external knowl-
+edge source for Retrieval-Augmented Generation
+(RAG) significantly enhances the performance of
+large generative language models (LLMs) on le-
+gal tasks. This indicates that STARD is useful for
+developing more accessible and efficient legal sys-
+tems.
+In conclusion, the contributions of this paper are
+as follows:
+• We propose STARD, a statute retrieval dataset de-
+rived from real-world legal consultation posed by
+non-professionals, with 1,543 queries and their
+corresponding relevant statutes.
+• We propose a comprehensive annotation frame-
+work specifically designed for the statute retrieval
+task based on non-professional queries, which
+provides references and insights for future anno-
+tation in the legal field.
+• We conduct experiments on a wide range of re-
+trieval baselines and find that statute retrieval
+with queries issued by non-professionals is still a
+difficult task that requires further investigation.
+• We present experiments on LLMs solving legal
+tasks with and without the STARD dataset. Ex-
+periments show that STARD can notably enhance
+the performance of LLMs in legal tasks.
+2
+Problem Formulation
+2.1
+Statute of Civil Law System
+Civil law is a legal system primarily based on codi-
+fied laws rather than case precedents, making writ-
+ten statutes the main source of legal authority. This
+contrasts with common law systems, where previ-
+ous judicial decisions also play a central role. In
+civil law, statutes are created and enacted by legisla-
+tive bodies, such as parliaments, and are organized
+into systematic collections known as codes, which
+cover various areas of law like contracts, torts, and
+property. A statute is a formal written law that pro-
+vides specific rules and guidelines to be followed
+within a jurisdiction. Within statutes, there are sec-
+tions known as statutory articles, which detail indi-
+vidual provisions or clauses of the law, addressing
+particular aspects or requirements. These statutes
+and their articles are fundamental in civil law sys-
+tems to ensure that the legal framework is clear,
+predictable, and accessible, thereby facilitating or-
+der and defining societal rights and responsibilities.
+10659
+=== [p.3] ===
+What should l do if l am 
+bitten by someone else's pet?
+Step 1: Recall
+Queries from General Public
+…
+Criminal Law
+Civil Law
+Procedure Law
+Step 2: Query Decomposition
+Life issues
+Legal facts
+Step 3: Filter
+Causing
+Damage
+Domestic
+Animals
+Article 1245: If damage is caused by a domesticated animal, the 
+keeper or manager of the animal should bear the tort liability. 
+However, if it can be proven that the damage was caused by ...
+Marriage
+…
+Fields of Law
+What should l do if l am 
+bitten by someone else's pet?
+Article 1247: If damage is caused to others by dangerous animals 
+such as dogs that are prohibited from being kept, the keeper or 
+manager of the animal should bear the tort liability.
+Article 1249: If damage is caused to others by an animal that has 
+been abandoned or has escaped during the period of abandonment or 
+escape the original keeper or manager...
+Tort Liability
+Civil Law - Tort Liability
+…
+…
+Subfields of Law
+Figure 1: A schematic of our annotation framework with green boxes highlighting query-relevant elements.
+2.2
+Definition of Statute Retrieval
+The statute retrieval task aims to accurately retrieve
+relevant statutory articles in response to a query. To
+be specific, given a query q that describes a legal
+issue or situation and a corpus of statutory articles
+S = {s1, s2, ..., sn}, n ∈N+. For each statute
+si in the corpus, there is a Bernoulli variable ri
+indicating whether si is relevant2 to the query q.
+The goal of the statute retrieval task is to retrieve
+a set of statutes R = {sj|rj = 1}, including all
+statutes relevant to the query.
+3
+Annotation Framework
+This section explains how annotators transform
+general questions into professional legal questions
+submitted by non-professionals and then identify
+the most relevant legal statutes to support these
+questions. To be specific, annotators use a three-
+step method: recall, query decomposition, and fil-
+tering (illustrated in Figure 1). This method mirrors
+the structured approach commonly used in legal
+reasoning, which involves three logical steps: es-
+tablishing a broad legal principle (major premise),
+applying it to the specific facts of a case (minor
+premise), and then concluding. This section is or-
+ganized into three subsections, each detailing a part
+of the annotation process that is designed to mirror
+these logical steps in legal reasoning.
+3.1
+Step 1: Recall
+When initiating the annotation of legal statutes per-
+tinent to a query, our annotators first narrow down
+the scope of the relevant statutes. Specifically, they
+start by identifying the most pertinent areas of law
+within the entire legal system. The process uses a
+top-down refining method. Annotators begin with
+2The definition of “relevant” is discussed in detail in Sec-
+tion 3.
+broad departmental categories of law, such as civil,
+criminal law, and administrative law. Upon encoun-
+tering a specific issue, annotators first determine
+which category of departmental law it falls under,
+then progressively refine the issue to more specific
+aspects of the law. For instance, if the issue pertains
+to civil law, the annotator assesses whether it relates
+to contract law or tort law. If it is a matter of con-
+tract law, a further determination is made regarding
+the specific type of contract involved. Similarly, for
+tort law, the specific type of tort is identified. This
+step effectively narrows the scope of legal statute
+retrieval to particular chapters within the relevant
+departmental law.
+3.2
+Step 2: Query Decomposition
+Given the specialized nature of legal knowledge,
+individuals without a formal education in law often
+frame their queries with informal language rather
+than professional legal terminology. These queries
+typically consist of straightforward semantic ex-
+pressions that do not directly correspond to estab-
+lished legal norms. For instance, consider the ques-
+tion “What should I do if I am bitten by some-
+one’s pet?”. Here, “pet bite” represents a common,
+non-technical description of an incident. Search-
+ing for legal norms based solely on such descrip-
+tions might lead to irrelevant or imprecise results.
+Therefore, when annotators perform legal statute
+retrieval, they should transform the informal fact
+descriptions written by the questioner into legal
+facts through interpretation. This is the step to find
+the minor premise in the legal logic syllogism. In
+this transformation process, the annotator evaluates
+the life facts according to the provisions of the law
+and selects the legal norms corresponding to these
+life facts. For example, for the aforementioned
+issue of a pet biting a person, the annotators will
+transform “pet bites a person” into the legal fact of
+10660
+=== [p.4] ===
+“causing damage to other” and “domestic animals”
+according to the provisions of Chapter 9 of the Tort
+Liability Compilation of the Civil Code.
+3.3
+Step 3: Filter
+The filtering process is a critical step where anno-
+tators refine and finalize the selection of relevant
+legal statutes. This is accomplished by employ-
+ing a “subsumption” method, integral to the syllo-
+gistic reasoning in law. In this method, the legal
+facts, which have been interpreted and transformed
+from real-life scenarios in the previous steps, are
+matched against the smallest possible subset of le-
+gal statutes that adequately address the query.
+To be specific, consider a set of legal statutes
+S
+=
+{S1, S2, S3} recalled in the first step.
+Through the transformation process, the query is
+deconstructed into distinct legal facts F1, F2, F3.
+Each fact corresponds to a subset of statutes that
+it implies, denoted as SF1 = {S1, S4, S5}, SF2 =
+{S1, S5}, and SF3 = {S3, S6}. The objective in
+the filtering stage is to intersect these subsets with
+the initially recalled set S to determine the most
+relevant statutes. This is represented as SGolden =
+(SF1∪SF2∪SF3)∩S, yielding SGolden = {S1, S3}.
+These statutes in SGolden are considered the
+“golden” legal statutes for the dataset, as they en-
+compass all the legal implications drawn from the
+facts of the query. This step ensures that the se-
+lected statutes are not only relevant but also com-
+prehensive in covering the legal issues presented in
+the query, thereby providing a solid legal founda-
+tion to support the resolution of the query.
+3.4
+Generalizability of Our Framework
+In this section, we discuss the generalizability of
+the STARD dataset and our annotation framework,
+discussing the following two research questions
+(RQs):
+• RQ1: Can the STARD dataset be applied to the
+legal systems of other countries through direct
+translation of our dataset?
+• RQ2: Can our Three-Step Annotation Frame-
+work be applied to other legal systems?
+For RQ1, directly translating the STARD dataset
+into other languages does not guarantee its applica-
+bility in foreign legal systems. Each country pos-
+sesses unique legal statutes; articles selected from
+one jurisdiction may not exist or may have entirely
+different implications in another. Thus, the nuances
+of local laws must be considered, making straight-
+forward translation inadequate for cross-national
+applications. For RQ2, our proposed Three-Step
+Annotation Framework is potentially generalizable
+to other countries under the civil law system. Coun-
+tries with civil law systems, such as Germany,
+France, and Japan, typically share a similar pro-
+cess for retrieving law statutes. This process can
+generally be structured into three steps: Recall,
+Query Decomposition, and Filtering. Therefore,
+our framework could be adapted to these environ-
+ments, supporting the construction of statute re-
+trieval datasets and the application of legal statutes
+across various civil law jurisdictions.
+4
+Dataset Construction
+4.1
+Data Sources
+All queries in our dataset derive from real legal
+consultations. Specifically, our legal team creates
+legal questions from the 12348 China Legal Service
+Website3, followed by a manual anonymization of
+each question, which involved removing any poten-
+tial identifiers associated with entities, corporations,
+or individuals.
+To obtain the 55,348 candidate statutory articles,
+our legal team conducted extensive research and
+discussions to compile a comprehensive list of cur-
+rently valid Chinese statutory laws and regulations4.
+We then manually downloaded the most up-to-date
+versions of these laws from the government’s offi-
+cial website. These laws were subsequently divided
+into the smallest searchable units based on articles
+using automated scripts.
+4.2
+Recruitment and Payment of Annotators
+For recruitment, we sourced annotators from promi-
+nent law schools5. The annotation team initially
+consisted of 16 members. Although three members
+departed during the project, their positions were
+quickly filled to maintain the team size. Our salary
+plan remunerates participants based on the number
+of annotations they complete, with a fixed rate of
+approximately 10 CNY per annotation. On average,
+annotators processed four queries per hour, result-
+ing in an average hourly wage of 40 CNY. This
+3This is the Chinese government’s official website for on-
+line legal services: http://www.12348.gov.cn/
+4The entire list of statutes we selected can be found on our
+official GitHub.
+5Many existing legal datasets choose law school students
+as annotators (Li et al., 2023e; Zongyue et al., 2023; Liu et al.,
+2023).
+10661
+=== [p.5] ===
+pay rate significantly exceeds the minimum hourly
+wage mandated in Beijing.
+4.3
+Annotation Process
+Annotators are tasked with identifying relevant ar-
+ticles of statutes in response to actual legal queries
+posed by the general public.
+The specifics of
+the annotation framework are detailed in Section
+3. Additionally, annotators are instructed not to
+use generative models, such as ChatGPT, for as-
+sistance. The annotation process starts with the
+manual anonymization of each question within the
+STARD dataset, involving the removal of any po-
+tential identifiers associated with entities, corpora-
+tions, or individuals. Subsequently, annotators are
+required to locate relevant statutes for each ques-
+tion, following the three-step principle introduced
+in Section 3.
+4.4
+Annotation Consistency
+For each question, two annotators were assigned.
+The final gold standard for each question was
+established only when both annotators agreed
+on the same legal provisions6.
+To evaluate the reliability of agreement among
+human annotators, we utilized Cohen’s Kappa (Co-
+hen, 1960) K coefficient in a binary classification
+context. Each query-statute article pair corresponds
+to a binary classification task, where annotators
+judge whether the query is related or unrelated to
+the statute. This analysis, conducted on a dataset
+comprising 1,543 annotated instances, yielded a
+K value of 0.5312. This indicates moderate agree-
+ment. Achieving such a K value is considered
+satisfactory for a complex task involving fifty thou-
+sand classifications with multiple possible correct
+labels.
+4.5
+Ethics Discussion
+We have thoroughly addressed the following ethical
+considerations:
+• (1) Privacy and Anonymity: Given the sensitive
+nature of legal consultations, we have rigorously
+anonymized all queries in the STARD dataset.
+• (2) Transparency: To promote reproducibility
+and transparency, we have made the dataset, asso-
+ciated models, and the codes publicly available7.
+This allows other researchers to verify, replicate,
+6In cases where annotators had differing opinions, the
+question would not be included in the final dataset.
+7https://github.com/oneal2000/STARD/tree/main
+and expand upon our work, advancing the field
+of legal informatics.
+• (3) Accountability: Recognizing the dynamic
+nature of legal statutes, we commit to regularly
+updating the STARD dataset to reflect the latest
+changes in law. This ensures the dataset remains
+accurate and reliable for ongoing research and
+application.
+• (4) Accessibility: The STARD dataset is freely
+available for download from the official website
+under the MIT license, facilitating easy access
+for researchers and practitioners alike. This pro-
+motes broader usage and supports innovation
+across various fields.
+5
+Dataset Statistics and Analysis
+The basic statistics of our proposed dataset are
+shown in Table 2. STARD comprises a total of
+1,543 queries and a large-scale corpus of 55,348
+candidate statutory articles. Among these candi-
+date statutory articles, 1,445 articles are relevant to
+at least one of the queries in the dataset. The aver-
+age length of a query is 27.3 words, and the average
+length of a statute article is nearly 120 words.
+Figure 2 presents the distribution of queries
+across the number of relevant statutory articles,
+highlighting the varied complexity within the
+dataset.
+A substantial majority of the queries,
+843 out of 1,543, correspond to just one relevant
+statutory article, indicating a significant number of
+queries can be addressed with a single, specific le-
+gal reference. This could suggest that many of the
+non-professional queries are focused and pertain
+to specific legal issues that require straightforward
+statute retrieval. However, 45% of queries require
+multiple statutory articles which indicates some of
+the questions are more complex, involving multiple
+references of law. This diversity in query com-
+plexity demonstrates that our dataset is capable of
+accommodating a wide range of legal questions,
+from straightforward to highly intricate.
+6
+Statute Retrieval Experiment
+6.1
+Selected Retrieval Baselines
+We consider four types of baselines for compari-
+son, including traditional IR methods, pre-trained
+Language models on general domain data, PLMs
+tailored for IR, and pre-trained language models
+built with legal documents. The implementation
+10662
+=== [p.6] ===
+Table 2: Basic statistics of our proposed STARD dataset.
+Statistic
+# Number
+Total Queries
+1,543
+Total Candidate Statutory Articles
+55,348
+Total Num of Relevant Statutory Articles
+1,445
+Occurrences of Relevant Articles
+2,717
+Avg. Relevant Articles per Query
+1.76
+Avg. Query Length
+27.30
+Avg. Article Length
+119.93
+1
+2
+3
+4
+5
+5+
+Number of Relevant Statutory Articles
+0
+200
+400
+600
+800
+Number of Queries
+Figure 2: Distribution of relevant statutory article num-
+bers for each query.
+details of these baselines are provided in Ap-
+pendix B
+• Traditional IR Methods
+– QL (Ponte and Croft, 2017) is a language
+model based on Dirichlet smoothing and has
+good performance on retrieval tasks.
+– BM25 (Robertson et al., 2009) is an effective
+retrieval model based on lexical matching that
+achieves good performance in retrieval tasks.
+• General Domain Pre-trained Models
+– Chinese-RoBERTa-WWM (Cui et al., 2021)
+is a language model pre-trained with the
+Whole Word Masking strategy.
+– SEED (Lu et al., 2021) is a pre-trained text
+encoder for dense retrieval that achieves state-
+of-the-art performance.
+– coCondenser (Gao and Callan, 2021b) is
+an enhanced version of Condenser(Gao and
+Callan, 2021a) that adds an unsupervised
+corpus-level contrastive loss to warm up the
+passage embedding space.
+• Legal Domain Pre-trained Models
+– Lawformer (Xiao et al., 2021) apply Long-
+former(Beltagy et al., 2020) to initialize and
+train with the MLM task on the legal domain.
+– SAILER (Li et al., 2023a) is a structure-aware
+pre-trained language model for tailored legal
+document representation. It utilizes the logical
+connections between different sections within
+a legal document.
+• Fine-tuned Dense Retrieval Model
+– Dense-CAIL is a dense retrieval model trained
+on the CAIL2018 dataset (Xiao et al., 2018).
+We choose this baseline to verify whether the
+existing dataset based on formal professional
+questions is sufficient for addressing statute re-
+trieval tasks based on non-professional queries.
+– Dense-STARD employs a five-fold cross-
+validation technique on the STARD dataset.
+We initialize the above two models with Chinese-
+Roberta-WWM (Cui et al., 2021). For the setting
+of cross-validation, the dataset is randomly di-
+vided into five subsets, where one subset serves
+as the test set and the remaining four are used
+as training sets. The details of our fine-tuning
+process are introduced in Appendix G.
+• Dense-GPT4: We distill a dense retrieval model
+from GPT-4. The process involved using GPT-4
+to generate legal questions based on statute ar-
+ticles within a given corpus. Specifically, we
+prompted GPT-4 to create a legal question q that
+is closely related to a specific statute article a+
+i ,
+resulting in a query-statute pair (q, a+
+i ). Then,
+we employ a contrastive learning approach uti-
+lizing these query-statute pairs to train the dense
+retriever. Details are provided in Appendix H.
+• LSI-STARD is a Transformer based classifier
+fine-tuned on STARD. In the Legal Statute Identi-
+fication (LSI) field (Zhong et al., 2018; Paul et al.,
+2022; Chalkidis et al., 2021), the statute retrieval
+task is approached as a classification problem,
+where each statute is treated as a unique label.
+This method transforms the task into classifying
+legal documents or queries against a set of labels,
+each representing a different statute. Follow-
+ing this methodology, we finetune a transformer-
+based classification model on the STARD dataset,
+employing the same five-fold cross-validation set-
+ting. We initialize the transformer-based model
+with Chinese-Roberta-WWM (Cui et al., 2021)
+and randomly initialize the outermost MLP Layer.
+Details are provided in Appendix I.
+10663
+=== [p.7] ===
+Table 3: The overall experimental results of multiple baselines on STARD. The best results are in bold, and the
+second-best results are underlined. “R” stands for Recall, and “M” stands for MRR. General PLM and Legal PLM
+are all in the zero-shot setting. Note that LSI-STARD is a classification model where each statute is treated as a
+unique label; we report its ranking performance based on the probability for each statute.
+R@5
+R@10 R@20 R@30 R@50 R@100 R@200 M@3
+M@5
+M@10
+Lexical Matching
+QL
+0.3363 0.4020 0.4651 0.4839 0.5537 0.6515
+0.7224
+0.3052 0.3167 0.3304
+BM25
+0.3349 0.3943 0.4504 0.4773 0.5240 0.6493
+0.7035
+0.3176 0.3251 0.3369
+Open-Domain PLM
+Roberta
+0.3216 0.3908 0.4646 0.5042 0.5715 0.6633
+0.7351
+0.2766 0.2905 0.3010
+SEED
+0.2897 0.3555 0.4264 0.4589 0.4975 0.5626
+0.6260
+0.2607 0.2708 0.2816
+coCondenser
+0.1120 0.1598 0.2223 0.2659 0.3288 0.4292
+0.5246
+0.0847 0.0922 0.1004
+Legal PLM
+SAILER
+0.2330 0.3050 0.3790 0.4286 0.4885 0.5674
+0.6463
+0.2006 0.2115 0.2234
+Lawformer
+0.2411 0.2989 0.3720 0.4137 0.4733 0.5478
+0.6309
+0.2205 0.2313 0.2412
+Fine-tuned PLM
+Dense-STARD 0.5206 0.6061 0.7064 0.7485 0.8107 0.9065
+0.9531
+0.4372 0.4543 0.4724
+Dense-GPT4
+0.4382 0.5174 0.5961 0.6471 0.6810 0.7984
+0.8521
+0.3842 0.3948 0.4106
+Dense-CAIL
+0.0887 0.1272 0.1832 0.2341 0.2712 0.3281
+0.3819
+0.0660 0.0719 0.0842
+LSI-STARD
+0.1861 0.2069 0.2386 0.2564 0.3004 0.3410
+0.3956
+0.2062 0.2093 0.2156
+6.2
+Evaluation Metrics
+We use Mean Reciprocal Rank and Recall as eval-
+uation metrics. By using both MRR and Recall,
+we can gain insights into both the accuracy of the
+top-ranked results and the comprehensiveness of
+the relevant statutory articles retrieved by the re-
+trieval model. Detailed definitions of these metrics
+are provided in Appendix C.
+6.3
+Experimental Results
+In this subsection, we provide a detailed analysis
+of the performance of various retrieval baselines
+evaluated on our proposed STARD dataset. We
+have the following insights into the effectiveness
+of different retrieval methods:
+(1) Under the zero-shot setting, traditional lexi-
+cal matching techniques surpass both general and
+legal-domain pre-trained language models (PLMs).
+This demonstrates that lexical matching methods
+are still very strong baselines in retrieval tasks. (2)
+Among all the methods that do not use human anno-
+tation, the performance of Dense-GPT4 stands out,
+exceeding that of all unsupervised methods tested.
+This indicates that distilling GPT4 to train task-
+specific models is a good choice in scenarios with-
+out human annotations. (3) Domain-specific mod-
+els like SAILER are optimized for particular tasks,
+thus resulting in underperformance compared to
+general domain models. Specifically, SAILER is
+tailored for legal case retrieval involving long doc-
+uments as queries. Consequently, it struggles with
+tasks that involve short queries and medium-length
+articles, unlike the model STARD. (4) The retrieval
+model fine-tuned on the CAIL2018 dataset per-
+formed sub-optimally on the STARD dataset. This
+suggests significant differences between the non-
+professional queries in STARD and the formal le-
+gal queries in existing datasets. Consequently, it
+underscores the unique nature of STARD, neces-
+sitating specialized models for effective statute re-
+trieval. (5) While the LSI classifier performs well
+in existing studies for tasks involving the classi-
+fication of a few dozen statutes, it struggles with
+the STARD dataset, which contains over 50,000
+labels, resulting in suboptimal performance. As a
+result, retrieval methods are more effective than the
+LSI approach for large-scale statute retrieval tasks.
+(6) The performance of both the lexical matching
+method and the non-finetuned models is less effec-
+tive than that of the Dense-STARD model. This
+arises because the former models lack the capac-
+ity to interpret life issues as legal facts, a capabil-
+ity that Dense-STARD has acquired through fine-
+tuning. It has been trained to associate the life
+issues presented in queries with relevant legal arti-
+cles. However, Dense-STARD’s training set is con-
+fined to just over one thousand query-article pairs.
+Consequently, its recall rates remain suboptimal,
+with Recall@100 at only 90.65%. These findings
+underscore the necessity for further exploration in
+this field.
+7
+Retrieval Augmented Generation
+Experiment
+7.1
+Selected Benchmark
+We select two datasets encompassing three tasks
+for our RAG experiment:
+• JecQA (Zhong et al., 2020) is the most ex-
+tensive multiple-choice dataset within the Chi-
+10664
+=== [p.8] ===
+Table 4: The overall experimental results of three LLMs
+on the JecQA benchmark. We report accuracy as the
+evaluation metric. The best results are in bold and the
+second best results are underlined.
+Retriever
+JQA-CA JQA-KD CAIL
+Baichuan
+w/o RAG
+0.231
+0.266
+0.850
+BM25
+0.233
+0.288
+0.766
+Dense-STARD
+0.238
+0.291
+0.816
+chatGLM
+w/o RAG
+0.185
+0.194
+0.636
+BM25
+0.189
+0.224
+0.646
+Dense-STARD
+0.200
+0.237
+0.684
+chatGPT
+w/o RAG
+0.187
+0.206
+0.496
+BM25
+0.233
+0.293
+0.528
+Dense-STARD
+0.193
+0.252
+0.503
+nese legal field. This dataset includes two dis-
+tinct tasks: Knowledge-Driven Questions (KD-
+questions) and Case-Analysis Questions (CA-
+questions), encompassing a total of 26,365 ques-
+tions. All the questions are multi-select, meaning
+that more than one option can be correct.
+• CAIL 2018 (Xiao et al., 2018) is a large-scale
+Chinese legal dataset designed for judgment pre-
+diction with over 2.6 million criminal cases. This
+dataset contains detailed annotations of judgment
+results, including applicable law articles, specific
+charges, and prescribed prison terms. We select
+the Charge Prediction task of CAIL 2018 and use
+prediction Accuracy as the evaluation metric.
+7.2
+Selected LLMs and Settings
+Our selected LLMs are introduced in Appendix D.
+The generation configuration is detailed in Ap-
+pendix E. The prompt template for LLMs is de-
+tailed in Appendix F.
+7.3
+Experimental Results
+Table 4 presents the results of the LLM’s per-
+formance with and without the use of Retrieval-
+Augmented Generation (RAG). In the scenario
+without RAG, the LLM directly outputs the correct
+options based on the question. In the RAG scenario,
+the retrieval model (BM25 or Dense-STARD) re-
+calls the top 10 relevant statutory articles from the
+corpus based on the question. The retrieved statu-
+tory articles are then integrated into a meticulously
+designed prompt template (detailed in Appendix F).
+The experimental results reveal that using the
+STARD corpus as the external knowledge base for
+the RAG significantly enhances the performance
+of large language models (LLMs) and underscores
+the value of our proposed dataset in improving
+the effectiveness of LLMs on legal tasks. The re-
+sults also reveal that different LLMs have unique
+preferences for retrievers. For the Baichuan and
+ChatGLM models, a fine-tuned dense retriever sur-
+passes BM25, indicating that these models benefit
+from dense retrievers’ high recall rates. However,
+this advantage is not observed with the ChatGPT
+model, where BM25 outperforms the fine-tuned
+dense retriever. This suggests that the performance
+of RAG is highly dependent on the preferences of
+the LLM regarding the retriever. The experimental
+results on the CAIL 2018 dataset align with those
+observed for JecQA, with one notable exception:
+the performance of the Baichuan model without
+RAG. In this setting, Baichuan’s performance is
+markedly superior to that of chatGLM, chatGPT,
+and Baichuan with RAG. We hypothesize that this
+exception arises from the Baichuan model’s uti-
+lization of the CAIL 2018 dataset during its pre-
+training phase, leading to a direct answer accuracy
+rate that is even 81% higher than that of chatGPT.
+8
+Related Work
+CAIL 2018 (Xiao et al., 2018; Zhong et al., 2018)
+competitions conduct law statute retrieval work us-
+ing formal legal judgment documents. The queries
+in the dataset originate from the “Court’s Find-
+ings” part of the judgments, and the candidates
+are statute articles of Chinese Criminal Law. The
+annual COLIEE competitions introduce a series
+of statute retrieval datasets using the questions ex-
+tracted from the Japanese legal bar exams (Goebel
+et al., 2023; Kim et al., 2022; Rabelo et al., 2022; Li
+et al., 2023c,d). These tasks aim to retrieve relevant
+statute law from the Japanese Civil Code Article ac-
+cording to questions from bar exams. AILA (Bhat-
+tacharya et al., 2019) competitions also introduce
+a series of statute retrieval datasets. The queries
+from AILA are legal judgment documents from the
+Supreme Court of India. The candidate statutes are
+part of the set of statute articles from Indian law.
+BSARD (Louis and Spanakis, 2021) is a statutory
+article retrieval dataset in French with candidate
+articles from a 22,600+ Belgian law articles corpus.
+In the studies of the Legal Statute Identifi-
+cation (LSI) (Zhong et al., 2018; Paul et al.,
+2022; Chalkidis et al., 2021), finding the rele-
+vant statute is approached as a classification prob-
+lem, where each statute is treated as a unique la-
+bel. LADAN (Xu et al., 2020) is an LSI method
+10665
+=== [p.9] ===
+that uses a graph neural network and attention
+mechanism to distinguish confusing law articles.
+LeSICiN (Paul et al., 2022) utilizes both textual
+content and legal citation networks to identify rele-
+vant legal statutes.
+Legal QA tasks also aim to fulfill the public’s
+demand for legal information (Do et al., 2017).
+LLeQA (Louis et al., 2024) is a French long-
+form legal QA dataset comprising 1,868 expert-
+annotated legal questions. GerLayQA (Büttner and
+Habernal, 2024) is a question-answering dataset
+comprising 21k laymen’s legal questions paired
+with answers from lawyers and grounded in con-
+crete law book paragraphs.
+9
+Conclusion
+We present STARD, a new benchmark consisting
+of 1,543 questions from the general public. To
+the best of our knowledge, STARD is the first Chi-
+nese statutes retrieval dataset tailored for the gen-
+eral public. Moreover, we propose an annotation
+framework to improve the accuracy and relevance
+of statute retrieval annotation, which offers valu-
+able guidelines for future legal annotations. Our
+experiments across various retrieval models high-
+lighted the complexities of non-professional statute
+retrieval, indicating the necessity for further explo-
+ration. Additionally, we demonstrated that inte-
+grating the STARD dataset significantly boosts the
+performance of LLMs in legal tasks, showcasing
+its potential to enhance legal AI applications.
+10
+Limitations
+We acknowledge the limitations of this paper. One
+of the primary limitations is that our dataset is
+specifically designed around the Chinese legal sys-
+tem, inherently limiting its direct applicability to
+legal systems outside of this context. Despite our
+discussions on potential methodologies for adapt-
+ing STARD to other civil law systems, such an
+expansion necessitates creating and annotating new
+datasets tailored to those systems’ distinct legal
+frameworks and statutes. Thus, our future work
+will be dedicated to developing additional datasets
+that encompass a broader range of civil law systems.
+This endeavor aims to extend the utility of our work
+and foster further research and development in the
+domain of legal statute retrieval, ensuring broader
+applicability and relevance across different legal
+landscapes.
+11
+Ethics Statement
+In the framework of this research, ethical consider-
+ations have been paramount from the initial stages,
+underscoring our commitment to the responsible
+advancement and application of artificial intelli-
+gence technologies. Our adherence to the princi-
+ples of open research and the critical importance of
+reproducibility have compelled us to make all as-
+sociated models, datasets, and codebases publicly
+available on GitHub.
+Moreover, in the development of our dataset, we
+have paid scrupulous attention to privacy and re-
+spect for individuals’ rights. Given the inherently
+sensitive nature of legal consultations, we have dili-
+gently anonymized every query within the STARD
+dataset. This process involved the removal of any
+potential identifiers related to entities, corporations,
+or individuals, thereby safeguarding privacy and
+preempting the possibility of data misuse.
+References
+Qingyao Ai, Keping Bi, Jiafeng Guo, and W Bruce
+Croft. 2018. Learning a deep listwise context model
+for ranking refinement. In The 41st international
+ACM SIGIR conference on research & development
+in information retrieval, pages 135–144.
+Iz Beltagy, Matthew E Peters, and Arman Cohan. 2020.
+Longformer: The long-document transformer. arXiv
+preprint arXiv:2004.05150.
+Paheli Bhattacharya, Kripabandhu Ghosh, Saptarshi
+Ghosh, Arindam Pal, Parth Mehta, Arnab Bhat-
+tacharya, and Prasenjit Majumder. 2019. Fire 2019
+aila track: Artificial intelligence for legal assistance.
+In Proceedings of the 11th annual meeting of the fo-
+rum for information retrieval evaluation, pages 4–6.
+Tom Brown, Benjamin Mann, Nick Ryder, Melanie
+Subbiah, Jared D Kaplan, Prafulla Dhariwal, Arvind
+Neelakantan, Pranav Shyam, Girish Sastry, Amanda
+Askell, et al. 2020. Language models are few-shot
+learners. Advances in neural information processing
+systems, 33:1877–1901.
+Marius Büttner and Ivan Habernal. 2024. Answering
+legal questions from laymen in german civil law sys-
+tem. In Proceedings of the 18th Conference of the
+European Chapter of the Association for Computa-
+tional Linguistics (Volume 1: Long Papers), pages
+2015–2027.
+Zhe Cao, Tao Qin, Tie-Yan Liu, Ming-Feng Tsai, and
+Hang Li. 2007. Learning to rank: from pairwise
+approach to listwise approach. In Proceedings of the
+24th international conference on Machine learning,
+pages 129–136.
+10666
+=== [p.10] ===
+Ilias Chalkidis, Abhik Jana, Dirk Hartung, Michael
+Bommarito, Ion Androutsopoulos, Daniel Martin
+Katz, and Nikolaos Aletras. 2021. Lexglue: A bench-
+mark dataset for legal language understanding in en-
+glish. arXiv preprint arXiv:2110.00976.
+Jia Chen, Haitao Li, Weihang Su, Qingyao Ai, and
+Yiqun Liu. 2023.
+Thuir at wsdm cup 2023 task
+1:
+Unbiased learning to rank.
+arXiv preprint
+arXiv:2304.12650.
+Xuesong Chen, Ziyi Ye, Xiaohui Xie, Yiqun Liu, Xi-
+aorong Gao, Weihang Su, Shuqi Zhu, Yike Sun, Min
+Zhang, and Shaoping Ma. 2022. Web search via an
+efficient and effective brain-machine interface. In
+Proceedings of the Fifteenth ACM International Con-
+ference on Web Search and Data Mining, pages 1569–
+1572.
+Jacob Cohen. 1960. A coefficient of agreement for
+nominal scales. Educational and psychological mea-
+surement, 20(1):37–46.
+Yiming Cui, Wanxiang Che, Ting Liu, Bing Qin, and
+Ziqing Yang. 2021. Pre-training with whole word
+masking for chinese bert.
+IEEE/ACM Transac-
+tions on Audio, Speech, and Language Processing,
+29:3504–3514.
+Phong-Khac Do, Huy-Tien Nguyen, Chien-Xuan Tran,
+Minh-Tien Nguyen, and Minh-Le Nguyen. 2017.
+Legal question answering using ranking svm and
+deep convolutional neural network. arXiv preprint
+arXiv:1703.05320.
+Zhengxiao Du, Yujie Qian, Xiao Liu, Ming Ding,
+Jiezhong Qiu, Zhilin Yang, and Jie Tang. 2022. Glm:
+General language model pretraining with autoregres-
+sive blank infilling. In Proceedings of the 60th An-
+nual Meeting of the Association for Computational
+Linguistics (Volume 1: Long Papers), pages 320–335.
+Yan Fang, Jingtao Zhan, Qingyao Ai, Jiaxin Mao,
+Weihang Su, Jia Chen, and Yiqun Liu. 2024.
+Scaling laws for dense retrieval.
+arXiv preprint
+arXiv:2403.18684.
+Luyu Gao and Jamie Callan. 2021a.
+Condenser: a
+pre-training architecture for dense retrieval. arXiv
+preprint arXiv:2104.08253.
+Luyu Gao and Jamie Callan. 2021b. Unsupervised cor-
+pus aware language model pre-training for dense pas-
+sage retrieval. arXiv preprint arXiv:2108.05540.
+Luyu Gao, Zhuyun Dai, and Jamie Callan. 2021. Re-
+think training of bert rerankers in multi-stage retrieval
+pipeline. In European Conference on Information
+Retrieval, pages 280–286. Springer.
+Randy Goebel, Yoshinobu Kano, Mi-Young Kim, Ju-
+liano Rabelo, Ken Satoh, and Masaharu Yoshioka.
+2023. Summary of the competition on legal informa-
+tion, extraction/entailment (coliee) 2023. In Proceed-
+ings of the Nineteenth International Conference on
+Artificial Intelligence and Law, pages 472–480.
+Vladimir Karpukhin, Barlas O˘guz, Sewon Min, Patrick
+Lewis, Ledell Wu, Sergey Edunov, Danqi Chen, and
+Wen-tau Yih. 2020.
+Dense passage retrieval for
+open-domain question answering. arXiv preprint
+arXiv:2004.04906.
+Mi-Young Kim, Juliano Rabelo, Randy Goebel, Masa-
+haru Yoshioka, Yoshinobu Kano, and Ken Satoh.
+2022. Coliee 2022 summary: Methods for legal doc-
+ument retrieval and entailment. In JSAI International
+Symposium on Artificial Intelligence, pages 51–67.
+Springer.
+Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio
+Petroni, Vladimir Karpukhin, Naman Goyal, Hein-
+rich Küttler, Mike Lewis, Wen-tau Yih, Tim Rock-
+täschel, et al. 2020. Retrieval-augmented generation
+for knowledge-intensive nlp tasks. Advances in Neu-
+ral Information Processing Systems, 33:9459–9474.
+Haitao Li, Qingyao Ai, Jia Chen, Qian Dong, Yueyue
+Wu, Yiqun Liu, Chong Chen, and Qi Tian. 2023a.
+Sailer: structure-aware pre-trained language model
+for legal case retrieval. In Proceedings of the 46th
+International ACM SIGIR Conference on Research
+and Development in Information Retrieval, pages
+1035–1044.
+Haitao Li, Jia Chen, Weihang Su, Qingyao Ai, and
+Yiqun Liu. 2023b. Towards better web search perfor-
+mance: Pre-training, fine-tuning and learning to rank.
+arXiv preprint arXiv:2303.04710.
+Haitao Li, Weihang Su, Changyue Wang, Yueyue Wu,
+Qingyao Ai, and Yiqun Liu. 2023c. Thuir@ col-
+iee 2023: Incorporating structural knowledge into
+pre-trained language models for legal case retrieval.
+arXiv preprint arXiv:2305.06812.
+Haitao Li, Changyue Wang, Weihang Su, Yueyue Wu,
+Qingyao Ai, and Yiqun Liu. 2023d. Thuir@ coliee
+2023: More parameters and legal knowledge for legal
+case entailment. arXiv preprint arXiv:2305.06817.
+Qingquan Li, Yiran Hu, Feng Yao, Chaojun Xiao,
+Zhiyuan Liu, Maosong Sun, and Weixing Shen.
+2023e. Muser: A multi-view similar case retrieval
+dataset. In Proceedings of the 32nd ACM Interna-
+tional Conference on Information and Knowledge
+Management, pages 5336–5340.
+Bulou Liu, Yiran Hu, Qingyao Ai, Yiqun Liu, Yueyue
+Wu, Chenliang Li, and Weixing Shen. 2023. Lever-
+aging event schema to ask clarifying questions for
+conversational legal case retrieval. In Proceedings of
+the 32nd ACM International Conference on Informa-
+tion and Knowledge Management, pages 1513–1522.
+Michael Livingston. 1990. Congress, the courts, and
+the code: Legislative history and the interpretation of
+tax statutes. Tex. L. Rev., 69:819.
+Antoine Louis and Gerasimos Spanakis. 2021. A statu-
+tory article retrieval dataset in french. arXiv preprint
+arXiv:2108.11792.
+10667
+=== [p.11] ===
+Antoine Louis, Gijs van Dijck, and Gerasimos Spanakis.
+2024. Interpretable long-form legal question answer-
+ing with retrieval-augmented large language models.
+In Proceedings of the AAAI Conference on Artificial
+Intelligence, volume 38, pages 22266–22275.
+Shuqi Lu, Di He, Chenyan Xiong, Guolin Ke, Waleed
+Malik, Zhicheng Dou, Paul Bennett, Tie-Yan Liu,
+and Arnold Overwijk. 2021. Less is more: Pretrain a
+strong siamese encoder for dense text retrieval using
+a weak decoder. In Proceedings of the 2021 Con-
+ference on Empirical Methods in Natural Language
+Processing, pages 2780–2791.
+Yixiao Ma, Yueyue Wu, Weihang Su, Qingyao Ai,
+and Yiqun Liu. 2023. Caseencoder: A knowledge-
+enhanced pre-trained model for legal case encoding.
+arXiv preprint arXiv:2305.05393.
+Shounak Paul, Pawan Goyal, and Saptarshi Ghosh. 2022.
+Lesicin: A heterogeneous graph-based approach for
+automatic legal statute identification from indian le-
+gal documents. In Proceedings of the AAAI Con-
+ference on Artificial Intelligence, volume 36, pages
+11139–11146.
+Jay M Ponte and W Bruce Croft. 2017. A language
+modeling approach to information retrieval. In ACM
+SIGIR Forum, volume 51, pages 202–208. ACM New
+York, NY, USA.
+Juliano Rabelo, Randy Goebel, Mi-Young Kim, Yoshi-
+nobu Kano, Masaharu Yoshioka, and Ken Satoh.
+2022. Overview and discussion of the competition on
+legal information extraction/entailment (coliee) 2021.
+The Review of Socionetwork Strategies, 16(1):111–
+133.
+Stephen Robertson, Hugo Zaragoza, et al. 2009. The
+probabilistic relevance framework: Bm25 and be-
+yond. Foundations and Trends® in Information Re-
+trieval, 3(4):333–389.
+Weihang Su, Qingyao Ai, Xiangsheng Li, Jia Chen,
+Yiqun Liu, Xiaolong Wu, and Shengluan Hou. 2024a.
+Wikiformer: Pre-training with structured information
+of wikipedia for ad-hoc retrieval. In Proceedings
+of the AAAI Conference on Artificial Intelligence,
+volume 38, pages 19026–19034.
+Weihang Su, Qingyao Ai, Yueyue Wu, Yixiao Ma,
+Haitao Li, and Yiqun Liu. 2023a.
+Caseformer:
+Pre-training for legal case retrieval. arXiv preprint
+arXiv:2311.00333.
+Weihang Su, Xiangsheng Li, Yiqun Liu, Min Zhang,
+and Shaoping Ma. 2023b. Thuir2 at ntcir-16 session
+search (ss) task. arXiv preprint arXiv:2307.00250.
+Weihang Su, Yichen Tang, Qingyao Ai, Zhijing Wu,
+and Yiqun Liu. 2024b. Dragin: Dynamic retrieval
+augmented generation based on the real-time informa-
+tion needs of large language models. arXiv preprint
+arXiv:2403.10081.
+Weihang Su, Changyue Wang, Qingyao Ai, Yiran Hu,
+Zhijing Wu, Yujia Zhou, and Yiqun Liu. 2024c. Un-
+supervised real-time hallucination detection based on
+the internal states of large language models. arXiv
+preprint arXiv:2403.06448.
+Chaojun Xiao, Xueyu Hu, Zhiyuan Liu, Cunchao Tu,
+and Maosong Sun. 2021. Lawformer: A pre-trained
+language model for chinese legal long documents. AI
+Open, 2:79–84.
+Chaojun Xiao, Haoxi Zhong, Zhipeng Guo, Cunchao Tu,
+Zhiyuan Liu, Maosong Sun, Yansong Feng, Xianpei
+Han, Zhen Hu, Heng Wang, et al. 2018. Cail2018:
+A large-scale legal dataset for judgment prediction.
+arXiv preprint arXiv:1807.02478.
+Nuo Xu, Pinghui Wang, Long Chen, Li Pan, Xiaoyan
+Wang, and Junzhou Zhao. 2020. Distinguish confus-
+ing law articles for legal judgment prediction. arXiv
+preprint arXiv:2004.02557.
+Aiyuan Yang, Bin Xiao, Bingning Wang, Borong Zhang,
+Ce Bian, Chao Yin, Chenxu Lv, Da Pan, Dian Wang,
+Dong Yan, et al. 2023. Baichuan 2: Open large-scale
+language models. arXiv preprint arXiv:2309.10305.
+Ziyi Ye, Xiaohui Xie, Qingyao Ai, Yiqun Liu, Zhihong
+Wang, Weihang Su, and Min Zhang. 2024. Relevance
+feedback with brain signals. ACM Transactions on
+Information Systems, 42(4):1–37.
+Yue Zhang, Yafu Li, Leyang Cui, Deng Cai, Lemao Liu,
+Tingchen Fu, Xinting Huang, Enbo Zhao, Yu Zhang,
+Yulong Chen, et al. 2023. Siren’s song in the ai ocean:
+a survey on hallucination in large language models.
+arXiv preprint arXiv:2309.01219.
+Haoxi Zhong, Chaojun Xiao, Zhipeng Guo, Cunchao Tu,
+Zhiyuan Liu, Maosong Sun, Yansong Feng, Xianpei
+Han, Zhen Hu, Heng Wang, et al. 2018. Overview
+of cail2018: Legal judgment prediction competition.
+arXiv preprint arXiv:1810.05851.
+Haoxi Zhong, Chaojun Xiao, Cunchao Tu, Tianyang
+Zhang, Zhiyuan Liu, and Maosong Sun. 2020. Jec-
+qa: a legal-domain question answering dataset. In
+Proceedings of the AAAI conference on artificial in-
+telligence, volume 34, pages 9701–9708.
+Xue Zongyue, Liu Huanghai, Hu Yiran, Kong Kangle,
+Wang Chenlu, Liu Yun, and Shen Weixing. 2023.
+Leec: A legal element extraction dataset with an ex-
+tensive domain-specific label system. arXiv preprint
+arXiv:2310.01271.
+A
+License and Permissions
+STARD is available under the MIT License. This
+permissive license was chosen to encourage the
+widespread use and adaptation of our resources,
+allowing for both academic and commercial ap-
+plications without significant restrictions. For de-
+tailed terms and conditions, including how the
+10668
+=== [p.12] ===
+dataset, code, and models can be used, modified,
+and shared, please refer to the documentation pro-
+vided in our GitHub repository8.
+B
+Implementation Details of Retrieval
+Baselines
+• For the implementation of traditional IR meth-
+ods QL and BM25, we use the Pyserini toolkit:
+https://github.com/castorini/pyserini.
+• For the implementation of Chinese-RoBERTa-
+WWM, we directly use their models released on
+Huggingface9. As SEED and Condenser have no
+available Chinese versions, we reproduce their
+work on the Chinese Wikipedia based on their
+open-source training code and follow all settings
+provided in their paper (Lu et al., 2021; Gao and
+Callan, 2021a).
+• For the implementation of Lawformer (Xiao
+et al., 2021) and SAILER (Li et al., 2023a), we di-
+rectly use the checkpoints released on the official
+GitHub10.
+C
+Evaluation Metrics
+Following the setting of previous works (Li et al.,
+2023b; Chen et al., 2023; Su et al., 2023b; Ma et al.,
+2023; Chen et al., 2022; Ye et al., 2024), we use
+Mean Reciprocal Rank and Recall as evaluation
+metrics.
+The Mean Reciprocal Rank is a statistical mea-
+sure used to evaluate the performance of a query-
+based system, where the primary goal is to retrieve
+the highest-ranked item. MRR calculates the aver-
+age of the reciprocal ranks of results for a sample
+of queries. The reciprocal rank of a query response
+is the multiplicative inverse of the rank of the first
+correct answer:
+MRR = 1
+Q
+Q
+X
+i=1
+1
+ranki
+(1)
+where Q is the number of queries, and ranki is the
+rank position of the first relevant document for the
+i-th query.
+Recall measures the ability of a model to retrieve
+all relevant instances in a dataset. It is defined as
+the ratio of the number of relevant items correctly
+8https://github.com/oneal2000/STARD/tree/main
+9https://huggingface.co/hfl/chinese-roberta-wwm-ext
+10https://github.com/CSHaitao/SAILER/,
+https://github.com/thunlp/LegalPLMs
+retrieved to the total number of relevant items in
+the database, which is critical in scenarios where
+missing any relevant item could be costly:
+Recall = Number of relevant items retrieved
+Total number of relevant items
+(2)
+D
+Selected LLMs
+Our selected LLMs are listed as follows:
+• Baichuan (Yang et al., 2023) is a series of large-
+scale multilingual language models, trained from
+scratch on 2.6 trillion tokens. We choose the
+Baichuan-2-Base-13B model which is widely
+used in bilingual Chinese-English scenarios.
+• ChatGLM (Du et al., 2022) is a series of gen-
+erative language models optimized for Chinese
+question answering and dialogue. We choose
+ChatGLM3-6B with 6.2 billion parameters.
+• ChatGPT (Brown et al., 2020) is a series of
+large language models developed by OpenAI,
+including several versions. Among these, we
+choose GPT-3.5-turbo, which is identified as the
+most advanced GPT-3.5 model.
+E
+Generation Configuration
+We obtain responses from chatGPT by accessing
+its official API 11. For Baichuan and chatGLM,
+we directly download model parameters from each
+model’s official Hugging Face repositories and use
+the official Python code provided by Hugging Face
+to obtain the response. We use the official default
+configurations provided by each model for the gen-
+eration configuration.
+F
+Prompt Template for RAG
+Previous studies have shown that RAG can signifi-
+cantly improve the performance of LLMs (Lewis
+et al., 2020; Su et al., 2024b) and mitigate the hallu-
+cination phenomenon in LLMs (Zhang et al., 2023;
+Su et al., 2024c). In our RAG experiments, we
+employed the following prompt template for the
+LLM:
+11https://platform.openai.com/docs/guides/text-
+generation/chat-completions-api
+10669
+=== [p.13] ===
+Prompt 1
+Please answer the question based on the
+following statute articles:
+Article 1: [Content]
+......
+Article 10: [Content]
+Please answer the following question based
+on the provided articles and your knowl-
+edge, prioritizing the provided knowledge.
+Note that the provided articles might not
+include those relevant to the question.
+Question: xxx
+G
+Fine-tuning Process
+We initialize the model with Chinese-Roberta-
+WWM (Cui et al., 2021). We use the dual-encoder
+architecture (Karpukhin et al., 2020; Fang et al.,
+2024; Su et al., 2023a) to compute the dot product
+between two embedding vectors as the relevance
+score:
+X(c) = [CLS]q[SEP],
+(3)
+X(s) = [CLS]s[SEP],
+(4)
+Emb(X) = transformer[CLS](X),
+(5)
+S(q, s) = Emb(X(q))⊤· Emb(X(s)),
+(6)
+where
+q
+is
+the
+query,
+s
+is
+the
+statute,
+transformer[CLS](·)
+outputs
+a
+contextual-
+ized vector for each token and we select the
+"[CLS]" vector as the embedding vector of the
+input. In Equation 6, we regard the inner products
+of embeddings as the relevance score S.
+For the loss function, we use the Softmax Cross
+Entropy Loss (Cao et al., 2007; Ai et al., 2018;
+Gao et al., 2021; Su et al., 2024a) to optimize the
+retrieval model, which is defined as:
+L(Q, s+, N)
+= −log
+exp(S(Q, s+))
+exp(S(Q, s+) + P
+s−∈N exp(S(Q, s−)),
+(7)
+where S is the relevance score function which is
+defined in Equation 6. Q is the query, s+ is the rel-
+evant statute and N is the set of irrelevant statutes
+randomly sampled from the corpus.
+H
+Training Process of the Dense Retrieval
+Model Distilled from GPT-4
+We introduce an approach utilizing GPT-4 to
+generate labels for question-article pairs.
+Our
+methodology leverages GPT-4’s capabilities to au-
+tonomously generate non-professional legal ques-
+tions from statutory articles, thus enabling the pair-
+ing of these questions with their corresponding
+articles without the need for human supervision.
+The process begins by selecting statutory arti-
+cles from the corpus of STARD. GPT-4 is then
+tasked with generating a legal question based on
+the content of each article. This is achieved by pro-
+viding GPT-4 with a specific prompt designed to
+simulate a scenario in which an individual without
+prior legal knowledge seeks advice. The prompt
+instructs GPT-4 to formulate a question that such
+an individual might ask, ensuring that the question
+is directly related to and explainable by the content
+of the statutory article provided. The prompt used
+in this study is structured as follows:
+Prompt 1
+Given the following known statutory article:
+[Content of the statutory article]
+Imagine a scenario in which a person
+without legal knowledge is seeking legal
+advice. Please generate a question that this
+party might ask.
+Note: The question must be fully explain-
+able using the statutory article mentioned
+above, and remember that the person who
+proposes this question has never read the
+legal articles mentioned before.
+Each interaction with GPT-4 results in the creation
+of a query-statute pair (q, a+
+i ), where q is the gen-
+erated question and a+
+i is the positive statute article
+to which the question is relevant.
+Following the generation of query-statute pairs,
+we employ a contrastive learning framework to
+train a dense retriever model. We use the same
+relevance scoring function S, as detailed in Equa-
+tion 6, which assesses the relevance of articles to
+the questions.
+In the training phase, for each query Q paired
+with a positive article a+
+i , we also sample 8 nega-
+tive articles from the corpus. These negative sam-
+10670
+=== [p.14] ===
+ples are not relevant to the query and serve as the
+negative set. The loss function employed, repre-
+sented by Equation 8, is designed to maximize the
+score of the positive article relative to the scores of
+the negative samples, effectively training the model
+to distinguish between relevant and non-relevant
+articles accurately.
+L(Q, a+
+i , N)
+= −log
+exp(S(Q, a+
+i ))
+exp(S(Q, a+
+i ) + P
+a−∈N exp(S(Q, a−)), (8)
+where S is the relevance score function, which is
+defined in Equation 6, and N is the set of irrelevant
+statutes randomly sampled from the corpus.
+I
+Training Process of the LSI Classifier
+We apply a fine-tuned classifier approach to eval-
+uate the performance of Legal Statute Identi-
+fication (LSI) methods, as defined in previous
+works (Zhong et al., 2018; Paul et al., 2022). LSI
+is framed as a classification task where each legal
+statute is treated as a distinct label. This transforma-
+tion allows for the classification of legal documents
+or queries by associating them with the relevant
+statutory labels.
+Our methodology utilizes a transformer-based
+classification model, specifically fine-tuned on the
+STARD dataset within a five-fold cross-validation
+framework.
+We initiate our model using the
+Chinese-Roberta-WWM (Cui et al., 2021) for the
+transformer’s parameters, while the parameters for
+the outermost Multi-Layer Perceptron (MLP) layer
+are initialized randomly. The process of input trans-
+formation and subsequent classification is defined
+by the following equations:
+X(q) = [CLS]q[SEP],
+(9)
+L(q) = MLP(transformer[CLS](X(q))),
+(10)
+where q represents a query from the STARD
+dataset. The function transformer[CLS](·) first
+encodes the input using the transformer architec-
+ture, focusing on the output of the [CLS] token’s
+embedding vector. The MLP(·) then maps this
+embedding onto the space of statutory labels L.
+10671

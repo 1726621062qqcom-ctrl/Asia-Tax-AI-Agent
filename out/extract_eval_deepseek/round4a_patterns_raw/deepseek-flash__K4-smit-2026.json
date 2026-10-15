@@ -1,0 +1,303 @@
+{
+ "model": "deepseek-flash",
+ "case": "K4-smit-2026",
+ "samples": 2,
+ "k": 3,
+ "locate": "retrieval",
+ "patterns": true,
+ "dense": true,
+ "temperature": 0.7,
+ "prompt_version": "2026-10-14c",
+ "rows": [
+  {
+   "path": "roles.ULT.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "=== [pdf p.5] ===\nDEFINITIONS\n— 3 —\n“Target Interest”\nthe RMB100 million registered capital in Shenzhen Giga \nsubscribed by the Vendor, representing 7.8125% of the \ntotal registered capital and 8.9835% of the total paid-in \ncapital of Shenzhen Giga\n“Vendor”\nSMIT Group Limited*（國微集團（深圳）有限公司）, a \ncomp",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1
+   }
+  },
+  {
+   "path": "roles.ULT.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "=== [pdf p.5] ===\nDEFINITIONS\n— 3 —\n“Target Interest”\nthe RMB100 million registered capital in Shenzhen Giga \nsubscribed by the Vendor, representing 7.8125% of the \ntotal registered capital and 8.9835% of the total paid-in \ncapital of Shenzhen Giga\n“Vendor”\nSMIT Group Limited*（國微集團（深圳）有限公司）, a \ncomp",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1
+   }
+  },
+  {
+   "path": "roles.ULT.attrs.cit_rate",
+   "kind": "disclosed",
+   "gold": 15.0,
+   "value": 15.0,
+   "status": "correct",
+   "means": "model",
+   "quote": "This is calculated based on a 15% preferential enterprise income tax rate, which is applicable to the valid High/New Technology Enterprise certificate as recognised by the respective PRC tax authorities under the New Enterprise Income Tax Law.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 2,
+    "nulls": 1,
+    "rejects": 0,
+    "agree": 0.667,
+    "quote_len": 243,
+    "figures_in_quote": 1,
+    "score": 0.03306
+   }
+  },
+  {
+   "path": "roles.OP.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "Huang Xueliang（黃學良）, the chairman, chief \nexecutive officer, executive Director and controlling \nshareholder of the Company\n“PRC”\nthe People’s Republic of China, which shall, for the \npurposes of this circular, exclude Hong Kong Special \nAdministrative Region of the PRC, Macao Special \nAdministrativ",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1
+   }
+  },
+  {
+   "path": "roles.OP.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "Huang Xueliang（黃學良）, the chairman, chief \nexecutive officer, executive Director and controlling \nshareholder of the Company\n“PRC”\nthe People’s Republic of China, which shall, for the \npurposes of this circular, exclude Hong Kong Special \nAdministrative Region of the PRC, Macao Special \nAdministrativ",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1
+   }
+  },
+  {
+   "path": "roles.BUYER.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "Huang Xueliang（黃學良）, the chairman, chief \nexecutive officer, executive Director and controlling \nshareholder of the Company\n“PRC”\nthe People’s Republic of China, which shall, for the \npurposes of this circular, exclude Hong Kong Special \nAdministrative Region of the PRC, Macao Special \nAdministrativ",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1
+   }
+  },
+  {
+   "path": "roles.BUYER.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "Huang Xueliang（黃學良）, the chairman, chief \nexecutive officer, executive Director and controlling \nshareholder of the Company\n“PRC”\nthe People’s Republic of China, which shall, for the \npurposes of this circular, exclude Hong Kong Special \nAdministrative Region of the PRC, Macao Special \nAdministrativ",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1
+   }
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "kind": "disclosed",
+   "gold": 7.8125,
+   "value": null,
+   "status": "conflict",
+   "means": "pattern",
+   "quote": null,
+   "rejected": [
+    "conflict: 10.0 / 7.8125 / 19.5027 / 0.99"
+   ],
+   "conflict": [
+    {
+     "value": 10.0,
+     "doc": "K4-smit-2026",
+     "quote": "Should there be any inconsistency \nbetween the Chinese and English versions, the English version shall prevail.\nIn this circular, unless the context otherwise requires, the following expressions have the \nfollowing meanings:\n“Board”\nthe board of Directors\n“Business Day”\na day (other than any Saturday or Sunday) on which banks \nin the PRC are generally open for business throughout their \nnormal business hours\n“Company”\nSMIT Holdings Limited（國微控股有限公司）, a company \nincorporated in the Cayman Islands with limited liability \nand the shares of which are listed on the Main Board of the \nStock Exchange (Stock Code: 2239)\n“Completion”\nthe completion of the Equity Transfer Agreement\n“Conditions Precedent”\nthe conditions precedent to the payment of the Second \nInstalment\n“connected person(s)”\nhas the meaning ascribed thereto under the Listing Rules\n“Consideration”\nthe consideration in the sum of approximately RMB266.2 \nmillion for the Disposal\n“Deposit”\nthe deposit to the Disposal which is an amount representing \n10% of the Consideration\n“Director(s)”\nthe director(s) of the Company\n“Disposal”\nthe transfer of the Target Interest from the Vendor to the \nPurchaser in accordance with the terms of the Equity \nTransfer Agreement\n“EDA”\nelectronic design automation\n“Equity Transfer Agreement”\nthe equity transfer agreement dated 2 April 2026 entered \ninto between the Vendor and the Purchaser in relation to \nthe Disposal\n“Group”\nthe Company and its subsidiaries\n“Hong Kong”\nHong Kong Special Administrative Region of the PRC",
+     "origin": "same document",
+     "modality": "table",
+     "kind": "number",
+     "explicit": true
+    },
+    {
+     "value": 7.8125,
+     "doc": "K4-smit-2026",
+     "quote": "=== [pdf p.5] ===\nDEFINITIONS\n— 3 —\n“Target Interest”\nthe RMB100 million registered capital in Shenzhen Giga \nsubscribed by the Vendor, representing 7.8125% of the \ntotal registered capital and 8.9835% of the total paid-in \ncapital of Shenzhen Giga\n“Vendor”\nSMIT Group Limited*（國微集團（深圳）有限公司）, a \ncompany incorporated under the laws of the PRC with \nlimited liability and a wholly-owned subsidiary of the \nCompany\n“%”\nper cent\nIn this circular, unless the context requires otherwise, the terms “associate(s)”, “connected \nperson(s)”, “percentage ratio(s)”, “substantial shareholder(s)” and “subsidiary(ies)”, shall have \nthe meaning given to such terms in the Listing Rules.\n*  for identification purpose only",
+     "origin": "same document",
+     "modality": "table",
+     "kind": "number",
+     "explicit": true
+    },
+    {
+     "value": 19.5027,
+     "doc": "K4-smit-2026",
+     "quote": "=== [pdf p.11] ===\nLETTER FROM THE BOARD\n— 9 —\nShanghai State Fund is owned as to approximately 19.5027% by SAIC Motor (Group) Co., \nLtd.*（上海汽車工業（集團）有限公司）, 19.5027% by Shanghai State-owned Capital Investment \nCo., Ltd.*（上海國有資本投資有限公司）and other shareholders each holding not more than 10% \ninterest in Shanghai State Fund.\nBoth of SAIC Motor (Group) Co., Ltd.*（上海汽車工業（集團）有限公司）and Shanghai \nState-owned Capital Investment Co., Ltd.*（上海國有資本投資有限公司）are controlled by the \nState-owned Assets Supervision and Administration Commission of Shanghai（上海市國有資產監\n督管理委員會）.\nTo the best of the Directors’ knowledge, information and belief, having made all reasonable \nenquiries, the Purchaser and its ultimate beneficial owner are Independent Third Parties.\nThe Vendor\nThe Vendor is a wholly-owned subsidiary of the Company incorporated in the PRC with \nlimited liability.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    },
+    {
+     "value": 0.99,
+     "doc": "K4-smit-2026",
+     "quote": "On 21 May 2019, the \nVendor first acquired RMB10 million fully paid-up capital in Shenzhen Giga, representing \napproximately 0.99% equity interest in Shenzhen Giga at the time.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    }
+   ],
+   "features": {
+    "pattern_hits": 6,
+    "pattern_values": 4
+   }
+  },
+  {
+   "path": "holds.ULT>OP.since",
+   "kind": "disclosed",
+   "gold": "2019-05-21",
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 0,
+    "nulls": 3,
+    "rejects": 0
+   }
+  },
+  {
+   "path": "holds.ULT>OP.cost",
+   "kind": "derived",
+   "gold": 100000000.0,
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 0,
+    "nulls": 3,
+    "rejects": 0
+   }
+  },
+  {
+   "path": "flows.exit.listed_market_trade",
+   "kind": "derived",
+   "gold": false,
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 0,
+    "nulls": 3,
+    "rejects": 0
+   }
+  },
+  {
+   "path": "present.HOLD",
+   "kind": "derived",
+   "gold": "NONE",
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 0,
+    "nulls": 3,
+    "rejects": 0
+   }
+  },
+  {
+   "path": "event.exit",
+   "kind": "disclosed",
+   "gold": 266200000.0,
+   "value": 266200000.0,
+   "status": "correct",
+   "means": "model",
+   "quote": "Pursuant to the Sale and Purchase Agreement, the Consideration of approximately RMB266.2 million (equivalent to approximately USD37.0 million) shall be settled by cash during 2025.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 2,
+    "nulls": 1,
+    "rejects": 0,
+    "agree": 0.667,
+    "quote_len": 180,
+    "figures_in_quote": 5,
+    "score": 0.03306
+   }
+  },
+  {
+   "path": "event.on",
+   "kind": "derived",
+   "gold": "2026-04-02",
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 3,
+    "reads": 3,
+    "values": 0,
+    "nulls": 3,
+    "rejects": 0
+   }
+  }
+ ],
+ "usage": {
+  "calls": 21,
+  "prompt_tokens": 11871,
+  "completion_tokens": 10259,
+  "cache_hit_tokens": 2048,
+  "seconds": 81.53686308860779,
+  "retries": 0,
+  "cached": 0
+ },
+ "wall": 205.9,
+ "error": null,
+ "notes": []
+}

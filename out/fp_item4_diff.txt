@@ -1,0 +1,71 @@
+cases on one side only: 9 (financing_OPCN-ULHK_full_open_y1__pw32, financing_OPCN-ULHK_full_open_y1__pw33, ip_OPCN-ULHK_full_open_y1__pw36, ip_OPCN-ULHK_full_open_y1__pw37)
+cases by template: {'financing': 24, 'holding': 95, 'inbound': 12, 'ip': 75, 'repatriation': 62, 'services': 62}
+candidate rows by bound move:
+  lo= hi=    1062
+      financing_OPCN-ULHK_full_open_y1__pw04 {"LENDER": "SG", "payment": "False"} lo 5233550.0->5233550.0 hi 5233550.0->5233550.0
+      financing_OPCN-ULHK_full_open_y1__pw04 {"LENDER": "SG", "payment": "True"} lo 5240150.0->5240150.0 hi 5240150.0->5240150.0
+  lo- hi=    873
+      financing_OPCN-ULHK_sparse_open_y1 {"LENDER": "CN", "payment": "False"} lo 5233550.0->-250.0 hi 5233550.0->5233550.0
+      financing_OPCN-ULHK_sparse_open_y1 {"LENDER": "SG", "payment": "False"} lo 5233550.0->-250.0 hi 5233550.0->5233550.0
+  lo= hi-    388
+      holding_OPCN-ULHK_full_open_y1__pw05 {"HOLD": "HK", "exit_route": "INDIRECT", "financing": "DEBT", "payment": "False"} lo 5233706.46->5233706.46 hi 5235286.04->5234786.04
+      holding_OPCN-ULHK_full_open_y1__pw05 {"HOLD": "HK", "exit_route": "INDIRECT", "financing": "DEBT", "payment": "True"} lo 10474106.42->10474106.42 hi 10475685.9->10475185.9
+  lo= hi+    288
+      holding_OPCN-ULHK_full_open_y1__pw04 {"HOLD": "HK", "exit_route": "INDIRECT", "financing": "DEBT", "payment": "False"} lo 5233706.46->5233706.46 hi 5234786.04->5235286.04
+      holding_OPCN-ULHK_full_open_y1__pw04 {"HOLD": "SG", "exit_route": "INDIRECT", "financing": "DEBT", "payment": "False"} lo 5233720.0->5233720.0 hi 5234968.5->5235468.5
+  lo+ hi=    210
+      holding_OPCN-ULHK_full_open_y1__pw04 {"HOLD": "CN", "exit_route": "INDIRECT", "financing": "EQUITY", "payment": "False"} lo 5233802.5->5233847.5 hi 5234776.0->5234776.0
+      holding_OPCN-ULHK_full_open_y1__pw04 {"HOLD": "CN", "exit_route": "INDIRECT", "financing": "DEBT", "payment": "False"} lo 5233802.5->5233847.5 hi 5235026.0->5235026.0
+  lo- hi+    148
+      holding_OPCN-ULHK_full_open_y1__pw04 {"HOLD": "None", "exit_route": "DIRECT", "financing": "DEBT", "payment": "False"} lo 5233757.34->5233552.5 hi 5233890.49->5234140.49
+      holding_OPCN-ULHK_full_open_y1__pw04 {"HOLD": "SG", "exit_route": "INDIRECT", "financing": "EQUITY", "payment": "False"} lo 5233870.0->5233800.0 hi 5234968.5->5235468.5
+  lo- hi-    134
+      holding_OPCN-ULHK_full_open_y1__pw05 {"HOLD": "HK", "exit_route": "INDIRECT", "financing": "EQUITY", "payment": "False"} lo 5233855.0->5233805.0 hi 5235295.0->5234795.0
+      holding_OPCN-ULHK_full_open_y1__pw05 {"HOLD": "HK", "exit_route": "INDIRECT", "financing": "EQUITY", "payment": "True"} lo 10474255.0->10474205.0 hi 10475695.0->10475195.0
+  lo+ hi-    98
+      holding_OPCN-ULHK_full_open_y1__pw05 {"HOLD": "None", "exit_route": "DIRECT", "financing": "DEBT", "payment": "False"} lo 5233752.5->5233757.34 hi 5234140.49->5233890.49
+      holding_OPCN-ULHK_full_open_y1__pw05 {"HOLD": "None", "exit_route": "DIRECT", "financing": "DEBT", "payment": "True"} lo 10474152.5->10474157.22 hi 10474540.29->10474290.29
+  lo+ hi+    76
+      holding_OPCN-ULHK_full_open_y1__pw07 {"HOLD": "None", "exit_route": "DIRECT", "financing": "DEBT", "payment": "False"} lo 5233555.89->5233752.5 hi 5233760.49->5234140.49
+      holding_OPCN-ULHK_full_open_y1__pw07 {"HOLD": "SG", "exit_route": "INDIRECT", "financing": "EQUITY", "payment": "False"} lo 5233800.0->5233850.0 hi 5233970.0->5234943.5
+need keys added / removed (rule key):
+  1220 + data.p2_tcsh group.p2_cbcr_pbt_sg
+  1125 + data.p2_tcsh_elected_sg group.p2_tcsh_elected_sg:elect
+  1024 + data.p2_dm group.p2_dm_avg_revenue_eur_sg
+  1024 + data.p2_dm group.p2_dm_avg_income_eur_sg
+   822 + data.p2_tcsh group.p2_tcsh_history_sg
+   822 + data.p2_tcsh group.p2_cbcr_simplified_taxes_sg
+   822 + data.p2_tcsh group.p2_cbcr_revenue_sg
+   822 + data.p2_tcsh group.p2_qualified_cbcr_sg
+   588 + data.p2_tcsh group.p2_cbcr_pbt_hk
+   562 + data.p2_dm_elected_sg group.p2_dm_elected_sg:elect
+   485 + data.p2_tcsh_elected_hk group.p2_tcsh_elected_hk:elect
+   342 - hk.fsie.substance.dividend payee.adequate_substance
+   310 + hk.fsie.substance.dividend payee.adequate_substance
+   306 - hk.fsie.substance.dividend payee.registration_filing_compliant:is_true
+   292 + hk.fsie.substance.dividend payee.registration_filing_compliant:is_true
+   274 - cn.reinvest.deferral flow.reinvestment_form
+   274 - cn.reinvest.deferral flow.direct_payment
+   274 - cn.reinvest.deferral flow.reinvestment_from_distributed_profit
+   270 + cn.reinvest.credit flow.reinvested_in_cn
+   268 + cn.reinvest.deferral flow.reinvestment_form
+   268 + cn.reinvest.deferral flow.direct_payment
+   268 + cn.reinvest.deferral flow.reinvestment_from_distributed_profit
+   268 - hk.fsie.participation.dividend payee.no_main_purpose_of_tax_benefit
+   254 + cn.reinvest.deferral flow.reinvested_in_cn
+   240 - cn.reinvest.credit flow.reinvested_in_cn
+   236 + hk.fsie.participation.dividend payee.no_main_purpose_of_tax_benefit
+   228 - cn.reinvest.deferral flow.reinvested_in_cn
+   210 + cn.reinvest.credit flow.investee_encouraged_industry
+   210 + cn.reinvest.credit flow.direct_payment
+   210 + cn.reinvest.credit flow.planned_holding_months:ge
+   210 + cn.reinvest.credit flow.reinvestment_form
+   206 - cn.reinvest.credit flow.investee_encouraged_industry
+   206 - cn.reinvest.credit flow.direct_payment
+   206 - cn.reinvest.credit flow.planned_holding_months:ge
+   206 - cn.reinvest.credit flow.reinvestment_form
+   202 + hk.fsie.substance.dividend payee.substance_ruled_adequate
+   202 + data.p2_dm group.p2_dm_avg_income_eur_hk
+   202 + data.p2_dm group.p2_dm_avg_revenue_eur_hk
+   198 - hk.fsie.substance.dividend payee.pure_equity_holding
+   198 - hk.fsie.substance.dividend payee.substance_ruled_adequate

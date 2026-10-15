@@ -1,0 +1,39 @@
+{
+ "case_id": "K4-freetech-2024",
+ "kind": "K4",
+ "template": "holding",
+ "subject": "GROUP",
+ "members": ["ULT", "OP"],
+ "roles": {
+  "ULT": {"loc": "HK", "attrs": {"incorporated_in": "HK"}},
+  "OP": {"loc": "CN", "attrs": {"incorporated_in": "CN"}},
+  "BUYER": {"loc": "CN", "attrs": {"incorporated_in": "CN"}}
+ },
+ "holds": [{"holder": "ULT", "held": "OP", "ratio": 55.0, "since": "2015-08-31", "cost": 46800000.0}],
+ "flows": {"exit": {"listed_market_trade": false, "receipt_kind": "REMITTED"}},
+ "present": {"HOLD": null},
+ "settled": {},
+ "event": {"exit": 71099000.0, "on": "2024-11-22"},
+ "provenance": {
+  "roles.ULT.loc": {"kind": "disclosed", "source": "K4-freetech-2024", "page": "pdf 5", "quote": "Freetech Smart Road Recycling Engineering Investment Limited (英達智能道路再生工程投資有限公司), a company incorporated in Hong Kong with limited liability"},
+  "roles.ULT.attrs.incorporated_in": {"kind": "disclosed", "source": "K4-freetech-2024", "page": "pdf 5", "quote": "a company incorporated in Hong Kong with limited liability"},
+  "roles.OP.loc": {"kind": "disclosed", "source": "K4-freetech-2024", "page": "pdf 11", "quote": "The Target Company is a company established in the PRC with limited liability on 1 September 2009 by the Purchaser"},
+  "roles.OP.attrs.incorporated_in": {"kind": "disclosed", "source": "K4-freetech-2024", "page": "pdf 11", "quote": "The Target Company is a company established in the PRC with limited liability"},
+  "roles.BUYER.loc": {"kind": "disclosed", "source": "K4-freetech-2024", "page": "pdf 11", "quote": "The Purchaser, a state-owned enterprise, is a company established in the PRC with limited liability"},
+  "roles.BUYER.attrs.incorporated_in": {"kind": "disclosed", "source": "K4-freetech-2024", "page": "pdf 11", "quote": "is a company established in the PRC with limited liability"},
+  "holds.ULT>OP.ratio": {"kind": "disclosed", "source": "K4-freetech-2024", "page": "pdf 11", "quote": "the Target Company is owned as to 55% by the Vendor and 45% by the Purchaser"},
+  "holds.ULT>OP.since": {"kind": "disclosed", "source": "K4-freetech-2024", "page": "pdf 13", "quote": "at a total consideration of approximately RMB46.8 million on 31 August 2015"},
+  "holds.ULT>OP.cost": {"kind": "disclosed", "source": "K4-freetech-2024", "page": "pdf 13", "quote": "The Vendor acquired 55% of the Target Company by way of subscribing for registered capital of the Target Company of RMB24,444,400 at a total consideration of approximately RMB46.8 million"},
+  "flows.exit.listed_market_trade": {"kind": "derived", "source": "K4-freetech-2024", "formula": "标的是在中国成立的有限责任公司（pdf 11），其股权不在公开市场交易"},
+  "flows.exit.receipt_kind": {"kind": "disclosed", "source": "K4-freetech-2024", "page": "pdf 7", "quote": "the Purchaser shall procure for such amount to be transferred to an account of the Vendor in Hong Kong"},
+  "present.HOLD": {"kind": "derived", "source": "K4-freetech-2024", "formula": "卖方直接持有标的公司 55%（pdf 11），其间没有中间控股公司"},
+  "event.exit": {"kind": "disclosed", "source": "K4-freetech-2024", "page": "pdf 50", "quote": "The amount represents the cash consideration of RMB71,099,000"},
+  "event.on": {"kind": "derived", "source": "K4-freetech-2024", "formula": "取股权买卖协议签署日 2024-11-22（pdf 6：the SPA dated 22 November 2024）；完成日未披露"}
+ },
+ "company_estimate": {"CN": 2430000.0, "page": "pdf 50", "quote": "the estimated PRC enterprise income tax of RMB2,430,000 (equivalent to HK$2,609,000) in relation to the gain on the Disposal, calculated based on a tax rate of 10%", "use": "只作比对，不是标准答案（案例采集.md §7）"},
+ "notes": [
+  "来源：英達公路再生科技（6888.HK）2024-12-16 通函（cases/sources/K4-freetech-2024/source.pdf）。",
+  "只建模三地内的部分：卖方（香港）记为 ULT，其上层的开曼上市公司等不在范围内；标的为 OP，买方（内地国企，原持 45%）为集团外 BUYER。",
+  "计税成本取通函所载“约人民币 4,680 万元”的出资对价；金额单位为人民币元。"
+ ]
+}

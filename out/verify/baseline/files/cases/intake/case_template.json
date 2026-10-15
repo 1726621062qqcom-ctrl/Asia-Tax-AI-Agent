@@ -1,0 +1,31 @@
+{
+ "case_id": "K6-example",
+ "kind": "K6",
+ "template": "holding",
+ "subject": "GROUP",
+ "roles": {
+  "OP": {"loc": "CN", "attrs": {"managed_from": "CN", "vat_general_taxpayer": true}},
+  "ULT": {"loc": "SG", "attrs": {"managed_from": "SG", "residence_cert": true}}
+ },
+ "holds": [{"holder": "ULT", "held": "OP", "ratio": 100.0, "since": "2020-01-01", "cost": 3000.0}],
+ "flows": {"up1": {"receipt_kind": "NONE"}},
+ "present": {"HOLD": null},
+ "settled": {},
+ "event": {"dividend": 1000.0, "on": "2026-06-30"},
+ "provenance": {
+  "roles.OP.loc": {"kind": "disclosed", "source": "K6-example", "quote": "营业执照：住所 …（逐字摘录）"},
+  "roles.OP.attrs.managed_from": {"kind": "disclosed", "source": "K6-example", "quote": "…"},
+  "roles.OP.attrs.vat_general_taxpayer": {"kind": "disclosed", "source": "K6-example", "quote": "一般纳税人资格登记 …"},
+  "roles.ULT.loc": {"kind": "disclosed", "source": "K6-example", "quote": "…"},
+  "roles.ULT.attrs.managed_from": {"kind": "disclosed", "source": "K6-example", "quote": "…"},
+  "roles.ULT.attrs.residence_cert": {"kind": "disclosed", "source": "K6-example", "quote": "Certificate of Residence for 2026 …"},
+  "holds.ULT>OP.ratio": {"kind": "disclosed", "source": "K6-example", "quote": "股东名册 …"},
+  "holds.ULT>OP.since": {"kind": "disclosed", "source": "K6-example", "quote": "…"},
+  "holds.ULT>OP.cost": {"kind": "derived", "source": "K6-example", "formula": "出资 2000 + 增资 1000"},
+  "flows.up1.receipt_kind": {"kind": "disclosed", "source": "K6-example", "quote": "…"},
+  "present.HOLD": {"kind": "disclosed", "source": "K6-example", "quote": "现无中间控股公司"},
+  "event.dividend": {"kind": "disclosed", "source": "K6-example", "quote": "董事会决议：分配股息 1000 …"},
+  "event.on": {"kind": "disclosed", "source": "K6-example", "quote": "…"}
+ },
+ "notes": ["模板：K6 私有案例。kind 为 K3 时允许 synthetic 出处，并写 synthetic_share；K4–K6 不允许合成值。"]
+}

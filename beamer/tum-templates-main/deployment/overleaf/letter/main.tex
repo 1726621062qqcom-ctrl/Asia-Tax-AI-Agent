@@ -1,0 +1,65 @@
+%%
+% This is an Overleaf template for letters
+% using the TUM Corporate Desing https://www.tum.de/cd
+%
+% For further details on how to use the template, take a look at our
+% GitLab repository and browse through our test documents
+% https://gitlab.lrz.de/latex4ei/tum-templates.
+%
+% The tumletter class is based on the KOMA-Script class scrlttr2.
+% If you need further customization please consult the KOMA-Script guide
+% https://ctan.org/pkg/koma-script.
+% Additional class options are passed down to the base class.
+%
+% If you encounter any bugs or undesired behaviour, please raise an issue
+% in our GitLab repository
+% https://gitlab.lrz.de/latex4ei/tum-templates/issues
+% and provide a description and minimal working example of your problem.
+%%
+
+
+\documentclass[
+  english,            % define the document language (english, german)
+]{tumletter}
+
+
+% load additional packages
+\usepackage{lipsum}
+
+
+% set letter specific variables (overwriting defaults)
+\setkomavar{date}{April 1, 2021}
+\setkomavar{signature}{Erika Mustermann\\(Chief of Science)}
+
+% letter subject
+\setkomavar{subject}{Reply to your notes on the grand unified theory}
+
+% The content of the footer columns 2 and 3 can be modified by setting the
+% KOMA variables 'tum.footer.col2' and 'tum.footer.col3'.
+% The footer columns 1 and 4 should not be changed.
+% \setkomavar{tum.footer.col2}{your content\\with up to 15 lines}
+
+
+\begin{document}
+
+% start of the letter with recipient address
+\begin{letter}{Dr.\@~Dr.\@\ Sheldon Lee Cooper\\
+    California Institute of Technology\\
+    1200 East California Boulevard\\
+    Pasadena, California 91125}
+
+  % letter opening clause (necessary command at the start of a letter,
+  % it also prints letterhead, address fields, titel, subject, and foldmarks)
+  \opening{Dear Mr.\@\ Cooper:}
+
+  \lipsum[1]
+
+  % letter closing clause (prints signature too)
+  \closing{Best regards,}
+
+  % Postscript and enclosures
+  \ps PS: It's always a pleasure correcting your theories :-)
+  \encl{Some trivial proof\\The corrected grand unified theory}
+
+\end{letter}
+\end{document}

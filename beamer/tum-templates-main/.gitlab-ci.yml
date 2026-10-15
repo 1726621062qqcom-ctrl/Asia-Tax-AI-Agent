@@ -1,0 +1,195 @@
+stages:
+  - check
+  - build
+  - deploy
+
+latexindent:
+  stage: check
+  image: gitlab.lrz.de:5005/latex4ei/texlive:2023
+  before_script:
+    - latexindent --version
+  script:
+    - make check_format_latex
+
+cmake-format: &python-cached-venv
+  stage: check
+  image: python:3.11-alpine
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  cache:
+    paths:
+      - .cache/pip
+      - venv/
+  before_script:
+    - apk add make
+    - python -m venv venv
+    - source venv/bin/activate
+    - pip install -r requirements.txt
+  script:
+    - make check_format_cmake
+
+shfmt:
+  stage: check
+  image: mvdan/shfmt:v3.7.0-alpine
+  before_script:
+    - apk add make
+    - shfmt --version
+  script:
+    - make check_format_sh
+
+shellcheck:
+  <<: *python-cached-venv
+  script:
+    - make shellcheck
+
+.tests-template: &tests-template
+  stage: build
+  image: gitlab.lrz.de:5005/latex4ei/texlive:$TL_VERSION
+  before_script:
+    - tlmgr --version
+  script:
+    - mkdir build
+    - cd build
+    - cmake -DPDFLATEX_COMPILER=$(which $LATEX_COMPILER) ..
+    - make -k tests
+  artifacts:
+    name: "tests_${LATEX_COMPILER}_${TL_VERSION}"
+    expire_in: 1 week
+    when: always
+    paths:
+      - build/**/test_*.{pdf,log}
+
+tests-latest:
+  <<: *tests-template
+  variables:
+    TL_VERSION: latest
+    LATEX_COMPILER: pdflatex
+
+tests-matrix:
+  <<: *tests-template
+  parallel:
+    matrix:
+      - TL_VERSION: [2020, 2021, 2022, 2023, 2024]
+        LATEX_COMPILER: [pdflatex, lualatex]
+  rules:
+    # run job on pushes to 'main' branch
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: on_success
+    # run job on release tags
+    - if: $CI_COMMIT_TAG =~ /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)/
+      when: on_success
+    # run job on merge requests to 'main' branch
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event" &&
+          $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main" &&
+          $CI_MERGE_REQUEST_TITLE !~ /^(Draft|WIP):/
+      when: on_success
+
+installers:
+  stage: build
+  image: gitlab.lrz.de:5005/latex4ei/nsis:latest
+  script:
+    - mkdir build
+    - cd build
+    - cmake -DBUILD_TESTING=OFF ..
+    - cpack
+  artifacts:
+    name: installers
+    expire_in: 1 week
+    paths:
+      - build/tum-templates.{exe,deb,tar.gz}
+
+overleaf-templates:
+  stage: build
+  image: gitlab.lrz.de:5005/latex4ei/nsis:latest
+  script:
+    - mkdir build
+    - cd build
+    - cmake -DBUILD_TESTING=OFF ..
+    - make overleaf
+  artifacts:
+    name: overleaf-templates
+    expire_in: 1 week
+    paths:
+      - build/overleaf/*.zip
+
+documentation:
+  stage: build
+  image: asciidoctor/docker-asciidoctor:latest
+  script:
+    - cd docs
+    - export RELEASE_VERSION=$(git tag --sort=committerdate | tail -1)
+    - make html
+  artifacts:
+    name: documentation
+    expire_in: 1 week
+    paths:
+      - docs/output
+
+package-registry:
+  stage: deploy
+  needs:
+    - job: installers
+      artifacts: true
+    - job: overleaf-templates
+      artifacts: true
+  image: gitlab.lrz.de:5005/latex4ei/nsis:latest
+  variables:
+    REGISTRY: "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic"
+    VERSION: "$CI_COMMIT_REF_NAME"
+  before_script:
+    - echo "TUM Templates version $VERSION"
+  script:
+    - curl --fail --header "JOB-TOKEN:$CI_JOB_TOKEN"
+      --upload-file build/tum-templates.exe
+      $REGISTRY/windows-installer/${VERSION#v}/tum-templates-$VERSION.exe
+    - curl --fail --header "JOB-TOKEN:$CI_JOB_TOKEN"
+      --upload-file build/tum-templates.deb
+      $REGISTRY/debian-installer/${VERSION#v}/tum-templates-$VERSION.deb
+    - curl --fail --header "JOB-TOKEN:$CI_JOB_TOKEN"
+      --upload-file build/tum-templates.tar.gz
+      $REGISTRY/linux-installer/${VERSION#v}/tum-templates-$VERSION.tar.gz
+    - cd build/overleaf
+    - for template in *.zip; do
+        curl --fail --header "JOB-TOKEN:$CI_JOB_TOKEN" --upload-file $template
+        $REGISTRY/overleaf-templates/${VERSION#v}/$template;
+      done
+  rules: &deploy-rules
+    # run job on pushes to 'main' branch
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: on_success
+    # run job on release tags
+    - if: $CI_COMMIT_TAG =~ /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)/
+      when: on_success
+
+trigger-texlive-tum:
+  stage: deploy
+  needs:
+    - job: package-registry
+  variables:
+    # pass expected variables to downstream project
+    UPSTREAM_PROJECT: "$CI_PROJECT_PATH"
+    UPSTREAM_COMMIT: "$CI_COMMIT_SHORT_SHA"
+    UPSTREAM_BRANCH: "$CI_COMMIT_BRANCH"
+    UPSTREAM_TAG: "$CI_COMMIT_TAG"
+    TUM_TEMPLATES_VERSION: "$CI_COMMIT_REF_NAME"
+  trigger:
+    project: latex4ei/texlive-tum
+    branch: main
+  rules: *deploy-rules
+
+pages:
+  stage: deploy
+  needs:
+    - job: documentation
+      artifacts: true
+  script:
+    - mkdir public
+    - mv docs/output/* public
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - public
+  rules:
+    # run job on pushes to 'main' branch
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: on_success

@@ -1,0 +1,378 @@
+{
+ "model": "qwen3.8-flash",
+ "case": "K4-shuion-ypu-2024",
+ "samples": 2,
+ "k": 5,
+ "locate": "retrieval",
+ "patterns": true,
+ "dense": true,
+ "temperature": 0.7,
+ "prompt_version": "2026-10-14c",
+ "rows": [
+  {
+   "path": "roles.ULT.loc",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "Bright Continental Limited, a company incorporated in Hong Kong and an indirect non-wholly owned subsidiary of the Company;",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 2,
+    "passages": 9,
+    "reads": 9,
+    "values": 5,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.556,
+    "quote_len": 123,
+    "figures_in_quote": 1,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 2
+  },
+  {
+   "path": "roles.ULT.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "Bright Continental Limited, a company incorporated in Hong\nKong and an indirect non-wholly owned subsidiary of the\nCompany;",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 2,
+    "passages": 9,
+    "reads": 9,
+    "values": 4,
+    "nulls": 5,
+    "rejects": 0,
+    "agree": 0.444,
+    "quote_len": 123,
+    "figures_in_quote": 1,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 2
+  },
+  {
+   "path": "roles.OP.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "At the Latest Practicable Date, YPU, one of the Project Companies, is a company incorporated in the PRC with limited liability and is principally engaged in property investment and operation.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1,
+    "passages": 9,
+    "reads": 9,
+    "values": 6,
+    "nulls": 3,
+    "rejects": 0,
+    "agree": 0.667,
+    "quote_len": 191,
+    "figures_in_quote": 0,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "roles.OP.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "At the Latest Practicable Date, YPU, one of the Project Companies, is a company incorporated\nin the PRC with limited liability and is principally engaged in property investment and operation.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1,
+    "passages": 9,
+    "reads": 9,
+    "values": 4,
+    "nulls": 5,
+    "rejects": 0,
+    "agree": 0.444,
+    "quote_len": 191,
+    "figures_in_quote": 0,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "roles.BUYER.loc",
+   "kind": "derived",
+   "gold": "CN",
+   "value": null,
+   "status": "conflict",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [
+    "conflict: OTHER / CN"
+   ],
+   "conflict": [
+    {
+     "value": "OTHER",
+     "doc": "K4-shuion-2024",
+     "quote": "Wisdom Forever Limited Partnership, a limited partnership incorporated in the Cayman Islands and is owned as to 100% in aggregate by two wholly owned subsidiaries of Ningbo Fund as limited partners, with Shui On Knowledge and Innovation Partners (an indirect wholly owned subsidiary of the Company) being the general partner;",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "enum",
+     "explicit": true
+    },
+    {
+     "value": "CN",
+     "doc": "K4-shuion-2024",
+     "quote": "Ningbo Fund is a limited partnership established under the laws of the PRC and is principally",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "enum",
+     "explicit": true
+    }
+   ],
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1,
+    "passages": 9,
+    "reads": 9,
+    "values": 3,
+    "nulls": 6,
+    "rejects": 0,
+    "agree": 0.222
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "kind": "disclosed",
+   "gold": 86.8,
+   "value": 86.8,
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "YPU is directly owned as to 86.8% by Bright Continental and 13.2% by Yangpu Knowledge Innovation.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 3,
+    "pattern_values": 2,
+    "passages": 8,
+    "reads": 8,
+    "values": 4,
+    "nulls": 3,
+    "rejects": 1,
+    "agree": 0.5,
+    "quote_len": 97,
+    "figures_in_quote": 2,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "holds.ULT>OP.since",
+   "kind": "disclosed",
+   "gold": "2003-08-26",
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": 4
+  },
+  {
+   "path": "holds.ULT>OP.cost",
+   "kind": "missing",
+   "gold": null,
+   "value": 11935000.0,
+   "status": "false_fill",
+   "means": "retrieved",
+   "quote": "Bright Continental Limited\n11,935.00\n86.80\nMonetary funds",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.2,
+    "quote_len": 57,
+    "figures_in_quote": 2,
+    "score": 0.03205,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "flows.exit.immovable_ratio",
+   "kind": "derived",
+   "gold": 96.86,
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "flows.exit.listed_market_trade",
+   "kind": "derived",
+   "gold": false,
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "present.HOLD",
+   "kind": "derived",
+   "gold": "NONE",
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "present.exit_route",
+   "kind": "disclosed",
+   "gold": "DIRECT",
+   "value": "INDIRECT",
+   "status": "wrong",
+   "means": "retrieved",
+   "quote": "The Equity Transfer completes upon the receipt of the consideration for the Equity Transfer (deducting the Withholding Tax) by the Transferors (which are indirectly owned as to 51% by SODH (a direct wholly owned subsidiary of the Company) and 49% by Wisdom Forever, to which the consideration will be",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.2,
+    "quote_len": 350,
+    "figures_in_quote": 3,
+    "score": 0.02707,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "event.exit",
+   "kind": "disclosed",
+   "gold": 4706000000.0,
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "event.on",
+   "kind": "derived",
+   "gold": "2024-11-27",
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  }
+ ],
+ "usage": {
+  "calls": 93,
+  "prompt_tokens": 50813,
+  "completion_tokens": 2220,
+  "cache_hit_tokens": 0,
+  "seconds": 260.0902044773102,
+  "retries": 0,
+  "cached": 0
+ },
+ "wall": 77.0,
+ "error": null,
+ "notes": [
+  "holds.ULT>OP.ratio: a reading of another passage was refused (quote not found in the document); the accepted reading stands on its verified quote"
+ ]
+}

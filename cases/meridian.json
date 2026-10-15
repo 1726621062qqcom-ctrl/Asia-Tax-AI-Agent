@@ -1,0 +1,65 @@
+{
+  "template": "inbound_services",
+  "subject": "SERVICER",
+  "members": [
+    "SERVICER"
+  ],
+  "roles": {
+    "SERVICER": {
+      "loc": "SG",
+      "attrs": {
+        "managed_from": "SG",
+        "incorporated_in": "SG",
+        "fixed_place_in_cn": false,
+        "fixed_place_in_hk": false,
+        "payee_is_government": false,
+        "payee_is_financial_institution": false
+      }
+    },
+    "CLIENT": {
+      "loc": "CN",
+      "attrs": {
+        "managed_from": "CN"
+      }
+    }
+  },
+  "holds": [],
+  "flows": {
+    "fee": {
+      "service_days_12m": 76,
+      "service_kind": "ENGINEERING_DESIGN_CONSULTING",
+      "profit_margin": 30,
+      "receipt_kind": "REMITTED",
+      "foreign_headline_rate": 25,
+      "foreign_taxed": true,
+      "tax_paid_on": "2025-12-31",
+      "remitted_on": "2025-12-31",
+      "service_performed_in_source": true,
+      "service_performed_in_residence": true,
+      "vat_borne_by_payer": true
+    }
+  },
+  "present": {
+    "payment": false
+  },
+  "settled": {
+    "fee": {
+      "CN": 100000
+    }
+  },
+  "event": {
+    "service_fee": 1000000,
+    "on": "2025-12-31",
+    "as_at": "2026-10-07"
+  },
+  "notes": [
+    "Contract amount SGD 1,000,000; the client withheld 100,000 at 10% and obtained the withholding certificate; amounts are in Singapore dollars.",
+    "The payment and withholding dates are not given in the case; 2025-12-31 is taken; this only affects the start of the refund and mutual agreement clocks.",
+    "The onshore performance share is unknown: 76 days of work in the Mainland are known and most of the work was done in Singapore, so performance in both places is a fact, service_onshore_share is left empty, and the Mainland deemed-profit base takes an interval for the share.",
+    "Whether the Singapore certificate of residence (COR) has been obtained is not given, residence_cert is left empty; the treaty exemption and the refund both depend on it.",
+    "The Singapore partial exemption (s43(6B)) is computed on the company's taxable income for the whole year; the case only gives this project's revenue of 1 million and costs of 0.7 million, so cit_rate is not filled and the 17% headline rate applies; profit_margin 30 is this project's margin.",
+    "service_kind is ENGINEERING_DESIGN_CONSULTING (data analysis, modelling, system implementation and training belong to design consulting, Article 5 of 国税发〔2010〕19号, 15%–30%).",
+    "The contract transfers no patent, copyright or know-how and the client does not get the source code; whether it is characterised as a royalty is a discretion item (Articles 4 and 6 of 国税函〔2009〕507号).",
+    "Meridian actually received 900,000 = contract amount − 10% enterprise income tax, with no VAT withheld; any withheld VAT is borne by the client, hence vat_borne_by_payer = true."
+  ]
+}

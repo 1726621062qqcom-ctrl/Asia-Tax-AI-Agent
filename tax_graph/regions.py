@@ -66,8 +66,9 @@ def absolute(elem, field, facts, suffix=""):
     if elem in ("payer", "payee"):
         who = facts.get(("_meta", elem))
         return "%s.%s%s" % (who, field, suffix) if who else None
-    if elem == "flow":
-        fid = facts.get(("_meta", "flow"))
+    if elem == "flow":                                   # decision D21: a created party's side under the flow's own key
+        side = facts.get(("_meta", "flow_side"))
+        fid = facts.get(("_meta", "flow")) if side is None or field in side else facts.get(("_meta", "flow_base"))
         return "flow:%s.%s%s" % (fid, field, suffix) if fid else None
     return None
 
@@ -80,6 +81,8 @@ def absolute_key(rel_key, flow):
         return "%s.%s" % (flow.payer, rest)
     if elem == "payee":
         return "%s.%s" % (flow.payee, rest)
-    if elem == "flow":
-        return "flow:%s.%s" % (flow.attrs.get("fact_key") or flow.id, rest)       # 口径 D21
+    if elem == "flow":                                   # decision D21: only the created party's side under the key
+        side = flow.attrs.get("fact_key_fields") or ()
+        key = flow.attrs.get("fact_key") if rest.split(":", 1)[0] in side else None
+        return "flow:%s.%s" % (key or flow.id, rest)
     return rel_key

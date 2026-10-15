@@ -1,0 +1,153 @@
+[p.1] Mutation Testing Advances: An Analysis and Survey | Mike Papadakisa, Marinos Kintisa, Jie Zhangc, Yue Jiab, Yves Le Traona, | Mark Harmanb
+[p.2] artiﬁcial defects, we should not be conﬁdent on our testing and should improve | our test suites. Mutation realises this idea and measures the conﬁdence inspired | by our testing. This method has reached a maturity phase and gradually gains
+[p.3] the behaviour space of the program under analysis the interest shifts to the | behaviour of the mutants. In this line of research, mutants are used to identify | important behaviour diﬀerences that can be either functional or non-functional.
+[p.4] R² = 0.88697 | 0 | 10
+[p.5] 0 | 20 | 40
+[p.6] (40 papers), those that tackle problems unrelated to mutation testing problems | (25 papers), those that describe mutation testing tools (34 papers) and those | that use mutation testing only to perform test assessment (217 papers). In an
+[p.7] Depending on what we deﬁne as program behaviour we can have diﬀerent | mutant killing conditions. Typically, what we monitor are all the observable | program outputs against each running test: everything that the program prints
+[p.8] Table 1: The popular ﬁve-operator set (proposed by Oﬀutt et al. [34]) | Names | Description
+[p.9] Adequacy criteria are deﬁned as predicates deﬁning the objectives of testing | [32]. Goodenough and Gerhart [35] argue that criteria capture what properties | of a program must be exercised to constitute a thorough test, i.e., one whose
+[p.10] and error’ (that pre-dates civilisation), and also resting on the foundations of | inferential statistics and Popperian science [40]. | One of the fundamental problems in software testing is the inability to know
+[p.11] Table 2: | Summary of the main studies concerned with the relationship of test | criteria and faults.
+[p.12] Table 2: | Summary of the main studies concerned with the relationship of test | criteria and faults.
+[p.13] any case [59]. Coverage of all mutants is also undecidable [37], but mutation | testing forms a direct link between faults and test achievements, allowing more | scientiﬁc (in the sense intended by Popper) statements of test achievement than
+[p.14] 4. The relations between Mutants and Fault Revelation | The underlying idea of mutation is simple; we form defects and we ask testers | to design test cases that reveal them. Naturally, readers may ask why such an
+[p.15] The above mentioned points motivated researchers to study and set the | foundation of mutation testing. | The ﬁrst point has been shown theoretically based on the foundations of
+[p.16] that higher order mutants are of relatively lower strength than the ﬁrst order | ones. | The third point is a realisation of the requirement that the mutants must
+[p.17] criteria [32]. Thus, previous research has shown that strong mutation probably | subsumes weak mutation [75], all dataﬂow criteria [47, 55], logical criteria [76], | branch and statement criteria [52]. These studies suggest that a small set of
+[p.18] yes | Input Test | Program P
+[p.19] 5.1. Mutant Selection (Step 1.) | Mutation testing requires selecting a set of mutant operators based on which | the whole process is applied. Thus, we need to deﬁne the speciﬁc syntactic trans-
+[p.20] the WS-BPEL operators are diﬀerent due to the lack of common features with | other languages (e.g., functions and arrays). | Mirshokraie et al. [10, 81] proposed a set of JavaScript operators. These
+[p.21] during execution. | Operators for Speciﬁc Categories of Applications. | Alberto et al. [87] investigated the mutation testing approach for formal
+[p.22] strength of its assumptions and assertions. | Operators for Speciﬁc Categories of Bugs. | Brown et al.
+[p.23] tations. This line of work aims at evaluating the appropriateness of type anno- | tations. Jabbarvand and Malek [110] introduced an energy-aware framework | for Android application. In this work, a set of ﬁfty mutant operators mimicing
+[p.24] vious studies, i.e., the 5-operator set of Oﬀutt et al. [34]. Investigating ways | to discover relatively good trade-oﬀs between cost and eﬀectiveness, Delgado | et al. [82] studied a selective approach that signiﬁcantly reduce the number of
+[p.25] mutant threat” [36]. | This issue motivated the study of Kurtz et al. | [122],
+[p.26] ing all the others). This work aims at weak mutation and attempts to statically | identify dominance relations between the mutants. Similarly, Iida and Takada | [133] identify conditional expressions that describe the mutant killing condi-
+[p.27] on the function’s outcome and b) the branch statements that are complex. The | variables with signiﬁcant impact on the outcome of the functions are identiﬁed | using the usage frequency and dynamic invariants (extracted from the execution
+[p.28] Papadakis and Malevris [141] use special meta-functions to monitor the mutant | execution and control the mutant application. Wang et al. [142] and Tokumoto | et al. [143] use meta-functions that fork new processes. Bardin et al. [144] and
+[p.29] achieved. This last point is particularly important as it is linked to the decision | of when to stop the testing process, i.e., Step 8 (Section 5.8). | 5.3.1. Identifying Equivalent Mutants
+[p.30] clone to the other [157]. | Literature includes additional techniques for the identiﬁcation of equivalent | mutants using dynamic analysis. These require test case execution and, thus,
+[p.31] (avoiding mutation score overestimation which can be as high as 10%). Along | the same lines, Fernandes et al. [166] proposed 37 rules that can help avoiding | the introduction of redundant mutants. Their results showed that these rules
+[p.32] symbolic execution [141, 172]. Additional details regarding the automatic test | generation and mutation-based test generation can be found in the surveys of | Anand et al. [173] and Souza et al. [29].
+[p.33] However, dynamic techniques approximate the symbolic constraints based on | the actual program execution. Therefore, there is a need to embed the mu- | tant killing conditions within the executable program and guide test generation
+[p.34] 5.4.3. Search-based Test Generation | Other dynamic test generation techniques use search-based optimisation al- | gorithms to generate mutant killing test cases. The idea realised by this class
+[p.35] dition by measuring the disagreement between the test traces of the original | program and the mutants. Fraser and Arcuri [192] count the number of exe- | cuted predicates that diﬀer while Souza et al. [185] measure the diﬀerences in
+[p.36] Tests | Mutants | m1
+[p.37] Regarding both Scenarios A and B, there are several optimisations that try | to avoid executing mutants that have no chance of being killed by the candidate | test cases. Thus, mutants that are not reachable by any test should not be
+[p.38] Other test execution advances include heuristics related to the identiﬁca- | tion of inﬁnite loops caused by mutants. Such inﬁnite loops are frequent and | greatly aﬀect mutant execution time. However, since determining whether a
+[p.39] space exploration of multithreaded programs. This work involves optimisation | techniques and heuristics that achieve substantial mutant execution savings. In | the context of fault localisation, Gong et al. [209] proposed a dynamic strategy
+[p.40] obtained outputs. Patrick et al. [213] use pseudo-oracles to test stochastic soft- | ware. Rutherford et al. [214] use discrete-event simulations (executable spec- | iﬁcations) to deﬁne assertions and sanity checks that model how “reasonable”
+[p.41] cations (all over the codebase). | Mutant classiﬁcation provides opportunities | to achieve good trade-oﬀs between eﬀectiveness and eﬃciency. Papadakis and
+[p.42] Regarding test case prioritisation, Lou et al. [194] studied two prioritisation | schemes; one based on the number of mutants killed and one based on the dis- | tribution of the killed mutants and found that prioritising based on the number
+[p.43] suites are capable of revealing at least 90% of the program faults [6]. | The study of Tengeri et al. [228] suggests that mutation testing forms a | good indicator of the expected number of defects in a system (number of real
+[p.44] devised an automated approach that generates test assertions. Testers are then | asked to validate these assertions. The same method has also been extended | to identify relevant pre- and post-conditions suitable for parameterized tests
+[p.45] killed mostly by failing tests provide indications regarding the faulty program lo- | cations. Empirical results on this approach demonstrated that mutation-based | fault localisation is signiﬁcantly superior to other types of fault localisation
+[p.46] specialised applications. Most of the approaches use genetic programming or | constraint-based techniques to select and check whether special types of mutants | can ﬁx the underlying faults.
+[p.47] search algorithms and diversity-aware testing techniques. | Mutation testing requires performing the mutant execution step which is | expensive even when using the test execution optimisations that were discussed
+[p.48] be employed in order to search the space of all possible mutants for those that | are subtle (mutants that are killed by only few test cases) [264], representative | of all mutants [38], and realistic (both semantically and syntactically close to
+[p.49] and, ﬁnally, other applications and testing approaches. | 7.1. Model-based Testing | An important line of mutation-based research regards its application to
+[p.50] tants. The same approach was then used to evaluate the conformance of feature | models to a software product line [279]. This approach also attempts to auto- | matically detect and remove conformance faults from the feature model, similar
+[p.51] GUI models for test case generation of Android applications. This particular | approach mutates an auto-generated stochastic GUI model of the application, | represented as a FSM, in order to search for better models that will result in dif-
+[p.52] properties of this type of systems. | Stephan et al. [293, 294] present a technique that compares model-clone | detection techniques for Simulink models using mutation. This approach in-
+[p.53] Mutation testing has also been applied on NuSMV models. Arcaini et al. | [302] creates mutants of such models and checks whether the NuSMV model | advisor (an automatic static model review tool) can statically detect these mu-
+[p.54] 7.2. Security Testing | This section presents mutation-based approaches related to security. More | precisely, applications on testing security policies [309–313], regression testing of
+[p.55] mutation analysis to correlate policy rules and tests cases and, subsequently, it | applies test selection. The test selection is performed by selecting test cases that | are correlated with rules involved with syntactic changes between the original
+[p.56] adaptive random testing. | 7.4. Other Mutation-based Applications | This section describes approaches tackling general software engineering prob-
+[p.57] diﬀerent clone detection techniques. Along these lines, the work of Svajlenko et | al. [327] presents mutant operators that create fork constructs in order to assist | the study and analysis of code similarity.
+[p.58] that of Baudry et al. | [333], who suggested that equivalent mutants can be | seen as diverse program versions. Therefore, by generating equivalent program
+[p.59] models. | At the implementation level, the mutation testing tools target mostly the | C and Java programming languages. Most of the tools focus on the support
+[p.60] Table 3: Mutation Testing Tools. | Name & Ref | Year
+[p.61] Table 3: Mutation Testing Tools. | Name & Ref | Year
+[p.62] Table 3: Mutation Testing Tools. | Name & Ref | Year
+[p.63] Table 3: Mutation Testing Tools. | Name & Ref | Year
+[p.64] Table 3: Mutation Testing Tools. | Name & Ref | Year
+[p.65] 9. Mutation-based Test Assessment: Use and Threats to Validity | Mutation testing is a popular technique for assessing the fault revealing po- | tential of test suites. Much work on empirical software engineering relies on the
+[p.66] R² = 0.93652 | 0 | 10
+[p.67] 0 | 10 | 20
+[p.68] 0 | 10 | 20
+[p.69] Java | C | Model Notations
+[p.70] respectively. Similarly, there are signiﬁcant diﬀerence across diﬀerent types of | mutant operators, as reported by Namin and Kakarla [393]. Kurtz et al. [122] | showed that it is hard to select mutant operator sets that perform similarly well
+[p.71] when discarding them. | There are many studies advocating some form of ‘reﬁned’ mutation score | for mitigating the problems caused by mutant redundancies. The ﬁrst study
+[p.72] study, Kurtz et al. [169] proposed using symbolic execution to approximate | subsuming mutants. Papadakis et al. [37] and Kintis et al. [152] suggested | using compiler optimisations to remove duplicated mutants (a special form of
+[p.73] Input: A set S of mutants | Input: A set T of test cases | Input: A matrix M of size |T | × |S| such as Mij = 1 if testi kills mutantj
+[p.74] didate test cases. Consider the case where we want to compare two test tech- | niques. In this case, we need two test suites, one that simulates the result of | the ﬁrst technique and one that simulates the result of the second technique.
+[p.75] of which can inﬂuence the experimental outcome [394]. As already explained, | the choice of mutant operators aﬀects signiﬁcantly the results of an experiment. | However, diﬀerent implementations of the same operators are likely to produce
+[p.76] the original program are representative (or very similar) of those on the mutant | programs. This assumption is called the “Clean Program Assumption” (CPA) | [6]. The assumption can be problematic since test suites are assessed on the
+[p.77] menters who follow these seven steps help other researchers replicate and inves- | tigate, properly, the inﬂuence of such potentially confounding factors, thereby | contributing to the overall experimental robustness of their study.
+[p.78] trast their ﬁndings on a (small) sample of cases where mutant redundancy | is controlled. | 4. Test suite choice and size: Explain the choice of test suite and any
+[p.79] 7. Presentation of the results: Clarify the granularity level of the em- | pirical results. Many empirical studies compute mutation scores over the | whole subject projects they are using (one score per project). Since, this
+[p.80] • Mutation applied on new languages and artefacts. New mutation testing | tools also appear. | • Use of mutants as a means to support other software engineering activities
+[p.81] in theory a smart mutant selection process can identify them. Therefore, future | mutation may identify ways to generate and use those valuable higher order | mutants.
+[p.82] of mutants. The current trend is to explore the behaviour space of mutants, | instead of the original program, to identify several interesting aspects, either | functional or non-functional. Thus, the conformance of models, the generation
+[p.83] [5] P. R. Mateo, M. P. Usaola, J. Oﬀutt, Mutation at system and functional | levels, in: Third International Conference on Software Testing, Veriﬁca- | tion and Validation, ICST 2010, Paris, France, April 7-9, 2010, Workshops
+[p.84] March 18-22, 2013, 2013, pp. 74–83. doi:10.1109/ICST.2013.23. | URL http://dx.doi.org/10.1109/ICST.2013.23 | [11] N. Li, M. West, A. Escalona, V. H. S. Durelli, Mutation testing in practice
+[p.85] [16] J. Tuya, M. J. S. Cabal, C. de la Riva, Mutating database queries, Infor- | mation & Software Technology 49 (4) (2007) 398–417. doi:10.1016/j. | infsof.2006.06.009.
+[p.86] [23] R. A. DeMillo, R. J. Lipton, F. G. Sayward, Program Mutation: A New | Approach to Program Testing, in: Infotech State of the Art Report, Soft- | ware Testing, Vol. 2, 1979, pp. 107–126.
+[p.87] gram. 120 (2016) 25–48. doi:10.1016/j.scico.2016.01.003. | URL https://doi.org/10.1016/j.scico.2016.01.003 | [31] R. A. Silva, S. do Rocio Senger de Souza, P. S. L. de Souza, A systematic
+[p.88] lent mutant detection technique, in: 37th IEEE/ACM International Con- | ference on Software Engineering, ICSE 2015, Florence, Italy, May 16-24, | 2015, Volume 1, 2015, pp. 936–946. doi:10.1109/ICSE.2015.103.
+[p.89] 2014, 2014, pp. 654–665. doi:10.1145/2635868.2635929. | URL http://doi.acm.org/10.1145/2635868.2635929 | [44] P. G. Frankl, S. N. Weiss, An experimental comparison of the eﬀectiveness
+[p.90] 60–70. doi:10.1109/24.855537. | URL http://dx.doi.org/10.1109/24.855537 | [50] M. Chen, M. R. Lyu, W. E. Wong, Eﬀect of code coverage on software
+[p.91] [55] S. Kakarla, S. Momotaz, A. S. Namin, An evaluation of mutation and | data-ﬂow testing: A meta-analysis, in: Fourth IEEE International Confer- | ence on Software Testing, Veriﬁcation and Validation, ICST 2012, Berlin,
+[p.92] [61] L. Inozemtseva, R. Holmes, Coverage is not strongly correlated with test | suite eﬀectiveness, in: 36th International Conference on Software Engi- | neering, ICSE ’14, Hyderabad, India - May 31 - June 07, 2014, 2014, pp.
+[p.93] [67] L. J. Morell, A theory of fault-based testing, IEEE Trans. Software Eng. | 16 (8) (1990) 844–857. doi:10.1109/32.57623. | URL http://dx.doi.org/10.1109/32.57623
+[p.94] ternational Conference on Software Testing, Veriﬁcation and Validation | Workshops (ICSTW), 2017, pp. 110–115. doi:10.1109/ICSTW.2017.26. | [75] A. J. Oﬀutt, S. D. Lee, An empirical evaluation of weak mutation, IEEE
+[p.95] 2011, Workshop Proceedings, 2011, pp. 398–407. doi:10.1109/ICSTW. | 2011.52. | URL http://dx.doi.org/10.1109/ICSTW.2011.52
+[p.96] [86] M. Gligoric, S. Badame, R. Johnson, Smutant: a tool for type-sensitive | mutation testing in a dynamic language, in: | SIGSOFT/FSE’11 19th
+[p.97] April 13-17, 2015, 2015, pp. 1–10. doi:10.1109/ICSTW.2015.7107450. | URL http://dx.doi.org/10.1109/ICSTW.2015.7107450 | [92] L. Deng, J. Oﬀutt, P. Ammann, N. Mirzaei, Mutation operators for test-
+[p.98] [98] H. Dan, R. M. Hierons, Semantic mutation analysis of ﬂoating-point com- | parison, in: Fifth IEEE International Conference on Software Testing, | Veriﬁcation and Validation, ICST 2012, Montreal, QC, Canada, April 17-
+[p.99] of memory-related operators, in: Eighth IEEE International Conference | on Software Testing, Veriﬁcation and Validation, ICST 2015 Workshops, | Graz, Austria, April 13-17, 2015, 2015, pp. 1–10. doi:10.1109/ICSTW.
+[p.100] doi:10.1109/ICST.2011.30. | URL https://doi.org/10.1109/ICST.2011.30 | [109] R. Gopinath, E. Walkingshaw, How good are your types? using mutation
+[p.101] Software Engineering (ICSE 2008), Leipzig, Germany, May 10-18, 2008, | 2008, pp. 351–360. doi:10.1145/1368088.1368136. | URL http://doi.acm.org/10.1145/1368088.1368136
+[p.102] [120] L. Zhang, M. Gligoric, D. Marinov, S. Khurshid, Operator-based and | random mutant selection: Better together, in: 2013 28th IEEE/ACM | International Conference on Automated Software Engineering, ASE 2013,
+[p.103] [125] M. Papadakis, Y. L. Traon, Eﬀective fault localization via mutation analy- | sis: a selective mutation approach, in: Symposium on Applied Computing, | SAC 2014, Gyeongju, Republic of Korea - March 24 - 28, 2014, 2014, pp.
+[p.104] [131] C. Sun, F. Xue, H. Liu, X. Zhang, A path-aware approach to mutant re- | duction in mutation testing, Information & Software Technology 81 (2017) | 65–81. doi:10.1016/j.infsof.2016.02.006.
+[p.105] [137] A. S. Namin, X. Xue, O. Rosas, P. Sharma, Muranker: a mutant ranking | tool, Softw. Test., Verif. Reliab. 25 (5-7) (2015) 572–604. doi:10.1002/ | stvr.1542.
+[p.106] 3092714. | URL http://doi.acm.org/10.1145/3092703.3092714 | [143] S. Tokumoto, H. Yoshida, K. Sakamoto, S. Honiden, Muvm: Higher order
+[p.107] [148] F. Hariri, A. Shi, H. Converse, S. Khurshid, D. Marinov, Evaluating the | eﬀects of compiler optimizations on mutation testing at the compiler IR | level, in: 27th IEEE International Symposium on Software Reliability
+[p.108] [154] M. Kintis, N. Malevris, Using data ﬂow patterns for equivalent mutant | detection, in: Seventh IEEE International Conference on Software Testing, | Veriﬁcation and Validation, ICST 2014 Workshops Proceedings, March 31
+[p.109] [160] K. Tai, Predicate-based test generation for computer programs, in: Pro- | ceedings of the 15th International Conference on Software Engineering, | Baltimore, Maryland, USA, May 17-21, 1993., 1993, pp. 267–276.
+[p.110] in: Proceedings of the 16th ACM SIGPLAN International Conference on | Generative Programming: Concepts and Experiences, GPCE 2017, ACM, | New York, NY, USA, 2017, pp. 187–198. doi:10.1145/3136040.3136053.
+[p.111] ESEC’11: 13th European Software Engineering Conference (ESEC-13), | Szeged, Hungary, September 5-9, 2011, 2011, pp. 212–222. doi:10.1145/ | 2025113.2025144.
+[p.112] s11219-011-9142-y. | URL http://dx.doi.org/10.1007/s11219-011-9142-y | [178] S. Anand, C. S. Pasareanu, W. Visser, JPF-SE: A symbolic execution ex-
+[p.113] IEEE International Conference on Software Maintenance (ICSM 2010), | September 12-18, 2010, Timisoara, Romania, 2010, pp. 1–10. doi:10. | 1109/ICSM.2010.5609672.
+[p.114] pp. 147–158. doi:10.1145/1831708.1831728. | URL http://doi.acm.org/10.1145/1831708.1831728 | [188] M. Papadakis, N. Malevris, Automatic mutation based test data genera-
+[p.115] International Symposium on Foundations of Software Engineering, (FSE- | 22), Hong Kong, China, November 16 - 22, 2014, 2014, pp. 246–256. | doi:10.1145/2635868.2635921.
+[p.116] (2013) 647–668. doi:10.1002/stvr.1480. | URL http://dx.doi.org/10.1002/stvr.1480 | [200] R. Just, M. D. Ernst, G. Fraser, Eﬃcient mutation analysis by propagating
+[p.117] Conference and the ACM SIGSOFT International Symposium on Foun- | dations of Software Engineering, 2009, Amsterdam, The Netherlands, Au- | gust 24-28, 2009, 2009, pp. 297–298. doi:10.1145/1595696.1595750.
+[p.118] lelisation, in: | Sixth IEEE International Conference on Software Test- | ing, Veriﬁcation and Validation, ICST 2013 Workshops Proceedings,
+[p.119] July 19-23, 2009, 2009, pp. 69–80. doi:10.1145/1572272.1572282. | URL http://doi.acm.org/10.1145/1572272.1572282 | [217] D. Schuler, A. Zeller, (un-)covering equivalent mutants, in: Third In-
+[p.120] 10.1109/ICST.2012.160. | URL http://dx.doi.org/10.1109/ICST.2012.160 | [223] M. Kintis, M. Papadakis, N. Malevris, Employing second-order mutation
+[p.121] 2011, pp. 357–365. doi:10.1109/ICSTW.2011.50. | URL http://dx.doi.org/10.1109/ICSTW.2011.50 | [228] D. Tengeri, L. Vid´acs, ´A. Besz´edes, J. J´asz, G. Balogh, B. Vancsics,
+[p.122] ESEC’11: 13th European Software Engineering Conference (ESEC-13), | Szeged, Hungary, September 5-9, 2011, 2011, pp. 416–419. doi:10.1145/ | 2025113.2025179.
+[p.123] [237] M. Staats, G. Gay, M. P. E. Heimdahl, Automated oracle creation sup- | port, or: How I learned to stop worrying about fault propagation and love | mutation testing, in: 34th International Conference on Software Engineer-
+[p.124] on Software Testing, Veriﬁcation and Validation, ICST 2014, March 31 | 2014-April 4, 2014, Cleveland, Ohio, USA, 2014, pp. 153–162. doi:10. | 1109/ICST.2014.28.
+[p.125] [248] S. S. Murtaza, A. Hamou-Lhadj, N. H. Madhavji, M. Gittens, An em- | pirical study on the use of mutant traces for diagnosis of faults in | deployed systems, Journal of Systems and Software 90 (2014) 29–44.
+[p.126] 6227211. | URL http://dx.doi.org/10.1109/ICSE.2012.6227211 | [254] W. Weimer, Z. P. Fry, S. Forrest, Leveraging program equivalence
+[p.127] ICSE 2011, Waikiki, Honolulu , HI, USA, May 21-28, 2011, 2011, pp. | 121–130. doi:10.1145/1985793.1985811. | URL http://doi.acm.org/10.1145/1985793.1985811
+[p.128] Beijing, China, 2008, pp. 249–258. doi:10.1109/SCAM.2008.36. | URL https://doi.org/10.1109/SCAM.2008.36 | [265] M. Harman, Y. Jia, P. R. Mateo, M. Polo, Angels and monsters: an em-
+[p.129] 978-3-319-47106-8_2. | URL http://dx.doi.org/10.1007/978-3-319-47106-8_2 | [270] D. Shin, S. Yoo, D. Bae, Diversity-aware mutation adequacy criterion
+[p.130] 2013.6606689. | URL https://doi.org/10.1109/ICSE.2013.6606689 | [275] C. Henard, M. Papadakis, Y. L. Traon, Mutation-based generation of
+[p.131] [280] M. B. Trakhtenbrot, Implementation-oriented mutation testing of stat- | echart models, in: Third International Conference on Software Testing, | Veriﬁcation and Validation, ICST 2010, Paris, France, April 7-9, 2010,
+[p.132] 308–317. doi:10.1109/ICST.2008.16. | URL http://dx.doi.org/10.1109/ICST.2008.16 | [286] T. Su, G. Meng, Y. Chen, K. Wu, W. Yang, Y. Yao, G. Pu, Y. Liu,
+[p.133] Paciﬁc Software Engineering Conference, APSEC 2014, Jeju, South Ko- | rea, December 1-4, 2014. Volume 1: Research Papers, 2014, pp. 43–46. | doi:10.1109/APSEC.2014.15.
+[p.134] ternational Conference on Software Testing, Veriﬁcation and Validation | Workshops, ICST Workshops 2016, Chicago, IL, USA, April 11-15, 2016, | 2016, pp. 168–173. doi:10.1109/ICSTW.2016.21.
+[p.135] International Conference on Software Testing, Veriﬁcation and Validation, | ICST 2011 Workshops Proceedings, March 21 - March 25, 2011, Berlin, | Germany, 2011, pp. 408–413. doi:10.1109/ICSTW.2011.24.
+[p.136] [308] B. Lindstr¨om, S. F. Andler, J. Oﬀutt, P. Pettersson, D. Sundmark, Mu- | tating aspect-oriented models to test cross-cutting concerns, in: Eighth | IEEE International Conference on Software Testing, Veriﬁcation and Val-
+[p.137] [313] P. H. Nguyen, M. Papadakis, I. Rubab, Testing delegation policy enforce- | ment via mutation analysis, in: Sixth IEEE International Conference on | Software Testing, Veriﬁcation and Validation, ICST 2013 Workshops Pro-
+[p.138] [318] Z. Zhang, T. Wu, J. Zhang, Boundary value analysis in automatic white- | box test generation, in: 26th IEEE International Symposium on Software | Reliability Engineering, ISSRE 2015, Gaithersbury, MD, USA, November
+[p.139] doi:10.1109/ICSTW.2009.33. | URL http://dx.doi.org/10.1109/ICSTW.2009.33 | [324] C. Andr´es, M. G. Merayo, M. N´u˜nez, Formal passive testing of timed
+[p.140] [329] J. Zhang, Y. Lou, L. Zhang, D. Hao, L. Zhang, H. Mei, Isomorphic re- | gression testing: executing uncovered branches without test augmenta- | tion, in: Proceedings of the 24th ACM SIGSOFT International Sympo-
+[p.141] 2610415. | URL http://doi.acm.org/10.1145/2610384.2610415 | [334] B. Lisper, B. Lindstrm, P. Potena, M. Saadatmand, M. Bohlin, Tar-
+[p.142] [340] Y. Ma, J. Oﬀutt, Y. R. Kwon, Mujava: a mutation system for java, in: | L. J. Osterweil, H. D. Rombach, M. L. Soﬀa (Eds.), 28th International | Conference on Software Engineering (ICSE 2006), Shanghai, China, May
+[p.143] [347] Y. Jia, M. Harman, Milu: A customizable, runtime-optimized higher or- | der mutation testing tool for the full c language, in: Proceedings of the | 3rd Testing: Academic and Industrial Conference Practice and Research
+[p.144] 1109/ICST.2009.41. | URL https://doi.org/10.1109/ICST.2009.41 | [353] R. Delamare, B. Baudry, Y. L. Traon, Ajmutator: A tool for the mu-
+[p.145] [357] M. Ellims, D. Ince, M. Petre, The csaw c mutation tool: Initial results, in: | Testing: Academic and Industrial Conference Practice and Research Tech- | niques - MUTATION (TAICPART-MUTATION 2007), 2007, pp. 185–192.
+[p.146] [363] ”muBPEL - A mutation testing tool for WS-BPEL”, “Last Accessed May | 2017” (2011). | URL
+[p.147] [368] M. Schirp, ”mutation testing for ruby ”, “Last Accessed May 2017” (2012). | URL "https://github.com/mbj/mutant" | [369] M. Kusano, C. Wang, Ccmutator:
+[p.148] [374] A. Derezi´nska, K. Ha las, Analysis of Mutation Operators for the Python | Language, Springer International Publishing, Cham, 2014, pp. 155–164. | doi:10.1007/978-3-319-07013-1_15.
+[p.149] potential layout faults following changes to responsive web pages (N), | in: M. B. Cohen, L. Grunske, M. Whalen (Eds.), 30th IEEE/ACM In- | ternational Conference on Automated Software Engineering, ASE 2015,
+[p.150] [385] F. S. O. Jr., K. Pattabiraman, A. Mesbah, Detecting inconsistencies in | javascript MVC applications, in: A. Bertolino, G. Canfora, S. G. Elbaum | (Eds.), 37th IEEE/ACM International Conference on Software Engineer-
+[p.151] transition system mutation made easy, in: 2015 IEEE/ACM 37th IEEE | International Conference on Software Engineering, Vol. 2, 2015, pp. 817– | 818. doi:10.1109/ICSE.2015.263.
+[p.152] 31st IEEE/ACM International Conference on Automated Software En- | gineering, ASE 2016, Singapore, September 3-7, 2016, 2016, pp. 39–44. | doi:10.1145/2970276.2970345.
+[p.153] pp. 171–175. doi:10.1109/ICSTW.2014.22. | URL https://doi.org/10.1109/ICSTW.2014.22 | [402] M. Kintis, M. Papadakis, A. Papadopoulos, E. Valvis, N. Malevris, Y. Le

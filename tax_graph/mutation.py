@@ -9,7 +9,8 @@ Operators, one mutant each:
   PRED   a threshold comparison's boundary moved (>= to >, > to >=, <= to <, < to <=) on one rule
   SHIFT  a threshold parameter moved by one unit (0.1 below 10) for every rule reading it
 A mutant is killed when, on some case of the sample, a candidate's floor, ceiling, pending groups, costs, tax items or
-deadlines differ from the original's, the run fails, or the compiler rejects the mutated spec. The sample: the
+deadlines differ from the original's, or the run fails. A mutated spec the compiler rejects is stillborn (L6 p.6,
+测试系统.md §3.5): counted apart as "rejected", neither killed nor in the score's denominator. The sample: the
 boundary-value cases of the battery plus a greedy cover of the grid cases by the rules that fire in them; each mutant
 runs first on the cases where its rule fires and stops at the first difference. Writes out/mutation.json (read by the
 battery report) and out/mutation_report.md. Survivors point at rules or thresholds no case pins down.
@@ -165,7 +166,7 @@ def _mutant_job(k):
                 verdict, where = "killed", n
                 break
     except CompileError as e:
-        verdict, where = "killed", "compiler: %s" % str(e).splitlines()[0][:100]
+        verdict, where = "rejected", "compiler: %s" % str(e).splitlines()[0][:100]
     finally:
         E.RULES = orig
         E._PLAN_FAV.clear()
@@ -204,21 +205,25 @@ def main(argv):
     by_op = {}
     for r in results:
         a = by_op.setdefault(r["operator"], [0, 0])
+        if r["verdict"] == "rejected":                          # stillborn: not in the denominator (L6)
+            continue
         a[0] += r["verdict"] == "killed"
         a[1] += 1
-    survivors = [r["mutant"] for r in results if r["verdict"] != "killed"]
-    summary = {"killed": sum(v[0] for v in by_op.values()), "total": len(results), "cases": len(sample),
-               "by_operator": by_op, "survivors": survivors, "seconds": round(time.time() - t0)}
+    survivors = [r["mutant"] for r in results if r["verdict"] == "survived"]
+    rejected = [(r["mutant"], r["where"]) for r in results if r["verdict"] == "rejected"]
+    summary = {"killed": sum(v[0] for v in by_op.values()), "total": len(results) - len(rejected), "rejected": len(rejected),
+               "cases": len(sample), "by_operator": by_op, "survivors": survivors, "seconds": round(time.time() - t0)}
     OUT.mkdir(exist_ok=True)
     (OUT / "mutation.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
-    lines = ["# Mutation report", "", "killed %d of %d mutants on %d cases (%d s)" % (summary["killed"], summary["total"],
-                                                                                    len(sample), summary["seconds"]), ""]
+    lines = ["# Mutation report", "", "killed %d of %d mutants on %d cases (%d s); %d rejected by the compiler, not counted" % (
+        summary["killed"], summary["total"], len(sample), summary["seconds"], len(rejected)), ""]
     lines += ["| operator | killed | total |", "|---|---|---|"] + ["| %s | %d | %d |" % (k, v[0], v[1]) for k, v in sorted(by_op.items())]
     lines += ["", "## survivors (no case of the sample notices them)", ""] + ["- " + s for s in survivors]
+    lines += ["", "## rejected by the compiler (stillborn, L6: not killed, not in the score)", ""] + ["- %s — %s" % x for x in rejected]
     lines += ["", "## killed: where", ""] + ["- %s — %s" % (r["mutant"], r["where"]) for r in results if r["verdict"] == "killed"]
     (OUT / "mutation_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-    out.write("killed %d of %d (%s) -> out/mutation_report.md\n" % (summary["killed"], summary["total"],
-                                                                     ", ".join("%s %d/%d" % (k, v[0], v[1]) for k, v in sorted(by_op.items()))))
+    out.write("killed %d of %d (%s), rejected %d -> out/mutation_report.md\n" % (summary["killed"], summary["total"],
+                                                                                  ", ".join("%s %d/%d" % (k, v[0], v[1]) for k, v in sorted(by_op.items())), len(rejected)))
     out.flush()
     return 0
 

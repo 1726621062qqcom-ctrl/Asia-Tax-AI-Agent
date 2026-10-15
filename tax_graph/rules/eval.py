@@ -7,7 +7,7 @@ from dataclasses import dataclass, field, replace
 from typing import Dict, List, Optional, Tuple
 
 from .model import (ALL, PROCEDURE, STAGES, And, Discretion, Effect, Grade, Leaf, Mount, Not, Or, RuleObj)
-from .tri import AND, CEILING, FLOOR, NOT, OR, Tri, U, decide, MISSING, Need
+from .tri import AND, CEILING, DISCRETION, FLOOR, NOT, OR, Tri, U, decide, MISSING, Need
 from . import procedure_cn, procedure_hk, procedure_sg
 
 PSEUDO_INCOMES = ("CFC_INCLUSION", "TOPUP")       # the engine's pseudo-flows (model.CFC_INCLUSION, model.TOPUP)
@@ -22,16 +22,29 @@ def _registered(effect):
 DEADLINE_EVALUATORS = _registered("DEADLINE")       # rule id or value text -> (deadline name, fn(facts, P, deadlines))
 PENALTY_EVALUATORS = _registered("PENALTY")         # rule id -> fn(rule, facts, P, deadlines, tax)
 BASE_EVALUATORS = _registered("BASE")               # rule id -> fn(facts, P, chooser) -> fraction in [0, 1]
-NET_OF_VAT = ("cn.wht.base_excludes_vat",           # 口径 D26: a non-resident's income net of the VAT
-              "cn.eit.revenue_excludes_output_vat")  # 口径 D29: a Mainland company's revenue net of the VAT on its sale
+VAT_EVALUATORS = _registered("VAT")                 # decision D43: rule id -> fn(facts, P, chooser) -> rate on the amount, or None
+CUSTOMS_EVALUATORS = _registered("CUSTOMS")         # decision D43: rule id -> fn(facts, P, chooser) -> rate on the amount
+# decision D48: rule id -> fn(facts, P, chooser, items) -> rate on the amount (LAT, DEED, STAMP) or, for a SURCHARGE, a list of
+# (rate on the amount, bearer, deduction) — one per VAT item it follows
+SURCHARGE_EVALUATORS = _registered("SURCHARGE")
+LAT_EVALUATORS = _registered("LAT")
+DEED_EVALUATORS = _registered("DEED")
+PROPERTY_TAX_EVALUATORS = _registered("PROPERTY_TAX")   # decision D49
+STAMP_EVALUATORS = _registered("STAMP")
+NET_OF_VAT = ("cn.wht.base_excludes_vat",           # decision D26: a non-resident's income net of the VAT
+              "cn.eit.revenue_excludes_output_vat")  # decision D29: a Mainland company's revenue net of the VAT on its sale
+# decision D41: the payee's income computed at the arm's-length amount — a factor on the amount, not a domestic base (decision
+# D32): it composes with the profit or gain share; the factor is kept on the item (TaxItem.uplift) for the payer's
+# corresponding adjustment
+ARMS_LENGTH = ("cn.tp.income_uplift", "hk.tp.income_uplift", "sg.tp.income_uplift")
 CHARGE_EVALUATORS = _registered("CHARGE")           # rule id -> fn(facts, P, chooser): the charged share of the amount, for a
-                                                    # charge whose base is its own (the parts of one disposal, 口径 D22)
-# 口径 D23: whether a flow's price includes the VAT is one fact for the VAT on it and for the input credit of that VAT —
+                                                    # charge whose base is its own (the parts of one disposal, decision D22)
+# decision D23: whether a flow's price includes the VAT is one fact for the VAT on it and for the input credit of that VAT —
 # decided once per flow (a group of its own, not a rule's); the jurisdiction the planner files the question under
 VAT_PRICE = "cn.vat.law.price_includes_vat"
 SHARED_GROUPS = {VAT_PRICE: "CN"}
 INCLUSIVE_BY_FACT = ("cn.vat.law.inclusive_price",)   # 销售额 = 含税销售额 ÷ (1 + 税率) when the contract prices the VAT in
-                                                     # (口径 D23, D25)
+                                                     # (decision D23, D25)
 DEDUCT_BASE_EVALUATORS = _registered("DEDUCT_BASE")
 EVALUATOR_READS = {k: v for m in PROCEDURE_MODULES for k, v in m.READS.items()}
 
@@ -45,13 +58,18 @@ class Flow:
     target_loc: Optional[str] = None     # SHARE_TRANSFER: where the investee sits; the gain is sourced there (cn.reg.eit#7)
     indirect_cn: bool = False            # SHARE_TRANSFER of an offshore holder whose subtree holds Mainland taxable property
     id: str = "flow"
-    payer_seat: Optional[str] = None     # 口径 D31: where a party moved to the Mainland for income tax (effective management)
+    payer_seat: Optional[str] = None     # decision D31: where a party moved to the Mainland for income tax (effective management)
     payee_seat: Optional[str] = None     # is established — what VAT and stamp duty see; None: its location
     target_seat: Optional[str] = None
+    only: Optional[str] = None           # decision D38: "CN_INCOME" — a nil-price transfer at its arm's-length value: only the
+                                         # Mainland's income rules read it (engine.arms_length_flows)
 
     @property
     def source_loc(self):
-        return self.target_loc if self.income == "SHARE_TRANSFER" and self.target_loc else self.payer_loc
+        """A share gain is sourced where the investee sits, a property's where the property lies (实施条例 第七条（三）;
+        decision D48: target_loc is then the property's location), all else where the payer is."""
+        return (self.target_loc if self.income in ("SHARE_TRANSFER", "PROPERTY_TRANSFER", "PROPERTY_RENT") and self.target_loc
+                else self.payer_loc)
 
 
 @dataclass
@@ -67,11 +85,16 @@ class TaxItem:
     deferred: bool = False               # tax computed but not payable while the deferral condition holds
     deduction: bool = False              # the payer's deduction: counts negative
     cites: List[str] = field(default_factory=list)
-    vat_inclusive: bool = False          # a VAT item taken out of a VAT-inclusive price: its rate is r / (1 + r) (口径 D26)
+    vat_inclusive: bool = False          # a VAT item taken out of a VAT-inclusive price: its rate is r / (1 + r) (decision D26)
     actual: Optional[float] = None       # a closed item: what was paid, in % of amount; the rules no longer move it
     bearer: Optional[str] = None         # "payer" | "payee"; None = the payer for a deduction, the payee otherwise
-    levy: str = "income"                 # "income" | "stamp" | "vat": caps, exemptions and credits touch income items only
+    levy: str = "income"                 # "income" | "stamp" | "vat" | "customs": caps, exemptions and credits touch income items only
     creditable: float = 0.0              # foreign tax (and underlying tax) available against this item, in % of amount
+    uplift: float = 1.0                  # decision D41: the arm's-length factor this jurisdiction applied to the amount
+    carry: float = 0.0                   # decision D51: tax, in % of amount, the flow changes in the company's other income or
+                                         # later years through its losses (losses.apply); never creditable
+    pre_loss: Optional[float] = None     # decision D51: base_share before the loss stage moved it
+    loss_years: Optional[dict] = None    # decision D51: year -> the tax the loss stage moved on this item in that year (GloBE)
 
     @property
     def borne_by(self):
@@ -82,8 +105,8 @@ class TaxItem:
         if self.actual is not None:
             return self.actual
         if self.deduction:
-            return -self.rate * self.base_share
-        return max(0.0, self.rate * self.base_share - self.credit)
+            return -self.rate * self.base_share + self.carry
+        return max(0.0, self.rate * self.base_share - self.credit) + self.carry
 
 
 @dataclass
@@ -97,15 +120,15 @@ class FlowResult:
     deadline_jur: Dict[str, str] = field(default_factory=dict)                  # name -> taxing jurisdiction of the clock
     rules: Dict[str, RuleObj] = field(default_factory=dict)                     # id -> rule, for every applicable rule
     gaps: Dict[str, tuple] = field(default_factory=dict)                        # deadline -> (jurisdiction, year) of a missing calendar
-    outside: Dict[tuple, tuple] = field(default_factory=dict)                   # 口径 D30: (jur, levy, bearer) -> (law, in force from)
+    outside: Dict[tuple, tuple] = field(default_factory=dict)                   # decision D30: (jur, levy, bearer) -> (law, in force from)
 
     def needs(self, jur=None):
-        """Pending keys, optionally only from rules acting on one jurisdiction's tax (a shared group: its own, 口径 D23)."""
+        """Pending keys, optionally only from rules acting on one jurisdiction's tax (a shared group: its own, decision D23)."""
         return sorted({n.key for (rid, _), ns in self.groups.items() for n in ns
                        if jur is None or (SHARED_GROUPS[rid] if rid in SHARED_GROUPS else self.rules[rid].scope.taxing) in (jur, ALL)})
 
     def item(self, jur):
-        """The income-tax item of one jurisdiction (since 口径 D26 the VAT stage runs first: a VAT item is no answer)."""
+        """The income-tax item of one jurisdiction (since decision D26 the VAT stage runs first: a VAT item is no answer)."""
         return next((it for it in self.items if it.jur == jur and not it.deduction and it.levy == "income"), None)
 
     def total(self, jur=None):
@@ -178,6 +201,14 @@ class Chooser:
             self.pending[self.group] = self.pending.get(self.group, frozenset()) | needs
         return decide(Tri(U, needs), not self.invert, self.bound, self.group, self.force)
 
+    def judged(self, *keys):
+        """An authority's call the text leaves to it, met inside an evaluator (decision D41): pending like missing data, but
+        a judgement — not asked of the case."""
+        needs = frozenset(Need(DISCRETION, k) for k in keys)
+        if self.pending is not None:
+            self.pending[self.group] = self.pending.get(self.group, frozenset()) | needs
+        return decide(Tri(U, needs), not self.invert, self.bound, self.group, self.force)
+
 
 def apply(items, r: RuleObj, P, facts=None, bound=FLOOR, ch=None):
     jur = r.scope.taxing if r.scope.taxing != ALL else None
@@ -194,12 +225,44 @@ def apply(items, r: RuleObj, P, facts=None, bound=FLOOR, ch=None):
         rate = entity_rate(r, P, facts, "payer")
         return items + [TaxItem(jur, rate, rate, deduction=True, cites=[r.id])]
     if r.effect is Effect.STAMP:
-        rate = P[r.value]
+        if r.id in STAMP_EVALUATORS:                  # decision D48: a scale on the price (HK Scale 1, SG BSD / SSD)
+            rate = STAMP_EVALUATORS[r.id](facts or {}, P, ch or Chooser(r.id, "flow", bound, {}), items)
+            if not rate:
+                return items
+        else:
+            rate = P[r.value]
         return items + [TaxItem(jur, rate, rate, levy="stamp", bearer=r.bearer or "payee", cites=[r.id])]
+    if r.effect is Effect.SURCHARGE:                  # decision D48: on each VAT item it follows, that item's bearer and sign
+        out = []
+        for rate, bearer, deduction in SURCHARGE_EVALUATORS[r.id](facts or {}, P, ch or Chooser(r.id, "flow", bound, {}), items):
+            if rate:
+                out.append(TaxItem(jur, rate, rate, levy="surcharge", bearer=bearer, deduction=deduction, cites=[r.id]))
+        return items + out
+    if r.effect in (Effect.LAT, Effect.DEED, Effect.PROPERTY_TAX):   # decision D48, D49: a rate on the amount from the facts and levies
+        fn = {Effect.LAT: LAT_EVALUATORS, Effect.DEED: DEED_EVALUATORS, Effect.PROPERTY_TAX: PROPERTY_TAX_EVALUATORS}[r.effect][r.id]
+        rate = fn(facts or {}, P, ch or Chooser(r.id, "flow", bound, {}), items)
+        if not rate:
+            return items
+        return items + [TaxItem(jur, rate, rate, levy=LEVY_OF[r.effect], bearer=r.bearer or "payee", cites=[r.id])]
+    if r.effect is Effect.CUSTOMS:                    # decision D43: the duty as a rate on the amount
+        rate = CUSTOMS_EVALUATORS[r.id](facts or {}, P, ch or Chooser(r.id, "flow", bound, {}))
+        if not rate:
+            return items
+        return items + [TaxItem(jur, rate, rate, levy="customs", bearer=r.bearer or "payer", cites=[r.id])]
+    if r.effect is Effect.VAT and r.id in VAT_EVALUATORS:   # decision D43: a rate computed from the goods' facts; a credit
+        fn = VAT_EVALUATORS[r.id]                            # (fn.credit) is the bearer's own, negative
+        rate = fn(facts or {}, P, ch or Chooser(r.id, "flow", bound, {}))
+        inclusive = False
+        if isinstance(rate, tuple):                          # decision D48: (rate, taken out of a VAT-inclusive price)
+            rate, inclusive = rate
+        if not rate:
+            return items
+        return items + [TaxItem(jur, rate, rate, levy="vat", bearer=r.bearer or "payee", cites=[r.id],
+                                deduction=bool(getattr(fn, "credit", False)), vat_inclusive=inclusive)]
     if r.effect is Effect.VAT:
         rate = P[r.value]
         inclusive = False
-        if any(m in r.uses for m in INCLUSIVE_BY_FACT):   # 口径 D23: only for a VAT-inclusive price — a fact of the contract
+        if any(m in r.uses for m in INCLUSIVE_BY_FACT):   # decision D23: only for a VAT-inclusive price — a fact of the contract
             inc = (facts or {}).get(("flow", "price_includes_vat"))
             if inc is None:
                 c0 = ch or Chooser(r.id, "flow", bound, {})
@@ -233,13 +296,13 @@ def apply(items, r: RuleObj, P, facts=None, bound=FLOOR, ch=None):
     mine = [it for it in items if it.jur == jur and not it.deduction and it.levy == "income"]
     treaty_rule = r.scope.residence is not None and r.scope.side == "source"
     if r.effect is Effect.BASE and any(m in r.uses + ((r.value,) if r.value else ()) for m in NET_OF_VAT):
-        # 口径 D26 (公告2013年第9号), D29 (增值税会计处理规定): with a VAT-inclusive price the income is the price net of
+        # decision D26 (公告2013年第9号), D29 (增值税会计处理规定): with a VAT-inclusive price the income is the price net of
         # the VAT — the base (and a treaty cap's base) shrink to 1 / (1 + r); a gain is the net price less the basis
         x = sum(v.rate for v in items if v.levy == "vat" and v.jur == jur and not v.deduction and v.borne_by == "payee"
                 and v.vat_inclusive) / 100.0
         if x > 0:
             for it in mine:
-                if (facts or {}).get(("flow", "income")) == "IP_TRANSFER":
+                if (facts or {}).get(("flow", "income")) in ("IP_TRANSFER", "PROPERTY_TRANSFER"):   # a gain: net price less basis
                     it.base_share = max(0.0, it.base_share - x)
                 else:
                     it.base_share *= 1.0 - x
@@ -257,6 +320,8 @@ def apply(items, r: RuleObj, P, facts=None, bound=FLOOR, ch=None):
                 it.cap_base *= share                  # the treaty narrows the base its cap applies to
             else:
                 it.base_share *= share                # domestic law narrows what is taxed
+                if r.id in ARMS_LENGTH:
+                    it.uplift *= share                # decision D41: or widens it to the arm's-length amount
             it.cites.append(r.id)
     elif r.effect is Effect.RATE_CAP:
         cap = P[r.value]
@@ -272,9 +337,11 @@ def apply(items, r: RuleObj, P, facts=None, bound=FLOOR, ch=None):
             it.cites.append(r.id)
     elif r.effect is Effect.CREDIT:                   # s50-type limit: credit <= residence tax on the same income
         foreign = [x for x in items if x.jur != jur and x.jur is not None and not x.deduction and x.levy == "income"]
-        paid = sum(min(x.actual, x.rate * x.base_share) if x.actual is not None else x.effective for x in foreign)   # 口径 D01
+        paid = sum(min(x.actual, x.rate * x.base_share) if x.actual is not None else x.effective for x in foreign)   # decision D01
         if not foreign and facts and facts.get(("flow", "foreign_tax_rate")) is not None:
             paid = float(facts[("flow", "foreign_tax_rate")])       # ex post: the tax actually borne abroad
+        if "hk.fsie.intragroup_foreign_tax" in r.uses and facts:     # decision D44: s15OA(8) — the seller's foreign tax on
+            paid += float(facts.get(("flow", "hk_carried_foreign_tax")) or 0.0)   # the deferred gain, as on this one
         if "cn.ftc.indirect" in r.uses and facts:                   # EIT art 24: the tax the payer bore on the profits behind
             u = facts.get(("flow", "underlying_tax_share"))           # the dividend, as % of the dividend (125号 第五条)
             if u is None:                                             # unknown: pending; the favourable end credits in full,
@@ -299,11 +366,12 @@ def apply(items, r: RuleObj, P, facts=None, bound=FLOOR, ch=None):
     return items
 
 
-LEVY_OF = {Effect.VAT: "vat", Effect.STAMP: "stamp"}
+LEVY_OF = {Effect.VAT: "vat", Effect.STAMP: "stamp", Effect.CUSTOMS: "customs", Effect.SURCHARGE: "surcharge", Effect.LAT: "lat",
+           Effect.DEED: "deed", Effect.PROPERTY_TAX: "property"}
 
 
 def levy_view(f: Flow):
-    """口径 D31. The flow as VAT and stamp duty see it: each party where it is established. The effective-management
+    """decision D31. The flow as VAT and stamp duty see it: each party where it is established. The effective-management
     variant makes a foreign company a Mainland resident for income tax only (国税发〔2009〕82号 第二条)."""
     if not (f.payer_seat or f.payee_seat or f.target_seat):
         return f
@@ -316,9 +384,9 @@ def seen_by(r, f, fl):
 
 
 def outside_of(rules, applicable, f: Flow):
-    """口径 D30. The library keeps current law only: a rule whose law replaced rules it does not keep (RuleObj.before)
+    """decision D30. The library keeps current law only: a rule whose law replaced rules it does not keep (RuleObj.before)
     cannot speak for a flow dated before it takes effect — whatever the old rules said, that levy is outside the library
-    there, never nil. An income base that turns on the VAT (口径 D26, D29) is outside with it. (jur, levy, bearer) ->
+    there, never nil. An income base that turns on the VAT (decision D26, D29) is outside with it. (jur, levy, bearer) ->
     (law, in force from); the engine turns the bearer into the party that bears it."""
     out = {}
     if f.on is None:
@@ -344,15 +412,17 @@ def evaluate_flow(rules, ctx, f: Flow, bound, P, force=None, amount=None) -> Flo
     elem_of = lambda on: on                       # facts are keyed ("flow"|"payer"|"payee", field)
     final = ctx.facts.get(("flow", "_final")) or {}   # jurisdictions whose tax on this flow is paid and closed
 
-    def inverted(r):                              # 口径 D03
+    def inverted(r):                              # decision D03
         """A final item's tax is sunk; its jurisdiction's income rules now only move the tax *due*, and with it the
         credit elsewhere (125号 第四条(二), s50(1)) - so the end that raises the tax due is the favourable one."""
         return r.scope.taxing in final and r.effect in INCOME_EFFECTS
 
     fav_of = lambda r: (not r.favourable) if inverted(r) else r.favourable
-    fl = levy_view(f)                             # 口径 D31: VAT and stamp duty match by the seat
+    fl = levy_view(f)                             # decision D31: VAT and stamp duty match by the seat
     applicable = [r for r in rules if matches(r.scope, seen_by(r, f, fl)) and valid_on(r, f.on)]
     applicable = [r for r in applicable if r.grade is not Grade.B_PRACTICE or (bound == FLOOR) == fav_of(r)]
+    if f.only == "CN_INCOME":                     # decision D38: no stamp duty, VAT or other jurisdiction's tax on a price not paid
+        applicable = [r for r in applicable if r.effect not in LEVY_OF and r.scope.taxing == "CN"]
     tri = {}
     seat_facts = dict(ctx.facts.get(("_meta", "seat")) or ())   # and read the facts that turn on a party's place by it
     for r in applicable:

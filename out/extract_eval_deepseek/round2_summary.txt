@@ -1,0 +1,173 @@
+cases per model: Counter({'deepseek-flash': 10, 'deepseek-v4-pro': 10})
+deepseek-flash   derived        {'correct': 28, 'null': 29, 'wrong': 5}
+deepseek-flash   null-expected  {'false_fill': 5, 'abstained': 17}
+deepseek-flash   value          {'correct': 86}
+deepseek-v4-pro  derived        {'correct': 28, 'null': 29, 'rejected': 1, 'wrong': 4}
+deepseek-v4-pro  null-expected  {'abstained': 17, 'false_fill': 5}
+deepseek-v4-pro  value          {'correct': 81, 'wrong': 3, 'null': 2}
+deepseek-flash {'calls': 151, 'prompt_tokens': 2258597, 'completion_tokens': 406621, 'cache_hit_tokens': 2222845, 'seconds': 2337.481172323227} max case wall 393s
+deepseek-v4-pro {'calls': 147, 'prompt_tokens': 2259862, 'completion_tokens': 330778, 'cache_hit_tokens': 2237952, 'seconds': 3474.509024143219} max case wall 672s
+errors: []
+
+NON-CORRECT ROWS
+('K3-carote-2026', 'flows.up1.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  correct    False  | In addition, under PRC laws and regulations, our PRC subsidiaries may pay dividends only out of their respective accumulated after-tax profi 
+('K3-carote-2026', 'flows.up2.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-carote-2026', 'holds.ULT>HOLD.cost', 'missing', 'None')
+    deepseek-flash   false_fill 100000.0  | Carote Group acquired the entire issued share capital in Carote (Singapore) Management from Zhejiang Carote for a consideration of US$100,00 
+    deepseek-v4-pro  false_fill 100000.0  | Carote Group acquired the entire issued share capital in Carote (Singapore) Management from Zhejiang Carote for a consideration of US$100,00 
+('K3-carote-2026', 'holds.ULT>OP.cost', 'missing', 'None')
+    deepseek-flash   false_fill 67731000.0  | In August 2023, Carote Group purchased 100% equity interests in Zhejiang Carote from the Controlling Shareholders, the companies controlled  
+    deepseek-v4-pro  abstained  None  |  
+('K3-carote-2026', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-carote-2026', 'roles.ULT.attrs.group_revenue_eur', 'derived', '201430425.49')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-ekh-2026', 'flows.up1.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-ekh-2026', 'flows.up1.foreign_headline_rate', 'disclosed', '25')
+    deepseek-flash   correct    25.0  | The provision for PRC Enterprise Income Tax is based on the estimated taxable income for the PRC taxation purposes at the applicable rate of 
+    deepseek-v4-pro  wrong      20.0  | The income tax rate of resident enterprises is 25%, while the income tax rate of non-resident enterprises is 20%. 
+('K3-ekh-2026', 'flows.up2.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-ekh-2026', 'holds.HOLD>OP.since', 'derived', '2012-12-31')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-ekh-2026', 'holds.ULT>HOLD.since', 'derived', '2012-12-31')
+    deepseek-flash   wrong      '2010-10-26'  | Best China Development Limited (保昌發展有限公司), a limited liability company incorporated in Hong Kong on 26 October 2010 and our wholly-owned sub 
+    deepseek-v4-pro  null       None  |  
+('K3-ekh-2026', 'roles.ULT.attrs.group_revenue_eur', 'derived', '98891763.71')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-jst-2026', 'flows.out.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-jst-2026', 'flows.out.foreign_headline_rate', 'disclosed', '25')
+    deepseek-flash   correct    25.0  | The general corporate income tax rate in the PRC is 25%. 
+    deepseek-v4-pro  wrong      10.0  | The EIT Law provides that since January 1, 2008, an income tax rate of 10% will normally be applicable to dividends declared to non-PRC resi 
+('K3-jst-2026', 'holds.ULT>OP.cost', 'missing', 'None')
+    deepseek-flash   false_fill 493484473.0  | On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte 
+    deepseek-v4-pro  false_fill 493484473.0  | On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte 
+('K3-jst-2026', 'holds.ULT>OP.since', 'derived', '2023-09-05')
+    deepseek-flash   wrong      '2023-02-21'  | On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte 
+    deepseek-v4-pro  wrong      '2023-02-21'  | On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte 
+('K3-jst-2026', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   wrong      'HK'  | After the completion of the above transfers of equity interests, Shanghai Jushuitan has become a wholly foreign-owned enterprise wholly-owne 
+    deepseek-v4-pro  wrong      'HK'  | After the completion of the above transfers of equity interests, Shanghai Jushuitan has become a wholly foreign-owned enterprise wholly-owne 
+('K3-jst-2026', 'roles.ULT.attrs.group_revenue_eur', 'derived', '120885764.78')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-jst-2026', 'roles.ULT.attrs.is_mne_member', 'derived', 'True')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  rejected   None  |  ['quote not found in the document']
+('K3-mirxes-2026', 'flows.up1.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-mirxes-2026', 'flows.up1.foreign_headline_rate', 'disclosed', '25')
+    deepseek-flash   correct    25.0  | Under the Law of the PRC on Enterprise Income Tax (the “EIT Law”) and implementation regulations of the EIT Law, the basic tax rate of the C 
+    deepseek-v4-pro  null       None  |  
+('K3-mirxes-2026', 'flows.up1.foreign_taxed', 'derived', 'True')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  correct    True  | The EIT Law and its relevant regulations also impose a withholding tax at 10% on the foreign investors with respect to dividend distribution 
+('K3-mirxes-2026', 'flows.up2.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-mirxes-2026', 'holds.ULT>HOLD.cost', 'missing', 'None')
+    deepseek-flash   false_fill 83463359.41  | Pursuant to an equity transfer agreement entered into between MiRXEA Pte. Ltd. and Huzhou Mirui dated June 14, 2023, MiRXEA Pte. Ltd. transf 
+    deepseek-v4-pro  false_fill 83463359.41  | Pursuant to an equity transfer agreement entered into between MiRXEA Pte. Ltd. and Huzhou Mirui dated June 14, 2023, MiRXEA Pte. Ltd. transf 
+('K3-mirxes-2026', 'holds.ULT>OP.cost', 'missing', 'None')
+    deepseek-flash   false_fill 10000000.0  | Our subsidiary, Hangzhou Miwei, was incorporated in the PRC on December 11, 2020 as a limited liability company with an initial registered c 
+    deepseek-v4-pro  abstained  None  |  
+('K3-mirxes-2026', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  wrong      'CN'  | Pursuant to an equity transfer agreement entered into between MiRXEA Pte. Ltd. and Huzhou Mirui dated June 14, 2023, MiRXEA Pte. Ltd. transf 
+('K3-mirxes-2026', 'roles.ULT.attrs.group_revenue_eur', 'derived', '19373610.56')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-shein-2026', 'flows.up1.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-shein-2026', 'flows.up1.foreign_taxed', 'derived', 'True')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-shein-2026', 'holds.ULT>OP.ratio', 'derived', '100.0')
+    deepseek-flash   correct    100.0  | Roadget Business Pte. Ltd.
+(Singapore)
+100%
+Xiyin E Commerce FZE
+(The United Arab Emirates)
+Infinite Styles eCommerce
+Co., Ltd. (Ireland)
+10 
+    deepseek-v4-pro  null       None  |  
+('K3-shein-2026', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   wrong      'OTHER'  | Shein Distribution
+Corporation(7)
+(Delaware)
+Guangzhou Shein 
+International Import & 
+Export Co., Ltd. (China) 
+    deepseek-v4-pro  null       None  |  
+('K3-shein-2026', 'present.financing', 'derived', 'EQUITY')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  correct    'EQUITY'  | Equity interests 
+('K3-shein-2026', 'roles.ULT.attrs.group_revenue_eur', 'derived', '35675288689.21')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-sunsine-2026', 'flows.up1.deductible_at_payer', 'derived', 'False')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-sunsine-2026', 'holds.ULT>OP.since', 'derived', '2023-12-31')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K3-sunsine-2026', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   wrong      'SG'  | CHINA SUNSINE CHEMICAL HOLDINGS LTD.
+(Singapore) 
+    deepseek-v4-pro  wrong      'SG'  | CHINA SUNSINE CHEMICAL HOLDINGS LTD. (Singapore) GROUP STRUCTURE 100% Shandong Sunsine Chemical Co., Ltd. (Shanxian, Shandong, PRC) 
+('K4-freetech-2024', 'flows.exit.listed_market_trade', 'derived', 'False')
+    deepseek-flash   correct    False  | The equity of expressway maintenance companies is relatively closed compared to the outstanding shares of listed companies, with no active t 
+    deepseek-v4-pro  null       None  |  
+('K4-freetech-2024', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K4-shuion-kic-2024', 'flows.exit.immovable_ratio', 'derived', '97.8')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K4-shuion-kic-2024', 'holds.ULT>OP.cost', 'missing', 'None')
+    deepseek-flash   abstained  None  |  ['quote not found in the document']
+    deepseek-v4-pro  false_fill 1116720000.0  | Following the capital reduction, the registered capital of the Company was HK$1,128,000,000, of which Top Victory Development Limited adjust 
+('K4-shuion-kic-2024', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K4-shuion-kic-2024', 'roles.BUYER.loc', 'derived', 'CN')
+    deepseek-flash   correct    'CN'  | An onshore merger and acquisition loan (the “M&A Loan”) for the Limited Partnership to pay for a portion of the consideration for the Equity 
+    deepseek-v4-pro  null       None  |  
+('K4-shuion-ypu-2024', 'event.exit', 'disclosed', '4706000000.0')
+    deepseek-flash   correct    4706000000.0  | the 86.8% equity interests in YPU will be transferred from Bright Continental to the
+Limited Partnership at the consideration of approximate 
+    deepseek-v4-pro  wrong      86.8  | the 86.8% equity interests in YPU will be transferred from Bright Continental to the Limited Partnership at the consideration of approximate 
+('K4-shuion-ypu-2024', 'flows.exit.immovable_ratio', 'derived', '96.86')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K4-shuion-ypu-2024', 'holds.ULT>OP.cost', 'missing', 'None')
+    deepseek-flash   abstained  None  |  
+    deepseek-v4-pro  false_fill 98952000.0  | Bright Continental Limited adjusted its contribution amount from US$119,350,000 to US$98,952,000, accounting for 86.8% of the total register 
+('K4-shuion-ypu-2024', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K4-shuion-ypu-2024', 'roles.BUYER.loc', 'derived', 'CN')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K4-smit-2026', 'present.HOLD', 'derived', 'NONE')
+    deepseek-flash   null       None  |  
+    deepseek-v4-pro  null       None  |  
+('K4-smit-2026', 'roles.ULT.attrs.cit_rate', 'disclosed', '15.0')
+    deepseek-flash   correct    15.0  | This is calculated based on a 15% preferential enterprise income tax rate, which is applicable to the valid High/New Technology Enterprise c 
+    deepseek-v4-pro  null       None  |  

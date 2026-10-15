@@ -1,0 +1,181 @@
+{
+ "case_id": "K3-jst-2026",
+ "kind": "K3",
+ "template": "repatriation",
+ "subject": "GROUP",
+ "members": [
+  "ULT",
+  "OP"
+ ],
+ "roles": {
+  "ULT": {
+   "loc": "HK",
+   "attrs": {
+    "incorporated_in": "HK",
+    "is_mne_member": true,
+    "group_revenue_eur": 120885764.78
+   }
+  },
+  "OP": {
+   "loc": "CN",
+   "attrs": {
+    "incorporated_in": "CN"
+   }
+  }
+ },
+ "holds": [
+  {
+   "holder": "ULT",
+   "held": "OP",
+   "ratio": 100.0,
+   "since": "2023-09-05"
+  }
+ ],
+ "flows": {
+  "out": {
+   "foreign_taxed": true,
+   "foreign_headline_rate": 25,
+   "deductible_at_payer": false,
+   "reduced_capital_ratio": 98.2297
+  }
+ },
+ "present": {
+  "HOLD": null,
+  "repatriation": "CAPITAL_REDUCTION",
+  "payment": false
+ },
+ "settled": {},
+ "event": {
+  "on": "2026-02-12",
+  "years": 1,
+  "dividend": 350000000.0
+ },
+ "synthetic_share": 0.33,
+ "provenance": {
+  "roles.ULT.loc": {
+   "kind": "disclosed",
+   "source": "K3-jst-2025",
+   "page": "pdf 163",
+   "quote": "on October 4, 2021, Hong Kong True Value Limited was incorporated as a limited liability company in Hong Kong and a direct wholly-owned subsidiary of True Value Limited."
+  },
+  "roles.ULT.attrs.incorporated_in": {
+   "kind": "disclosed",
+   "source": "K3-jst-2025",
+   "page": "pdf 424",
+   "quote": "Hong Kong True Value Limited (“HK True Value”) was incorporated in Hong Kong with a limited liability on 4 October 2021 as an intermediate holding company of the Group."
+  },
+  "roles.ULT.attrs.is_mne_member": {
+   "kind": "derived",
+   "source": "K3-jst-2025",
+   "page": "pdf 461",
+   "quote": "The Group’s subsidiary in Thailand is subject to Thailand CIT which is calculated based on the applicable tax rate of 20% on the assessable profits of the subsidiaries",
+   "formula": "the group has subsidiaries in the Mainland and Thailand (pdf 425–426, 461) — the Hong Kong company is a member of an MNE group (Cap 112 s15H)"
+  },
+  "roles.ULT.attrs.group_revenue_eur": {
+   "kind": "derived",
+   "source": "K3-jst-2025",
+   "page": "pdf 413",
+   "quote": "Note 2022 2023 2024 2024 2025 RMB’000 RMB’000 RMB’000 RMB’000 RMB’000 (Unaudited) Revenue 6 523,078 697,191 909,750 420,973 523,642",
+   "formula": "group revenue for 2024 RMB909,750,000 ÷ EUR/CNY central parity on 2024-12-31 of 7.5257 (official/fx/cny_central_parity.csv) = EUR120,885,764.78; kept after re-dating to 2026 (the threshold looks at the four preceding years; full-year 2025 is not disclosed)"
+  },
+  "roles.OP.loc": {
+   "kind": "disclosed",
+   "source": "K3-jst-2025",
+   "page": "pdf 48",
+   "quote": "“Shanghai Jushuitan” Shanghai Jushuitan Network Technology Co., Ltd. (上海 聚水潭網絡科技有限公司), a limited liability company established under the laws of the PRC on September 26, 2014 and our wholly-owned subsidiary"
+  },
+  "roles.OP.attrs.incorporated_in": {
+   "kind": "disclosed",
+   "source": "K3-jst-2025",
+   "page": "pdf 48",
+   "quote": "a limited liability company established under the laws of the PRC on September 26, 2014"
+  },
+  "holds.ULT>OP.ratio": {
+   "kind": "disclosed",
+   "source": "K3-jst-2025",
+   "page": "pdf 163",
+   "quote": "Shanghai Jushuitan has become a wholly foreign-owned enterprise wholly-owned by Hong Kong True Value Limited, and thus an indirect wholly-owned subsidiary of our Company."
+  },
+  "holds.ULT>OP.since": {
+   "kind": "derived",
+   "source": "K3-jst-2025",
+   "page": "pdf 163",
+   "quote": "On September 5, 2023, Broad Street Investments Holding (Singapore) Pte. Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund transferred to Hong Kong True Value Limited their equity interests in Shanghai Jushuitan",
+   "formula": "91.35% acquired on 2023-02-21 (pdf 163), the remaining 8.65% on 2023-09-05 making it 100% — 100% since 2023-09-05; 25% or more since 2023-02-21"
+  },
+  "holds.ULT>OP.cost": {
+   "kind": "missing",
+   "source": "K3-jst-2025",
+   "page": "pdf 163",
+   "note": "consideration RMB3,484,473 (2023-02-21, pdf 163) + RMB140,000,000 + \"the US dollar equivalent of RMB350,000,000\" (2023-09-05, pdf 163, 425); the USD amount of the USD part is not disclosed, and a non-resident's foreign-currency cost is converted to RMB at the central parity on the day before the withholding obligation arises (公告2017年第37号) — the tax cost is asked by the program"
+  },
+  "flows.out.foreign_taxed": {
+   "kind": "derived",
+   "source": "K3-jst-2025",
+   "page": "pdf 461",
+   "quote": "distribution of profits earned by PRC companies since 1 January 2008 to foreign investors is subject to withholding tax of 5% or 10%, depending on if the foreign investor is considered as the beneficial owner of the dividend",
+   "formula": "the Mainland levies withholding tax on profit distributions to a foreign investor"
+  },
+  "flows.out.foreign_headline_rate": {
+   "kind": "disclosed",
+   "source": "K3-jst-2025",
+   "page": "pdf 461",
+   "quote": "The general corporate income tax rate in the PRC is 25%."
+  },
+  "flows.out.deductible_at_payer": {
+   "kind": "derived",
+   "formula": "neither a dividend nor a capital reduction repayment is an expense of the payer, not deductible (Enterprise Income Tax Law Article 10(1), Article 8)"
+  },
+  "flows.out.reduced_capital_ratio": {
+   "kind": "synthetic",
+   "source": "K3-jst-2025",
+   "page": "pdf 539",
+   "quote": "On February 12, 2025, the registered capital of Shanghai Jushuitan was decreased from RMB606,481,809 to RMB10,736,712.",
+   "basis": "by the reduction in registered capital (606,481,809 − 10,736,712) ÷ 606,481,809 = 98.2297%; the paid-in capital and whether it was reduced in the same proportion are not disclosed"
+  },
+  "present.HOLD": {
+   "kind": "derived",
+   "source": "K3-jst-2025",
+   "page": "pdf 163",
+   "quote": "Shanghai Jushuitan has become a wholly foreign-owned enterprise wholly-owned by Hong Kong True Value Limited, and thus an indirect wholly-owned subsidiary of our Company.",
+   "formula": "the Hong Kong company holds Shanghai Jushuitan directly, with no intermediate holding company in between"
+  },
+  "present.repatriation": {
+   "kind": "synthetic",
+   "source": "K3-jst-2025",
+   "page": "pdf 539",
+   "quote": "On February 12, 2025, the registered capital of Shanghai Jushuitan was decreased from RMB606,481,809 to RMB10,736,712.",
+   "basis": "the registered capital has been reduced (pdf 539); whether funds were returned to the Hong Kong company is not disclosed; treated as a capital reduction repayment, for testing only"
+  },
+  "present.payment": {
+   "kind": "synthetic",
+   "basis": "whether the payment crosses years is not disclosed; payment in the same year is taken"
+  },
+  "event.on": {
+   "kind": "synthetic",
+   "basis": "re-dated: the real capital reduction date is 2025-02-12, the library holds only current law (decision D30), moved to 2026-02-12"
+  },
+  "event.years": {
+   "kind": "synthetic",
+   "basis": "one year only"
+  },
+  "event.dividend": {
+   "kind": "synthetic",
+   "source": "K3-jst-2025",
+   "page": "pdf 425",
+   "quote": "The consideration of RMB140,000,000 has been settled in 2023 and the remaining RMB350,000,000 as promissory notes receivable due from HK True Value were settled subsequently in March 2025 (Note 21).",
+   "basis": "whether and how much the capital reduction returned is not disclosed; the Hong Kong company settled a promissory note of RMB350,000,000 in March 2025, its relation to the February capital reduction not disclosed — RMB350,000,000 is taken as the repatriated amount, for testing only"
+  }
+ },
+ "notes": [
+  "Source: JST Group Corporation Limited (6687.HK, incorporated in the Cayman Islands) prospectus of 2025-10-13 (cases/sources/K3-jst-2025/source.pdf). K3 semi-synthetic: structure, ratios and dates come from the prospectus; the repatriated amount, method and date are synthetic values (see provenance).",
+  "Only the part within the three jurisdictions is taken: ULT is Hong Kong True Value (Hong Kong intermediate holding, incorporated 2021-10-04), OP is Shanghai Jushuitan (Mainland); the BVI company True Value Limited above it and the Cayman listed company are not in this case. The group also has Hong Kong Jushuitan Technology (holder not disclosed), not in this case.",
+  "Background: in the red-chip reorganisation the domestic shareholders transferred 91.35% at registered capital value (RMB1 per RMB1 of registered capital) on 2023-02-21, and on 2023-09-05 four parties including Singapore Broad Street transferred 8.65% for RMB490,000,000 (consideration per party not disclosed); the sellers were mostly individuals and partnerships, outside the scope of v1. On 2024-10-25 the registered capital was increased from RMB3,814,351 to RMB606,481,809 (source not disclosed, possibly a capitalisation of capital reserve; if from share premium, it does not increase the investor's tax basis under 国税函〔2010〕79号 Article 4), and on 2025-02-12 reduced to RMB10,736,712.",
+  "Not disclosed: Shanghai Jushuitan's accumulated undistributed profits and surplus reserve (the part recognised as a dividend in proportion on the capital reduction), the Hong Kong company's tax cost, economic substance, tax residence certificate — left for the program to ask. Group equity is negative (pdf 428) and the subsidiaries' profits are not disclosed separately. Amounts are in RMB.",
+  "names: each party's defined term / full name in the document (aliases separated by /), individuals written as in the document, used for locating extraction patterns, search queries and registry look-ups (抽取改造.md §2, §7)"
+ ],
+ "names": {
+  "ULT": "Hong Kong True Value Limited / HK True Value",
+  "OP": "Shanghai Jushuitan Network Technology Co., Ltd. / Shanghai Jushuitan"
+ }
+}

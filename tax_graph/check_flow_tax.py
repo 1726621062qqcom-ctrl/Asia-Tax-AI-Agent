@@ -89,7 +89,7 @@ CASES = [
 
 def lender(ratio=2.0, related=True):
     return {("payee", "residence_cert"): True, ("payee", "payee_is_government"): False, ("payee", "payee_is_financial_institution"): False,
-            ("payee", "onpay_ratio_12m"): 0, ("payee", "fixed_place_in_sg"): False, ("payee", "payee_is_related"): related,
+            ("payee", "onpay_ratio_12m"): 0, ("payee", "fixed_place_in_sg"): False, ("flow", "cn_related"): related,
             ("payer", "related_party_debt_equity_ratio"): ratio}
 
 
@@ -98,14 +98,14 @@ DEDUCTION_CASES = [
     ("CN pays interest to a related HK lender within 2:1: 10% withheld (or 7%), 25% deducted while the rate is within the benchmark", CN, HK, I, lender(), CN,
      (7.0 - 25.0, 10.0 + 6.0), {"payee.no_adverse_bo_factors", "payee.ppt", "flow.benchmark_rate", "flow.interest_rate", "flow.price_includes_vat", "flow.unified_borrowing_relending"},
      "EIT art 4 25%; 财税〔2008〕121号 一 2:1; 实施条例 第三十八条(二): the loan rate is unknown, so the ceiling keeps no deduction; "
-     "the ceiling's 6% interest VAT, never credited (口径 D25)"),
+     "the ceiling's 6% interest VAT, never credited (decision D25)"),
     ("CN pays interest to a related HK lender at 3:1: deduction only if arm's length and within the benchmark", CN, HK, I, lender(ratio=3.0), CN,
      (7.0 - 25.0, 10.0 + 6.0), {"payee.no_adverse_bo_factors", "payee.ppt", "payer.arms_length_interest", "flow.benchmark_rate",
                                 "flow.interest_rate", "flow.price_includes_vat", "flow.unified_borrowing_relending"},
-     "121号 二; EIT art 46; 实施条例 第三十八条; 6% interest VAT at the ceiling (口径 D25)"),
+     "121号 二; EIT art 46; 实施条例 第三十八条; 6% interest VAT at the ceiling (decision D25)"),
     ("CN pays interest to an unrelated HK lender at 3:1: no thin-cap limit, benchmark test still", CN, HK, I, lender(ratio=3.0, related=False), CN,
      (7.0 - 25.0, 10.0 + 6.0), {"payee.no_adverse_bo_factors", "payee.ppt", "flow.benchmark_rate", "flow.interest_rate", "flow.price_includes_vat", "flow.unified_borrowing_relending"},
-     "EIT art 46 applies to related parties; 实施条例 第三十八条 to every non-financial lender; 6% interest VAT at the ceiling (口径 D25)"),
+     "EIT art 46 applies to related parties; 实施条例 第三十八条 to every non-financial lender; 6% interest VAT at the ceiling (decision D25)"),
     ("HK pays a deductible royalty to a SG associate: 16.5% deemed on 100%, 16.5% deducted", HK, SG, R,
      {("flow", "ip_used_in_hk"): True, ("flow", "royalty_deductible_in_hk"): True, ("payee", "payee_is_associate"): True,
       ("flow", "ip_never_owned_by_hk_business"): False, ("payee", "residence_cert"): True}, HK,

@@ -2,16 +2,18 @@
 
 engine(graph, ctx, bound, force) -> (total, groups, labels)
 bounds(graph, ctx)              -> Bounds(lo, hi, groups, cost, L_lo, L_hi)   # 2 + 2 x |groups| engine runs
-The only stops are Reject (入口) and Defect (断言), as the contracts I2–I3 require.
+The only stops are Reject (entry) and Defect (assertion), as the contracts I2–I3 require.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, replace as _replace
 from typing import Dict, Tuple
 
-from .facts import FIXED, facts_for, source_of
+from .facts import FIXED, facts_for, related_in, source_of, tax_year
+from .losses import LOSS_RULES, loss_stage, p2_loss_tax
 from .regions import absolute
 from itertools import combinations
 
-from .model import CFC_INCLUSION, IP_TRANSFER, LIQUIDATION, SHARE_TRANSFER, SPLIT_INCOMES, TOPUP, FlowEdge, Graph, Label, topo_order
+from .model import (BRANCH, BRANCH_PROFIT, CFC_INCLUSION, IP_TRANSFER, LIQUIDATION, PROPERTY, RENT, SHARE_TRANSFER, SPLIT_INCOMES, TOPUP, Entity,
+                    FlowEdge, Graph, Label, months, topo_order)
 from .params import Params
 from .rules.compile import compile_rules
 from .rules.eval import Flow, FlowResult, TaxItem, cond, evaluate_flow, matches, valid_on
@@ -100,7 +102,7 @@ class CaseCtx(Ctx):
 
     def plan_controlled(self, elem, field):
         """A field the plan sets: adjustable for everyone, or designable for a company the plan creates — unless the
-        structure's own flows already fix it (facts.FIXED, 口径 D19): the plan cannot undo its own flows."""
+        structure's own flows already fix it (facts.FIXED, decision D19): the plan cannot undo its own flows."""
         if self.facts.get((FIXED, "%s.%s" % (elem, field))):
             return False
         if field in self.adjustable:
@@ -139,11 +141,12 @@ class Bounds:
 
 
 def flow_of(graph, f, facts):
-    seat = lambda eid: graph.entities[eid].attrs.get("seat") if eid else None     # 口径 D31
+    seat = lambda eid: graph.entities[eid].attrs.get("seat") if eid else None     # decision D31
     return Flow(graph.entities[f.payer].loc, graph.entities[f.payee].loc, f.income, on=f.on,
-                target_loc=graph.entities[f.target].loc if f.target else None,
+                target_loc=graph.entities[f.target].loc if f.target else f.attrs.get("property_loc") if f.income in (PROPERTY, RENT) else None,
                 indirect_cn=bool(facts.get(("flow", "indirect_cn_target"))), id=f.id,
-                payer_seat=seat(f.payer), payee_seat=seat(f.payee), target_seat=seat(f.target))
+                payer_seat=seat(f.payer), payee_seat=seat(f.payee), target_seat=seat(f.target),
+                only="CN_INCOME" if f.attrs.get("cn_income_only") else None)
 
 
 def label_tax(f, items):
@@ -155,7 +158,7 @@ GROUP_FACTS = ("group_revenue_eur",)              # facts of the consolidated gr
 
 def group_fact(graph, e, field_):
     """A group-level fact as the entity states it, else as any member states it; members stating different values
-    is a conflict the planner asks about (returned as the string 'conflict'). 口径 D12."""
+    is a conflict the planner asks about (returned as the string 'conflict'). decision D12."""
     v = e.attrs.get(field_)
     if v is not None:
         return v
@@ -166,15 +169,20 @@ def group_fact(graph, e, field_):
     return next(iter(vals)) if vals else None
 
 
-DEDUCTIBLE_OUT = ("INTEREST", "ROYALTY", "SERVICE_FEE")
-LEVY_TEXT = {"vat": "增值税", "stamp": "印花税", "income": "所得税"}
+DEDUCTIBLE_OUT = ("INTEREST", "ROYALTY", "SERVICE_FEE", "GOODS")      # decision D42: a trader's goods are its cost of sales
+
+
+def own_costs(f):
+    """decision D42: what a trader's resale costs it besides the goods (operating_costs); 0 for other income; None unknown."""
+    return f.attrs.get("operating_costs") if f.attrs.get("purchase_flow") else 0.0
+LEVY_TEXT = {"vat": "VAT", "stamp": "stamp duty", "income": "income tax", "customs": "customs duty"}
 
 
 def vat_borne(labels, eid, year=None, flow=None):
-    """口径 D29. The VAT an entity bears on the modelled flows, signed (its input credits negative), as its accounts see it:
+    """decision D29. The VAT an entity bears on the modelled flows, signed (its input credits negative), as its accounts see it:
     the seller's is out of what it collected — the output VAT is a liability, not revenue (增值税会计处理规定) — or a
     cost; the payer's on a deductible payment is part of the expense, less what it credits. VAT on a purchase it
-    capitalises (the IP it buys) goes into the asset, whose amortisation is a datum (口径 D27). Without labels: 0."""
+    capitalises (the IP it buys) goes into the asset, whose amortisation is a datum (decision D27). Without labels: 0."""
     total = 0.0
     for lb in (labels or {}).values():
         f = lb.flow
@@ -187,8 +195,8 @@ def vat_borne(labels, eid, year=None, flow=None):
 
 
 def outside_steps(b, graph):
-    """口径 D30. The flows dated before a law the library starts from: a levy there that a group company would bear makes
-    the candidate's tax unknown — like an unmodelled step (口径 D19), no plan, listed with its other numbers. A levy borne
+    """decision D30. The flows dated before a law the library starts from: a levy there that a group company would bear makes
+    the candidate's tax unknown — like an unmodelled step (decision D19), no plan, listed with its other numbers. A levy borne
     outside the group does not touch the objective: a note. Returns (steps, notes)."""
     group = graph.group()
     steps, notes = set(), set()
@@ -206,7 +214,7 @@ def own_tax(labels, eid):
     """Income tax the company itself owes on the flows in `labels` — it is the taxpayer of a receipt's items and of its
     own deductions (withholding it bears under a gross-up stays the recipient's tax): 125号 第五条 本层企业就利润和投资
     收益所实际缴纳的税额, as far as the modelled flows carry it."""
-    return sum(lb.flow.amount * it.effective / 100.0 for lb in labels.values() for it in lb.items    # 口径 D04, D06
+    return sum(lb.flow.amount * it.effective / 100.0 for lb in labels.values() for it in lb.items    # decision D04, D06
                if it.levy == "income" and not it.deferred and (lb.flow.payer if it.deduction else lb.flow.payee) == eid)
 
 
@@ -220,11 +228,20 @@ def other_tax(entity):
     return None if v is None else float(v)
 
 
+def globe_etr(taxes, net):
+    """decision D37. GloBE Art 5.1.1 as the Commentary explains it (Ch 5 para 3): the jurisdictional ETR is a percentage
+    rounded to the fourth decimal place (14.12346% = 14.1235%) — Hong Kong s26AF with Sch 64 (the 2023 Commentary);
+    Singapore s2 ("GloBE rules" include the Commentary) with s11(1) and s27(4). A half rounds up."""
+    from decimal import ROUND_HALF_UP, Decimal
+    return float(Decimal(repr(100.0 * taxes / net)).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP))
+
+
 def cn_tiers(graph, resident, P):
     """财税〔2009〕125号 第六条 / 财税〔2017〕84号 第二条: the foreign companies whose tax stands behind a Mainland resident's
     dividends, by tier — the first held >= 20% directly by the resident; each next one held >= 20% directly by a single
     company of the tier above and >= 20% in total by the resident (directly, or through companies of the tiers).
-    Returns {company: tier}. 口径 D05."""
+    Every single holding the total counts is itself >= 20% (操作指南 第21段, 示例四、五): a direct holding of the resident
+    below 20%, or a holding below 20% by a company of the tiers, adds nothing. Returns {company: tier}. decision D05."""
     lim, n = P["cn.ftc.indirect_ratio_min"], int(P["cn.ftc.indirect_tiers"])
     foreign = lambda e: graph.entities[e].loc != "CN"
     tier, total = {}, {}
@@ -237,8 +254,8 @@ def cn_tiers(graph, resident, P):
             z = h.held
             if z in tier or z == resident or not foreign(z) or tier.get(h.holder) != k - 1 or h.ratio < lim:
                 continue
-            tot = sum((hh.ratio if hh.holder == resident else total[hh.holder] * hh.ratio / 100.0)
-                      for hh in graph.holds if hh.held == z and (hh.holder == resident or hh.holder in total))
+            tot = sum(total[hh.holder] * hh.ratio / 100.0
+                      for hh in graph.holds if hh.held == z and hh.holder in total and hh.ratio >= lim)
             if tot >= lim:
                 new[z] = tot
         for z, tot in new.items():
@@ -257,7 +274,7 @@ def gain_cost(graph, f):
 
 
 def book_amortization(f, year=None):
-    """口径 D27. The buyer's book amortisation of the IP it bought on the step f, as the case states it per modelled year
+    """decision D27. The buyer's book amortisation of the IP it bought on the step f, as the case states it per modelled year
     (ip_book_amortization: no method or useful life is assumed) — in one financial year (from the step's year, within
     the modelled years) or over all of them. None while not stated."""
     per = f.attrs.get("ip_book_amortization")
@@ -270,10 +287,10 @@ def book_amortization(f, year=None):
 
 
 def step_income(graph, eid, year=None, labels=None):
-    """口径 D22, D27. What the plan's IP transfer step adds to an existing company's stated profit or GloBE income, which
+    """decision D22, D27. What the plan's IP transfer step adds to an existing company's stated profit or GloBE income, which
     describe its present business: the seller's book gain (proceeds less its carrying amount ip_book_value — none in a
-    transfer at book value, which recognises no gain in the accounts, 口径 D28; the proceeds net of the VAT it bears,
-    口径 D29) and the buyer's book amortisation. `year`: that year only; None: the modelled years. Returns (amount,
+    transfer at book value, which recognises no gain in the accounts, decision D28; the proceeds net of the VAT it bears,
+    decision D29) and the buyer's book amortisation. `year`: that year only; None: the modelled years. Returns (amount,
     what is still to ask)."""
     total, needs = 0.0, []
     for f in graph.flows:
@@ -313,14 +330,16 @@ def profit_needs(graph, eid):
     return tuple(["flow:%s.cost_basis" % f.id for f in graph.flows
                   if f.payee == eid and f.income in (SHARE_TRANSFER, IP_TRANSFER) and gain_cost(graph, f) is None]
                  + ["flow:%s.ip_book_amortization" % (f.attrs.get("fact_key") or f.id) for f in graph.flows
-                    if f.payer == eid and f.income == IP_TRANSFER and book_amortization(f) is None])
+                    if f.payer == eid and f.income == IP_TRANSFER and book_amortization(f) is None]
+                 + ["flow:%s.operating_costs" % (f.attrs.get("fact_key") or f.id) for f in graph.flows      # decision D42
+                    if f.payee == eid and own_costs(f) is None])
 
 
 def designed_profit(graph, labels, eid, year=None):
     """After-tax profit of a company the plan creates (created_by_plan): it has exactly the flows the plan models —
     income received, less deductible payments it makes, less the income taxes it bears (its deductions' saving
     included). None if a gain it realises has no known cost. `year`: that year's flows only. Stated in the plan as a
-    design condition ("a pure holding / financing company"). 口径 D06."""
+    design condition ("a pure holding / financing company"). decision D06."""
     e = graph.entities[eid]
     if not e.attrs.get("created_by_plan"):
         return None
@@ -335,10 +354,12 @@ def designed_profit(graph, labels, eid, year=None):
                     return None
                 income += f.amount - float(cost)
             else:
-                income += f.amount
+                if own_costs(f) is None:                            # decision D42: a trader's costs not given
+                    return None
+                income += f.amount - float(own_costs(f))
         elif f.payer == eid and f.income in DEDUCTIBLE_OUT:
             income -= f.amount
-        elif f.payer == eid and f.income == IP_TRANSFER:           # 口径 D27: the IP it bought, amortised in its accounts
+        elif f.payer == eid and f.income == IP_TRANSFER:           # decision D27: the IP it bought, amortised in its accounts
             a = book_amortization(f, year)
             if a is None:
                 return None
@@ -346,7 +367,7 @@ def designed_profit(graph, labels, eid, year=None):
     tax = sum(lb.flow.amount * it.effective / 100.0 for lb in labels.values() for it in lb.items
               if it.levy == "income" and not it.deferred and (year is None or lb.flow.on.year == year)
               and (lb.flow.payer if it.borne_by == "payer" else lb.flow.payee) == eid)
-    return round(income - tax - vat_borne(labels, eid, year), 2)                # 口径 D29: and the VAT it bears
+    return round(income - tax - vat_borne(labels, eid, year), 2)                # decision D29: and the VAT it bears
 
 
 def pooled_credit(rule, entity, flows, graph, labels, P, bound, choose=None):
@@ -355,15 +376,15 @@ def pooled_credit(rule, entity, flows, graph, labels, P, bound, choose=None):
     jur = entity.loc
     rows = []
     for f in flows:
-        if f.income == TOPUP or f.amount <= 0:                  # 口径 D02: Part 14 credits do not reach DTT / MTT; an
+        if f.income == TOPUP or f.amount <= 0:                  # decision D02: Part 14 credits do not reach DTT / MTT; an
             continue                                            # amount still asked for (nil) carries no tax to pool
-        if source_of(graph, f) == jur:                          # 口径 D11: Singapore-sourced income is not in the pool
+        if source_of(graph, f) == jur:                          # decision D11: Singapore-sourced income is not in the pool
             continue
         it = next((x for x in labels[f.id].items if x.jur == jur and not x.deduction and x.levy == "income"), None)
         if it is None or it.rate * it.base_share <= 0:
             continue                                            # sg.ftc.pooling_sg_tax_not_nil
         foreign_items = [x for x in labels[f.id].items if x.jur != jur and x.jur is not None and not x.deduction and x.levy == "income"]
-        foreign = sum(min(x.actual, x.rate * x.base_share) if x.actual is not None else x.effective for x in foreign_items)   # 口径 D01
+        foreign = sum(min(x.actual, x.rate * x.base_share) if x.actual is not None else x.effective for x in foreign_items)   # decision D01
         if not foreign_items:                                   # ex post: the tax actually borne abroad, as a fact
             rate = facts_for(graph, f).get(("flow", "foreign_tax_rate"))
             if rate is not None:
@@ -413,12 +434,13 @@ def carryforward_credit(rule, entity, flows, graph, labels, P, bound, choose=Non
     jur = entity.loc
     rows = []
     for f in flows:
-        if f.income == TOPUP or f.amount <= 0:                  # 口径 D02: no top-up tax in the Mainland model; an amount
+        if f.income == TOPUP or f.amount <= 0:                  # decision D02: no top-up tax in the Mainland model; an amount
             continue                                            # still asked for (nil) carries no tax
         it = next((x for x in labels[f.id].items if x.jur == jur and not x.deduction and x.levy == "income"), None)
-        if it is None or it.rate * it.base_share <= 0:
-            continue
-        rows.append((f, it, f.amount * it.rate * it.base_share / 100.0, f.amount * it.creditable / 100.0, source_of(graph, f), f.on.year))
+        if it is None or (it.rate * it.base_share <= 0 and not (it.pre_loss and it.creditable > 0)):
+            continue                                            # decision D51: a limit of nil still carries the foreign tax (示例八)
+        rows.append((f, it, f.amount * it.rate * it.base_share / 100.0, f.amount * it.creditable / 100.0, source_of(graph, f),
+                     tax_year(f, jur)))                          # decision D50
     by_country = defaultdict(list)
     for row in rows:
         by_country[row[4]].append(row)
@@ -460,7 +482,7 @@ def entity_stage(graph, ctx_of, bound, force, P, rules, labels, groups, only=Non
     """Rules mounted on an entity: their condition is read per flow of that entity, their effect spans the flows
     (those in `only` when given)."""
     for r in rules:
-        if r.scope.mount is not Mount.ENTITY:
+        if r.scope.mount is not Mount.ENTITY or r.id in LOSS_RULES:     # decision D51: the loss stage's own (losses.py)
             continue
         for e in graph.entities.values():
             if r.scope.taxing not in (e.loc, ALL) and r.scope.side != "residence":
@@ -469,7 +491,7 @@ def entity_stage(graph, ctx_of, bound, force, P, rules, labels, groups, only=Non
                 continue
             qualifying = []
             for f in (graph.flows if only is None else only):
-                if f.payee != e.id or f.income == TOPUP:          # 口径 D02: no entity-level credit reaches a top-up
+                if f.payee != e.id or f.income == TOPUP:          # decision D02: no entity-level credit reaches a top-up
                     continue
                 facts = facts_for(graph, f)
                 flow = flow_of(graph, f, facts)
@@ -544,7 +566,8 @@ def split_variants(graph, f):
 
 
 def cfc_chain_ratio(graph, holder, held):
-    """国税发〔2009〕2号 第七十七条: indirect holdings multiply down the chain, but a tier held above 50% counts as 100%."""
+    """Control (实施条例 第一百一十七条; 公告2023年第17号 第二条第二款, which replaced 国税发〔2009〕2号 第七十七条 — decision D39):
+    indirect holdings multiply down the chain, but a tier held above 50% counts as 100%."""
     if holder == held:
         return 100.0
     best = 0.0
@@ -553,6 +576,15 @@ def cfc_chain_ratio(graph, holder, held):
             step = 100.0 if h.ratio > 50.0 else h.ratio
             best = max(best, step / 100.0 * cfc_chain_ratio(graph, h.held, held))
     return best
+
+
+def cfc_profit_share(graph, holder, held, seen=()):
+    """国税发〔2009〕2号 第八十条 (decision D39): the shareholder's share of the deemed distribution — the ratios of the tiers
+    multiplied as they are (counting a tier above 50% as 100% is for control only), holdings along several chains added."""
+    if holder == held:
+        return 100.0
+    return sum(h.ratio / 100.0 * cfc_profit_share(graph, h.held, held, seen + (holder,))
+               for h in graph.holds if h.holder == holder and h.held not in seen)
 
 
 def cfc_flows(graph: Graph, P, needs=None, labels=None):
@@ -577,7 +609,7 @@ def cfc_flows(graph: Graph, P, needs=None, labels=None):
             if any(f.payer == sub_.id and f.income == LIQUIDATION for f in graph.flows):
                 continue                                        # wound up in the horizon: its profits are distributed (D19)
             atp = sub_.attrs.get("after_tax_profit")
-            if atp is not None:                                 # 口径 D22, D27: the plan's IP step, after its own tax
+            if atp is not None:                                 # decision D22, D27: the plan's IP step, after its own tax
                 gain, missing = step_income(graph, sub_.id, labels=labels)
                 if missing:
                     if needs is not None:
@@ -597,9 +629,10 @@ def cfc_flows(graph: Graph, P, needs=None, labels=None):
             retained = max(0.0, float(atp) - distributed)
             if retained <= 0:
                 continue
+            share = cfc_profit_share(graph, parent.id, sub_.id)        # decision D39: 第八十条, not the control ratio
             out.append(FlowEdge("cfc:%s>%s" % (sub_.id, parent.id), sub_.id, parent.id, CFC_INCLUSION,
-                                round(retained * chain / 100.0, 2), last + timedelta(days=1),
-                                attrs={"cfc_chain_ratio": chain, "cfc_share_control": share_control}))
+                                round(retained * share / 100.0, 2), last + timedelta(days=1),
+                                attrs={"cfc_chain_ratio": chain, "cfc_profit_share": share, "cfc_share_control": share_control}))
     return out
 
 
@@ -608,7 +641,7 @@ JURISDICTION_CODES = frozenset({"CN", "HK", "SG"})   # a group keyed by a jurisd
 P2_PRE = {"HK": "p2.", "SG": "sg.p2."}             # each jurisdiction's own enactment of the GloBE parameters
 P2_THRESHOLD = {"HK": "p2.revenue_threshold", "SG": "sg.p2.revenue_threshold"}   # the rules' own scope parameters
 P2_RATE = {"HK": "p2.minimum_rate", "SG": "sg.p2.minimum_rate"}                  # s7 / Art 10.1; 15% in s16(3), s21(1)
-P2_IIR = {"HK": "p2.qualified_iir_hk", "SG": "p2.qualified_iir_sg"}              # 口径 D20: the OECD central record
+P2_IIR = {"HK": "p2.qualified_iir_hk", "SG": "p2.qualified_iir_sg"}              # decision D20: the OECD central record
 
 
 def p2_entities(graph: Graph, loc):
@@ -618,7 +651,7 @@ def p2_entities(graph: Graph, loc):
 
 
 def p2_excluded(graph: Graph, f, eid, P, law=None):
-    """口径 D16. Income the GloBE computation leaves out of the receiving entity's GloBE income (Art 3.2.1(b)(c)):
+    """decision D16. Income the GloBE computation leaves out of the receiving entity's GloBE income (Art 3.2.1(b)(c)):
     excluded dividends — on an ownership interest other than a portfolio shareholding held under a year at the
     distribution — and excluded equity gains — on disposing of an ownership interest other than a portfolio
     shareholding (MMT Act s2; GloBE Art 10.1.1). Without a holding edge the flow is not known to be on an ownership
@@ -627,7 +660,7 @@ def p2_excluded(graph: Graph, f, eid, P, law=None):
         return False
     pre = P2_PRE.get(law or graph.entities[eid].loc, "p2.")
     if f.income in ("DIVIDEND", "DISTRIBUTION") + SPLIT_INCOMES:    # a liquidation or capital reduction: a dividend part
-        # and a disposal of the interest (engine.parts) — excluded on the same ownership interest (口径 D16, D20)
+        # and a disposal of the interest (engine.parts) — excluded on the same ownership interest (decision D16, D20)
         h = graph.holding(eid, f.payer)
         if h is None:
             return False
@@ -640,17 +673,18 @@ def p2_excluded(graph: Graph, f, eid, P, law=None):
 
 
 def p2_tax(labels, graph: Graph, eid, year, P):
-    """口径 D16. Covered taxes the entity bears on the modelled flows of a financial year — withheld on its receipts,
+    """decision D16. Covered taxes the entity bears on the modelled flows of a financial year — withheld on its receipts,
     charged where it sits, its deductions' saving included — less the tax on income the GloBE computation leaves out
     (GloBE Art 4.1.3(a); MMT Regulations reg 38(2)(a))."""
     return sum(lb.flow.amount * it.effective / 100.0 for lb in labels.values() if lb.flow.on.year == year for it in lb.items
                if it.levy == "income" and not it.deferred and (lb.flow.payer if it.borne_by == "payer" else lb.flow.payee) == eid
                and not (it.borne_by != "payer" and p2_excluded(graph, lb.flow, eid, P))
-               and not (it.deduction and lb.flow.income == IP_TRANSFER)) + p2_step_tax(labels, eid, year, P)   # 口径 D27
+               and not (it.deduction and lb.flow.income == IP_TRANSFER)) + p2_step_tax(labels, eid, year, P) \
+        + p2_loss_tax(labels, eid, year, P)                                                              # decision D27, D51
 
 
 def p2_step_tax(labels, eid, year, P):
-    """口径 D27. The IP step's tax amortisation in the buyer's covered taxes for a financial year, with GloBE's deferred tax
+    """decision D27. The IP step's tax amortisation in the buyer's covered taxes for a financial year, with GloBE's deferred tax
     (Art 4.4.1): the current saving t x A_t, and deferred tax on A_t - A_b at t, recast at the minimum rate when t is
     higher — A_t the deduction over the modelled years taken evenly, A_b the book amortisation of the year. A buyer with no
     tax amortisation (Hong Kong, from an associate) has a permanent difference: nothing."""
@@ -665,23 +699,23 @@ def p2_step_tax(labels, eid, year, P):
         a_b = book_amortization(f, year) or 0.0
         for it in lb.items:
             if it.levy == "income" and it.deduction and not it.deferred and it.borne_by == "payer":
-                a_t = f.amount * it.base_share / years
+                a_t = f.amount * (it.pre_loss if it.pre_loss is not None else it.base_share) / years
                 total += -it.rate / 100.0 * a_t + min(it.rate, m) / 100.0 * (a_t - a_b)
     return total
 
 
 def p2_other(e):
     """Covered taxes outside the modelled flows: the group's datum (None while unknown); nil for a company the plan
-    creates, which by design does nothing beyond its modelled flows (口径 D06, D16)."""
+    creates, which by design does nothing beyond its modelled flows (decision D06, D16)."""
     if e.attrs.get("covered_taxes_other") is not None:
         return float(e.attrs["covered_taxes_other"])
     return 0.0 if e.attrs.get("created_by_plan") else None
 
 
 def designed_globe_income(graph: Graph, eid, year, P, labels=None):
-    """口径 D06, D16. GloBE income of a company the plan creates — exactly its modelled flows — for a financial year:
+    """decision D06, D16. GloBE income of a company the plan creates — exactly its modelled flows — for a financial year:
     what it receives less the deductible payments it makes, before tax (Art 3.2.1(a)), without excluded dividends and
-    excluded equity gains (Art 3.2.1(b)(c)); net of the VAT it bears (口径 D29, with the flows' labels). None while the
+    excluded equity gains (Art 3.2.1(b)(c)); net of the VAT it bears (decision D29, with the flows' labels). None while the
     cost of an included gain is unknown."""
     income = 0.0
     for f in graph.flows:
@@ -696,10 +730,12 @@ def designed_globe_income(graph: Graph, eid, year, P, labels=None):
                     return None
                 income += f.amount - float(cost)
             else:
-                income += f.amount
+                if own_costs(f) is None:                            # decision D42: a trader's costs not given
+                    return None
+                income += f.amount - float(own_costs(f))
         elif f.payer == eid and f.income in DEDUCTIBLE_OUT:
             income -= f.amount
-        elif f.payer == eid and f.income == IP_TRANSFER:           # 口径 D27: the book amortisation of the IP it bought
+        elif f.payer == eid and f.income == IP_TRANSFER:           # decision D27: the book amortisation of the IP it bought
             a = book_amortization(f, year)
             if a is None:
                 return None
@@ -711,7 +747,7 @@ def p2_income(graph: Graph, e, year, P, labels=None):
     """An entity's GloBE income for a financial year: as the group states it (the figure of every modelled year — the
     case's events recur), or, for a company the plan creates, from its modelled flows. None while unknown."""
     if e.attrs.get("globe_income") is not None:
-        gain, missing = step_income(graph, e.id, year, labels)    # 口径 D22, D27: the step's gain or amortisation on top
+        gain, missing = step_income(graph, e.id, year, labels)    # decision D22, D27: the step's gain or amortisation on top
         return None if missing else float(e.attrs["globe_income"]) + gain
     return designed_globe_income(graph, e.id, year, P, labels) if e.attrs.get("created_by_plan") else None
 
@@ -727,7 +763,7 @@ def p2_income_needs(graph: Graph, e, year, P):
 
 
 def p2_shares(graph: Graph, loc, law, ces, years, P, post, bound, force, labels, plan_ticks, ex_ante):
-    """One jurisdiction's top-up, year by year, under one law (口径 D14-D17): the constituent entities located in loc are
+    """One jurisdiction's top-up, year by year, under one law (decision D14-D17): the constituent entities located in loc are
     blended; with net GloBE income, excess profit = net income less the substance-based exclusion, shared in proportion
     to positive GloBE income (s16(2) A x B / C; Art 5.2.4); without, only an additional current top-up (p2_additional).
     Yields (year, tag, on, attrs, [(entity id, amount, attrs)]), each amount a pseudo-flow's — charged at the minimum
@@ -772,7 +808,7 @@ def p2_shares(graph: Graph, loc, law, ces, years, P, post, bound, force, labels,
 
 
 def iir_entities(graph: Graph, loc):
-    """口径 D20. The constituent entities whose top-up an IIR computes in loc: those located there, less any that is a
+    """decision D20. The constituent entities whose top-up an IIR computes in loc: those located there, less any that is a
     Mainland resident only by its place of effective management (a residence variant) — such a company is taxed on its
     worldwide income at the statutory 25% (EIT Law art 3, 4), above the minimum rate, while the covered taxes the case
     states for it are those of its home jurisdiction; it brings no top-up into charge."""
@@ -780,7 +816,7 @@ def iir_entities(graph: Graph, loc):
 
 
 def p2_parents(graph: Graph, P):
-    """口径 D20. The parent entities that apply an income inclusion rule, with the share of each low-taxed constituent
+    """decision D20. The parent entities that apply an income inclusion rule, with the share of each low-taxed constituent
     entity they bring into charge (HK GloBE Art 2.1-2.3, Sch 60; SG MEMTA s12-s14). The qualified-IIR jurisdictions are
     those the OECD central record lists (Hong Kong, Singapore; the Mainland has none). The ultimate parent applies it
     when located in one; otherwise each intermediate parent located in one that no parent above it in one controls
@@ -822,12 +858,12 @@ def p2_parents(graph: Graph, P):
 
 
 def p2_flows(graph: Graph, P, needs=None, bound=None, force=None, labels=None, plan_ticks=None, ex_ante=True):
-    """口径 D14, D16 — 范围.md 9. The top-up is a jurisdiction's, for a financial year (MMT Act s16-s18 applied to the
+    """decision D14, D16 — 范围.md 9. The top-up is a jurisdiction's, for a financial year (MMT Act s16-s18 applied to the
     DTT by s30; GloBE Art 5.1-5.3 applied to the HKMTT by Sch 62), computed by p2_shares; each entity's share rides on
     a pseudo-flow p2:<entity>. Financial years: the calendar years the modelled flows fall in (the convention the SBIE
     transition rates use); the first year's pseudo-flows carry no year, later ones @<year>, as recurring flows are
     named. labels: the real flows' labels of this pass (covered taxes). Dated after the year's last real flow.
-    口径 D20 — the income inclusion rule: for a parent that applies one (p2_parents), the top-up of a jurisdiction
+    decision D20 — the income inclusion rule: for a parent that applies one (p2_parents), the top-up of a jurisdiction
     without a domestic top-up of its own in the model (the Mainland) is computed under the parent's law, and the
     parent's allocable share of each entity's share (Art 2.2.1; s15) rides on a pseudo-flow iir:<entity>><parent> that
     the parent pays itself — the parent's tax, in its own jurisdiction. Hong Kong and Singapore entities need none:
@@ -845,9 +881,11 @@ def p2_flows(graph: Graph, P, needs=None, bound=None, force=None, labels=None, p
         return out
     for loc in sorted(P2_JURISDICTIONS):
         ces = p2_entities(graph, loc)
-        if not ces:
+        first = P.rows[P2_RATE[loc]]["effective_from"]                     # the domestic top-up, like the IIR, from its
+        ys = [y for y in years if "%d-01-01" % y >= first]                   # first financial year only: no data asked for
+        if not ces or not ys:                                                # a year no top-up rule speaks to
             continue
-        for year, tag, on, attrs, shares in p2_shares(graph, loc, loc, ces, years, P, post, bound, force, labels, plan_ticks, ex_ante):
+        for year, tag, on, attrs, shares in p2_shares(graph, loc, loc, ces, ys, P, post, bound, force, labels, plan_ticks, ex_ante):
             out.extend(FlowEdge("p2:%s%s" % (eid, tag), eid, eid, TOPUP, amount, on, attrs=dict(a)) for eid, amount, a in shares)
     for r, held in sorted(p2_parents(graph, P).items()):
         law = graph.entities[r].loc
@@ -866,7 +904,7 @@ def p2_flows(graph: Graph, P, needs=None, bound=None, force=None, labels=None, p
 
 
 def p2_cmp(graph: Graph, ces, fields, test):
-    """Tri of test(*values) over group facts: unknown ones pending, a conflict asked (口径 D12)."""
+    """Tri of test(*values) over group facts: unknown ones pending, a conflict asked (decision D12)."""
     vals, needs = [], set()
     for f in fields:
         v = group_fact(graph, ces[0], f)
@@ -891,7 +929,7 @@ def p2_election(graph: Graph, loc, ces, field_, P, post, bound, force, plan_tick
 
 
 def p2_tcsh(graph: Graph, loc, ces, year, P, sbie, applied, law=None):
-    """口径 D17. Transitional CbCR safe harbour, for a financial year (Singapore regs 69-74 under s20; Hong Kong Sch 61
+    """decision D17. Transitional CbCR safe harbour, for a financial year (Singapore regs 69-74 under s20; Hong Kong Sch 61
     Pt 3 ss 2, 4, 6-8, 14): a year of the transition period (the calendar year as the financial year), a qualified CbC
     report for the jurisdiction, the safe harbour applied in every earlier year the rules applied (once out, always
     out: the model's own earlier years, else the group's statement), and one of three tests on the CbC report figures:
@@ -902,7 +940,7 @@ def p2_tcsh(graph: Graph, loc, ces, year, P, sbie, applied, law=None):
     paras 19.2, 20.1, which Hong Kong s26AF follows): p2_eur_rate_<year>; the group's p2_eur_rate serves the first
     modelled year only, a later year's rate is a datum of its own. Hong Kong and Singapore have no eligible
     distribution tax system: reg 70(1)(d) holds. law: whose rules
-    test the jurisdiction (its own for the domestic top-up; the parent's for an IIR, 口径 D20)."""
+    test the jurisdiction (its own for the domestic top-up; the parent's for an IIR, decision D20)."""
     law = law or loc
     pre, sfx = P2_PRE[law], "_" + loc.lower()
     begins = P.rows[P2_RATE[law]]["effective_from"]                       # the first financial year the rules apply to
@@ -928,7 +966,7 @@ def p2_tcsh(graph: Graph, loc, ces, year, P, sbie, applied, law=None):
 
 
 def p2_dm(graph: Graph, ces, loc, P, law=None):
-    """口径 D17. De minimis exclusion (Singapore s19(1); Hong Kong GloBE Art 5.5.1-5.5.3): the jurisdiction's average
+    """decision D17. De minimis exclusion (Singapore s19(1); Hong Kong GloBE Art 5.5.1-5.5.3): the jurisdiction's average
     revenue below EUR 10m and average GloBE income or loss below EUR 1m (or a loss), each over the year and the two
     before it — the group's averages, in EUR."""
     pre, sfx = P2_PRE[law or loc], "_" + loc.lower()
@@ -937,7 +975,7 @@ def p2_dm(graph: Graph, ces, loc, P, law=None):
 
 
 def p2_relief(graph: Graph, loc, ces, year, P, post, bound, force, plan_ticks, ex_ante, applied, law=None):
-    """口径 D17. The jurisdiction's top-up for the year is nil when the filing entity elects a relief it is eligible for:
+    """decision D17. The jurisdiction's top-up for the year is nil when the filing entity elects a relief it is eligible for:
     the transitional CbCR safe harbour (s20(2); Sch 61 s4) or the de minimis exclusion (s19(4); Art 5.5.1). Each
     election is the filing entity's (p2_election). Eligibility the data leave open is pending; a relief known not to
     be available asks nothing. applied[year]: whether the safe harbour applied (for the later years' once-out test)."""
@@ -968,7 +1006,7 @@ def p2_sbie(ces, year, P, post, bound, force, law=None):
     """The jurisdiction's substance-based income exclusion (s16(6) O, s18; Art 5.2.2, 5.3.1): its constituent entities'
     carve-outs summed, a loss-making entity's included. An entity's unknown payroll or assets leave the exclusion
     without an upper limit: the favourable end lets it cover the net income, the other end counts the known parts.
-    A company the plan creates has no payroll or assets beyond what the case states for it (口径 D16)."""
+    A company the plan creates has no payroll or assets beyond what the case states for it (decision D16)."""
     total, unbounded = 0.0, False
     for e in ces:
         if e.attrs.get("sbie") is not None:
@@ -986,7 +1024,7 @@ def p2_sbie(ces, year, P, post, bound, force, law=None):
 
 
 def p2_additional(graph, loc, ces, income, net, act, P, post, bound, force, plan_ticks, ex_ante, on, tag, attrs, law=None):
-    """口径 D15. A jurisdiction without net GloBE income: adjusted covered taxes below zero and below 15% of the net loss
+    """decision D15. A jurisdiction without net GloBE income: adjusted covered taxes below zero and below 15% of the net loss
     leave an additional current top-up equal to the difference (MMT Act s21(1); GloBE Art 4.1.5) — the jurisdictional
     top-up then (s16(4) J; Art 5.2.3), shared among the entities whose own covered taxes fall short: Singapore
     s16(3)(a) A x D / E, D = 15% of a loss-making entity's GloBE loss less its negative covered taxes; Hong Kong
@@ -1038,8 +1076,8 @@ def p2_additional(graph, loc, ces, income, net, act, P, post, bound, force, plan
 def sbie_parts(entity, year, P, law=None):
     """Substance-based income exclusion: payroll x rate + tangible assets x rate, the rates replaced during the
     transition period by the year's values — each jurisdiction's own enactment: Hong Kong GloBE Art 5.3.3, 5.3.4,
-    9.2.1, 9.2.2; Singapore MMT Act s18 with the Second Schedule (口径 D13). An unknown base: None. law: whose rules
-    compute (the parent's under an IIR, 口径 D20)."""
+    9.2.1, 9.2.2; Singapore MMT Act s18 with the Second Schedule (decision D13). An unknown base: None. law: whose rules
+    compute (the parent's under an IIR, decision D20)."""
     pre = P2_PRE.get(law or entity.loc, "p2.")
 
     def rate(base_pid, table_pid):
@@ -1088,10 +1126,10 @@ def pem_candidates(graph: Graph, P):
 
 def residence_graph(graph: Graph, resident_in_cn):
     """The graph with the given entities treated as Mainland residents (their flows then meet Mainland rules, the
-    credits for their foreign income included: 口径 D09)."""
+    credits for their foreign income included: decision D09)."""
     from dataclasses import replace
     ents = {k: (replace(v, loc="CN", attrs=dict(v.attrs, resident_by_pem=True, seat=v.loc)) if k in resident_in_cn else v)
-            for k, v in graph.entities.items()}                   # 口径 D31: the seat stays for VAT and stamp duty
+            for k, v in graph.entities.items()}                   # decision D31: the seat stays for VAT and stamp duty
     return Graph(ents, graph.holds, graph.flows, graph.members)
 
 
@@ -1137,7 +1175,8 @@ def cached_evaluate(rules, ctx, flow, bound, P, force, amount):
            frozenset(getattr(ctx, "adjustable", ()) or ()), frozenset((ctx.ticks or {}).items()))
     facts_key = tuple(sorted(((k, _freeze(v)) for k, v in ctx.facts.items()), key=lambda kv: kv[0]))
     fkey = (flow.payer_loc, flow.payee_loc, flow.income, flow.on, flow.target_loc, flow.indirect_cn, flow.id,
-            flow.payer_seat, flow.payee_seat, flow.target_seat)          # 口径 D31: what VAT and stamp duty match on
+            flow.payer_seat, flow.payee_seat, flow.target_seat,          # decision D31: what VAT and stamp duty match on
+            flow.only)                                                   # decision D38: which rules read it
     rel = tuple(sorted((k, v) for k, v in (force or {}).items() if isinstance(k, tuple) and len(k) == 2 and k[1] == flow.id))
     key = (tok, facts_key, fkey, bound, rel, amount)
     hit = _FLOW_CACHE.get(key)
@@ -1154,6 +1193,143 @@ def flow_name(fid):
     return fid.split(".", 1)[0]
 
 
+ALV = ".alv"                                                # decision D38: a nil-price transfer at its arm's-length value
+
+
+def cn_taxes_gain(graph, f):
+    """A share transfer whose gain the Mainland taxes: of Mainland equity, or of a foreign holder of Mainland property
+    (公告2015年第7号)."""
+    if f.income != SHARE_TRANSFER or not f.target:
+        return False
+    if graph.entities[f.target].loc == "CN":
+        return True
+    return any(graph.entities[e].loc == "CN" for e in graph.subtree(f.target) - {f.target})
+
+
+def designed_at_market(f):
+    """A step the template prices at its market value (decision D18, D19, D22): its price is the arm's-length value."""
+    return bool(f.attrs.get("reorg_step") or f.attrs.get("unwind_step") or f.attrs.get("ip_transfer_step"))
+
+
+def arms_length_flows(graph: Graph):
+    """decision D38. Equity passing between related parties below its arm's-length value is taxed in the Mainland on that
+    value (cn_gain_share). A nil price cannot carry it as a share of the price: the engine adds the transfer at its
+    arm's-length value as a flow of its own, "<id>.alv" — the same flow for settled taxes and outputs (flow_name) — that
+    only the Mainland's income rules read: no other jurisdiction taxes a price that was not paid, and no stamp duty or
+    VAT turns on it."""
+    extra = []
+    for f in graph.flows:
+        alv = f.attrs.get("arms_length_value")
+        if (f.amount == 0 and alv is not None and float(alv) > 0 and not f.attrs.get("cn_income_only")
+                and cn_taxes_gain(graph, f) and related_in(graph, f, "CN") is not False):   # decision D40: open — pending
+            extra.append(FlowEdge(f.id + ALV, f.payer, f.payee, SHARE_TRANSFER, float(alv), f.on, target=f.target,
+                                  attrs=dict(f.attrs, consideration=float(alv), cn_income_only=True)))
+    return _replace(graph, flows=list(graph.flows) + extra) if extra else graph
+
+
+def arms_length_needs(graph: Graph):
+    """decision D38. A related parties' transfer of equity the Mainland taxes, at a price the case states but whose
+    arm's-length value it does not: the Mainland tax is unbounded without that value — asked, never filled. A step the
+    template prices at market value is its own arm's-length value."""
+    out = {}
+    for f in graph.flows:
+        if ("arms_length_value" in f.attrs or f.attrs.get("amount_unknown") or f.attrs.get("cn_income_only")
+                or designed_at_market(f) or not cn_taxes_gain(graph, f) or related_in(graph, f, "CN") is False):
+            continue
+        out[("data.arms_length_value", f.id)] = frozenset({Need(DATA, "flow:%s.arms_length_value" % f.id)})
+    return out
+
+
+BRANCH_FIELDS = ("branch_profit", "branch_period_end", "branch_receipt", "branch_taxed")   # suffixed _cn / _hk / _sg
+
+
+def branch_flows(graph: Graph):
+    """decision D47. A company's branch in another jurisdiction (head-office facts branch_profit_<j>, the profit of the branch's
+    year; branch_period_end_<j>, when that year ends — unstated, the modelled year's last flow date): the engine places
+    the branch as an entity of type BRANCH in j ("<company>@<J>") and its year's profit as a flow BRANCH_PROFIT from it
+    to the company. The branch's jurisdiction taxes the profit as the branch's own; the head office's jurisdiction as its
+    own law says — the Mainland in the year the branch's year ends, remitted or not (财税〔2009〕125号 第三条（一）、第十一条);
+    Singapore when received (branch_receipt_<j>; s10(25), s13(8)(b)); Hong Kong only if it arises there (s14). A loss
+    places no flow: it does not reach the Mainland profit (EIT art 17); its carry-forward is outside the model. The
+    branch's own tax (branch_taxed_<j>, else the Mainland's by law) is what Singapore's s13(9)(a) asks."""
+    from .facts import HEADLINE, params
+    last = max((f.on for f in graph.flows if f.on is not None), default=None)
+    ents, extra = dict(graph.entities), []
+    for e in graph.entities.values():
+        if e.type == BRANCH:
+            continue
+        for j in JURISDICTION_CODES - {e.loc}:
+            sfx = "_" + j.lower()
+            if "branch_profit" + sfx not in e.attrs:
+                continue
+            profit, on = e.attrs.get("branch_profit" + sfx), e.attrs.get("branch_period_end" + sfx) or last
+            if on is None or (profit is not None and float(profit) <= 0):
+                continue
+            bid = "%s@%s" % (e.id, j)
+            ents[bid] = Entity(bid, j, type=BRANCH, attrs={"managed_from": j, "head_office": e.id})
+            attrs = {"branch_flow": True, "foreign_headline_rate": params()[HEADLINE[j]]}
+            if profit is None:
+                attrs["amount_unknown"] = True
+            taxed = e.attrs.get("branch_taxed" + sfx)
+            if taxed is None and j == "CN":
+                taxed = True                                    # EIT art 3(2): the establishment's profit is charged
+            if taxed is not None:
+                attrs["foreign_taxed"] = bool(taxed)
+            if e.attrs.get("branch_receipt" + sfx) is not None:
+                attrs["receipt_kind"] = e.attrs["branch_receipt" + sfx]
+            extra.append(FlowEdge("branch:" + bid, bid, e.id, BRANCH_PROFIT, float(profit or 0.0), on, attrs=attrs))
+    return _replace(graph, entities=ents, flows=list(graph.flows) + extra) if extra else graph
+
+
+def branch_needs(graph: Graph):
+    """decision D47. A branch whose year's profit the case does not give: its taxes are unbounded — asked, never filled."""
+    return {("data.branch_profit", f.payer): frozenset({Need(DATA, "%s.branch_profit_%s" % (f.payee, graph.entities[f.payer].loc.lower()))})
+            for f in graph.flows if f.income == BRANCH_PROFIT and f.attrs.get("amount_unknown")}
+
+
+def property_needs(graph: Graph):
+    """decision D48. A property sale whose property's location the case does not give: where it is taxed turns on it; one in
+    Hong Kong whose ad valorem stamp duty the contract does not allocate (Cap 117 First Schedule head 1(1)(C): all
+    parties are liable) — asked, never filled."""
+    out = {}
+    for f in graph.flows:
+        if f.income not in (PROPERTY, RENT):
+            continue
+        if f.attrs.get("property_loc") is None:
+            out[("data.property_loc", f.id)] = frozenset({Need(DATA, "flow:%s.property_loc" % f.id)})
+        elif f.attrs["property_loc"] == "HK" and f.attrs.get("stamp_borne_by") is None:
+            out[("data.stamp_borne_by", f.id)] = frozenset({Need(DATA, "flow:%s.stamp_borne_by" % f.id)})
+        if f.income == RENT and f.attrs.get("property_loc") == "SG" and f.attrs.get("annual_value") is None:
+            # decision D49: Singapore's property tax is on the annual value the Chief Assessor sets, not on the rent
+            out[("data.annual_value", f.id)] = frozenset({Need(DATA, "flow:%s.annual_value" % f.id)})
+    return out
+
+
+def capitalisation_needs(graph: Graph):
+    """decision D46. A capitalisation whose reserve the case does not name: the Mainland tax on it, and the basis of a later
+    sale, turn on it — asked, never filled."""
+    return {("data.capitalised_from", f.id): frozenset({Need(DATA, "flow:%s.capitalised_from" % f.id)})
+            for f in graph.flows if f.income == "DIVIDEND" and f.attrs.get("capitalised") and f.attrs.get("capitalised_from") is None}
+
+
+def duty_rate_needs(graph: Graph):
+    """decision D43. The duty on goods a group company exports from, or imports into, the Mainland: the tariff rate is the
+    goods' (from the tariff schedule 税则), a datum — without it the duty is unbounded: asked, never filled."""
+    from .facts import goods_route
+    group, out = graph.group() | set(graph.members or ()), {}
+    for f in graph.flows:
+        if f.income != "GOODS":
+            continue
+        shipped, delivered = goods_route(graph, f)
+        if delivered is None:
+            continue
+        for who, field, cond in ((f.payee, "export_duty_rate", shipped == "CN" and delivered != "CN"),    # the consignor
+                                 (f.payer, "import_duty_rate", delivered == "CN" and shipped != "CN")):   # the consignee
+            if cond and who in group and graph.entities[who].loc == "CN" and f.attrs.get(field) is None:
+                out[("data." + field, f.id)] = frozenset({Need(DATA, "flow:%s.%s" % (f.id, field))})   # the goods' own
+    return out
+
+
 def engine(graph: Graph, ctx_of, bound, force=None, P=None, rules=None, settled=None, as_at=None, closed=()):
     """ctx_of(facts) builds the Ctx for one flow (mode, ticks and adjustable set come from the caller).
     settled: flow name -> {jurisdiction: tax actually paid} (场景.md §8); as_at: the date clocks are judged against;
@@ -1161,6 +1337,8 @@ def engine(graph: Graph, ctx_of, bound, force=None, P=None, rules=None, settled=
     P = P or Params()
     rules = rules or RULES
     settled = settled or {}
+    graph = arms_length_flows(graph)                     # decision D38
+    graph = branch_flows(graph)                          # decision D47
     labels, groups, flows = {}, {}, {}
     ref, done, trace = None, set(), []     # the previous pass's labels; labels finished in this pass; what readers saw
 
@@ -1191,7 +1369,7 @@ def engine(graph: Graph, ctx_of, bound, force=None, P=None, rules=None, settled=
         return float(atp) if atp is not None else designed_profit(graph, vw, x, year)
 
     def tier_tax(x, vw, tiers, needs, year=None):
-        """口径 D05, D06 — 125号 第五条, from the lowest tier up: the tax behind company x's after-tax profit — what it paid on its profits
+        """decision D05, D06 — 125号 第五条, from the lowest tier up: the tax behind company x's after-tax profit — what it paid on its profits
         and investment income, plus what it bears through the dividends it received in view from a qualifying company
         of the next tier. The least value the data allow; `needs` collects the data that would raise it."""
         other = other_tax(graph.entities[x])
@@ -1221,7 +1399,7 @@ def engine(graph: Graph, ctx_of, bound, force=None, P=None, rules=None, settled=
         company's figures are its stated year's; a company the plan creates distributes the year its resolution names,
         a plan action (the year with the most tax behind it) pending until the plan takes it. A datum missing anywhere
         down the tiers leaves the share pending — the least value it can take kept for the unfavourable end, the data
-        named for the question. 口径 D07, D08."""
+        named for the question. decision D07, D08."""
         if g.income not in ("DIVIDEND", CFC_INCLUSION) or graph.entities[g.payee].loc != "CN" \
                 or graph.entities[g.payer].loc == "CN" or facts.get(("flow", "underlying_tax_share")) is not None:
             return                                          # only a foreign company's dividend to a Mainland resident
@@ -1262,7 +1440,7 @@ def engine(graph: Graph, ctx_of, bound, force=None, P=None, rules=None, settled=
             facts[("flow", "underlying_tax_share")] = share
 
     def cfc_facts(g, facts, vw):
-        """口径 D10. The foreign company's effective burden as the labels in view show it (what it bore on its receipts, as
+        """decision D10. The foreign company's effective burden as the labels in view show it (what it bore on its receipts, as
         payee), its total profit, and whether it sits in a white-listed jurisdiction (国税函〔2009〕37号)."""
         if g.income != CFC_INCLUSION:
             return
@@ -1287,7 +1465,7 @@ def engine(graph: Graph, ctx_of, bound, force=None, P=None, rules=None, settled=
         facts.setdefault(("flow", "direct_ratio"), max((h.ratio for h in graph.holds if h.holder == g.payee and h.held == g.payer), default=0.0))
 
     def p2_facts(g, facts, vw):
-        """口径 D14. The jurisdiction's ETR for a top-up pseudo-flow (s17; Art 5.1.1): the adjusted covered taxes of
+        """decision D14. The jurisdiction's ETR for a top-up pseudo-flow (s17; Art 5.1.1): the adjusted covered taxes of
         every constituent entity located there — what each bore on its flows here (income levy, deductions included)
         plus what it states outside this model — over their net GloBE income; nil when those taxes are negative
         (s17(3)). An additional current top-up's pseudo-flow carries its own amount (p2_additional)."""
@@ -1300,9 +1478,9 @@ def engine(graph: Graph, ctx_of, bound, force=None, P=None, rules=None, settled=
             unknown = tuple(sorted("%s.covered_taxes_other" % x.id for x in ces if p2_other(x) is None))
             if unknown:                                         # unknown covered taxes: the ETR is pending, not computed on 0
                 facts[("flow", "p2_etr_needs")] = unknown
-            elif net > 0:                                       # 口径 D16: the year's covered taxes, excluded income's left out
+            elif net > 0:                                       # decision D16: the year's covered taxes, excluded income's left out
                 taxes = sum(p2_tax(vw, graph, x.id, year, P) + p2_other(x) for x in ces)
-                facts.setdefault(("flow", "p2_etr"), round(100.0 * max(0.0, taxes) / net, 6))
+                facts.setdefault(("flow", "p2_etr"), globe_etr(max(0.0, taxes), net))
         rev = group_fact(graph, e, "group_revenue_eur")
         facts.setdefault(("payee", "group_revenue_eur"), None if rev == "conflict" else rev)
 
@@ -1315,11 +1493,12 @@ def engine(graph: Graph, ctx_of, bound, force=None, P=None, rules=None, settled=
         return out
 
     def after_reorg(g, facts, vw):
-        """口径 D18. What the restructuring step leaves for later flows. A later disposal of the stake HOLD took over (or
+        """decision D18. What the restructuring step leaves for later flows. A later disposal of the stake HOLD took over (or
         of ULT's shares in HOLD): the Mainland basis is the transferor's original one when the step's Mainland tax was
         deferred as a special reorganisation (59号 §6(2) 1-2), else the consideration — every other jurisdiction's basis
         is the consideration. A dividend from OP to HOLD: whether the step was a special reorganisation of two parties
-        in different places (公告2013年第72号 §8)."""
+        in different places (公告2013年第72号 §8). Hong Kong after an intra-group transfer relief: engine.after_intragroup
+        (decision D44)."""
         for r in graph.flows:
             if not r.attrs.get("reorg_step") or r.id == g.id or r.id not in vw:
                 continue
@@ -1331,10 +1510,55 @@ def engine(graph: Graph, ctx_of, bound, force=None, P=None, rules=None, settled=
                 facts[("flow", "reorg_special_applied")] = special
                 facts[("flow", "reorg_same_residence")] = graph.entities[r.payer].loc == graph.entities[r.payee].loc
 
+    def after_intragroup(g, facts, vw):
+        """decision D44. Cap 112 s15OA(5), (8): a later disposal, by the entity that acquired the property in an intra-group
+        transfer whose gain the relief deferred (the step's label applied hk.fsie.intragroup_relief): for the FSIE regime
+        it acquired the property at the seller's cost on the seller's date, and the foreign tax the seller paid on the
+        deferred gain counts as paid on the later gain — it meets the subject-to-tax condition too (Example 38)."""
+        if g.income != SHARE_TRANSFER or not g.target:
+            return
+        for r in graph.flows:
+            if (r.income != SHARE_TRANSFER or r.id == g.id or r.payer != g.payee or r.target != g.target or r.id not in vw
+                    or "hk.fsie.intragroup_relief" not in vw[r.id].applied):
+                continue
+            h = graph.holding(r.payee, r.target)
+            cost = r.attrs.get("cost_basis", h.cost if h is not None else None)
+            if cost is not None:
+                facts[("flow", "hk_cost_basis")] = float(cost)
+            if h is not None and h.since is not None:
+                facts[("flow", "hk_holding_months")] = months(h.since, g.attrs.get("accrued_on") or g.on)
+            tax = sum(vw[r.id].flow.amount * it.effective / 100.0 for it in vw[r.id].items
+                      if it.jur != "HK" and it.levy == "income" and not it.deduction and it.borne_by == "payee")
+            if tax > 0 and g.amount:
+                facts[("flow", "hk_carried_foreign_tax")] = 100.0 * tax / g.amount
+                facts[("flow", "subject_income_taxed_abroad")] = True
+
+    def after_capitalisation(g, facts):
+        """decision D46. A later sale, by the holder, of a company that capitalised retained earnings for it: for the Mainland
+        the capitalised amount is the holder's paid-in capital — a dividend on the decision (国税函〔2010〕79号 第四条),
+        reinvested as capital (财税〔2018〕102号 第二条（一）1; 公告2017年第37号 第三条: the basis is the capital paid in).
+        Share premium capitalised is no dividend and adds nothing (79号 第四条第二款). Other jurisdictions' basis stays
+        the cost paid. The disposal part of a capital reduction carries the withdrawn share of it, as of the cost
+        (engine.split_cost)."""
+        if g.income != SHARE_TRANSFER or not g.target:
+            return
+        add = sum(c.amount for c in graph.flows
+                  if c.income == "DIVIDEND" and c.attrs.get("capitalised") and c.attrs.get("capitalised_from") == "retained_earnings"
+                  and c.payer == g.target and c.payee == g.payee and c.id != g.id and c.on <= g.on)
+        whole = next((x for x in graph.flows if x.id + ".gain" == g.id), None)
+        if whole is not None and whole.income == "CAPITAL_REDUCTION":
+            r = whole.attrs.get("reduced_capital_ratio")
+            add = add * float(r) / 100.0 if r is not None else 0.0     # split_cost leaves the cost unknown then too
+        base = facts.get(("flow", "cn_cost_basis"), facts.get(("flow", "cost_basis")))
+        if add and base is not None:
+            facts[("flow", "cn_cost_basis")] = float(base) + add
+
     def read(g, vw):
         """The flow's facts, with what the readers derive from the labels in view."""
         facts = facts_for(graph, g)
         after_reorg(g, facts, vw)
+        after_intragroup(g, facts, vw)
+        after_capitalisation(g, facts)
         underlying(g, facts, vw)
         cfc_facts(g, facts, vw)
         p2_facts(g, facts, vw)
@@ -1358,7 +1582,7 @@ def engine(graph: Graph, ctx_of, bound, force=None, P=None, rules=None, settled=
     def keep(g, res, extra_cites=()):
         src = source_of(graph, g)
         origin = graph.entities[g.target] if g.income == SHARE_TRANSFER and g.target else graph.entities[g.payer]
-        src_seat = origin.attrs.get("seat") or src               # 口径 D31: where a levy's source is, by the seat
+        src_seat = origin.attrs.get("seat") or src               # decision D31: where a levy's source is, by the seat
         fx = facts_for(graph, g)
         gross_up, vat_gross_up = bool(fx.get(("flow", "wht_borne_by_payer"))), bool(fx.get(("flow", "vat_borne_by_payer")))
         for it in res.items:
@@ -1367,7 +1591,7 @@ def engine(graph: Graph, ctx_of, bound, force=None, P=None, rules=None, settled=
                                      or (vat_gross_up and it.levy == "vat" and it.jur == src_seat)):
                 it.bearer = "payer"                              # contract: the payer bears the withholding
         outside = {}
-        for (jur, levy, bearer), v in res.outside.items():   # 口径 D30: who would bear the levy the library cannot compute
+        for (jur, levy, bearer), v in res.outside.items():   # decision D30: who would bear the levy the library cannot compute
             if bearer == "payee" and ((gross_up and levy == "income" and jur == src) or (vat_gross_up and levy == "vat" and jur == src_seat)):
                 bearer = "payer"
             outside[(jur, levy, g.payer if bearer == "payer" else g.payee)] = v
@@ -1410,15 +1634,28 @@ def engine(graph: Graph, ctx_of, bound, force=None, P=None, rules=None, settled=
     # taxes the entities bore after those credits (covered taxes, CFC burden), and get their own entity stage. A
     # reader early in a pass sees taxes before a later entity-level credit (a pooled credit cuts what an intermediate
     # company paid, after its dividend upward was read): the passes repeat until every reader sees finished taxes.
-    for _pass in range(FIX_MAX):                           # 口径 D04
+    for _pass in range(FIX_MAX):                           # decision D04
         labels, groups, flows, done, trace = {}, {}, {}, set(), []
         real = phase(topo_order(graph.flows))
+
+        def choose_loss(rule_id, key, keys, source=MISSING, register=True, _g=groups):
+            grp = (rule_id, key)
+            needs = frozenset(Need(k[1], k[0]) if isinstance(k, tuple) else Need(source, k) for k in keys)
+            if register:
+                _g[grp] = _g.get(grp, frozenset()) | needs
+            return decide(Tri(U, needs), True, bound, grp, force or {})
+        loss_stage(graph, labels, P, choose_loss, getattr(ctx_of({}), "mode", EX_ANTE) == EX_ANTE, graph.group())   # decision D51
         entity_stage(Graph(graph.entities, graph.holds, list(flows.values()), graph.members), ctx_of, bound, force, P, rules, labels, groups, only=real)
         done = set(labels)
         data_needs = {}
-        for f in graph.flows:                              # 口径 D18 / D19: a step's amount, unknown: its tax is unbounded
+        for f in graph.flows:                              # decision D18 / D19: a step's amount, unknown: its tax is unbounded
             if f.attrs.get("amount_unknown"):
                 data_needs[("data.amount", f.id)] = frozenset({Need(DATA, "flow:%s.amount" % f.id)})
+        data_needs.update(arms_length_needs(graph))        # decision D38
+        data_needs.update(duty_rate_needs(graph))          # decision D43
+        data_needs.update(capitalisation_needs(graph))     # decision D46
+        data_needs.update(branch_needs(graph))             # decision D47
+        data_needs.update(property_needs(graph))           # decision D48
         pseudo = phase(topo_order(cfc_flows(graph, P, data_needs, labels) + p2_flows(
             graph, P, data_needs, bound, force, labels=labels, plan_ticks=plan_ticks,
             ex_ante=getattr(ctx_of({}), "mode", EX_ANTE) == EX_ANTE)))

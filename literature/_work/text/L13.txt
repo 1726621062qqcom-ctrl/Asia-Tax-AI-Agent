@@ -1,0 +1,2090 @@
+=== [p.1] ===
+Practical Regression Test Selection
+with Dynamic File Dependencies
+Milos Gligoric, Lamyaa Eloussi, and Darko Marinov
+University of Illinois at Urbana-Champaign
+{gliga,eloussi2,marinov}@illinois.edu
+ABSTRACT
+Regression testing is important but can be time-intensive.
+One approach to speed it up is regression test selection
+(RTS), which runs only a subset of tests. RTS was proposed
+over three decades ago but has not been widely adopted in
+practice. Meanwhile, testing frameworks, such as JUnit, are
+widely adopted and well integrated with many popular build
+systems. Hence, integrating RTS in a testing framework al-
+ready used by many projects would increase the likelihood
+that RTS is adopted.
+We propose a new, lightweight RTS technique, called Ek-
+stazi, that can integrate well with testing frameworks. Ek-
+stazi tracks dynamic dependencies of tests on ﬁles, and un-
+like most prior RTS techniques, Ekstazi requires no inte-
+gration with version-control systems. We implemented Ek-
+stazi for Java and JUnit, and evaluated it on 615 revisions
+of 32 open-source projects (totaling almost 5M LOC) with
+shorter- and longer-running test suites.
+The results show
+that Ekstazi reduced the end-to-end testing time 32% on
+average, and 54% for longer-running test suites, compared to
+executing all tests. Ekstazi also has lower end-to-end time
+than the existing techniques, despite the fact that it selects
+more tests.
+Ekstazi has been adopted by several popu-
+lar open source projects, including Apache Camel, Apache
+Commons Math, and Apache CXF.
+Categories and Subject Descriptors: D.2.5 [Software
+Engineering]: Testing and Debugging
+General Terms: Experimentation
+Keywords: Regression test selection, ﬁle dependencies
+1.
+INTRODUCTION
+Regression testing is important for checking that software
+changes do not break previously working functionality. How-
+ever, regression testing is costly as it runs a large number
+of tests. Some studies [13, 15, 21, 38, 43] estimate that re-
+gression testing can take up to 80% of the testing budget
+and up to 50% of the software maintenance cost. The cost
+Permission to make digital or hard copies of all or part of this work for
+personal or classroom use is granted without fee provided that copies are
+not made or distributed for proﬁt or commercial advantage and that copies
+bear this notice and the full citation on the ﬁrst page. To copy otherwise, to
+republish, to post on servers or to redistribute to lists, requires prior speciﬁc
+permission and/or a fee.
+ISSTA’15 , July 12–17, 2015, Baltimore, MD, USA
+Copyright 2015 ACM 978-1-4503-3620-8/15/07 ...$15.00.
+of regression testing increases as software grows. For exam-
+ple, Google observed that their regression-testing system,
+TAP [20, 55, 57], has had a linear increase in both the num-
+ber of software changes and the average test-suite execution
+time, leading to a quadratic increase in the total test-suite-
+execution time. As a result, the increase is challenging to
+keep up with even for a company with an abundance of com-
+puting resources.
+Regression test selection (RTS) is a promising approach
+to speed up regression testing. Researchers have proposed
+many RTS techniques (e.g., [23, 27, 31–33, 50, 62]); En-
+gstr¨om et al. [22] present a survey of RTS, and Yoo and
+Harman [59] present a survey of regression testing including
+RTS. A traditional RTS technique takes four inputs—two
+software revisions (new and old), test suite at the new re-
+vision, and dependency information from the test runs on
+the old revision—and produces, as output, a subset of the
+test suite for the new revision. The subset includes the tests
+that can be aﬀected by the changes; viewed dually, it ex-
+cludes the tests that cannot be aﬀected by the changes and
+thus, need not be rerun on the new revision. RTS is safe
+if it guarantees that the subset of selected tests includes all
+tests whose behavior may be aﬀected by the changes.
+While RTS was proposed over three decades ago [22, 59],
+it has not been widely adopted in practice, except for the
+substantial success of the Google TAP system [20, 55, 57].
+Unfortunately, TAP performs RTS only across projects (e.g.,
+YouTube depends on the Guava project, so all YouTube
+tests are run if anything in Guava changes) and provides no
+beneﬁt within a project. However, most developers work on
+one isolated project at a time rather than on a project from
+a huge codebase as done at Google. Moreover, our recent
+empirical study [26] shows that developers who work on such
+isolated projects frequently perform manual RTS, i.e., select
+to run only some of the tests from their test suite, even when
+their test suites are relatively fast. In sum, a large number of
+developers would beneﬁt from an automated RTS technique
+that could work in practice.
+Relevant Problem: We pose the following question: how
+should researchers design an RTS technique and tool to in-
+crease the likelihood that RTS actually be adopted in prac-
+tice? We note that testing frameworks, such as JUnit, are
+widely adopted and well integrated with many popular build
+systems, such as Ant or Maven. For example, our analysis of
+666 most active, Maven-based1 Java projects from GitHub
+showed that at least 520 (78%) use JUnit (and 59 more
+1We cloned 2000 most active Java projects but ﬁltered those
+that did not use Maven to automate our analysis.
+=== [p.2] ===
+use TestNG, another testing framework).
+In addition, at
+least 101 projects (15%) use a code coverage tool, and 2
+projects even use a mutation testing tool (PIT [47]). Yet,
+no project used automated RTS. We believe that integrat-
+ing a lightweight RTS technique with an existing testing
+framework would likely increase RTS adoption. Ideally, a
+project that already uses the testing framework could adopt
+RTS with just a minimal change to its build script, such as
+build.xml or pom.xml.
+The key requirement for an RTS technique to be adopted
+is that the end-to-end time, on average, is shorter than the
+time to execute all tests in the testing framework [37, 40].
+A typical RTS technique has three phases: the analysis (A)
+phase selects tests to run, the execution (E) phase runs the
+selected tests, and the collection (C) phase collects informa-
+tion from the current revision to enable the analysis for the
+next revision. Most research has evaluated RTS techniques
+based on the number of selected tests, i.e., implicitly based
+on the time only for the E phase; a few papers that do report
+time (e.g., [45, 58]) measure only A and E phases, ignoring
+the C phase. To properly compare speedup (or slowdown) of
+RTS techniques, we believe it is important to consider the
+end-to-end time that the developer observes, from initiating
+the test-suite execution for a new code revision until all test
+outcomes become available.
+Lightweight Technique:
+We propose Ekstazi, a novel
+RTS technique based on ﬁle dependencies. Ekstazi is moti-
+vated by recent advances in build systems [2, 3, 7–9, 17, 24,
+42] and prior work on RTS based on class dependencies [21–
+23, 34, 36, 45, 52] and external resources [29, 30, 43, 58], as
+discussed further in Section 7. Unlike most prior RTS tech-
+niques based on ﬁner-grained dependencies (e.g., methods
+or basic blocks), Ekstazi does not require integration with
+version-control systems (VCS): Ekstazi does not explicitly
+compare the old and new revisions. Instead, Ekstazi com-
+putes for each test entity (a test method or a test class) what
+ﬁles it depends on; the ﬁles can be either executable code
+(e.g., .class ﬁles in Java) or external resources (e.g., conﬁg-
+uration ﬁles). A test need not be run in the new revision
+if none of its dependent ﬁles changed. While we provide no
+formal proof that Ekstazi is safe, its safety follows directly
+from the proven safety for RTS based on class dependen-
+cies [52] and partial builds based on ﬁle dependencies [17].
+Robust Implementation: We implement the Ekstazi tech-
+nique in a tool [25] integrated with JUnit. Our tool handles
+many features of Java, such as packing of .class ﬁles in .jar
+archives, comparison of .class ﬁles using smart checksums
+(e.g., ignoring debug information), instrumentation to col-
+lect dependencies using class loaders or Java agents, reﬂec-
+tion, etc. Our tool can work out-of-the-box on any project
+that uses JUnit. The tool is available at www.ekstazi.org.
+Extensive Evaluation: We evaluate Ekstazi on 615 re-
+visions of 32 Java projects, ranging from 7,389 to 920,208
+LOC and from 83 to 641,534 test methods that take from 8
+to 2,565 seconds to execute in the base case, called RetestAll
+(that runs all the tests) [37]. To the best of our knowledge,
+this is the largest evaluation of any RTS study, and the ﬁrst
+to report the end-to-end RTS time, including the C phase.
+The experiments show that Ekstazi reduces the end-to-end
+time 32% on average, 54% for longer-running test suites,
+compared to RetestAll. Further, Ekstazi reduces the time
+47% on average, 66% for longer-running test suites, when
+the C phase is performed in a separate, oﬀ-line run [15, 18].
+class TestM {
+void t1() {
+assert new C().m() == 1; }
+void t2() {
+assert new D().m() == 1; }
+}
+class TestP {
+void t3() {
+assert new C().p() == 0; }
+void t4() {
+assert new D().p() == 4; }
+}
+class C {
+C() {}
+int m() {
+/∗no method calls ∗/ }
+int p() {
+/∗no method calls ∗/ }
+}
+class D extends C {
+D() {}
+@Override
+int p() {
+/∗no method calls ∗/ }
+}
+Figure 1: Example test code and code under test
+t1 →C.C, C.m
+t2 →D.D, C.C, C.m
+t3 →C.C, C.p
+t4 →D.D, C.C, D.p
+(a) meth-meth
+t1 →TestM, C
+t2 →TestM, D, C
+t3 →TestP, C
+t4 →TestP, D, C
+(b) meth-class
+TestM →TestM, C, D
+TestP →TestP, C, D
+(c) class-class
+Figure 2: Dependencies collected for code in Figure 1
+We also compare Ekstazi with FaultTracer [60], a state-
+of-the-research RTS tool based on ﬁne-grained dependencies,
+on a few projects that FaultTracer can work on. Not only is
+Ekstazi faster than FaultTracer, but FaultTracer is, on av-
+erage, even slower than RetestAll. We discuss why the main
+result—that Ekstazi is better than FaultTracer in terms
+of the end-to-end time—is not simply due to FaultTracer
+being a research prototype but a likely general result. Ek-
+stazi tracks dependencies at our proposed ﬁle granularity,
+whereas FaultTracer uses a ﬁner granularity. While Ekstazi
+does select more tests than FaultTracer and has a slightly
+slower E phase, Ekstazi has much faster A and C phases
+and thus, a lower end-to-end time.
+Ekstazi has already been integrated in the main reposi-
+tories of several open-source projects where it is used on a
+daily basis, including in Apache Camel [10], Apache Com-
+mons Math [11], and Apache CXF [12].
+2.
+EXAMPLE
+We use a synthetic example to introduce key terms and
+illustrate several RTS techniques and their trade-oﬀs. Fig-
+ure 1 shows code that represents an old project revision: two
+test classes—TestM and TestP—contain four test methods—
+t1, t2, t3, and t4—for two classes under test—C and D.
+Executing the tests on this revision can collect the de-
+pendencies that relate each test entity to a set of dependent
+elements. These elements can be of various granularity; for
+our example, we use methods and classes. We refer to the
+granularity of test entities as selection granularity—this is
+the level at which tests are tracked and selected (as test
+methods or test classes), and we refer to the granularity of
+dependent elements as dependency granularity—this is the
+level at which changes are determined.
+A traditional RTS technique, e.g., FaultTracer [60], using
+methods for both the selection granularity and the depen-
+dency granularity would collect the dependencies as in Fig-
+ure 2a. Ekstazi uses classes (more generally, ﬁles) for the
+dependency granularity and either methods or classes for
+the selection granularity. Using methods or classes collects
+the dependencies as in Figure 2b or Figure 2c, respectively.
+In Ekstazi, whenever a test entity depends on D, it also
+depends on C (in general, on all superclasses of D). Each
+test entity also depends on its test class, e.g., t1 depends on
+=== [p.3] ===
+TestM. Finally, this simple example does not show the test
+code or the code under test accessing any ﬁles, but Ekstazi
+also tracks ﬁles (including directories).
+Assume that a new code revision changes only the body
+of the method D.p and thus only the class D. FaultTracer
+would select to run only one test, t4. In contrast, Ekstazi
+at the method granularity would select two tests, t2 and
+t4, because they both depend on the changed class D. More-
+over, Ekstazi at the class granularity would select both test
+classes, TestM and TestP, and thus all four test methods, be-
+cause both test classes depend on the changed class D.
+At a glance, it seems that Ekstazi cannot be better than
+the traditional techniques, because Ekstazi never selects
+fewer tests. However, our goal is to optimize the end-to-end
+time for RTS. Although Ekstazi selects some more tests and
+thus has a longer execution phase, its use of much coarser
+dependencies shortens both the analysis and collection. As
+a result, Ekstazi has a much lower end-to-end time.
+Safely using methods as the dependency granularity is ex-
+pensive. An RTS technique that just intersects methods that
+are in the set of dependencies with the changes, as we dis-
+cussed in our simpliﬁed description, is unsafe, i.e., it could
+fail to select some test that is aﬀected by the changes. For
+example, the new revision could add a method m in class D
+(that overrides C.m); a naive intersection would not select
+any test, but the outcome of t2 could change: the execution
+of this test on the old revision does depend on the existence
+(or absence) of D.m, although the test could not execute that
+(non-existent) method [31, 48]. For another example, the
+new revision could change the value of a ﬁnal ﬁeld accessed
+from the existing method C.m; it would be necessary to col-
+lect accessed ﬁelds to safely reason about the change and
+determine which tests should be selected [48, 60].
+As a consequence, an RTS technique that uses methods
+as the dependency granularity could be safer by collecting
+more dependencies than just used methods (hence making
+the collection expensive and later selecting more tests, mak-
+ing the execution more expensive), and, more critically, it
+also needs sophisticated, expensive comparison of the old
+and new revisions to reason about the changes (hence mak-
+ing the analysis phase expensive). In contrast, an RTS tech-
+nique that uses classes as the dependency granularity can be
+safer by simply collecting all used classes (hence speeding up
+the collection), and more critically, it can use a rather fast
+check of the new revision that does not even require the old
+revision (hence speeding up the analysis phase). However,
+when tests depend not only on the code under test but also
+on external ﬁles [17, 43], collecting only the classes is not
+safe, and hence Ekstazi uses ﬁles as dependencies.
+3.
+TECHNIQUE AND IMPLEMENTATION
+A typical RTS technique has three phases: the analysis
+(A) phase selects what tests to run in the current revision,
+the execution (E) phase runs the selected tests, and the col-
+lection (C) phase collects information for the next revision.
+Ekstazi collects dependencies at the level of ﬁles. For each
+test entity, Ekstazi saves (in the corresponding dependency
+ﬁle2) the names and checksums of the ﬁles that the entity
+uses during execution.
+Ekstazi technique is safe for any code change and any
+change on the ﬁle system. The safety of Ekstazi intuitively
+follows from the proven safety of RTS based on class de-
+pendencies [52] and partial builds based on ﬁle dependen-
+cies [17]. We leave it as a future work to formally prove that
+Ekstazi is safe.
+In the rest of the section, we ﬁrst describe the RTS phases
+in more detail. We then describe the format in which Ek-
+stazi saves the dependencies, and describe an optimization
+that is important to make Ekstazi practical.
+We ﬁnally
+describe Ekstazi integration with a testing framework.
+3.1
+Analysis (A) Phase
+The analysis phase in Ekstazi is quite simple and thus
+fast. For each test entity, Ekstazi checks if the checksums
+of all used ﬁles are still the same.
+If so, the test entity
+is not selected. Note that an executable ﬁle can remain the
+same even when its source ﬁle changes (e.g., renaming a local
+variable or using syntactic sugar); dually, the executable ﬁle
+can change even when its source ﬁle remains the same (e.g.,
+due to a change in compilation).
+This checking requires
+no sophisticated comparisons of the old and new revisions,
+which prior RTS research techniques usually perform on the
+source, and in fact it does not even need to analyze the old
+revision (much like a build system can incrementally compile
+code just by knowing which source ﬁles changed). The only
+check is if the ﬁles remained the same.
+Ekstazi naturally handles newly added test entities: if
+there is no dependency information for some entity, it is se-
+lected. Initially, on the very ﬁrst run, there is no dependency
+information for any entity, so they are all selected.
+3.2
+Execution (E) Phase
+Although one can initiate test execution directly from a
+testing framework, large projects typically initiate test ex-
+ecution from a build system. Popular build systems (e.g.,
+Ant or Maven) allow the user to specify an includes list of
+all test classes to execute.
+Figure 3 shows two approaches to integrate RTS in a typi-
+cal Java project. Ekstazi can work with testing frameworks
+in both approaches. When tightly integrating the A and E
+phases (Figure 3a), the build system ﬁnds all test classes and
+invokes a testing framework as if all test entities will run;
+Ekstazi then checks for each entity if it should be actually
+run or not. Tightly integrating these two phases simpliﬁes
+adding Ekstazi to an existing build: to use Ekstazi re-
+quires only a single change, to replace testingframework.jar
+(e.g., junit.jar) with ekstazi.jar.
+Loosely integrating the A and E phases (Figure 3b) can
+improve performance in some cases. It ﬁrst determines what
+test entities not to run. This avoids the unnecessary over-
+head (e.g., loading classes or spawning a new JVM when the
+build spawns a JVM for each test entity) of preparing to run
+an entity and ﬁnding it should not run. The A phase makes
+an excludes list of test classes that should not run, and
+the build system ignores them before executing the tests.
+Ekstazi makes an excludes list from previously collected
+dependency ﬁles and excludes test classes rather than test
+methods because most build systems support an excludes
+list of classes. In case of the method selection granularity,
+the test methods that are not aﬀected are excluded at the
+beginning of the E phase.
+Figure 3 also shows two approaches to integrate the E
+and C phases. First, the dependencies for the test entities
+2Note that a “dependency ﬁle”, which stores dependencies,
+should not be confused with “dependent ﬁles”, which are the
+dependencies themselves.
+=== [p.4] ===
+System
+Build
+Test
+Outcomes
+JVM
+All
+Run
+CUT & Tests
+& A Phase
+C Phase
+(E Phase)
+Dependency
+Files
+Testing Framework
+(a) Tight integration
+JVM
+CUT & Tests
+(E Phase)
+JVM
+Some
+Run
+(E Phase)
+CUT & Tests
+Excludes
+C Phase
+Files
+Dependency
+Testing Framework
+Testing Framework
+System
+Build
+JVM
+A Phase
+Test
+Outcomes
+(b) Loose integration
+Figure 3: Integration of an RTS technique in a typical build with a testing framework
+that were not selected cannot change: these entities are not
+run and their corresponding dependency ﬁles do not change.
+But the test entities that were selected need to be run to de-
+termine if they still pass or fail, and thus to inform the user
+who initiated the test-suite execution. Because the depen-
+dencies for these entities change, the simplest way to update
+their dependency ﬁles is with one pass (AEC) that both de-
+termines the test outcome and updates the dependency ﬁles.
+However, collecting dependencies has an overhead. There-
+fore, some settings [15, 18] may prefer to use two passes: one
+without collecting dependencies (AE), just to determine the
+test outcome and inform the user, and another to also collect
+the dependencies (AEC). The second pass can be started in
+parallel with the ﬁrst or can be performed sequentially later.
+3.3
+Collection (C) Phase
+The collection phase creates the dependency ﬁles for the
+executed test entities. Ekstazi monitors the execution of
+the tests and the code under test to collect the set of ﬁles ac-
+cessed during execution of each entity, computes the check-
+sum for these ﬁles, and saves them in the corresponding
+dependency ﬁle. Ekstazi currently collects all ﬁles that are
+either read or written, but it could be even more precise by
+distinguishing writes that do not create a dependency [28].
+Moreover, Ekstazi tracks even ﬁles that were attempted to
+be accessed but did not exist; if those ﬁles are added later,
+the behavior can change.
+In principle, we could collect ﬁle dependencies by adapting
+a tool such as Fabricate [24] or Memoize [42]: these tools
+can monitor any OS process to collect its ﬁle dependencies,
+and thus they could be used to monitor a JVM that runs
+tests. However, these tools would be rather imprecise for
+two reasons. First, they would not collect dependencies per
+entity when multiple entities run in one JVM. Second, they
+would not collect dependencies at the level of .class ﬁles
+archived in .jar ﬁles. Moreover, these tools are not portable
+from one OS to another, and cannot be easily integrated in
+a testing framework such as JUnit or a build system such as
+Maven or Ant.
+We implemented the C phase in Ekstazi as a pure Java
+library that is called from a testing framework and addresses
+both points of imprecision. To collect dependencies per test
+entity, Ekstazi needs to be informed when an entity starts
+and ends. Ekstazi oﬀers API methods entityStarted(String
+name), which clears all previously collected dependencies,
+and entityEnded(String name), which saves all the collected
+dependencies to an appropriately named dependency ﬁle.
+When using method selection granularity, due to common
+designs of testing frameworks, additional steps are needed to
+properly collect dependencies. Namely, many testing frame-
+works invoke a constructor of a test class only once, and then
+invoke setUp method(s) before each test method is invoked.
+Therefore, Ekstazi appends dependencies collected during
+constructor invocation and setUp method(s) to the depen-
+dencies collected during the execution of each test method.
+To precisely collect accessed ﬁles, Ekstazi dynamically
+instruments the bytecode and monitors the execution to col-
+lect both explicitly accessed ﬁles (through the java.io pack-
+age) and implicitly accessed ﬁles (i.e., the .class ﬁles that
+contain the executed bytecode). Ekstazi collects explicitly
+used ﬁles by monitoring all standard Java library methods
+that may open a ﬁle (e.g., FileInputStream). Files that con-
+tain bytecode for Java classes are not explicitly accessed
+during execution; instead, a class loader accesses a classﬁle
+when a class is used for the ﬁrst time. Our instrumentation
+collects a set of objects of the type java.lang.Class that a
+test depends on; Ekstazi then ﬁnds for each class where it
+was loaded from. If a class is not loaded from disk but dy-
+namically created during execution, it need not be tracked
+as a dependency, because it cannot change unless the code
+that generates it changes.
+Instrumented Code Points: More precisely, Ekstazi in-
+struments the following code points: (1) start of a construc-
+tor, (2) start of a static initializer, (3) start of a static
+method, (4) access to a static ﬁeld, (5) use of a class lit-
+eral, (6) reﬂection invocations, and (7) invocation through
+invokeinterface (bytecode instruction). Ekstazi needs no
+special instrumentation for the test class: it gets captured
+as a dependency when its constructor is invoked. Ekstazi
+also does not instrument the start of instance methods: if
+a method of class C is invoked, then an object of class C is
+already constructed, which captured the dependency on C.
+3.4
+Dependency Format
+Ekstazi saves dependencies in a simple format similar to
+the dependency format of build tools such as Fabricate [24].
+For each test entity, Ekstazi saves all the information in
+a separate dependency ﬁle whose name corresponds to the
+entity name.
+For example in Figure 2b, Ekstazi creates
+four ﬁles TestM.t1, TestM.t2, TestP.t3, and TestP.t4. Sav-
+ing dependencies from all test entities in one ﬁle would save
+space and could save time for smaller projects, but it would
+increase time for large projects that often run several test
+entities in parallel (e.g., spawn multiple JVMs) so using one
+dependency ﬁle would require costly synchronization. In the
+future, we plan to explore other ways to persist the depen-
+dencies, e.g., databases.
+=== [p.5] ===
+3.5
+Smart Checksums
+Ekstazi’s use of ﬁle checksums oﬀers several advantages,
+most notably (1) the old revision need not be available for
+the A phase, and (2) hashing to compute checksums is fast.
+On top of collecting the executable ﬁles (.class) from the
+archives (.jar), Ekstazi can compute the smart checksum
+for the .class ﬁles. Computing the checksum from the byte-
+codes already ignores some changes in the source code (e.g.,
+i++ and i+=1 could be compiled the same way). The base-
+line approach computes the checksum from the entire ﬁle
+content, including all the bytecodes.
+However, two somewhat diﬀerent executable ﬁles may still
+have the same semantics in most contexts.
+For example,
+adding an empty line in a .java ﬁle would change the de-
+bug info in the corresponding .class ﬁle, but almost all test
+executions would still be the same (unless they observe the
+debug info, e.g., through exceptions that check line num-
+bers). Ekstazi can ignore certain ﬁle parts, such as compile-
+time annotations and other debug info, when computing the
+checksum.
+The trade-oﬀis that the smart checksum makes
+the A and C phases slower (rather than quickly applying a
+checksum on the entire ﬁle, Ekstazi needs to parse parts
+of the ﬁle and run the checksum on a part of the ﬁle), but
+it makes the E phase faster (as Ekstazi selects fewer tests
+because some dependent ﬁles match even after they change).
+3.6
+Integrating Ekstazi with JUnit
+We implemented the Ekstazi technique in a robust tool
+for Java and JUnit [25]. We integrated Ekstazi with JUnit
+because it is a widely used framework for executing unit tests
+in Java. Regarding the implementation, our ekstazi.jar has
+to change (dynamically) a part of the JUnit core itself to
+allow Ekstazi to skip a test method that should not be
+run. While JUnit provides listeners that can monitor start
+and end of tests, currently the listeners cannot change the
+control-ﬂow of tests. Ekstazi supports both JUnit 3 and
+JUnit 4, each with some limitation. For JUnit 3, Ekstazi
+supports only methods (not classes) as selection granularity.
+For JUnit 4, if a project uses a custom runner, Ekstazi
+supports only classes (not methods); otherwise, if no custom
+runner is used, Ekstazi supports both classes and methods.
+It is important to note that when Ekstazi does not support
+some case, it simply oﬀers no test selection and runs all the
+tests, as RetestAll.
+4.
+EVALUATION
+This section describes an experimental evaluation of Ek-
+stazi. We (1) describe the projects used in the evaluation,
+(2) describe the experimental setup, (3) report the RTS re-
+sults in terms of the number of selected test entities and
+time, (4) measure beneﬁts of the smart checksum, (5) evalu-
+ate the importance of selection granularity, (6) evaluate the
+importance of dependency granularity by comparing Ek-
+stazi with FaultTracer [60], and (7) describe a case study
+of Ekstazi integration with a popular open-source project.
+More information about the experiments (e.g., links to the
+projects used in evaluation) is available at www.ekstazi.
+org/research.html.
+We ran all the experiments on a 4-core 1.6 GHz Intel
+i7 CPU with 4GB of RAM, running Ubuntu Linux 12.04
+LTS. We used three versions of Oracle Java 64-Bit Server:
+1.6.0 45, 1.7.0 45, and 1.8.0 05. Diﬀerent versions were nec-
+essary as several projects require speciﬁc older or newer Java
+version. For each project, we used the latest revision that
+successfully compiled and executed all tests.
+4.1
+Projects
+Figure 4 lists the projects used in the evaluation; all 32
+projects are open source. The set of projects was created by
+three undergraduate students who were not familiar with our
+study. We suggested starting places with larger open-source
+projects: Apache [1], GitHub [4], and GoogleCode [5]. We
+also asked that each project satisﬁes several requirements:
+(1) has the latest available revision (obtained at the time
+of the ﬁrst download) build without errors (using one of
+three Java versions mentioned above), (2) has at least 100
+JUnit tests, (3) uses Ant or Maven to build code and execute
+tests, and (4) uses SVN or Git version-control systems. The
+ﬁrst two requirements were necessary to consider compilable,
+non-trivial projects, but the last two requirements were set
+to simplify our automation of the experiments.
+Note that Ekstazi itself does not require any integra-
+tion with VCS, but our experiments do require to automate
+checking out of various project revisions. To support both
+Ant and Maven across many project revisions, we do not
+modify the .xml conﬁguration ﬁles but replace the appro-
+priate junit.jar (in the lib for Ant-based projects or in
+the Maven .m2 download repo) with our ekstazi.jar. From
+about 100 projects initially considered from the three source-
+code repositories, two-thirds were excluded because they did
+not build (e.g., due to syntax errors or missing dependen-
+cies), used a diﬀerent build systems (e.g., Gradle), or had
+too few tests. The students conﬁrmed that they were able
+to execute JUnit tests in all selected projects.
+Figure 4 tabulates for each project its name, the latest re-
+vision available at the time of our ﬁrst download, the number
+of revisions that could build out of 20 revisions before the
+speciﬁed revision, the total number of lines of code (as re-
+ported by sloccount [53]), the number of JUnit test methods
+and classes averaged across all buildable revisions, and the
+average (avg) and total (P) time to execute the entire test
+suite across all buildable revisions. The remaining columns
+are discussed in the following sections.
+The row labeled P at the bottom of the table shows the
+cumulative numbers across all projects. We performed our
+evaluation on 615 revisions of 32 projects totaling 4,937,189
+LOC. To the best of our knowledge, this is the largest dataset
+used in any RTS study.
+We visually separate projects with short running and long
+running test suites. While no strict rule deﬁnes the bound-
+ary between the two, we classiﬁed the projects whose test
+suites execute in less than one minute as short running.
+The following sections mostly present results for all projects
+together, but in several cases we contrast the results for
+projects with short- and long-running test suites.
+4.2
+Experimental Setup
+We brieﬂy describe our experimental setup. The goal is
+to evaluate how Ekstazi performs if RTS is run for each
+committed project revision. In general, developers may run
+RTS even between commits [26], but there is no dataset
+that would allow executing tests the same way that devel-
+opers executed them in between commits. For each project,
+our experimental script checks out the revision that is 20
+revisions before the revision speciﬁed in Figure 4. If any re-
+=== [p.6] ===
+Project
+Revision
+Buildable
+Revisions
+LOC
+Test [avg]
+Time [sec]
+Test Selection [%]
+classes
+methods
+avg
+P
+e%
+tAEC
+tAE
+short running
+Cucumber
+5df09f85
+20
+19,939
+49
+296
+8
+169
+12
+99
+76
+JodaTimeM
+f17223a4
+20
+82,996
+124
+4,039
+10
+214
+21
+107
+75
+Retroﬁt
+810bb53e
+20
+7,389
+15
+162
+10
+217
+16
+104
+90
+CommonsValidatorM
+1610469
+20
+12,171
+61
+416
+11
+230
+6
+88
+78
+BVal
+1598345
+20
+17,202
+21
+231
+13
+267
+13
+138
+97
+CommonsJXPathM
+1564371
+13
+24,518
+33
+386
+15
+205
+20
+94
+81
+GraphHopper
+0e0e311c
+20
+33,254
+80
+677
+15
+303
+16
+85
+59
+River
+1520131
+19
+297,565
+14
+83
+17
+335
+6
+35
+18
+Functor
+1541713
+20
+21,688
+164
+1,134
+21
+439
+13
+112
+90
+EmpireDB
+1562914
+20
+43,980
+23
+113
+27
+546
+18
+112
+99
+JFreeChart
+3070
+20
+140,575
+359
+2,205
+30
+618
+5
+80
+64
+CommonsColl4
+1567759
+20
+52,040
+145
+13,684
+32
+644
+9
+66
+55
+CommonsLang3
+1568639
+20
+63,425
+121
+2,492
+36
+728
+11
+60
+53
+CommonsConﬁg
+1571738
+16
+55,187
+141
+2,266
+39
+633
+20
+72
+58
+PdfBox
+1582785
+20
+109,951
+94
+892
+40
+813
+12
+80
+63
+GSCollections
+6270110e
+20
+920,208
+1,106
+64,614
+51
+1,036
+29
+107
+90
+long running
+CommonsNet
+1584216
+19
+25,698
+37
+215
+68
+1,300
+10
+21
+21
+ClosureCompiler
+65401150
+20
+211,951
+233
+8,864
+71
+1,429
+17
+62
+50
+CommonsDBCP
+1573792
+16
+18,759
+27
+480
+76
+1,229
+21
+46
+39
+Log4jM
+1567108
+19
+30,287
+38
+440
+79
+1,508
+6
+62
+43
+JGitM
+bf33a6ee
+20
+124,436
+229
+2,223
+83
+1,663
+22
+65
+50
+CommonsIO
+1603493
+20
+25,981
+84
+976
+98
+1,969
+12
+30
+24
+IvyM
+1558740
+18
+72,179
+121
+1,005
+170
+3,077
+38
+53
+44
+Jenkins (light)
+c826a014
+20
+112,511
+86
+3,314
+171
+3,428
+7
+74
+71
+CommonsMath
+1573523
+20
+186,796
+461
+5,859
+249
+4,996
+6
+77
+16
+AntM
+1570454
+20
+131,864
+234
+1,667
+380
+7,613
+13
+24
+21
+ContinuumM
+1534878
+20
+91,113
+68
+361
+453
+9,064
+10
+32
+26
+GuavaM
+af2232f5
+16
+257,198
+348
+641,534
+469
+7,518
+13
+45
+17
+Camel (core)
+f6114d52
+20
+604,301
+2,015
+4,975
+1,296
+25,938
+5
+9
+7
+Jetty
+0f70f288
+20
+282,041
+504
+4,879
+1,363
+27,275
+26
+57
+49
+Hadoop (core)
+f3043f97
+20
+787,327
+317
+2,551
+1,415
+28,316
+7
+38
+22
+ZooKeeperM
+1605517
+19
+72,659
+127
+532
+2,565
+48,737
+20
+43
+37
+P
+-
+-
+615
+4,937,189
+7,479
+773,565
+9,400
+182,475
+-
+-
+-
+avg(all)
+14
+68
+53
+avg(short running) | avg(long running)
+14|15
+90|46
+72|34
+Figure 4: Projects used in the evaluation and test selection results using Ekstazi. Figure 5 describes the column titles
+c%
+Percentage of test classes selected
+e%
+Percentage of test entities selected
+m%
+Percentage of test methods selected
+tAEC
+Time for AEC normalized by time for RetestAll
+tAE
+Time for AE normalized by time for RetestAll
+Figure 5: Legend for symbols used in evaluation
+vision cannot build, it is ignored from the experiment, i.e.,
+the analysis phase of the next buildable revision uses de-
+pendencies collected at the previous buildable revision. If
+it can build, the script executes the tests in three scenarios:
+(1) RetestAll executes all tests without Ekstazi integration,
+(2) AEC executes the tests with Ekstazi while collecting de-
+pendencies, and (3) AE executes the tests with Ekstazi but
+without collecting dependencies, which is preferred in some
+settings (Section 3.2). The script then repeats these three
+steps for all revisions until reaching the latest available re-
+vision listed in Figure 4.
+In each step, the script measures the number of executed
+tests and the testing time (the execution of all tests for JU-
+nit, the end-to-end time for all AEC phases of Ekstazi,
+or just the times for the AE phases). The script measures
+the time to execute the build command that the developers
+use to execute the tests (e.g., ant junit-tests or mvn test).
+We sometimes limited the tests to just a part of the entire
+project (e.g., the core tests for Hadoop in RetestAll take
+almost 8 hours across 20 revisions, and the full test suite
+takes over 17 hours for just one revision). In our evaluation,
+we did not modify anything in the build conﬁguration ﬁle
+for running the tests, e.g., if it uses multiple cores, excludes
+some tests, or spawns new JVMs for each test class.
+By
+measuring the time for the build command, we evaluate the
+speedup that the developers would have observed had they
+used Ekstazi. Note that the speedup that Ekstazi provides
+over RetestAll is even bigger for the testing itself than for
+the build command, because the build command has some
+ﬁxed overhead before initiating the testing.
+=== [p.7] ===
+−20
+−15
+−10
+−5
+0
+Revision
+0
+100
+200
+300
+400
+500
+600
+700
+Number of tests
+RetestAll
+Class
+Method
+(a) GraphHopper tests
+−20
+−15
+−10
+−5
+0
+Revision
+0
+5
+10
+15
+20
+25
+30
+Time [sec]
+RetestAll
+AE
+AEC
+(b) GraphHopper time
+−20
+−15
+−10
+−5
+0
+Revision
+0
+500
+1000
+1500
+2000
+2500
+Number of tests
+RetestAll
+Class
+Method
+(c) CommonsLang3 tests
+−20
+−15
+−10
+−5
+0
+Revision
+0
+5
+10
+15
+20
+25
+30
+35
+40
+45
+Time [sec]
+RetestAll
+AE
+AEC
+(d) CommonsLang3 time
+Figure 6: Number of available and selected tests (a,c) and end-to-end time in seconds (b,d)
+Ekstazi has two main options: selection granularity can
+be class or method, and smart checksum can be on or oﬀ.
+The default conﬁguration uses the class selection granularity
+with smart checksum. As discussed earlier, due to idiosyn-
+crasies of JUnit 3, Ekstazi does not run the class selection
+granularity for all projects; those that use the method selec-
+tion granularity have the superscript M in Figure 4.
+4.3
+Main RTS Results
+The testing time is the key metric to compare RetestAll,
+Ekstazi AEC, and Ekstazi AE runs; as an additional met-
+ric, we use the number of executed tests.
+Figure 6 visu-
+alizes these metrics for two of the projects, GraphHopper
+and CommonsLang3.
+Plots for other projects look simi-
+lar; the selected projects include several revisions that are
+interesting to highlight.
+For each of the 20 revisions, we
+plot the total number of test methods (close to 700 and
+2,500 in GraphHopper and CommonsLang3, respectively),
+the number of test methods Ekstazi selects at the method
+level (blue line), the number of test methods Ekstazi se-
+lects at the class level (yellow line), the time for RetestAll
+(orange line), the time for all AEC phases of Ekstazi at
+the method level (purple line), and the time for only AE
+phases at the method level (green line). For example, revi-
+sion −12 for CommonsLang3 has about 400 and 1,200 test
+methods selected at the method and class level, respectively.
+We compute the selection ratio for each revision, in this case
+∼400/2,500 and ∼1,200/2,500, and then average the ratios
+over all revisions; for CommonsLang3, the average ratio is
+about 8% of methods and 11% of classes (Figure 8). Like-
+wise for times, we compute the ratio of the Ekstazi time
+over the RetestAll time for each revision and then average
+these ratios. In all starting revisions, −20, we expect the
+Ekstazi AEC to be slower than RetestAll, as Ekstazi runs
+all the tests and collects dependencies. In general, whenever
+Ekstazi selects (almost) all tests, it is expected to be slower
+than RetestAll, due to analysis and collection overhead. For
+example, Ekstazi is slower in revisions −1, −8, and −14 for
+GraphHopper, but it is faster for many other revisions. We
+also expect Ekstazi AE runs to be faster than Ekstazi AEC
+runs, but there are some cases where the background pro-
+cesses ﬂip that, e.g., revisions −5 and −6 for GraphHopper.
+The background noise also makes the time for RetestAll to
+ﬂuctuate, but over a large number of revisions we expect the
+noise to cancel out and allow a fair comparison of times for
+RetestAll, Ekstazi AEC, and Ekstazi AE. The noise has
+smaller eﬀect on long running test suites.
+All
+Smart
+m%
+tAEC
+tAE
+m%
+tAEC
+tAE
+Camel (core)
+5
+9
+7
+5
+9
+7
+CommonsDBCP
+40
+60
+47
+23
+43
+37
+CommonsIO
+21
+42
+32
+14
+30
+24
+CommonsMath
+6
+85
+16
+6
+75
+17
+CommonsNet
+11
+28
+28
+9
+26
+22
+CommonsValidator
+7
+93
+79
+6
+88
+78
+Ivy
+47
+63
+52
+38
+53
+44
+Jenkins (light)
+14
+72
+69
+7
+74
+71
+JFreeChart
+6
+87
+70
+5
+84
+67
+avg(all)
+17
+60
+45
+13
+54
+41
+Figure 7: Ekstazi without and with smart checksums
+The last three columns in Figure 4 show the average selec-
+tion per project; “e%” shows the ratio of test entities (meth-
+ods or classes) selected, and the times for AEC and AE are
+normalized to the JUnit run without Ekstazi. For example,
+for Cucumber, Ekstazi selects on average 12% of test en-
+tities, but the time that Ekstazi takes is 99% of RetestAll
+(or 76% if the C phase is ignored), so it provides almost no
+beneﬁt. In fact, for some other projects with short-running
+test suites, Ekstazi is slower than RetestAll; we highlight
+such cases, e.g., for JodaTime in Figure 4.
+Overall, the selection ratio of test entities varies between
+5% and 38% of RetestAll, the time for AEC varies between
+9% and 138 % (slowdown), and the time for AE varies be-
+tween 7% and 99%.
+On average, across all the projects,
+the AEC time is 68%, and the AE time is 53%. More impor-
+tantly, all slowdowns are for projects with short-running test
+suites. Considering only the projects with long-running test
+suites, Ekstazi reduces the AEC time to 46% of RetestAll,
+and reduces the AE time to 34%. In sum, Ekstazi appears
+useful for projects whose test suites take over a minute: Ek-
+stazi on average roughly halves their testing time.
+4.4
+Smart Checksums
+Recall that smart checksum performs a more expensive
+comparison of .class ﬁles to reduce the number of selected
+test entities. Figure 7 shows a comparison of Ekstazi runs
+with smart checksum being oﬀand on, for a diverse subset of
+projects. While smart checksum improves both the number
+of selected entities and the testing time (on average and in
+most cases), there are several cases where the results are the
+same, or the reduction in the testing time is even slightly
+lower, e.g., both times for Jenkins or the AE time for Com-
+=== [p.8] ===
+Method
+Class
+m%
+tAEC
+tAE
+c%
+tAEC
+tAE
+BVal
+16
+138
+94
+13
+138
+97
+ClosureCompiler
+20
+96
+53
+17
+62
+50
+CommonsColl4
+7
+81
+60
+9
+66
+55
+CommonsConﬁg
+19
+76
+57
+20
+72
+58
+CommonsDBCP
+23
+43
+37
+21
+46
+39
+CommonsIO
+14
+30
+24
+12
+30
+24
+CommonsLang3
+8
+63
+51
+11
+60
+53
+CommonsMath
+6
+75
+17
+6
+77
+16
+CommonsNet
+9
+26
+22
+10
+21
+21
+Cucumber
+13
+105
+78
+12
+99
+76
+EmpireDB
+13
+117
+100
+18
+112
+99
+Functor
+15
+111
+100
+13
+112
+90
+GraphHopper
+19
+84
+54
+16
+85
+59
+GSCollections
+16
+198
+101
+29
+107
+90
+JFreeChart
+5
+84
+67
+5
+80
+64
+PdfBox
+8
+85
+70
+12
+80
+63
+Retroﬁt
+19
+113
+93
+16
+104
+90
+River
+6
+34
+17
+6
+35
+18
+avg(all)
+13
+87
+61
+14
+77
+59
+Figure 8: Ekstazi with both selection granularities
+monsMath. This happens if projects have no revision (in
+the last 20 revisions) that modiﬁes only debug info; using
+smart checksum then leads to a slowdown as it never selects
+fewer tests but increases the cost of checking and collecting
+dependencies. We also manually inspected the results for
+several projects and found that smart checksum can be fur-
+ther improved: some .class ﬁles diﬀer only in the order of
+annotations, but Java speciﬁcation does not attach seman-
+tics to this order, so such changes can be safely ignored. In
+sum, smart checksum reduces the overall testing time.
+4.5
+Selection Granularity
+Ekstazi provides two levels of selection granularity: meth-
+ods (which selects fewer tests for the E phase but makes the
+A and C phases slower) and classes (which makes the A
+and C phases faster but selects more tests for the E phase).
+Figure 8 shows a comparison of Ekstazi for these two lev-
+els, on several randomly selected projects. Because Ekstazi
+does not support method selection granularity for projects
+that use a custom JUnit runner, we do not compare for
+such projects. Also, we do not compare for Guava; it has
+a huge number of test methods, and with method selection
+granularity, our default format for saving dependencies (Sec-
+tion 3.4) would create a huge number of dependency ﬁles
+that may exceed limits set by the ﬁle system. The class selec-
+tion granularity improves both AEC and AE times on aver-
+age and in most cases, especially for GSCollections. In some
+cases where the class selection granularity is not faster, it is
+only slightly slower. In sum, the class selection granularity
+reduces the overall testing time compared to the method se-
+lection granularity, and the class selection granularity should
+be the default value.
+4.6
+Dependency Granularity
+We next evaluate two levels of dependency granularity. We
+compare Ekstazi, which uses the class dependency granu-
+larity, with FaultTracer [60], which tracks dependencies on
+the edges of an extended control-ﬂow graph (ECFG). To
+the best of our knowledge, FaultTracer was the only pub-
+licly available tool for RTS at the time of our experiments.
+FaultTracer
+Ekstazi
+m%
+tAEC
+m%
+tAEC
+CommonsConﬁg
+8
+223
+19
+76
+CommonsJXPath
+14
+294
+20
+94
+CommonsLang3
+1
+183
+8
+63
+CommonsNet
+2
+57
+9
+26
+CommonsValidator
+1
+255
+6
+88
+JodaTime
+3
+663
+21
+107
+avg(all)
+5
+279
+14
+76
+Figure 9: Test selection with FaultTracer and Ekstazi
+FaultTracer collects the set of ECFG edges covered during
+the execution of each test method. For comparison purposes,
+we also use Ekstazi with the method selection granular-
+ity. FaultTracer implements a sophisticated change-impact
+analysis using the Eclipse [35] infrastructure to parse and
+traverse Java sources of two revisions.
+Although robust,
+FaultTracer has several limitations: (1) it requires that the
+project be an Eclipse project, (2) the project has to have
+only a single module, (3) FaultTracer does not track depen-
+dencies on external ﬁles, (4) it requires that both source
+revisions be available, (5) it does not track reﬂection calls,
+(6) it does not select newly added tests, (7) it does not
+detect any change in the test code, and (8) it cannot ig-
+nore changes in annotations that Ekstazi ignores via smart
+checksum [6]. Due to these limitations, we had to discard
+most of the projects from the comparison, e.g., 15 projects
+had multiple modules, and for CommonsIO, FaultTracer was
+unable to instrument the code.
+Figure 9 shows a comparison of FaultTracer and Ekstazi,
+with the values, as earlier, ﬁrst normalized to the savings
+compared to RetestAll for one revision, and then averaged
+across revisions.
+The Ekstazi results are the same as in
+Figure 4 and repeated for easier comparison. The results
+show that Ekstazi has a much lower end-to-end time than
+FaultTracer, even though Ekstazi does select more tests to
+run. Moreover, the results show that FaultTracer is even
+slower than RetestAll.
+To gain conﬁdence in the implementation, we compared
+the sets of tests selected by Ekstazi and FaultTracer, and
+conﬁrmed that the results were correct. In most cases, Ek-
+stazi selected a superset of tests selected by FaultTracer.
+In a few cases, Ekstazi (correctly) selected fewer tests than
+FaultTracer for two reasons. First, Ekstazi may select fewer
+tests due to smart checksum (Section 3.5). Second, Ekstazi
+ignores changes in source code that are not visible at the
+bytecode level, e.g., local variable rename (Section 3.3).
+4.7
+Apache CXF Case Study
+Several Apache projects integrated Ekstazi into their main
+repositories.
+Note that Ekstazi was integrated in these
+projects after we selected the projects for the evaluation,
+as explained in Section 4.2.
+One of the projects that in-
+tegrated Ekstazi, Apache CXF [12], was not used in our
+evaluation.
+To estimate the beneﬁts observed by Apache
+developers, we performed a study to measure time savings
+since Ekstazi was integrated (189 revisions at the time of
+this writing). We measured test execution time, across all
+revisions, for RetestAll and Ekstazi. Running tests with
+Ekstazi (∼54h) was 2.74X faster than RetestAll (∼148h).
+=== [p.9] ===
+5.
+DISCUSSION
+Coarser Dependencies Can Be Faster: We argue that
+the cost of FaultTracer is due to its approach and not just
+due to it being a research tool.
+The cost of FaultTracer
+stems from collecting ﬁne-grained dependencies, which af-
+fects both the A and C phases. In particular, the A phase
+needs to parse both old and new revisions and compare
+them. While Orso et al. [45] show how some of that cost
+can be lowered by ﬁltering classes that did not change, their
+results show that the overhead of parsing and comparison
+still ranges from a few seconds up to 4min [45]. Moreover,
+collecting ﬁne-grained dependencies is also costly. For ex-
+ample, we had to stop FaultTracer from collecting ECFG
+dependencies of CommonsMath after one hour; it is interest-
+ing to note that CommonsMath also has the most expensive
+C phase for Ekstazi (∼8X for the initial run when there is
+no prior dependency info). Last but not least, in terms of
+adoption, FaultTracer and similar approaches are also more
+challenging than Ekstazi because they require access to the
+old revision through some integration with version-control
+systems. In contrast, Ekstazi only needs the checksums of
+dependent ﬁles from the old revision.
+Sparse Collection: Although Ekstazi collects dependen-
+cies at each revision by default, one can envision collecting
+dependencies at every n-th revision [16, 18]. Note that this
+approach is safe as long as the analysis phase checks the
+changes between the current revision and the latest revision
+for which dependencies were collected. This avoids the cost
+of frequent collection but leads to less precise selection.
+Duplicate Tests:
+In a few cases, we observed that Ek-
+stazi did not run some tests during the ﬁrst run, which
+initially seemed like a bug in Ekstazi. However, inspecting
+these cases showed that some test classes were (ineﬃciently)
+included multiple times in the same test suite by the origi-
+nal developers. When JUnit (without Ekstazi) runs these
+classes, they are indeed executed multiple times. But when
+Ekstazi runs these test suites, after it executes a test for
+the ﬁrst time, it saves the test’s dependency ﬁle, so when the
+test is encountered again for the same test suite, all its de-
+pendent ﬁles are the same, and the test is ignored. However,
+if the same test method name is encountered consecutively
+multiple times, Ekstazi does not ignore the non-ﬁrst runs
+but unions the dependencies for all those invocations, to
+support parameterized unit tests.
+Parameterized Tests: Recent versions of JUnit support
+parameterized unit tests [56]. A parameterized test deﬁnes
+a set of input data and invokes a test method with each input
+from the set; each input may contain multiple values. This
+approach is used in data-driven scenarios where only the
+test input changes, but the test method remains the same.
+Currently, Ekstazi considers a parameterized unit test as
+a single test and unions the dependencies collected when
+executing the test method with each element from the input
+data set. In the future, we could explore tracking individual
+invocations of parameterized tests.
+Flaky Tests: Tests can have non-deterministic executions
+for multiple reasons such as multi-threaded code, time de-
+pendencies, asynchronous calls, etc.
+If a test passes and
+fails for the same code revision, it is often called a “ﬂaky
+test” [39]. Even if a test has the same outcome, it can have
+diﬀerent dependencies in diﬀerent runs.
+Ekstazi collects
+dependencies for a single run and guarantees that the test
+will be selected if any of its dependencies changes. However,
+if a dependency changes for another run that was not ob-
+served, the test will not be selected. This is the common
+approach in RTS [50] because collecting dependencies for all
+runs (e.g., using software model checking) would be costly.
+Parallel Execution vs. RTS: It may be (incorrectly) as-
+sumed that RTS is not needed in the presence of paral-
+lel execution if suﬃcient resources are available. However,
+even companies with an abundance of resources cannot keep
+up with running all tests for every revision [20, 55, 57].
+Additionally, parallel test execution is orthogonal to RTS.
+Namely, RTS can signiﬁcantly speed up test execution even
+if the tests are run in parallel. For example, tests for four
+projects used in our evaluation (ClosureCompiler, Hadoop,
+Jenkins, and JGit) execute by default on all available cores.
+Still, we can observe substantial speedup in testing time
+when Ekstazi is integrated in these projects.
+Moreover,
+RTS itself can be parallelized.
+In loose integration (Sec-
+tion 3.2), we can run A of all tests in parallel and then run
+EC of all tests in parallel. In tight integration, we can run
+AEC of all tests in parallel.
+6.
+THREATS TO VALIDITY
+External: The projects used in the evaluation may not be
+representative. To mitigate this threat, we performed ex-
+periments on a number of projects that vary in size, number
+of developers, number of revisions, and application domain.
+We performed experiments on 20 revisions per project;
+the results could diﬀer if we selected more revisions or dif-
+ferent segments from the software history. We considered
+only 20 revisions to limit machine time needed for experi-
+ments. Further, we consider each segment right before the
+latest available revision at the time when we started the
+experiments on the project.
+The reported results for each project were obtained on a
+single machine. The results may diﬀer based on the conﬁg-
+uration (e.g., available memory). We also tried a small sub-
+set of experiments on another machine and observed similar
+results in terms of speedup, although the absolute times dif-
+fered due to machine conﬁgurations. Because our goal is to
+compare real time, we did not want to merge experimental
+results from diﬀerent machines.
+Internal: Ekstazi implementation may contain bugs that
+may impact our conclusions. To increase the conﬁdence in
+our implementation, we reviewed the code, tested it on a
+number of small examples, and manually inspected several
+results for both small and large projects.
+Construct: Although many RTS techniques have been pro-
+posed, we compared Ekstazi only with FaultTracer. To the
+best of our knowledge, FaultTracer was the only publicly
+available RTS tool. Our focus in comparison is not only on
+the number of selected tests but primarily on the end-to-end
+time taken for testing. We believe that the time that the de-
+veloper observes, from initiating the test-suite execution for
+the new code revision until all the test outcomes become
+available, is the most relevant metric for RTS.
+7.
+RELATED WORK
+There has been a lot of work on regression testing in gen-
+eral, as surveyed in two reviews [14, 59], and on RTS in
+particular, as further surveyed in two more reviews [22, 23].
+We ﬁrst discuss work that inspired our Ekstazi technique:
+recent advances in build systems [2, 3, 7–9, 17, 24, 42], prior
+=== [p.10] ===
+work on RTS based on class dependencies [21, 34, 36, 45,
+51, 52], and external resources [29, 30, 43, 58]. We then dis-
+cuss prior techniques that use diﬀerent levels of dependency
+granularity and other related work.
+Build Systems and Memoization: Memoize [42], which is
+a Python-based system, uses strace on Linux to monitor all
+ﬁles opened while the given command executes. Memoize
+saves all ﬁle paths and ﬁle checksums, and ignores subse-
+quent runs of the same command if no checksum changed.
+Fabricate [24] is an improved version of Memoize that also
+supports parallel builds. Other build systems, for example
+SCons [8] and Vesta [9], capture dependencies on ﬁles that
+are attempted to be accessed, even if they do not exist. For
+memoization of Python code, Guo and Engler proposed In-
+cPy [28] that memoizes calls to functions. IncPy supports
+functions that use ﬁles, i.e., it stores the ﬁle checksums and
+re-executes a function if any of its inputs or ﬁles change.
+Our insight is to view RTS as memoization: if none of the
+dependent ﬁles for some test changed, then the test need not
+be run. By capturing ﬁle dependencies for each test entity,
+Ekstazi provides scalable and eﬃcient RTS that integrates
+well with testing frameworks, increasing the chance of adop-
+tion. Ekstazi diﬀers from build systems and memoization
+in several aspects: capturing dependencies for each test en-
+tity even when all entities are executed in the same JVM,
+supporting test entity granularities, smart checksums, and
+capturing ﬁles inside archives (i.e., classﬁles inside jar ﬁles).
+Class-based Test Selection: Hsia et al. [34] were the ﬁrst
+to propose RTS based on class ﬁrewall [36], i.e., the statically
+computed set of classes that may be aﬀected by a change.
+Orso et al. [45] present an RTS technique that combines class
+ﬁrewall and dangerous edges [50]. Their approach works in
+two phases: it ﬁnds relations between classes and interfaces
+to identify a subgraph of the Java Interclass Graph that may
+be aﬀected by the changes, and then selects tests via an edge-
+level RTS on the identiﬁed subgraph. Skoglund and Runeson
+ﬁrst performed a large case study on class ﬁrewall [51] and
+then [52] proposed an improved technique that removes the
+class ﬁrewall and uses a change-based RTS technique that
+selects only tests that execute modiﬁed classes.
+More re-
+cently, Christakis et al. [17] give a machine-veriﬁable proof
+that memoization of partial builds is safe when capturing
+dependencies on all ﬁles, assuming that code behaves deter-
+ministically (e.g., there is no network access). Compared to
+prior work, Ekstazi captures all ﬁles (including classes) for
+RTS, handles addition and changes of test classes, applies
+smart checksums, supports reﬂection, and has both class
+and method selection granularity. Moreover, we integrated
+Ekstazi with JUnit and evaluated on a much larger set of
+projects, using the end-to-end testing time.
+External Resources: Haraty et al. [29] and Daou [30] ex-
+plored regression testing for database programs.
+Willmor
+and Embury [58] proposed two RTS techniques, one that
+captures interaction between a database and the application,
+and the other based solely on the database state. Nanda et
+al. [43] proposed RTS for applications with conﬁguration
+ﬁles and databases. We explored several ways to integrate
+RTS with the existing testing frameworks, and Ekstazi cap-
+tures all ﬁles. At the moment, Ekstazi oﬀers no special sup-
+port for dependencies other than ﬁles (e.g., databases and
+web services). We plan to support these cases in the future.
+Granularity Levels:
+Ren et al. [48] described the Chi-
+anti approach for change impact analysis. Chianti collects
+method dependencies for each test and analyzes diﬀerences
+at the source level. We show that ﬁne-grained analysis can
+be expensive. Echelon from Microsoft [54] performs test pri-
+oritization [59] rather than RTS. It tracks ﬁne-grained de-
+pendencies based on basic blocks and accurately computes
+changes between code revisions by analyzing compiled bina-
+ries. Most research RTS techniques [59] also compute ﬁne-
+grained dependencies like Echelon. Because Echelon is not
+publicly available, our evaluation used FaultTracer [60], a
+state-of-the-research RTS tool. Elbaum et al. [19] and Di
+Nardo et al. [44] compared diﬀerent granularity levels (e.g.,
+statement vs. function) for test prioritization techniques.
+Ekstazi uses a coarse granularity, i.e., ﬁles, for dependency
+granularity, and the experiments show better results than
+for FaultTracer based on a ﬁner granularity. Also, the com-
+parison of both selection granularities shows that the coarser
+granularity provides more savings.
+Other Related Work: Zheng et al. [61] propose a fully
+static test selection technique that does not collect depen-
+dencies but constructs a call graph (for each test) and in-
+tersects the graph with the changes. Ekstazi collects de-
+pendencies dynamically, and measures the end-to-end time.
+Pinto et al. [46] and Marinescu et al. [41] studied test-suite
+evolution and other execution metrics over several project
+revisions.
+While we did not use those same projects and
+revisions (e.g., Marinescu et al.’s projects are in C), we
+did use 615 revisions of 32 projects.
+Several prediction
+models [32, 49] were proposed to estimate if RTS would be
+cheaper than RetestAll.
+Most models assume that the C
+phase is run separately and would need to be adjusted when
+RTS runs all phases and the end-to-end time matters. We
+focus Ekstazi on the end-to-end time.
+8.
+CONCLUSIONS
+We described the Ekstazi technique and its implementa-
+tion for regression test selection. The key diﬀerence between
+Ekstazi and prior work is that Ekstazi tracks test depen-
+dencies on ﬁles and integrates with JUnit. For each test en-
+tity, Ekstazi collects a set of ﬁles that are accessed during
+the execution. Ekstazi detects aﬀected tests by checking if
+the dependent ﬁles changed.
+We aim to make RTS practical by balancing the time
+for the analysis and collection phases, rather than focusing
+solely on reducing the number of selected tests for the exe-
+cution phase. The use of coarse-grain dependencies provides
+a “sweet-spot”.
+The experiments show that Ekstazi al-
+ready performs better overall than the state-of-the-research
+tools.
+Most importantly, Ekstazi works faster than the
+RetestAll base case. Finally, Ekstazi has already been in-
+tegrated in the main repositories by several popular open
+source projects, including Apache Camel, Apache Commons
+Math, and Apache CXF.
+9.
+ACKNOWLEDGMENTS
+We thank Alex Gyori, Farah Hariri, Owolabi Legunsen,
+Jessy Li, Yu Lin, Qingzhou Luo, Aleksandar Milicevic, and
+August Shi for their feedback on this work; Nikhil Unni,
+Dan Schweikert, and Rohan Sehgal for helping to make the
+list of projects used in the evaluation; and Lingming Zhang
+for making FaultTracer available.
+This research was par-
+tially supported by the NSF Grant Nos. CNS-0958199, CCF-
+1012759, CCF-1421503, and CCF-1439957.
+=== [p.11] ===
+10.
+REFERENCES
+[1] Apache Projects. https://projects.apache.org/.
+[2] Buck. http://facebook.github.io/buck/.
+[3] Build in the cloud.
+http://google-engtools.blogspot.com/2011/08/
+build-in-cloud-how-build-system-works.html.
+[4] GitHub. https://github.com/.
+[5] Google Code. https://code.google.com/.
+[6] Java Annotations. http://docs.oracle.com/javase/
+7/docs/technotes/guides/language/annotations.
+html.
+[7] Ninja. https://martine.github.io/ninja/.
+[8] SCons. http://www.scons.org/.
+[9] Vesta. http://www.vestasys.org/.
+[10] Apache Camel - Building. http://camel.apache.org/
+building.html.
+[11] Apache Commons Math.
+https://github.com/apache/commons-math.
+[12] Apache CXF. https://github.com/apache/cxf.
+[13] B. Beizer. Software Testing Techniques (2nd Ed.). 1990.
+[14] S. Biswas, R. Mall, M. Satpathy, and S. Sukumaran.
+Regression test selection techniques: A survey. Infor-
+matica (Slovenia), 35(3):289–321, 2011.
+[15] P. K. Chittimalli and M. J. Harrold.
+Re-computing
+coverage information to assist regression testing. In In-
+ternational Conference on Software Maintenance, pages
+164–173, 2007.
+[16] P. K. Chittimalli and M. J. Harrold. Recomputing cov-
+erage information to assist regression testing. Transac-
+tions on Software Engineering, 35(4):452–469, 2009.
+[17] M. Christakis, K. R. M. Leino, and W. Schulte. Formal-
+izing and verifying a modern build language. In Interna-
+tional Symposium on Formal Methods, pages 643–657,
+2014.
+[18] S. Elbaum, D. Gable, and G. Rothermel. The impact of
+software evolution on code coverage information. In In-
+ternational Conference on Software Maintenance, pages
+170–179, 2001.
+[19] S. Elbaum, A. G. Malishevsky, and G. Rothermel.
+Test case prioritization: A family of empirical studies.
+Transactions on Software Engineering, 28(2):159–182,
+2002.
+[20] S. Elbaum, G. Rothermel, and J. Penix.
+Techniques
+for improving regression testing in continuous integra-
+tion development environments. In International Sym-
+posium on Foundations of Software Engineering, pages
+235–245, 2014.
+[21] E. Engstr¨om and P. Runeson. A qualitative survey of
+regression testing practices. In Product-Focused Soft-
+ware Process Improvement, volume 6156, pages 3–16.
+Springer-Verlag, 2010.
+[22] E. Engstr¨om, P. Runeson, and M. Skoglund.
+A sys-
+tematic review on regression test selection techniques.
+Information & Software Technology, 52(1):14–30, 2010.
+[23] E. Engstr¨om, M. Skoglund, and P. Runeson. Empiri-
+cal evaluations of regression test selection techniques: a
+systematic review. In International Symposium on Em-
+pirical Software Engineering and Measurement, pages
+22–31, 2008.
+[24] Fabricate. https://code.google.com/p/fabricate/.
+[25] M. Gligoric, L. Eloussi, and D. Marinov.
+Ekstazi:
+Lightweight test selection. In International Conference
+on Software Engineering, demo papers, 2015.
+To ap-
+pear.
+[26] M. Gligoric, S. Negara, O. Legunsen, and D. Marinov.
+An empirical evaluation and comparison of manual and
+automated test selection. In Automated Software Engi-
+neering, pages 361–372, 2014.
+[27] T. L. Graves, M. J. Harrold, J.-M. Kim, A. Porter, and
+G. Rothermel.
+An empirical study of regression test
+selection techniques. Transactions on Software Engi-
+neering and Methodology, 10(2):184–208, 2001.
+[28] P. J. Guo and D. Engler. Using automatic persistent
+memoization to facilitate data analysis scripting. In In-
+ternational Symposium on Software Testing and Anal-
+ysis, pages 287–297, 2011.
+[29] R. A. Haraty, N. Mansour, and B. Daou. Regression
+testing of database applications. In Symposium on Ap-
+plied Computing, pages 285–289, 2001.
+[30] R. A. Haraty, N. Mansour, and B. Daou. Regression test
+selection for database applications. Advanced Topics in
+Database Research, 3:141–165, 2004.
+[31] M. J. Harrold, J. A. Jones, T. Li, D. Liang, A. Orso,
+M. Pennings, S. Sinha, S. A. Spoon, and A. Gujarathi.
+Regression test selection for Java software. In Confer-
+ence on Object-Oriented Programming, Systems, Lan-
+guages, and Applications, pages 312–326, 2001.
+[32] M. J. Harrold, D. S. Rosenblum, G. Rothermel, and
+E. J. Weyuker. Empirical studies of a prediction model
+for regression test selection. Transactions on Software
+Engineering, 27(3):248–263, 2001.
+[33] M. J. Harrold and M. L. Soﬀa. An incremental approach
+to unit testing during maintenance.
+In International
+Conference on Software Maintenance, pages 362–367,
+1988.
+[34] P. Hsia, X. Li, D. Chenho Kung, C.-T. Hsu, L. Li,
+Y. Toyoshima, and C. Chen. A technique for the se-
+lective revalidation of OO software.
+Journal of Soft-
+ware Maintenance: Research and Practice, 9(4):217–
+233, 1997.
+[35] Eclipse Kepler. http://www.eclipse.org/kepler/.
+=== [p.12] ===
+[36] D. C. Kung, J. Gao, P. Hsia, J. Lin, and Y. Toyoshima.
+Class ﬁrewall, test order, and regression testing of
+object-oriented programs. Journal of Object-Oriented
+Programming, 8(2):51–65, 1995.
+[37] H. Leung and L. White. A cost model to compare re-
+gression test strategies. In International Conference on
+Software Maintenance, pages 201–208, 1991.
+[38] H. K. N. Leung and L. White.
+Insights into regres-
+sion testing. In International Conference on Software
+Maintenance, pages 60–69, 1989.
+[39] Q. Luo, F. Hariri, L. Eloussi, and D. Marinov. An em-
+pirical analysis of ﬂaky tests. In Symposium on Foun-
+dations of Software Engineering, pages 643–653, 2014.
+[40] A. G. Malishevsky, G. Rothermel, and S. Elbaum. Mod-
+eling the cost-beneﬁts tradeoﬀs for regression testing
+techniques.
+In International Conference on Software
+Maintenance, pages 204–213, 2002.
+[41] P. D. Marinescu, P. Hosek, and C. Cadar. Covrig: A
+framework for the analysis of code, test, and coverage
+evolution in real software. In International Symposium
+on Software Testing and Analysis, pages 93–104, 2014.
+[42] Memoize.
+https://github.com/kgaughan/memoize.py.
+[43] A. Nanda, S. Mani, S. Sinha, M. J. Harrold, and
+A. Orso. Regression testing in the presence of non-code
+changes. In International Conference on Software Test-
+ing, Veriﬁcation, and Validation, pages 21–30, 2011.
+[44] D. D. Nardo,
+N. Alshahwan,
+L. C. Briand,
+and
+Y. Labiche.
+Coverage-based test case prioritisation:
+An industrial case study. In International Conference
+on Software Testing, Veriﬁcation and Validation, pages
+302–311, 2013.
+[45] A. Orso, N. Shi, and M. J. Harrold. Scaling regression
+testing to large software systems. In International Sym-
+posium on Foundations of Software Engineering, pages
+241–251, 2004.
+[46] L. S. Pinto, S. Sinha, and A. Orso.
+Understanding
+myths and realities of test-suite evolution.
+In Sym-
+posium on the Foundations of Software Engineering,
+pages 1–11, 2012.
+[47] PIT. http://pitest.org/.
+[48] X. Ren, F. Shah, F. Tip, B. G. Ryder, and O. Chesley.
+Chianti: A tool for change impact analysis of Java pro-
+grams. In Conference on Object-oriented Programming,
+Systems, Languages, and Applications, pages 432–448,
+2004.
+[49] D. S. Rosenblum and E. J. Weyuker. Using coverage in-
+formation to predict the cost-eﬀectiveness of regression
+testing strategies. Transactions on Software Engineer-
+ing, 23(3):146–156, 1997.
+[50] G. Rothermel and M. J. Harrold. A safe, eﬃcient regres-
+sion test selection technique. Transactions on Software
+Engineering and Methodology, 6(2):173–210, 1997.
+[51] M. Skoglund and P. Runeson.
+A case study of the
+class ﬁrewall regression test selection technique on a
+large scale distributed software system. In International
+Symposium on Empirical Software Engineering, pages
+74–83, 2005.
+[52] M. Skoglund and P. Runeson.
+Improving class ﬁre-
+wall regression test selection by removing the class ﬁre-
+wall. International Journal of Software Engineering and
+Knowledge Engineering, 17(3):359–378, 2007.
+[53] sloccount. http://www.dwheeler.com/sloccount/.
+[54] A. Srivastava and J. Thiagarajan. Eﬀectively prioritiz-
+ing tests in development environment. Software Engi-
+neering Notes, 27(4):97–106, 2002.
+[55] Testing
+at
+the
+speed
+and
+scale
+of
+Google,
+Jun
+2011. http://google-engtools.blogspot.com/2011/
+06/testing-at-speed-and-scale-of-google.html.
+[56] N. Tillmann and W. Schulte. Parameterized unit tests.
+In International Symposium on Foundations of Soft-
+ware Engineering, pages 253–262, 2005.
+[57] Tools for continuous integration at Google scale, Octo-
+ber 2011.
+http://www.youtube.com/watch?v=b52aXZ2yi08.
+[58] D. Willmor and S. M. Embury. A safe regression test
+selection technique for database-driven applications.
+In International Conference on Software Maintenance,
+pages 421–430, 2005.
+[59] S. Yoo and M. Harman. Regression testing minimiza-
+tion, selection and prioritization: A survey. Journal of
+Software Testing, Veriﬁcation and Reliability, 22(2):67–
+120, 2012.
+[60] L. Zhang, M. Kim, and S. Khurshid. Localizing failure-
+inducing program edits based on spectrum information.
+In International Conference on Software Maintenance,
+pages 23–32, 2011.
+[61] J. Zheng, B. Robinson, L. Williams, and K. Smiley. An
+initial study of a lightweight process for change identiﬁ-
+cation and regression test selection when source code is
+not available. In International Symposium on Software
+Reliability Engineering, pages 225–234, 2005.
+[62] J. Zheng, B. Robinson, L. Williams, and K. Smiley.
+Applying regression test selection for COTS-based ap-
+plications. In International Conference on Software En-
+gineering, pages 512–522, 2006.

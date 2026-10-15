@@ -1,0 +1,2302 @@
+=== [p.1] ===
+JFP 30, e11, 55 pages, 2020. © The Author(s) 2020. Published by Cambridge University Press. This is an Open
+1
+Access article, distributed under the terms of the Creative Commons Attribution licence (http://creativecommons.
+org/licenses/by/4.0/), which permits unrestricted re-use, distribution, and reproduction in any medium, provided the
+original work is properly cited.
+doi:10.1017/S0956796820000088
+Build systems à la carte: Theory and practice
+ANDREY MOKHOV
+School of Engineering, Newcastle University, Newcastle upon Tyne, UK
+Jane Street, London, UK
+(e-mail: andrey.mokhov@ncl.ac.uk)
+NEIL MITCHELL
+Facebook, London, UK
+(e-mail: ndmitchell@gmail.com)
+SIMON PEYTON JONES
+Microsoft Research, Cambridge, UK
+(e-mail: simonpj@microsoft.com)
+Abstract
+Build systems are awesome, terrifying – and unloved. They are used by every developer around the
+world, but are rarely the object of study. In this paper, we offer a systematic, and executable, frame-
+work for developing and comparing build systems, viewing them as related points in a landscape
+rather than as isolated phenomena. By teasing apart existing build systems, we can recombine their
+components, allowing us to prototype new build systems with desired properties.
+1 Introduction
+Build systems (such as MAKE) are big, complicated, and used by every software developer
+on the planet. But they are a sadly unloved part of the software ecosystem, very much a
+means to an end, and seldom the focus of attention. For years MAKE dominated, but more
+recently the challenges of scale have driven large software ﬁrms like Microsoft, Facebook,
+and Google to develop their own build systems, exploring new points in the design space.
+These complex build systems use subtle algorithms, but they are often hidden away, and
+not the object of study.
+In this paper, we give a general framework in which to understand and compare
+build systems, in a way that is both abstract (omitting incidental detail) and yet precise
+(implemented as Haskell code). Speciﬁcally, we make these contributions:
+• Build systems vary on many axes, including: static versus dynamic dependencies;
+local versus cloud; deterministic versus non-deterministic build tasks; early cutoff;
+self-tracking build systems; and the type of persistently stored build information.
+In Section 2, we identify some of these key properties, illustrated by four carefully
+chosen build systems.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.2] ===
+2
+A. Mokhov et al.
+• We describe some simple but novel abstractions that crisply encapsulate what a build
+system is (Section 3), allowing us, for example, to speak about what it means for a
+build system to be correct.
+• We identify two key design choices that are typically deeply wired into any build
+system: the order in which tasks are built (Section 4) and whether or not a task is
+rebuilt (Section 5). These choices turn out to be orthogonal, which leads us to a new
+classiﬁcation of the design space (Section 6).
+• We show that we can instantiate our abstractions to describe the essence of a variety
+of different real-life build systems, including MAKE, SHAKE, BAZEL, BUCK, NIX,
+and EXCEL,1 each by the composition of the two design choices (Section 6). Doing
+this modelling in a single setting allows the differences and similarities between
+these huge systems to be brought out clearly.2
+• Moreover, we can readily remix the ingredients to design new build systems with
+desired properties, for example, to combine the advantages of SHAKE and BAZEL.
+Writing this paper gave us the insights to combine dynamic dependencies and cloud
+build systems in a principled way; we evaluate the result in Section 7.
+• We use the presented abstractions to more clearly explain details from the original
+SHAKE paper (Sections 5.2.2 and 7.2) and develop new cloud build features,
+which are already in use in industry and in the GHC build system (Sections 7.4
+and 7.5).
+In short, instead of seeing build systems as unrelated points in space, we now see them
+as locations in a connected landscape, leading to a better understanding of what they do
+and how they compare, and making it easier to explore other points in the landscape.
+While we steer clear of many engineering aspects of real build systems, in Section 8,
+we discuss these aspects in the context of the presented abstractions. The related work is
+covered in Section 9.
+This paper is an extended version of an earlier conference paper (Mokhov et al., 2018).
+The key changes compared to the earlier version are (i) we added further clariﬁcations
+and examples to Section 3, and in particular, Section 3.8 is entirely new; (ii) Sections 4
+and 5 are based on the material from the conference paper but have been substantially
+expanded to include further details and examples, as well as completely new material such
+as Section 5.2.2; (iii) Section 7 is completely new; (iv) Sections 8.1, 8.6, 8.7, 8.8, and 8.9
+are almost entirely new, and Section 8.3 has been revised. The new material focuses on
+our experience and various important practical considerations, hence justifying the “and
+Practice” part of the paper title.
+2 Background
+Build systems automate the execution of repeatable tasks, at a scale from individ-
+ual users up to large organisations. In this section, we explore the design space of
+build systems, using four examples: MAKE (Feldman, 1979), SHAKE (Mitchell, 2012),
+BAZEL (Google, 2016), and EXCEL (De Levie, 2004). We have carefully chosen these
+four to illustrate the various axes on which build systems differ; we discuss many other
+notable examples of build systems, and their relationships, in Sections 6 and 9.
+1 EXCEL appears very different to the others but, seen through the lens of this paper, it is very close.
+2 All our models are executable and are available on Hackage as build-1.0.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.3] ===
+Build systems à la carte: Theory and practice
+3
+(a)
+(b)
+(c)
+Fig. 1. A task dependency graph and two build scenarios. Input ﬁles are shown in rectangles, inter-
+mediate, and output ﬁles are shown in rounded rectangles. Modiﬁed inputs and ﬁles that are rebuilt
+are highlighted.
+2.1 The venerable MAKE: Static dependencies and ﬁle modiﬁcation times
+MAKE3 was developed more than 40 years ago to automatically build software libraries
+and executable programs from source code. It uses makeﬁles to describe tasks – often
+referred to as build rules – and their dependencies, in a simple textual form. For example:
+util.o: util.h util.c
+gcc -c util.c
+main.o: util.h main.c
+gcc -c main.c
+main.exe: util.o main.o
+gcc util.o main.o -o main.exe
+The above makeﬁle lists three tasks: (i) compile a utility library comprising ﬁles util.h and
+util.c into util.o by executing4 the command gcc -c util.c, (ii) compile the main source
+ﬁle main.c into main.o, and (iii) link object ﬁles util.o and main.o into the executable
+main.exe. The makeﬁle contains the complete information about the task dependency
+graph, which is shown in Figure 1(a).
+If the user runs MAKE specifying main.exe as the desired output, MAKE will build util.o
+and main.o, in any order (or even in parallel) since these tasks are independent, and then
+main.exe. If the user modiﬁes util.h and runs MAKE again, it will perform a full rebuild,
+because all three tasks transitively depend on util.h, as illustrated in Figure 1(b). On the
+other hand, if the user modiﬁes main.c then a partial rebuild is sufﬁcient: util.o does not
+need to be rebuilt, since its inputs have not changed, see Figure 1(c). Note that if the
+dependency graph is acyclic, then each task needs to be executed at most once. Cyclic task
+dependencies are typically not allowed in build systems, although there are rare exceptions,
+see Section 8.5.
+The fewer tasks are executed in a partial rebuild, the better. To be more speciﬁc, consider
+the following property, which is essential for build systems; indeed, it is their raison d’être:
+3 There are numerous implementations of MAKE and none comes with a formal speciﬁcation. In this paper, we
+use a simple approximation to a real MAKE that you might ﬁnd on your machine.
+4 In this example, we pretend gcc is a pure function for the sake of simplicity. In reality, there are multiple
+versions of gcc. To account for this, the actual binary for gcc is often also listed as a dependency, along with
+any supporting binaries, or standard libraries (such as stdio.h), that are used by gcc.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.4] ===
+4
+A. Mokhov et al.
+Deﬁnition (Minimality). A build system is minimal if it executes tasks at most once per
+build, and only if they transitively depend on inputs that changed since the previous build.
+This property is tightly linked to build system correctness, which we will be ready to deﬁne
+in Section 3.6; for now, we will use minimality as a guiding principle when exploring the
+design space of build systems.
+To achieve minimality, MAKE relies on two main ideas: (i) it uses ﬁle modiﬁcation
+times to detect which ﬁles changed,5 and (ii) it constructs a task dependency graph from
+the information contained in the makeﬁle and executes tasks in a topological order. For a
+more concrete description, see Sections 4.1 and 6.2.
+2.2 EXCEL: Dynamic dependencies at the cost of minimality
+EXCEL is a build system in disguise. Consider the following simple spreadsheet.
+A1: 10
+B1: A1 + A2
+A2: 20
+There are two input cells A1 and A2, and a single task that computes the sum of their values,
+producing the result in cell B1. If either of the inputs change, EXCEL will recompute B1.
+Unlike MAKE, EXCEL does not need to know all task dependencies upfront. Indeed,
+some dependencies may change dynamically during computation. For example:
+A1: 10
+B1: INDIRECT("A" & C1)
+C1: 1
+A2: 20
+The formula in B1 uses the INDIRECT function, which takes a string and returns the value
+of the cell with that name. The string evaluates to "A1", so B1 evaluates to 10. However,
+the dependencies of the formula in B1 are determined by the value of C1, so it is impossible
+to compute the dependency graph before the build starts. In this particular example, the
+value of C1 is a constant, but it might instead be the result of a long computation chain –
+so its value will only become available during the build.
+To support dynamic dependencies, EXCEL’s calculation engine (Microsoft, 2011) is sig-
+niﬁcantly different from MAKE. EXCEL arranges the cells into a linear sequence, called the
+calc chain. During the build, EXCEL processes cells in the calc-chain sequence, but if com-
+puting a cell C requires the value of a cell D that has not yet been computed, EXCEL aborts
+computation of C, moves D before C in the calc chain, and resumes the build starting with
+D. When a build is complete, the resulting calc chain respects all the dynamic dependen-
+cies of the spreadsheet. When an input value or formula is changed, EXCEL uses the ﬁnal
+calc chain from the previous build as its starting point so that, in the common case where
+changing an input value does not change dependencies, there are no aborts. Notice that
+build always succeeds regardless of the initial calc chain (barring truly circular dependen-
+cies); the calc chain is just an optimisation. We refer to this algorithm as restarting and
+discuss it in more detail in Sections 4.2 and 6.3.
+5 Technically, you can fool MAKE by altering the modiﬁcation time of a ﬁle without changing its content, for
+example, using the command touch. MAKE is therefore minimal only under the assumption that you do not
+do that.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.5] ===
+Build systems à la carte: Theory and practice
+5
+(a)
+(b)
+Fig. 2. Dynamic dependencies example: create README and add it to the list of release documents
+docs.txt.
+Dynamic dependencies complicate minimality. In the above example, B1 should only be
+recomputed if A1 or C1 change, but not if (say) A2 changes; but these facts are not statically
+apparent. In practice, EXCEL implements a conservative approximation to minimality:
+it recomputes a formula if (i) the formula statically mentions a changed cell, or (ii) the
+formula uses a function like INDIRECT whose dependencies are not statically visible,
+or (iii) the formula itself has changed.
+Item (iii) in the above list highlights another distinguishing feature of EXCEL: it is self-
+tracking. Most build systems only track changes of inputs and intermediate results, but
+EXCEL also tracks changes in the tasks themselves: if a formula is modiﬁed, EXCEL will
+recompute it and propagate the changes. Self-tracking is uncommon in software build sys-
+tems, where one often needs to manually initiate a full rebuild even if just a single task has
+changed. We discuss self-tracking further in Section 8.8.
+2.3 SHAKE: Dynamic dependencies without remorse
+SHAKE was developed to solve the issue of dynamic dependencies (Mitchell, 2012)
+without sacriﬁcing the minimality requirement.
+Building on the MAKE example from Section 2.1, we add the following ﬁles whose
+dependencies are shown in Figure 2(a):
+• LICENSE is an input text ﬁle containing the project license.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.6] ===
+6
+A. Mokhov et al.
+Fig. 3. An early cutoff example: if a comment is added to main.c, the rebuild is stopped after detect-
+ing that main.o is unchanged, since this indicates that main.exe and its dependents do not need to be
+rebuilt.
+• release.txt lists all release ﬁles. This ﬁle is produced by concatenating input text ﬁles
+bins.txt and docs.txt, which list binary and documentation ﬁles of the project.
+• release.tar is the archive built by executing the command tar on the release ﬁles.
+The dependencies of release.tar are not known statically: they are determined by
+the content of release.txt, which might not even exist before the build. Makeﬁles can-
+not express such dependencies, requiring workarounds such as build phases, which are
+known to be problematic (Mokhov et al., 2016). In SHAKE, we can express the rule for
+release.tar as:
+"release.tar" %> \_ -> do
+need ["release.txt"]
+files <- lines <$> readFile "release.txt"
+need files
+cmd "tar" $ ["-cf", "release.tar"] ++ files
+We ﬁrst declare the static dependency on release.txt, then read its content (a list of ﬁles)
+and depend on each listed ﬁle, dynamically. Finally, we specify the command to produce
+the resulting archive. Crucially, the archive will only be rebuilt if one of the dependen-
+cies (static or dynamic) has changed. For example, if we create another documentation
+ﬁle README and add it to docs.txt, SHAKE will appropriately rebuild release.txt and
+release.tar, discovering the new dependency, see Figure 2(b).
+SHAKE’s implementation is different from both MAKE and EXCEL in two aspects. First,
+to decide which ﬁles need to be rebuilt, it stores the dependency graph that is constructed
+during the previous build (instead of just ﬁle modiﬁcation times or a linear chain). This
+idea has a long history, going back to incremental (Demers et al., 1981), adaptive (Acar
+et al., 2002), and self-adjusting computations – see Acar et al. (2007) and Section 9.
+Second, instead of aborting and deferring the execution of tasks whose newly discovered
+dependencies have not yet been built (as EXCEL does), SHAKE suspends their execution
+until the dependencies are brought up to date. We refer to this task scheduling algo-
+rithm as suspending, see a further discussion in Section 4.3 and a concrete implementation
+in Section 6.4.
+SHAKE also supports the early cutoff optimisation, which is illustrated in Figure 3. When
+it executes a task and the result is unchanged from the previous build, it is unnecessary
+to execute the dependent tasks, and hence SHAKE can stop a build earlier. Not all build
+systems support early cutoff: SHAKE and BAZEL (introduced below) do, but MAKE and
+EXCEL do not; see Section 5.1 for an explanation of why.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.7] ===
+Build systems à la carte: Theory and practice
+7
+(a)
+(b)
+(c)
+Fig. 4. A cloud build example: (a) download sources, (b) build main.exe by downloading it from
+the cloud and skipping intermediate ﬁles (only their hashes are needed), (c) modify util.c and rebuild
+main.exe, which requires building util.o (nobody has compiled util.c before) and downloading
+main.o (it is needed for linking main.exe). File hashes are shown in circles, and non-materialised
+intermediates in dashed rounded rectangles.
+2.4 BAZEL: A cloud build system
+When build systems are used by large teams, different team members often end up exe-
+cuting exactly the same tasks on their local machines. A cloud build system can speed
+up builds dramatically by sharing build results among team members. Furthermore, cloud
+build systems can support shallow builds that materialise only end build products locally,
+leaving all intermediates in the cloud.
+Consider the example in Figure 4. The user starts by downloading the sources, whose
+content hashes are (for simplicity) 1, 2, and 3, and requests to build main.exe, see
+Figure 4(a) and (b). By looking up the global history of all previous builds,6 the build
+system ﬁnds that someone has already compiled these exact sources before, and the result-
+ing ﬁles util.o and main.o had hashes 4 and 5, respectively. Similarly, the build system
+ﬁnds that the hash of the resulting main.exe was 6 and downloads the actual binary from
+the cloud storage – it must be materialised, because it is the end build product.
+In Figure 4(c), the user modiﬁes the source ﬁle util.c, thereby changing its hash
+from 1 to 7. The cloud lookup of the new combination {util.c, util.h} fails, which means
+that nobody has ever compiled it. The build system must therefore build util.o, materialis-
+ing it with the new hash 8. The combination of hashes of util.o and main.o has not been
+encountered before either, thus the build system ﬁrst downloads main.o from the cloud
+and then builds main.exe by linking the two object ﬁles. When the build is complete, the
+results can be uploaded to the cloud for future reuse by other team members.
+BAZEL is one of the ﬁrst openly available cloud build systems. As of writing, it is not
+possible to express dynamic dependencies in user-deﬁned build rules; however, some of
+the predeﬁned build rules require dynamic dependencies and the internal build engine can
+cope with them using a restarting task scheduler, which is similar to that of EXCEL but
+does not use the calc chain. BAZEL is not minimal in the sense that it may restart a task mul-
+tiple times as new dependencies are discovered and rebuilt, but it supports the early cutoff
+optimisation. Note that, in practice, the cost of duplicate work due to the use of a restarting
+scheduler may often be just a small fraction of the overall build cost (Section 4.3).
+6 In practice, old entries are regularly evicted from the cloud storage, as further discussed in Section 8.4.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.8] ===
+8
+A. Mokhov et al.
+Table 1. Build system differences
+Persistent build
+Build system
+information
+Scheduler
+Dependencies
+Minimal
+Cutoff
+Cloud
+MAKE
+File modiﬁcation
+Topological
+Static
+Yes
+No
+No
+times
+EXCEL
+Dirty cells,
+Restarting
+Dynamic
+No
+No
+No
+calc chain
+SHAKE
+Previous dependency Suspending
+Dynamic
+Yes
+Yes
+No
+graph
+BAZEL
+Cloud cache,
+Restarting
+Dynamic∗
+No
+Yes
+Yes
+command history
+∗At present, user-deﬁned build rules cannot have dynamic dependencies.
+To support cloud builds, BAZEL maintains (i) a content-addressable cache that maps the
+hash of a ﬁle’s content to the actual content of that ﬁle; (ii) a memo table that records all
+executed build commands with their input and output ﬁle hashes. The memo table allows
+the build engine to bypass the execution of a task, by predicting the hash of the result from
+the hashes of its dependencies; then the content-addressable cache allows the engine to
+download the result (if needed) based on the result hash. Further details and a concrete
+implementation will be provided in Sections 5.3 and 6.5.
+2.5 Summary
+We summarise differences between four discussed build systems in Table 1. The column
+‘persistent build information’ refers to the information that build systems persistently store
+between builds:
+• MAKE stores ﬁle modiﬁcation times, or rather, it relies on the ﬁle system to do that.
+• EXCEL stores one dirty bit per cell and the calc chain from the previous build.
+• SHAKE stores the dependency graph discovered in the previous build, annotated with
+ﬁle content hashes for efﬁcient checking of ﬁle changes.
+• BAZEL stores the content-addressable cache and the history of all previous build
+commands annotated with ﬁle hashes. This information is shared among all users.
+In this paper, we elucidate which build system properties are consequences of speciﬁc
+implementation choices (stored metadata and task scheduling algorithm), and how one can
+obtain new build systems with desired properties by recombining parts of existing imple-
+mentations. As a compelling example, in Section 6.5, we demonstrate how to combine the
+advantages of SHAKE and BAZEL.
+3 Build systems, abstractly
+We have introduced a number of components and characteristics of build systems: tasks,
+dependencies, early cutoff, minimality, etc. It is easy to get confused. To make all this more
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.9] ===
+Build systems à la carte: Theory and practice
+9
+concrete, this section presents executable abstractions that can express all the intricacies of
+build systems discussed in Section 2 and allow us to construct complex build systems from
+simple primitives. Speciﬁcally, we present the task and build abstractions in Sections 3.2
+and 3.3, respectively. Sections 4, 5, and 6 scrutinise the abstractions further and provide
+concrete implementations for several build systems.
+3.1 Common vocabulary for build systems
+Keys, values, and the store. The goal of any build system is to bring up to date a store
+that implements a mapping from keys to values. In software build systems, the store is the
+ﬁle system, the keys are ﬁlenames, and the values are ﬁle contents. In EXCEL, the store is
+the worksheets, the keys are cell names (such as A1), and the values are numbers, strings,
+etc., displayed as the cell contents. Many build systems use hashes of values as compact
+summaries with a fast equality check.
+Input, output, and intermediate values. Some values must be provided by the user as
+input. For example, main.c can be edited by the user who relies on the build system to
+compile it into main.o and subsequently main.exe. End build products, such as main.exe,
+are output values. All other values (in this case main.o) are intermediate; they are not
+interesting for the user but are produced in the process of turning inputs into outputs.
+Persistent build information. As well as the key/value mapping, the store also contains
+information maintained by the build system itself, which persists from one invocation of
+the build system to the next – its “memory”.
+Task description. Any build system requires the user to specify how to compute the
+new value for one key, using the (up-to-date) values of its dependencies. We call this
+speciﬁcation the task description. For example, in EXCEL, the formulae of the spreadsheet
+constitute the task description; in MAKE, the rules in the makeﬁle are the task description.
+Build system. A build system takes a task description, a target key, and a store, and
+returns a new store in which the target key and all its dependencies have up-to-date values.
+We model a build system concretely, as a Haskell program. To that end, Figure 5 pro-
+vides the type signatures for all key abstractions introduced in the paper. For example,
+Store i k v is the type of stores, with several associated functions (getValue, etc.). We
+use k as a type variable ranging over keys, v for values, and i for the persistent build
+information. Figure 6 lists standard library deﬁnitions.
+3.2 The task abstraction
+Our ﬁrst main abstraction is for task descriptions:
+newtype Task
+c k v = Task (forall f. c f => (k -> f v) -> f v)
+type
+Tasks c k v = k -> Maybe (Task c k v)
+Here c stands for constraint, such as Applicative (Section 3.4 explains why we need it).
+A Task describes a single build task, while Tasks associates a Task with every non-input
+key; input keys are associated with Nothing. The highly abstracted type Task describes
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.10] ===
+10
+A. Mokhov et al.
+Fig. 5. Type signatures of key build systems abstractions.
+how to build a value given a way to build its dependencies and is best explained by an
+example. Consider this EXCEL spreadsheet:
+A1: 10
+B1: A1 + A2
+A2: 20
+B2: B1 * 2
+Here, cell A1 contains the value 10, cell B1 contains the formula A1 + A2, etc. We can
+represent the formulae of this spreadsheet with the following task description:
+sprsh1 :: Tasks Applicative String Integer
+sprsh1 "B1" = Just $ Task $ \fetch -> ((+)
+<$> fetch "A1"
+<*> fetch "A2")
+sprsh1 "B2" = Just $ Task $ \fetch -> ((*2) <$> fetch "B1")
+sprsh1 _
+= Nothing
+We instantiate keys k with String, and values v with Integer. (Real spreadsheet cells
+would contain a wider range of values, of course.) The task description sprsh1 embod-
+ies all the formulae of the spreadsheet, but not the input values. It pattern-matches on
+the key to see if it has a task description (in the EXCEL case, a formula) for it. If not,
+it returns Nothing, indicating that the key is an input. If there is a formula in the cell,
+it returns the Task to compute the value of the formula. Every task is given a callback
+fetch to ﬁnd the value of any keys on which it depends. To run a Task, we simply
+apply the function it holds to a suitable callback (see the deﬁnition of the function run in
+Figure 5).
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.11] ===
+Build systems à la carte: Theory and practice
+11
+Fig. 6. Standard library deﬁnitions.
+The code to “compute the value of a formula” in sprsh1 looks a bit mysterious because
+it takes place in an Applicative computation (McBride & Paterson, 2008) – the relevant
+type signatures are given in Figure 6. We will explain why in Section 3.3. For now, we con-
+tent ourselves with observing that a task description, of type Tasks c k v, is completely
+isolated from the world of compilers, calc chains, ﬁle systems, caches, and all other com-
+plexities of real build systems. It just computes a single output, using a callback (fetch)
+to ﬁnd the values of its dependencies, and limiting side effects to those described by c.
+3.3 The build abstraction
+Next comes our second main abstraction – a build system:
+type Build c i k v = Tasks c k v -> k -> Store i k v -> Store i k v
+The signature is very straightforward. Given a task description, a target key, and a store,
+the build system returns a new store in which the value of the target key is up to date. What
+exactly does “up to date” mean? We answer that precisely in Section 3.6.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.12] ===
+12
+A. Mokhov et al.
+Here is a simple build system:
+busy :: Eq k => Build Applicative () k v
+busy tasks key store = execState (fetch key) store
+where
+fetch :: k -> State (Store () k v) v
+fetch k = case tasks k of
+Nothing
+-> gets (getValue k)
+Just task -> do v <- run task fetch
+modify (putValue k v)
+return v
+The busy build system deﬁnes the callback fetch that, when given a key, brings the key
+up to date in the store and returns its value. The function fetch runs in the standard Haskell
+State monad (Figure 6) initialised with the incoming store by execState. To bring a
+key k up to date, fetch asks the task description tasks how to compute its value. If
+tasks returns Nothing the key is an input, so fetch simply reads the result from the
+store. Otherwise fetch runs the obtained task to produce a resulting value v, records
+the new key/value mapping in the store, and returns v. Notice that fetch passes itself
+to task as an argument, so the latter can use fetch to recursively ﬁnd the values of k’s
+dependencies.
+Given an acyclic task description, the busy build system terminates with a correct result,
+but it is not a minimal build system (Deﬁnition 2.1). Since busy has no memory (i = ()),
+it cannot keep track of keys it has already built and will therefore busily recompute the
+same keys again and again if they have multiple dependents. We will develop much more
+efﬁcient build systems in Section 6.
+Nevertheless, busy can easily handle the example task description sprsh1 from the
+previous Section 3.2. In the GHCi session below, we initialise the store with A1 set to 10
+and all other cells set to 20.
+λ> store
+= initialise () (\key -> if key == "A1" then 10 else 20)
+λ> result = busy sprsh1 "B2" store
+λ> getValue "B1" result
+30
+λ> getValue "B2" result
+60
+As we can see, busy built both B2 and its dependency B1 in the correct order (if it had built
+B2 before building B1, the result would have been 20 ∗2 = 40 instead of (10 + 20) ∗2 =
+60). As an example showing that busy is not minimal, imagine that the formula in cell B2
+was B1 + B1 instead of B1 * 2. This would lead to calling fetch "B1" twice – once per
+occurrence of B1 in the formula – and each call would recompute the formula in B1.
+To avoid the recomputation, busy can keep the set of processed keys in the state monad
+(in addition to the store), treat processed keys as inputs in the getValue branch of the
+fetch callback, and include the key k into the set of processed keys in the putValue
+branch. This eliminates unnecessary work within a single build, but the next build needs to
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.13] ===
+Build systems à la carte: Theory and practice
+13
+recursively recompute all target’s dependencies again even if no inputs changed. To save
+work between builds, it is necessary to store some build information i persistently.
+3.4 The need for polymorphism in task
+The previous example illustrates why the Task abstraction is polymorphic in f. Recall its
+deﬁnition from Section 3.2:
+newtype Task c k v = Task (forall f. c f => (k -> f v) -> f v)
+The busy build system instantiates f to State (Store i k v), so that fetch :: k -> f v
+can side-effect the Store, thereby allowing successive calls to fetch to communicate
+with one another.
+We really, really want Task to be polymorphic in f. Given one task description T, we
+want to explore many build systems that can build T – and we will do so in Section 6. As
+we shall see, each build system will use a different f, so the task description must not ﬁx f.
+But the task description cannot possibly work for any f whatsoever; most task descrip-
+tions (e.g. sprsh1 in Section 3.2) require that f satisﬁes certain properties, such as
+Applicative or Monad. That is why Task has the “c f =>” constraint in its type, express-
+ing that f can only be instantiated by types that satisfy the constraint c and, in exchange,
+the task has access to the operations of class c. So the type Task emerges naturally, almost
+inevitably. But now that it has emerged, we ﬁnd that constraints c classify task descriptions
+in a very interesting, and practically useful, way:
+• Task Applicative: In sprsh1, we needed only Applicative operations, express-
+ing the fact that the dependencies between cells can be determined statically, that is,
+by looking at the formulae, without “computing” them (see Section 3.7).
+• Task Monad: As we shall see in Section 3.5, a monadic task allows dynamic depen-
+dencies, in which a formula may depend on cell C, but which cell C depends on the
+value of another cell D. A simple example of a task with dynamic dependencies is
+EXCEL formula INDIRECT("A" & C1) from Section 2.2.
+• Task Functor is somewhat degenerate: a functorial task description cannot even
+use the application operator <*>, which limits dependencies to a linear chain, as
+for example, in Docker containers (Hykes, 2013) (ignoring the recent multi-stage
+builds). It is interesting to note that, when run on such a task description, the busy
+build system will build each key at most once, thus partially fulﬁlling the minimality
+requirement 2.1. Alas, it still has no mechanism to decide which input keys changed
+since the previous build.
+• Task Selective corresponds to task descriptions with conditional statements, for
+example, EXCEL formula IF(C1=1,B2,A2), where it is possible to statically over-
+approximate the set of task dependencies. Here Selective is a type class of
+selective applicative functors (Mokhov et al., 2019), which allows us to model build
+systems like DUNE (Jane Street, 2018) using the presented framework.
+• Task MonadFail corresponds to monadic tasks that may fail. For example, the
+formula A1/A2 may fail due to division by zero. We will discuss this in Section 8.1.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.14] ===
+14
+A. Mokhov et al.
+• Task MonadPlus, Task MonadRandom and their variants can be used for describing
+tasks with a certain type of non-determinism, as discussed in Section 8.3.
+• Task (MonadState i) will be used in Section 6 to describe tasks that have read and
+write access to the persistently stored build information i.
+3.5 Monadic tasks
+As explained in Section 2.2, some task descriptions have dynamic dependencies, which
+are determined by values of intermediate computations. In our framework, such task
+descriptions correspond to the type Task Monad k v. Consider this spreadsheet example:
+A1: 10
+B1: IF(C1=1,B2,A2)
+C1: 1
+A2: 20
+B2: IF(C1=1,A1,B1)
+Note that B1 and B2 statically form a dependency cycle, so MAKE would not be able to
+order the tasks topologically, but EXCEL, which uses dynamic dependencies, is perfectly
+happy. We can express this spreadsheet using our task abstraction as follows:
+sprsh2 :: Tasks Monad String Integer
+sprsh2 "B1" = Just $ Task $ \fetch -> do
+c1 <- fetch "C1"
+if c1 == 1 then fetch "B2" else fetch "A2"
+sprsh2 "B2" = Just $ Task $ \fetch -> do
+c1 <- fetch "C1"
+if c1 == 1 then fetch "A1" else fetch "B1"
+sprsh2 _ = Nothing
+The big difference compared to sprsh1 is that the computation now takes place in a
+Monad, which allows us to extract the value of c1 and fetch different keys depending
+on whether or not c1 == 1. Note that, in this example, one can statically determine the sets
+of possible dependencies of the formulae IF(C1=1,B2,A2) and IF(C1=1,A1,B1) but this
+cannot be done in general – recall the spreadsheet with the formula INDIRECT("A" &
+C1) from Section 2.2, where the argument of the INDIRECT function is a string computed
+dynamically during the build. Such tasks can also be captured using Tasks Monad:
+sprsh3 :: Tasks Monad String Integer
+sprsh3 "B1" = Just $ Task $ \fetch -> do
+c1 <- fetch "C1"
+fetch ("A" ++ show c1)
+sprsh3 _ = Nothing
+Since the busy build system introduced in Section 3.3 always rebuilds every dependency
+it encounters, it is easy for it to handle dynamic dependencies. For minimal build systems,
+however, dynamic dependencies, and hence monadic tasks, are much more challenging, as
+we shall see in Section 6.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.15] ===
+Build systems à la carte: Theory and practice
+15
+3.6 Correctness of a build system
+We can now say what it means for a build system to be correct, something that is seldom
+stated formally. Our intuition is this: when the build system completes, the target key, and
+all its dependencies, should be up to date. What does “up to date” mean? It means that
+if we recompute the value of the key (using the task description and the ﬁnal store), we
+should get exactly the same value as we see in the ﬁnal store.
+To express this formally, we need an auxiliary function compute that computes the
+value of a key in a given store without attempting to update any dependencies:
+compute :: Task Monad k v -> Store i k v -> v
+compute task store = runIdentity (run task fetch)
+where
+fetch :: k -> Identity v
+fetch k = Identity (getValue k store)
+Here, we do not need any effects in the fetch callback to task, so we can use the standard
+Haskell Identity monad (Figure 6). This is another use of polymorphism in f, discussed
+in Section 3.4. The use of Identity just ﬁxes the “impedance mismatch” between the
+function getValue, which returns a pure value v, and the fetch argument of the task,
+which must return an f v for some f. To ﬁx the mismatch, we wrap the result of getValue
+in the Identity monad and pass to the task. The result has type Identity v, which we
+unwrap with runIdentity.
+Deﬁnition (Correctness). Suppose build is a build system, tasks is a build task
+description, key is a target key, store is an initial store, and result is the store pro-
+duced by running the build system with parameters tasks, key, and store. Or, using the
+precise language of our abstractions:
+build
+:: Build c i k v
+tasks
+:: Tasks c k v
+key
+:: k
+store, result :: Store i k v
+result = build tasks key store
+The keys that are reachable from the target key via dependencies fall into two classes:
+input keys and non-input keys, which we will denote by I and O, respectively. Note that
+key may be in either of these sets, although the case when key is an input is degenerate:
+we have I = {key} and O = ∅.
+The build result is correct if the following two conditions hold:
+• result and store agree on inputs, that is, for all input keys k ∈I:
+getValue k result == getValue k store.
+In other words, no inputs were corrupted during the build.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.16] ===
+16
+A. Mokhov et al.
+• The result is consistent with the tasks, that is, for all non-input keys k ∈O,
+the result of recomputing the corresponding task matches the value stored in the
+result:
+getValue k result == compute task result.
+A build system is correct if it produces a correct result for any tasks, key, and store.
+It is hard to satisfy the above deﬁnition of correctness given a task description with
+cycles. All build systems discussed in this paper are correct only under the assumption
+that the given task description is acyclic. This includes the busy build system introduced
+earlier: it will loop indeﬁnitely given a cyclic tasks. Some build systems provide a limited
+support for cyclic tasks, see Section 8.5.
+The presented deﬁnition of correctness needs to be adjusted for build systems that sup-
+port non-deterministic tasks and shallow cloud builds, as will be discussed in Sections 8.3
+and 8.4, respectively.
+3.7 Computing dependencies
+Earlier, we remarked that a Task Applicative could only have static dependencies.
+Usually, we would extract such static dependencies by (in the case of EXCEL) looking
+at the syntax tree of the formula. But a task description has no such syntax tree: as you
+can see in the deﬁnition of Task in Figure 5, a task is just a function, so all we can do is
+call it. Yet, remarkably, we can use the polymorphism of a Task Applicative to ﬁnd its
+dependencies without doing any of the actual work. Here is the code:
+dependencies :: Task Applicative k v -> [k]
+dependencies task = getConst $ run task (\k -> Const [k])
+Here Const is a standard Haskell type deﬁned in Figure 6. We instantiate f to Const [k].
+So a value of type f v, or in this case Const [k] v, contains no value v, but does contain
+a list of keys of type [k] which we use to record dependencies. The fetch callback that
+we pass to task records a single dependency; and the standard deﬁnition of Applicative
+for Const (which we give in Figure 6) combines the dependencies from different parts of
+the task. Running the task with f = Const [k] will thus accumulate a list of the task’s
+dependencies – and that is what dependencies does:
+λ> dependencies $ fromJust $ sprsh1 "B1"
+["A1","A2"]
+λ> dependencies $ fromJust $ sprsh1 "B2"
+["B1"]
+Notice that these calls to dependencies do no actual computation (in this case, spread-
+sheet arithmetic). They cannot: we are not supplying a store or any input numbers. So,
+through the wonders of polymorphism, we are able to extract the dependencies of the
+spreadsheet formula, and to do so efﬁciently, simply by running its code in a different
+Applicative! This is not new, for example see Capriotti & Kaposi (2014), but it is
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.17] ===
+Build systems à la carte: Theory and practice
+17
+extremely cool. We will see a practical use for dependencies when implementing
+applicative build systems, see Section 6.2.
+So much for applicative tasks. What about monadic tasks with dynamic dependen-
+cies? As we have seen in Section 2.3, dynamic dependencies need to be tracked too.
+This cannot be done statically; notice that we cannot apply the function dependencies
+to a Task Monad because the Const functor has no Monad instance. We need to run a
+monadic task on a store with concrete values, which will determine the discovered depen-
+dencies. Accordingly, we introduce the function track – a combination of compute and
+dependencies that computes both the resulting value and the list of its dependencies
+(key/value pairs) in an arbitrary monadic context m. We need this function to be polymor-
+phic over m, because each build system will execute tasks in its own monad, as we shall
+see in Section 6.
+Here is an implementation of track based on the standard Haskell WriterT monad
+transformer (Liang et al., 1995), whose main types are listed in Figure 6:
+track :: Monad m => Task Monad k v -> (k -> m v) -> m (v, [(k, v)])
+track task fetch = runWriterT $ run task trackingFetch
+where
+trackingFetch :: k -> WriterT [(k, v)] m v
+trackingFetch k = do v <- lift (fetch k); tell [(k, v)]; return v
+This function uses the WriterT transformer for recording additional information – a list of
+key/value pairs [(k, v)] – when executing a task in an arbitrary monad m. We substitute
+the given fetch with a trackingFetch that, in addition to fetching a value, tracks the
+corresponding key/value pair. The task returns a value of type WriterT [(k, v)] m v,
+which we unwrap with runWriterT. We will use track when implementing monadic
+build systems with dynamic dependencies, see Section 6.4.
+Here we show an example of tracking monadic tasks when m = IO, by deﬁning a cor-
+responding fetchIO of type String -> IO Integer, which allows us to demonstrate the
+dynamic nature of monadic dependencies in GHCi.
+λ> fetchIO k = do putStr (k ++ ": "); read <$> getLine
+λ> track (fromJust $ sprsh2 "B1") fetchIO
+C1: 1
+B2: 10
+(10,[("C1",1),("B2",10)])
+λ> track (fromJust $ sprsh2 "B1") fetchIO
+C1: 2
+A2: 20
+(20,[("C1",2),("A2",20)])
+As expected, the dependencies of the cell B1 from sprsh2 (see the spreadsheet
+in Section 3.5) are determined by the value of C1, which in this case is obtained by reading
+from the standard input using fetchIO.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.18] ===
+18
+A. Mokhov et al.
+3.8 Examples of tasks
+In this section, we give examples of tasks whose deﬁnitions involve different constraints
+on the computation context: Functor, Applicative, Monad, and MonadState s. The
+purpose of these examples is to continue building the intuition behind the Task abstraction
+and prepare the reader for richer types of tasks that will appear in Sections 6 and 8.
+We start with one of the favourite examples for functional programmers – the Fibonacci
+sequence Fn = Fn−1 + Fn−2:
+fibonacci :: Tasks Applicative Integer Integer
+fibonacci n = if n < 2 then Nothing else
+Just $ Task $ \fetch -> (+) <$> fetch (n - 1) <*> fetch (n - 2)
+Here the keys n < 2 are input parameters, and one can obtain the usual Fibonacci
+sequence by picking F0 = 0 and F1 = 1, respectively. Any minimal build system will
+compute the sequence with memoisation, that is, without recomputing the same value
+twice.
+Dependencies of elements of the Fibonacci sequence are known statically, hence we
+can express it using Tasks Applicative and beneﬁt from static dependency analysis
+(Section 3.7):
+λ> dependencies (fromJust $ fibonacci 5)
+[4,3]
+Interestingly, the Ackermann function – a famous example of a function that is not primi-
+tive recursive – cannot be expressed as an applicative task, because it needs to perform an
+intermediate recursive call to determine the value of one of its dependencies A(m, n −1):
+A(m, n) =
+⎧
+⎨
+⎩
+n + 1
+if m = 0
+A(m −1, 1)
+if m > 0 and n = 0
+A(m −1, A(m, n −1))
+if m > 0 and n > 0
+We therefore use Tasks Monad to express this function, binding the dynamic depen-
+dency to variable index:
+ackermann :: Tasks Monad (Integer, Integer) Integer
+ackermann (m, n)
+| m < 0 || n < 0 = Nothing
+| m == 0
+= Just $ Task $ const $ pure (n+1)
+| n == 0
+= Just $ Task $ \fetch -> fetch (m-1, 1)
+| otherwise = Just $ Task $ \fetch -> do index <- fetch (m, n-1)
+fetch (m-1, index)
+Functorial tasks are less common than applicative and monadic, but there is a classic exam-
+ple too – the Collatz sequence, where given an initial value c0, we calculate the next value
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.19] ===
+Build systems à la carte: Theory and practice
+19
+cn from cn−1 either by dividing cn−1 by 2 (if it is even) or multiplying it by 3 and adding 1
+(if it is odd):
+collatz :: Tasks Functor Integer Integer
+collatz n | n <= 0
+= Nothing
+| otherwise = Just $ Task $ \fetch -> f <$> fetch (n - 1)
+where
+f k | even k
+= k 'div' 2
+| otherwise = 3 * k + 1
+Functorial tasks correspond to computations with a linear dependency chain. For exam-
+ple, computing the element c8 of the Collatz sequence starting from c0 = 6 leads to the
+following dependency chain: c0 = 6 →3 →10 →5 →16 →8 →4 →2 →1 = c8.
+Collatz sequence is a good example of the early cutoff optimisation (Section 2.3): if we
+recompute c8 starting from a different initial value c0 = 40, the resulting computation will
+have a large overlap with the previous one: c0 = 40 →20 →10 →5 →16 →8 →4 →
+2 →1 = c8. We can therefore stop the recomputation after just two steps, since c2 = 10
+has not changed.
+Note that we can statically extract even more precise dependency information from func-
+torial tasks compared to applicative tasks. Indeed, we statically know that a Task Functor
+has exactly one dependency:
+dependency :: Task Functor k v -> k
+dependency task = getConst (run task Const)
+The Tasks abstraction allows us to express pure functions in a way that is convenient
+for their memoisation and incremental recomputation (see Section 9.3 for a discussion on
+memoisation). If we furthermore need to share computation results via a cloud cache, we
+can use Tasks (MonadState s) that will play an important role in Section 6. Intuitively,
+by making a shared state of type s available to a task, we give it the abilities to lookup and
+update cached computation results using the MonadState methods get and modify. For
+example, below we implement a cloud version of the Ackermann task that uses a Cache of
+type Map (Integer, Integer) Integer for sharing results of known Ackermann values.
+type Cache = Map (Integer, Integer) Integer
+cloudAckermann :: Tasks (MonadState Cache) (Integer, Integer) Integer
+cloudAckermann (m, n)
+| m < 0 || n < 0 = Nothing
+| m == 0
+= Just $ Task $ const $ pure (n+1)
+| n == 0
+= Just $ Task $ \fetch -> fetch (m-1, 1)
+| otherwise = Just $ Task $ \fetch -> do
+cache <- get
+case Map.lookup (m, n) cache of
+Nothing -> do index <- fetch (m, n-1)
+value <- fetch (m-1, index)
+modify (Map.insert (m, n) value)
+return value
+Just value -> return value
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.20] ===
+20
+A. Mokhov et al.
+The main case (m > 0 ∧n > 0) starts by looking up the pair of indices (m, n) in the cache.
+If the cache has Nothing, we calculate the resulting value as before and modify the cache
+accordingly; otherwise, if we have a cache hit, we return the obtained value immediately,
+skipping the actual calculation and thus potentially saving a large amount of work. Indeed,
+you do not want to recompute A(4, 2) = 265,536 −3 unnecessarily; all of its 19,729 decimal
+digits have already been helpfully computed, for example, see Kosara (2008). We will use
+MonadState tasks in our models of cloud build systems in Section 6.
+4 Schedulers
+The focus of this paper is on a variety of implementations of Build c i k v, given a user-
+supplied implementation of Tasks c k v. That is, we are going to take Tasks as given from
+now on and explore variants of Build: ﬁrst, abstractly (in this section and in Section 5)
+and then concretely in Section 6.
+As per the deﬁnition of minimality (Section 2.1), a minimal build system must rebuild
+only out-of-date keys and at most once. The only way to achieve the “at most once”
+requirement while producing a correct build result (Section 3.6) is to build all keys in an
+order that respects their dependencies.
+We have emboldened two different aspects above: the part of the build system responsi-
+ble for scheduling tasks in the dependency order (a “scheduler”) can be cleanly separated
+from the part responsible for deciding whether a key needs to be rebuilt (a “rebuilder”). In
+this section, we discuss schedulers, leaving rebuilders for Section 5.
+Section 2 introduced three different task schedulers that decide which tasks to execute
+and in what order; see the “Scheduler” column of Table 1 in Section 2.5. The following
+subsections explore the properties of the three schedulers, and possible implementations.
+4.1 Topological scheduler
+The topological scheduler precomputes a linear order of tasks, which when followed
+ensures dependencies are satisﬁed, then executes the required tasks in that order.
+Computing such a linear order is straightforward – given a task description and a target
+key, ﬁrst ﬁnd the (acyclic) graph of the key’s dependencies, then compute a topological
+order. Taking the MAKE example from Figure 1, we might compute the following order:
+1. main.o
+2. util.o
+3. main.exe
+Given the dependencies, we could have equally chosen to build util.o ﬁrst, but main.exe
+must come last.
+The advantage of this scheme is simplicity – compute an order, then execute tasks in
+that order. In addition, any missing keys or dependency cycles can be detected from the
+graph and reported to the user before any work has commenced.
+The downside of this approach is that it requires the dependencies of each task in
+advance. As we saw in Section 3.7, we can only extract dependencies from an applicative
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.21] ===
+Build systems à la carte: Theory and practice
+21
+task, which requires the build system to choose c = Applicative, ruling out dynamic
+dependencies.
+4.2 Restarting scheduler
+To handle dynamic dependencies, we cannot precompute a static order – we must inter-
+leave running tasks and ordering tasks. One approach is just to build tasks in an arbitrary
+order, and if a task calls fetch on an out-of-date key dep, abort the task and build dep
+instead. Returning to the example from Figure 1, we might build the tasks as follows:
+1. main.exe (abort because it depends on util.o which is out of date)
+2. main.o
+3. util.o
+4. main.exe (restart from scratch, completing successfully this time)
+We start with main.exe (an arbitrary choice), but discover it depends on main.o, so
+instead start building main.o. Next, we choose to build util.o (again, arbitrarily), before
+ﬁnally returning to main.exe that now has all its dependencies available and completes
+successfully.
+This approach works, but has a number of disadvantages. Firstly, it requires a technical
+mechanism to abort a task, which is easy in our theoretical setting with Task (see an imple-
+mentation in Section 6.3) but leads to engineering concerns in the real world. Secondly, it
+is not minimal in the sense that a task may start, do some meaningful work, and then abort,
+repeating that same work when restarted.
+As a reﬁnement, to reduce the number of aborts (often to zero), EXCEL records the
+discovered task order in its calc chain and uses it as the starting point for the next
+build (Section 2.2). BAZEL’s restarting scheduler does not store the discovered order
+between build runs; instead, it stores the most recent task dependency information from
+which it can compute a linear order. Since this information may become outdated, BAZEL
+may also need to abort a task if a newly discovered dependency is out of date.
+4.3 Suspending scheduler
+An alternative approach, utilised by the busy build system (Section 3.3) and SHAKE, is to
+simply build dependencies when they are requested, suspending the currently running task
+when needed. Using the example from Figure 1, we would build
+• main.exe (suspended)
+→main.o
+• main.exe (resumed then suspended again)
+→util.o
+• main.exe (completed)
+We start building main.exe ﬁrst as it is the required target. We soon discover a dependency
+on main.o and suspend the current task main.exe to build main.o, then resume and suspend
+again to build util.o, and ﬁnally complete the target main.exe.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.22] ===
+22
+A. Mokhov et al.
+This scheduler (when combined with a suitable rebuilder) provides a minimal build
+system that supports dynamic dependencies. In our model, a suspending scheduler is easy
+to write – it makes a function call to compute each dependency. However, a more practical
+implementation is likely to build multiple dependencies in parallel, which then requires
+a more explicit task suspension and resumption. To implement suspension, there are two
+standard approaches:
+• Blocking threads or processes: this approach is relatively easy, but can require sig-
+niﬁcant resources, especially if a large number of tasks are suspended. In languages
+with cheap green threads (e.g. Haskell), the approach is more feasible and it was the
+original approach taken by SHAKE.
+• Continuation-passing style (Claessen, 1999) can allow the remainder of a task to be
+captured, paused, and resumed later. Continuation passing is efﬁcient, but requires
+the build script to be architected to allow capturing continuations. SHAKE currently
+uses this approach.
+While a suspending scheduler is theoretically optimal, in practice, it is better than a restart-
+ing scheduler only if the cost of avoided duplicate work outweighs the cost of suspending
+tasks. Note, furthermore, that the cost of duplicate work may often be just a fraction of the
+overall build cost.
+5 Rebuilders
+A build system can be split into a scheduler (as deﬁned in Section 4) and a rebuilder.
+Suppose the scheduler decides that a key should be brought up to date. The next question
+is: does any work need to be done, or is the key already up to date? Or, in a cloud build
+system, do we have a cached copy of the value we need?
+While Section 2 explicitly listed the schedulers, the rebuilders were introduced more
+implicitly, primarily by the information they retain to make their decisions. From the exam-
+ples, we have looked at, we see four fundamental rebuilders, each with a number of tweaks
+and variations within them.
+5.1 A dirty bit
+The idea of a dirty bit is to have one piece of persistent information per key, saying whether
+the key is dirty or clean. After a build, all bits are set to clean. When the next build starts,
+anything that changed between the two builds is marked dirty. If a key and all its transitive
+dependencies are clean, the key does not need to be rebuilt. Taking the example from
+Figure 1(c), if main.c changes then it would be marked dirty, and main.o and main.exe
+would be rebuilt as they transitively depend on main.c.
+EXCEL models the dirty-bit approach most directly, having an actual dirty bit associated
+with each cell, marking the cell dirty if the user modiﬁes it. It also marks dirty all cells that
+(transitively) depend on the modiﬁed cell. EXCEL does not record dynamic dependencies
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.23] ===
+Build systems à la carte: Theory and practice
+23
+of each cell; instead, it computes a static over-approximation – it is safe for it to make
+more cells dirty than necessary, but not vice versa. The over-approximation is as follows:
+a cell is marked dirty (i) if its formula statically refers to a dirty cell, or (ii) if the formula
+calls a volatile function like INDIRECT whose dependencies cannot be guessed from the
+formula alone. The over-approximation is clear for INDIRECT, but it is also present for
+IF, where both branches are followed even though dynamically only one is used.
+MAKE uses ﬁle modiﬁcation times and compares ﬁles to their dependencies, which can
+be thought of as a dirty bit which is set when a ﬁle is older than its dependencies. The
+interesting property of this dirty bit is that it is not under the control of MAKE; rather it is
+existing ﬁle system information that has been repurposed. Modifying a ﬁle automatically
+clears its dirty bit and automatically sets the dirty bit of the ﬁles depending on it (but not
+recursively). Note that MAKE requires that ﬁle timestamps only go forward in time, which
+can be violated by backup software.
+With a dirty bit, it is possible to achieve minimality (Section 2.1). However, to achieve
+early cutoff (Section 2.3), it would be important to clear the dirty bit after a computation
+that did not change the value and make sure that keys that depend on it are not rebuilt
+unnecessarily. For EXCEL, this is difﬁcult because the dependent cells have already been
+recursively marked dirty. For MAKE, it is impossible to mark a ﬁle clean and at the same
+time not mark the ﬁles that depend on it dirty. MAKE can approximate early cutoff by
+not modifying the result ﬁle, and not marking it clean, but then it will be rebuilt in every
+subsequent build.
+A dirty-bit rebuilder is useful to reduce memory consumption, and in the case of
+MAKE, to integrate with the ﬁle system. However, as the examples show, in constrained
+environments where a dirty bit is chosen, it is often done as part of a series of compromises.
+It is possible to implement a dirty-bit rebuilder that is minimal and supports early cutoff.
+To do so, the build system should start with all inputs that have changed marked dirty,
+then a key must be rebuilt if any of its direct dependencies are dirty, marking the key
+dirty only if the result has changed. At the end of the build, all dirty bits must be cleared.
+This approach only works if all targets are rebuilt each time because clearing dirty bits of
+keys that are not transitive dependencies of current targets will cause them to incorrectly
+not rebuild subsequently. To avoid resetting the dirty bit, it is possible to use successive
+execution numbers, which ultimately leads to an approach we call verifying step traces
+in Section 5.2.2.
+5.2 Verifying traces
+An alternative way to determine if a key is dirty is to record the values/hashes of dependen-
+cies used last time, and if something has changed, the key is dirty and must be rebuilt – in
+essence, keeping a trace which we can use to verify existing values. Taking the example
+from Figure 4(c), we might record that the key util.o (at hash 8) depended on the keys util.c
+(at hash 7) and util.h (at hash 2). Next time round, if the scheduler decides that it is time
+for util.o to be rebuilt and all keys still have the same hashes as in the recorded trace, there
+is nothing to do, and we can skip rebuilding. If any of the hashes is different, we rebuild
+util.o and record a trace with the new values.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.24] ===
+24
+A. Mokhov et al.
+For traces, there are two essential operations – adding a new trace to the trace store and
+using the trace store to determine if a key needs rebuilding. Assuming a store of verifying
+traces VT k v, the operations are:
+recordVT :: k -> Hash v -> [(k, Hash v)] -> VT k v -> VT k v
+verifyVT :: (Monad m, Eq k, Eq v)
+=> k -> Hash v -> (k -> m (Hash v)) -> VT k v -> m Bool
+Rather than storing (large) values v, the verifying trace VT can store only hashes of those
+values, with type Hash v. Since the verifying trace persists from one build to the next – it
+constitutes the build system’s “memory” – it is helpful for it to be of modest size. After
+successfully building a key, we call recordVT to add a record to the current VT, passing
+the key, the hash of its value, and the list of hashes and dependencies.
+More interestingly, to verify whether a key needs rebuilding we use verifyVT, supply-
+ing the key, the hash of its current value, a function for obtaining the hash of the post-build
+value of any key (using a scheduling strategy as per Section 4), and the existing trace store
+VT. The result will be a Bool where True indicates that the current value is already up to
+date, and False indicates that it should be rebuilt.
+The most complex argument of verifyVT is a function fetchHash :: k -> m (Hash v)
+to obtain the hash of the post-build value of any key. With an applicative task, fetchHash
+will be called on the statically known task dependencies. However, with a monadic task,
+the dependencies are not known from the task alone, they are only recorded from previ-
+ous executions stored in VT. If the build system has two traces for a given key k, they
+will both request the same dependency ﬁrst, since Task Monad is deterministic. However,
+based on that ﬁrst result, they may then request different subsequent dependencies using
+fetchHash. A curious result is that, for suspending schedulers (Section 4.3) in many cases,
+the actual build steps are performed as a consequence of checking if a key needs rebuilding!
+A verifying trace and other types of traces discussed in this section support dynamic
+dependencies and minimality; furthermore, all traces except for deep traces (Section 5.4)
+support the early cutoff optimisation (Section 2.3).
+5.2.1 Trace representation
+One potential implementation would be to record all arguments passed to recordVT in
+a list and verify by simply checking if any list item matches the information passed by
+verifyVT. Concretely, in our implementations from Section 6, traces are recorded as
+lists of:
+data Trace k v a = Trace { key
+:: k
+, depends :: [(k, Hash v)]
+, result
+:: a }
+Where a is Hash v for verifying traces (and v for constructive traces, discussed later
+in Section 5.3). A real system is highly likely to use a more optimised implementation.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.25] ===
+Build systems à la carte: Theory and practice
+25
+The ﬁrst optimisation is that any system using Applicative dependencies can omit
+the dependency keys from the Trace, since they can be recovered from the key
+ﬁeld (Section 3.7).
+The next optimisation is that there is only very minor beneﬁt from storing more than one
+Trace per key. Therefore, verifying traces can be stored as Map k (Trace k v (Hash v)),
+where the initial k is the key ﬁeld of Trace, thus making verifyVT much faster. Note
+that storing only one Trace per key means that if the dependencies of a key change but
+the resulting value does not, and then the dependencies change back to what they were
+before, there will be no valid Trace available and the key will therefore have to be rebuilt,
+whereas a complete list of all historical traces would allow the rebuilding to be skipped.
+On the other hand, bounding the number of Trace structures by the number of distinct
+keys, regardless of how many builds are executed, is a useful property.
+5.2.2 Verifying step traces
+The SHAKE build system and the associated paper – see Section 2.3.3 in Mitchell (2012) –
+use a different trace structure, called verifying step traces, which stores less data than
+verifying traces, and has slightly different early cutoff semantics. Rather than storing the
+Hash v for each dependency, it instead stores built time and changed time for each
+key, and a list of dependency keys (without the hashes). The resulting StepTrace type
+resembles
+data StepTrace k v = StepTrace { key
+:: k
+, result
+:: Hash v
+, built
+:: Time
+, changed :: Time
+, depends :: [k] }
+The built ﬁeld is when the key last rebuilt. The changed ﬁeld is when the result last
+changed – if the last build changed the value, it will be equal to built, otherwise it will be
+older. The function recordVT consults the previous step traces to know whether to keep
+the previous changed value or change it to built. The function verifyVT is a bit more
+subtle; given a key k and the hash of its current value h, it performs the following steps:
+• Find the latest (with respect to the ﬁeld built) step trace matching k. If it does not
+exist, return False: k was never built before and cannot be veriﬁed.
+• If h does not equal the result ﬁeld of the trace, return False: the current k’s value
+was changed externally and thus needs rebuilding.
+• For each key d in depends:
+◦Make sure d is up to date, suspending the current task if needed;
+◦If d’s latest changed time is greater than k’s built time, return False.
+• Return True: the current k’s value is up to date.
+This approach preserves minimality and early cutoff. A variant with only one Time ﬁeld
+would lose early cutoff and indeed corresponds quite closely to MAKE. Furthermore, the
+Time stamp only needs to record which execution of the build is running, so every key
+built in the same run can share the same Time value – it just needs to be monotonically
+increasing between runs.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.26] ===
+26
+A. Mokhov et al.
+(a)
+(b)
+(c)
+Fig. 7. An example of verifying step traces. The small rectangles show the changed (left) and built
+(right) timestamps of each non-input key in the trace store.
+This optimisation is useful, at least in the case of SHAKE, to save space. A typical cryp-
+tographic hash takes up 32 bytes, while a key (in SHAKE) is an Int taking only 4 bytes.
+Furthermore, SHAKE permits values to be arbitrarily large and supports a custom value
+equality (two values can be bit-for-bit unequal but considered equal by SHAKE), hence
+Hash v is not a valid encoding. For applicative tasks, depends can be omitted, making the
+size of a StepTrace O(1) instead of O(n), where n is the number of dependencies.
+While verifying step traces are mostly an optimisation, there are some observable dif-
+ferences from verifying traces, as demonstrated by an example in Figure 7. We ﬁrst make
+the full build: all keys get a built and changed of timestamp 1. Next, we change util.c
+and build util.o; the latter is changed as a result and hence both built and changed
+are increased to 2. Finally, we change util.c back to what it was originally and build
+main.exe. With verifying traces, the hashes of the dependencies of main.exe would be
+equal to the initial build and main.exe would not need rebuilding. With verifying step
+traces, the changed ﬁeld of util.o would increase once more and main.exe would there-
+fore be rebuilt. As shown in Figure 7(c), the changed ﬁeld of main.exe remains 1, since
+the actual value is unchanged. Other than when building subsets of the targets, we are
+unaware of any other situation where verifying step traces are less powerful.
+5.3 Constructive traces
+A verifying trace records only hashes or timestamps, so that it can be small. In con-
+trast, a constructive trace also stores the resulting value. Concretely, it records a list of
+Trace k v v, where Trace is as deﬁned in Section 5.2.1. Once, we are storing the complete
+result, it makes sense to record many constructive traces per key and to share them with
+other users, providing cloud build functionality. We can access this additional information
+with these operations:
+recordCT
+:: k -> v -> [(k, Hash v)] -> CT k v -> CT k v
+constructCT :: (Monad m, Eq k, Eq v)
+=> k -> (k -> m (Hash v)) -> CT k v -> m [v]
+The function recordCT is similar to recordVT from Section 5.2, but instead of just pass-
+ing the hash of the resulting value, we pass the actual value. The function verifyVT has
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.27] ===
+Build systems à la carte: Theory and practice
+27
+been replaced with constructCT, which instead of taking the hash of the current value
+as input, returns a list of possible values as output – there may be more than one, because
+some build tools are non-deterministic, see Section 8.3.
+Regardless of the chosen scheduler (Section 4), there are three cases to consider when
+using a rebuilder based on constructive traces:
+• If constructCT returns the empty list of possible values, the key must be rebuilt.
+• If the current value in the store matches one of the possible values, the build system
+can skip this key. Here, a constructive trace is used for verifying the current value.
+• If the current value in the store does not match any possible value, we can use any
+of the possible values without doing any work to build it and copy it into the store.
+Any
+Applicative
+build
+system
+using
+constructive
+traces,
+for
+example
+CLOUDBUILD (Section 6.5), can index directly from the key and the hashes of its
+dependencies to the resulting value, for example, using a Map (k, [Hash v]) v.
+Importantly, assuming the traces are stored on a central server, the client can compute the
+key and the hashes of its dependencies locally and then make a single call to the server to
+retrieve the result.
+In practice, many cloud build systems store hashes of values in the trace store, that is,
+use Trace k v (Hash v) entries just like verifying traces and have a separate content-
+addressable cache which associates hashes with their actual contents.
+5.4 Deep constructive traces
+Constructive traces always verify keys by looking at their immediate dependencies, which
+must have ﬁrst been brought up to date, meaning that the time to verify a key depends on
+the number of transitive dependencies. A deep constructive trace optimises this process by
+only looking at the terminal input keys, ignoring any intermediate dependencies. The oper-
+ations capturing this approach are the same as for constructive traces in Section 5.3, but we
+use the names recordDCT and constructDCT, where the underlying DCT representation
+need only record information about hashes of inputs, not intermediate dependencies.
+Concretely, taking the example from Figure 1, to decide whether main.exe is out of
+date, a constructive trace would look at util.o and main.o (the immediate dependencies),
+whereas a deep constructive trace would look at util.c, util.h and main.c.
+An advantage of deep constructive traces is that to decide if main.exe is up to date only
+requires consulting its inputs, not even considering util.o or main.o. Such a feature is often
+known as a shallow build, as discussed in Section 8.4.
+There are two primary disadvantages of deep constructive traces:
+• Tasks must be deterministic: If the tasks are not deterministic then it is possible to
+violate correctness, as illustrated by the example in Section 8.4, see Figure 12.
+• No early cutoff: Deep constructive traces cannot support early cutoff (Section 2.3),
+since the results of intermediate computations are not considered.
+Current build systems using deep constructive traces always record hashes of terminal
+input keys, but the technique also works if we skip any number of dependency levels (say
+n levels). The input-only approach is the special case of n = ∞, and constructive traces are
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.28] ===
+28
+A. Mokhov et al.
+Table 2. Build systems à la carte
+Scheduling algorithm
+Rebuilding
+Topological
+Restarting
+Suspending
+strategy
+Section 4.1
+Section 4.2
+Section 4.3
+Dirty bit
+Section 5.1
+MAKE
+EXCEL
+–
+Verifying traces
+Section 5.2
+NINJA
+–
+SHAKE
+Constructive traces
+Section 5.3
+CLOUDBUILD
+BAZEL
+–
+Deep constructive traces Section 5.4
+BUCK
+–
+NIX
+the special case of n = 1. By picking values of n in between we would regain some early
+cutoff, at the cost of losing such simple shallow builds, while still requiring determinism.
+6 Build systems, concretely
+In the previous sections, we discussed the types of build systems and how they can be bro-
+ken down into two main components: a scheduler (Section 4) and a rebuilder (Section 5).
+In this section, we make this abstract distinction concrete by implementing a number of
+build systems as a composition of a scheduler and a rebuilder. The result can be sum-
+marised in Table 2, which tabulates 12 possible combinations, 8 of which are inhabited by
+existing build systems (we discuss these systems in Sections 2 and 9.1). Of the remaining
+four spots, all result in workable build systems. The most interesting unﬁlled spot in the
+table corresponds to a suspending scheduler composed with a constructive trace rebuilder.
+Such a build system would provide many beneﬁts; we title it CLOUD SHAKE and explore
+further in Section 6.5.
+6.1 Concrete implementations
+We can deﬁne schedulers and rebuilders more concretely with the following types
+(Figure 5):
+type Scheduler c i ir k v = Rebuilder c ir k v -> Build c i k v
+type Rebuilder c
+ir k v = k -> v -> Task c k v -> Task (MonadState ir) k v
+A Scheduler is a function that takes a Rebuilder and uses it to construct a Build system
+by choosing which keys to rebuild in which order. The Rebuilder makes use of the per-
+sistent build information ir, while the scheduler might augment that with further persistent
+information of its own, yielding i.
+A Rebuilder takes three arguments: a key, its current value, and a Task that can
+(re)compute the value of the key if necessary. It uses the persistent build information ir
+(carried by the state monad) to decide whether to rebuild the value. If doing so is unnec-
+essary, it returns the current value; otherwise, it runs the supplied Task to rebuild it. In
+both cases, it can choose to update the persistent build information ir to reﬂect what hap-
+pened. So, a Rebuilder wraps a Task c k v, which unconditionally rebuilds the key,
+to make a Task (MonadState ir) k v, which rebuilds the key only if necessary, and
+does the necessary book-keeping. Note that the resulting Task is always monadic; static
+dependency analysis can be performed on the original Task Applicative if needed.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.29] ===
+Build systems à la carte: Theory and practice
+29
+The scheduler runs the Task returned by the rebuilder passing it a fetch call-
+back that the task uses to ﬁnd values of its dependencies. The callback returns control
+to the scheduler, which may in turn call the rebuilder again to bring another key up to date,
+and so on.
+These two abstractions are the key to modularity: we can compose any scheduler with
+any rebuilder and obtain a correct build system. In this section, we will write a scheduler
+for each column of Table 2, and a rebuilder for each row; then compose them to obtain the
+build systems in the table’s body.
+6.2 MAKE
+An implementation of MAKE using our framework is shown in Figure 8. As promised,
+its deﬁnition is just the application of a Scheduler, topological, to a Rebuilder,
+modTimeRebuilder. We discuss each component in turn, starting with the rebuilder.
+The modTimeRebuilder uses the pair MakeInfo k = (now, modTimes) as persistent
+build information, carried by a state monad. This MakeInfo comprises the current time
+now :: Time and the map modTimes :: Map k Time of ﬁle modiﬁcation times. We assume
+that the external system, which invokes the build system, updates MakeInfo reﬂecting any
+ﬁle changes between successive builds.
+The rebuilder receives three arguments: a key, its current value, and the applicative
+task that can be used to rebuild the key if necessary. The rebuilder ﬁrst decides if the key
+is dirty by consulting modTimes: if the key is not found, that must mean it has never been
+built before; otherwise, modTimeRebuilder can see if any of the task’s dependencies
+(computed by dependencies) are out of date. If the key is dirty, we use run task to
+rebuild it and update the state with the new modiﬁcation time of the key7; otherwise, we
+can just return the current value.
+MAKE’s scheduler, topological, processes keys in a linear order based on a topo-
+logical sort of the statically known dependency graph (see Section 8.2 for parallel MAKE).
+Our deﬁnition in Figure 8 is polymorphic with respect to the type of build information i
+and is therefore compatible with any applicative rebuilder. The scheduler calls the sup-
+plied rebuilder on every key in the order and runs the obtained newTask to compute
+the newValue. Note that newTask has access only to the i part of the Store i k v, but the
+rest of the do block runs in the State (Store i k v) monad; we use the (unremarkable)
+helper function liftStore to ﬁx the mismatch. The newTask ﬁnds values of the key’s
+dependencies via the fetch callback, which is deﬁned to directly read the store.
+The pre-processing stage uses the function dependencies, deﬁned in Section 3.7,
+to extract static dependencies from the provided applicative task. We compute the
+linear processing order by constructing the graph of keys reachable from the
+target via dependencies and performing the topological sort of the result. We omit
+implementation of textbook graph algorithms reachable and topSort, for example,
+see Cormen et al. (2001).
+Note that the function dependencies can only be applied to applicative tasks, which
+restricts MAKE to static dependencies, as reﬂected in the type Build Applicative. Any
+other build system that uses the topological scheduler will inherit the same restriction.
+7 The real MAKE relies on the ﬁle system to track ﬁle modiﬁcation times, but we prefer to make this explicit in
+our model.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.30] ===
+30
+A. Mokhov et al.
+Fig. 8. An implementation of MAKE using our framework.
+6.3 EXCEL
+Our model of EXCEL uses the restarting scheduler and the dirtyBitRebuilder, see
+Figure 9. The persistent build information ExcelInfo k is a pair of: (i) a map k -> Bool
+associating a dirty bit with every key and (ii) a calc chain of type [k] recorded from the
+previous build (Section 2.2).
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.31] ===
+Build systems à la carte: Theory and practice
+31
+Fig. 9. An implementation of EXCEL using our framework.
+The external system, which invokes EXCEL’s build engine, is required to provide a
+transitively closed set of dirty bits. That is, if a cell is changed, its dirty bit is set, as well
+as the dirty bit of any other cell whose value might perhaps change as a result. It is OK to
+mark too many cells as dirty; but not OK to mark too few.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.32] ===
+32
+A. Mokhov et al.
+The dirtyBitRebuilder is very simple: if the key’s dirty bit is set, we run the task
+to rebuild the key; otherwise, we return the current value as is. Because the dirty cells are
+transitively closed, unlike MAKE’s modTimeRebuilder, the dirtyBitRebuilder does
+not need to modify i to trigger rebuilds of dependent keys.
+EXCEL’s restarting scheduler processes keys in the order speciﬁed by the calc
+chain. During the build, it constructs a newChain for the next build and maintains a
+set of keys done that have been processed. For each non-input key, the scheduler tries to
+rebuild it using a partial fetch callback that returns Either k v instead of v. The callback
+is deﬁned to fail with Left dep when asked for the value of a dependency dep that has not
+yet been processed (and hence may potentially be dirty); otherwise, it returns the current
+value of the dependency by looking it up in the store.
+After the newTask is executed (using liftStore), there are two cases to consider:
+• The newTask has failed, because one of its dependencies dep has not yet been pro-
+cessed. This indicates that the calculation chain from the previous build is incorrect
+and needs to be adjusted by moving the dep in front of the key, so that we can restart
+building the key after the dep is ready.
+• The newTask succeeded. The resulting newValue is written to the store, the key is
+marked as done, and EXCEL continues to build the rest of the chain.
+Note that the task returned by the rebuilder expects a total callback function and
+cannot be executed with the partial callback fetch. We ﬁx the mismatch with the function
+try that relies on the standard monad transformer ExceptT (Liang et al., 1995). The helper
+liftChain is analogous to liftStore in Figure 8, so we omit its implementation.
+6.4 SHAKE
+Our model of SHAKE (Figure 10) stores verifying traces VT k v deﬁned in Section 5.2
+as persistent build information and is composed of the suspending scheduler and the
+vtRebuilder.
+The rebuilder performs the verifyVT query to determine if the key is upToDate. If
+it is, the rebuilder simply returns the key’s current value. Otherwise, it executes the
+task, obtaining both a newValue and the key’s dynamic dependencies deps (see the
+deﬁnition of track in Section 3.7), which are subsequently recorded in the trace store
+using recordVT.
+The suspending scheduler uses a recursive fetch callback, deﬁned similarly to the
+busy build system (Section 3.3), that builds a given key, making sure not to duplicate
+work when called on the same key again in future. To achieve that, it keeps track of keys
+that have already been built in a set done :: Set k. Given a non-input key that has not yet
+been built, we use the supplied rebuilder to embed the build information i into the task.
+We then execute the obtained newTask by passing it the fetch function as a callback for
+building dependencies: the newTask will therefore be suspended while its dependencies
+are being brought up to date. The newValue obtained by running the newTask is stored,
+and the key is added to the set done.
+The fetch computation runs in the State (Store i k v, Set k) monad. To make
+MonadState i access the i inside the Store, we use the helper function liftRun (which
+uses a newtype to provide a MonadState instance that sees through into the Store).
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.33] ===
+Build systems à la carte: Theory and practice
+33
+Fig. 10. An implementation of SHAKE using our framework.
+As discussed in Section 5.2.2, SHAKE actually uses verifying step traces, but here we
+choose to focus on the more explicit verifying traces. We have implemented verifying step
+traces in our framework, and they compose with schedulers as you would hope.
+6.5 Cloud build systems: BAZEL, CLOUDBUILD, CLOUD SHAKE, BUCK and NIX
+Figure 11 shows our models of several cloud build systems. BAZEL, CLOUDBUILD, and
+CLOUD SHAKE are based on constructive traces (Section 5.3), whereas BUCK and NIX use
+deep constructive traces (Section 5.4).
+The implementation of ctRebuilder is analogous to that of vtRebuilder in Figure 10,
+but the verifyVT query is replaced with a more powerful query to constructCT that
+returns a list of suitable cachedValues by looking them up the cloud cache. If the current
+value is in the list, we can use it as is. Otherwise, if the list is non-empty, we can use
+an arbitrary cachedValue. Finally, if the cache has no suitable values, we fall back to
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.34] ===
+34
+A. Mokhov et al.
+Fig. 11. BAZEL, CLOUD SHAKE, CLOUDBUILD, BUCK and NIX in our framework.
+executing the task. The obtained newValue and the task’s dependencies are recorded as
+a new constructive trace for future use.
+The BAZEL build system uses a restarting scheduler whose implementation we omit. It is
+similar to EXCEL’s restarting scheduler deﬁned in Figure 9, but instead of building keys
+in the order speciﬁed by the persistently stored calc chain, BAZEL uses a build queue. The
+build starts with the queue containing all dirty keys. Similarly to EXCEL, the rebuilding of
+a key extracted from the queue may fail because one of its dynamic dependencies is dirty.
+In this case, the key is marked as blocked and its rebuilding is deferred. Whenever a key
+is successfully rebuilt, all keys that were previously blocked on it are added back to the
+queue and their build is eventually restarted.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.35] ===
+Build systems à la carte: Theory and practice
+35
+Note that although both our model and BAZEL’s actual implementation supports
+dynamic dependencies, it is currently not possible to deﬁne new monadic build rules in
+the language available to users. Instead, users have to rely on a collection of predeﬁned
+built-in rules, which cover many common instances of dynamic dependencies.
+By switching to the topological scheduler, we obtain a model of Microsoft’s
+CLOUDBUILD – an applicative build system that combines conventional scheduling
+of statically known directed acyclic graphs with constructive traces (Esfahani et al.,
+2016). We convert a monadic ctRebuilder into an applicative one by applying an
+adapter adaptRebuilder, which unwraps a given Task Applicative and wraps it into
+Task Monad.
+Our models of BUCK (Facebook, 2013) and NIX (Dolstra et al., 2004) use the
+rebuilder based on deep constructive traces (Section 5.4), called dctRebuilder, whose
+implementation we omit since it is very similar to that of ctRebuilder. BUCK uses
+the topological scheduler and is an applicative build system, whereas NIX uses the
+suspending scheduler and is therefore monadic.
+Using the abstractions built thus far, we have shown how to compose schedulers with
+rebuilders to reproduce existing build systems. To us, the most interesting build system
+as yet unavailable would compose a suspending scheduler with constructive traces – pro-
+viding a cloud-capable build system that is minimal and supports both early cutoff and
+monadic dependencies. Using our framework, it is possible to deﬁne and test such a sys-
+tem, which we call CLOUD SHAKE. All we need to do is compose suspending with
+ctRebuilder, as shown in Figure 11.
+7 Experience
+We have presented a framework that can describe, and indeed execute in prototype form,
+a wide spectrum of build systems. But our ultimate goal is a practical one: to use these
+insights to develop better build systems. Our earlier work on SHAKE (Mitchell, 2012), and
+applying SHAKE to building Glasgow Haskell Compiler (GHC) (Mokhov et al., 2016),
+makes progress in that direction.
+Based on the theory developed in this paper, we have extended SHAKE to become
+CLOUD SHAKE, the ﬁrst cloud-capable build system to support both early cutoff and
+monadic dependencies (Section 6.5), and used it to implement GHC’s (very substantial)
+build system, HADRIAN (Mokhov et al., 2016). In this section, we reﬂect on our experience
+of turning theory into practice.
+7.1 Haskell as a design language
+Build systems are surprisingly tricky. It is easy to wafﬂe and remarkably hard to be precise.
+As this paper exempliﬁes, it is possible to use Haskell as a design language, to express
+quite abstract ideas in a precise form – indeed, precise enough to be executed.
+Moreover, doing so is extremely beneﬁcial. The discipline of writing executable proto-
+types in Haskell had a profound effect on our thinking. It forced misconceptions to surface
+early. It required us to be explicit about side effects. It gave us a huge incentive to design
+abstractions that had simple types and an explicable purpose.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.36] ===
+36
+A. Mokhov et al.
+Consider, for example, our Task type:
+newtype Task c k v = Task (forall f. c f => (k -> f v) -> f v)
+We started off with a much more concrete type and explored multiple variants. During
+those iterations, this single line of code gave us a tangible, concrete basis for productive
+conversations, much more so than general debate about “tasks”.
+It is also worth noting that we needed a rather expressive language to faithfully express
+the abstractions that seem natural in this setting. In the case of Task, we needed a data
+constructor with a polymorphic ﬁeld; a higher-kinded type variable f :: * -> *; an even
+more abstracted kind for c :: (* -> *) -> Constraint; and, of course, type classes. Our
+models have since been translated to Rust (Gandhi, 2018) and Kotlin (Estevez & Shetty,
+2019), and in both cases there was a loss of precision due to language-speciﬁc limitations.
+When thinking about the type constructors over which f might usefully range, it turned
+out that we could adopt the existing abstractions of Functor, Applicative, Monad, and
+so on. That in turn led us to a new taxonomy of build systems – see Section 3.4. In the
+other direction, trying to express an existing build system DUNE in our models led us to
+ﬁnding a new abstraction – the Selective type class (Mokhov et al., 2019), which turned
+out to be useful outside the build systems domain.
+The effect of using a concrete design language went well beyond merely expressing our
+ideas: it directly inﬂuenced our thinking. For example, here are deﬁnitions for a scheduler
+and rebuilder, from Section 6.1:
+type Scheduler c i ir k v = Rebuilder c ir k v -> Build c i k v
+type Rebuilder c
+ir k v = k -> v -> Task c k v -> Task (MonadState ir) k v
+These powerful and modular abstractions, which ultimately formed part of the concep-
+tual structure of the paper, emerged fairly late in the project as we repeatedly reviewed,
+redesigned, and refactored our executable prototypes. It is hard to believe that we could
+have developed them without the support of Haskell as a design language.
+7.2 Experience from SHAKE
+The original design of SHAKE has not changed since the initial paper, but the implementa-
+tion has continued to mature – there have been roughly 5,000 subsequent commits to the
+SHAKE project.8 These commits added concepts like resources (for handling situations
+when two build tasks contend on a single external resource), rewriting serialisation to be
+faster, documentation including a website,9 and add a lot of tests. The biggest change in
+that time period was an implementation change: moving from blocking threads to continu-
+ations for the suspending scheduler. But otherwise, almost all external and internal details
+remain the same.10 We consider the lack of change suggestive that SHAKE is based on
+fundamental principles – principles we can now name and describe as a consequence of
+this paper.
+8 See https://github.com/ndmitchell/shake.
+9 See https://shakebuild.com.
+10 The most visible change is purely notational: switching from *> to %> for deﬁning rules, because a conﬂicting
+*> operator was added to the Haskell Prelude.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.37] ===
+Build systems à la carte: Theory and practice
+37
+There are two main aspects to the original SHAKE paper (Mitchell, 2012) that are
+described more clearly in this paper. Firstly, the rebuilder can now be described using
+verifying step traces Section 5.2.2, with a much clearer relationship to the unoptimised
+verifying traces of Section 5.2. Secondly, in the original paper, the tasks (there called
+“actions”) were described in continuation-passing style using the following data type11:
+data Action k v a = Finished a
+| Depends k (v -> Action k v a)
+In this paper, we describe tasks more directly, in a monadic (or applicative or functorial)
+style. But in fact the two are equivalent: Task Monad k v is isomorphic to Action k v v.
+To be concrete, the functions toAction and fromAction deﬁned below witness the
+isomorphism in both directions.
+instance Monad (Action k v) where
+return = Finished
+Finished x
+>>= f = f x
+Depends ds op >>= f = Depends ds $ \v -> op v >>= f
+toAction :: Task Monad k v -> Action k v v
+toAction (Task run) = run (\k -> Depends k Finished)
+fromAction :: Action k v v -> Task Monad k v
+fromAction x = Task (\fetch -> f fetch x)
+where
+f _
+(Finished v
+) = return v
+f fetch (Depends d op) = fetch d >>= f fetch . op
+Similarly, in the original paper, MAKE tasks were described as:
+data Rule k v a = Rule { depends :: [k], action :: [v] -> a }
+Assuming the lengths of the lists [k] and [v] always match, the data type Rule k v v is
+isomorphic to Task Applicative k v, and we can deﬁne a similar Applicative instance
+and conversion functions.
+By expressing these types using Task, we are able to describe the differences more
+concisely (Monad versus Applicative), use existing literature to determine what is and
+is not possible, and explore other constraints beyond just Monad and Applicative. These
+and other isomorphisms for second-order functionals, that is, functions of the form
+forall f. c f => (k -> f v) -> f a
+for various choices of c are studied in depth by Jaskelioff and O’Connor (2015).
+11 The original paper uses concrete types Key and Value. Here we generalise these types to k and v, and also
+add a so that Action k v can be an instance of Monad.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.38] ===
+38
+A. Mokhov et al.
+7.3 Experience from CLOUD SHAKE
+Converting SHAKE into CLOUD SHAKE was not a difﬁcult process once armed with the
+road map in this paper. The key was the introduction of two new functions:
+addCloud :: k -> Ver -> Ver -> [[(k, Hash v)]] -> v -> [k] -> IO ()
+lookupCloud :: (k -> m (Maybe (Hash v))) -> k -> Ver -> Ver
+-> m (Maybe (v, [[k]], IO ()))
+These functions are suspiciously like recordCT and constructCT from Section 5.3, with
+their differences perhaps the most illustrative of the changes required.12
+• Two Ver arguments are passed to each function. These are the versions of the build
+script and the rule for this particular key. If either version changes, then it is as
+though the key has changed and nothing will match. These versions are important to
+avoid using stale build products from previous versions of the build script.
+• The list of dependencies to addCloud is a list of lists, rather than a simple list. The
+reason is that SHAKE allows a list of dependencies to be speciﬁed simultaneously,
+so they can all be built in parallel.
+• The addCloud function also takes a list of keys [k], being the ﬁles that this rule
+produces. These produced ﬁles include those which are output keys from a rule and
+those declared with the function produces.
+• The lookupCloud function allows an explicit Nothing when looking up a depen-
+dent key, since some keys are not buildable.
+• The lookupCloud function returns at most one result, rather than a list. This change
+was made for simplicity.
+To integrate these functions into SHAKE, we found the most expedient route was to
+leave SHAKE with verifying traces, but if the verifying trace does not match, we consult
+the constructive trace. By bolting constructive traces onto the side of SHAKE, we avoid
+re-engineering of the central database. We have not found any signiﬁcant downsides from
+the bolt-on approach thus far, so it may be a sensible route to go even if developing from
+scratch – allowing an optimised veriﬁed trace implementation in many cases and falling
+back to a more complex implementation (requiring consulting remote servers) only rarely.
+The one thing we have not yet completed on the engineering side is a move to hosting
+caches over HTTP. At the moment all caches are on shared ﬁle systems. This approach
+can use mounted drives to mirror HTTP connections onto ﬁle systems, and reuse tools for
+managing ﬁle systems, share caches with rsync, and is simple. Unfortunately, on certain
+operating systems (e.g. Windows) mounting an HTTP endpoint as a ﬁle system requires
+administrator privileges, so an HTTP cache is still desirable.
+12 We have made some minor changes from actual SHAKE, like replacing Key for k, to reduce irrelevant
+differences.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.39] ===
+Build systems à la carte: Theory and practice
+39
+7.4 Experience from using CLOUD SHAKE
+While we expected the GHC build system to be the ﬁrst to take advantage of CLOUD
+SHAKE, we were actually beaten to it by Standard Chartered who reported13:
+Thanks for the symlinks release, we just ﬁnished upgrading this build
+system to use --share. ... Building from scratch with a warm cache takes
+around 5 s, saving us up to 2 h. Not bad!
+Converting to a build suitable for sharing is not overly onerous, but nor is it trivial.
+In particular, a cloud build is less forgiving about untracked operations – things that are
+wrong but usually harmless in local builds often cause serious problems in a cloud setting.
+Some things that require attention in moving to a cloud build:
+• Irrelevant differences: A common problem is that you do not get shared caching
+when you want it. As one example, imagine two users install gcc on different
+paths (say /usr/bin/gcc and /usr/local/bin/gcc). If these paths are recorded by
+the build system, the users will not share cache entries. As another example, con-
+sider a compiler that embeds the current time in the output: any users who build that
+ﬁle locally will not get any shared caching of subsequent outputs. Possible solutions
+include using relative paths; depending only on version numbers for system binaries
+(e.g. gcc); controlling the environment closely (e.g. using NIX); and extra ﬂags to
+encourage compilers to be more deterministic.
+• Insufﬁcient produced ﬁles: A build rule must declare all ﬁles it produces, so these
+can be included in the cache. As an example using Haskell, compilation of Foo.hs
+produces Foo.hi and Foo.o. If you declare the rule as producing Foo.hi, and other
+rules depend on Foo.hi, but also use Foo.o after depending on Foo.hi, a local build
+will probably work (although treating Foo.o as a proper dependency would deﬁnitely
+be preferable). However, if Foo.hi is downloaded from a remote cache, Foo.o will
+not be present and subsequent commands may fail (e.g. linking). In practice, most
+issues encountered during the move to cloud builds for GHC were caused by failing
+to declare produced ﬁles.
+• Missing dependencies: While missing dependencies are always a problem, the
+move to a cloud build makes them more serious. With local builds, outputs will
+be built at least once per user, but with a cloud build they might only be built once
+ever.
+To help with the ﬁnal two issues – insufﬁcient dependencies and produced ﬁles – we
+have further enhanced the SHAKE lint modes, coupling them to a utility called FSATrace,
+which detects which ﬁles are read/written by a command line execution. Such information
+has been very helpful in making the GHC build cloud ready (Eichmann, 2019).
+7.5 Experience from building GHC with SHAKE
+HADRIAN is a build system for the Glasgow Haskell Compiler (The GHC Team, 2019). It
+was developed to replace a MAKE-based build system and solve multiple scalability and
+13 https://groups.google.com/d/msg/shake-build-system/NbB5kMFS34I/mZ9L4TgkBwAJ
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.40] ===
+40
+A. Mokhov et al.
+maintainability challenges. As discussed in detail by Mokhov et al. (2016), most of these
+challenges were consequences of two key shortcomings of MAKE: (i) poor abstraction
+facilities of makeﬁles, notably the need to program in a single namespace of mutable string
+variables and (ii) the lack of dynamic dependencies (Section 2.3). HADRIAN beneﬁts both
+from SHAKE’s features and from the host language Haskell, making the new GHC build
+system easier to understand and maintain.
+Interestingly, although SHAKE is not a self-tracking build system (Section 8.8),
+HADRIAN implements a little domain-speciﬁc language for constructing build command
+lines and then tracks command lines by treating them as a type of values – an example
+of partial self-tracking made possible by SHAKE’s support for key-dependent value
+types (Section 8.6).
+The development of CLOUD SHAKE allows GHC developers to beneﬁt from caching
+build results between builds. Building GHC 8.8 from scratch takes ∼1 hour on Windows
+using HADRIAN or the original MAKE-based build system. This time includes building the
+compiler itself, 29 bundled libraries, such as base (each in vanilla and proﬁled way), and
+6 bundled executables, such as Haddock. One would hope that the build cache would be
+particularly useful for GHC’s continuous integration system that builds and tests every
+commit but our experience has been mixed. In an ideal case, when a commit does not
+affect the resulting GHC binaries, for example, only modiﬁes tests, HADRIAN can build
+GHC from scratch in just 3 minutes, by simply creating symbolic links to the previously
+built results stored in the cache. However, if a commit modiﬁes the “Stage 1 GHC”
+executable – an intermediate compiler built as part of the GHC bootstrapping – any
+further cache hits become unlikely, thus limiting beneﬁts of the build cache to Stage 1
+only (Eichmann, 2019).
+A small number of GHC build rules cannot be cached. These rules register libraries
+in the package database, and rather than producing ﬁles, they mutate a shared ﬁle.
+CLOUD SHAKE provides a way to manually label such build rules to exclude them from
+caching.
+One of the beneﬁts of using SHAKE is that we have access to high-quality build proﬁling
+information, allowing us to compute critical paths and other metrics; see Mitchell (2019)
+for an overview of SHAKE’s proﬁling features. This information has shown us, for
+example, that more CPUs would not help (on unlimited CPUs the speed up would be less
+than 10%), and that a handful of build tasks (two anomalously slow Haskell compilations
+and calls to slow single-threaded conﬁgure) take up a signiﬁcant fraction of build time
+(at least 15%).
+8 Engineering aspects
+In the previous sections, we have modelled the most critical subset of various build
+systems. However, like all real-world systems, there are many corners that obscure the
+essence. In this section, we discuss some of those details what would need to be done to
+capture them in our model and what the impact would be.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.41] ===
+Build systems à la carte: Theory and practice
+41
+8.1 Partial stores and exceptions
+Our model assumes a world where the store is fully deﬁned, every k is associated with
+a v, and every compute successfully completes returning a valid value. In the real world,
+build systems frequently deal with errors, for example, “ﬁle not found” or “compilation
+failed”. There are many ways of modelling errors, and in this section we give three simple
+examples.
+One simple approach is to include failures into the type of values v, for example, to
+model a partial store we can use an algebraic data type isomorphic to Maybe:
+data Value = FileNotFound | FileContents String
+This is convenient if tasks are aware of failures. For example, a task may be able to cope
+with missing ﬁles, for example, if fetch "username.txt" returns FileNotFound, the
+task could use the literal string "User" as a default value. In this case, the task will depend
+on the fact that the ﬁle username.txt is missing and will need to be rebuilt if the user
+later creates this ﬁle. In general, we can use values of type Either e v when dealing with
+failures of type e. To automatically convert a “failure-free” task into an equivalent task
+operating with values of type Either e v, we can use the following function:
+liftEither :: Task Monad k v -> Task Monad k (Either e v)
+liftEither task = Task $ \fetch ->
+runExceptT $ run task (ExceptT . fetch)
+Here, liftEither wraps the result of the given fetch :: k -> Either e v into ExceptT
+and then runs the task in the ExceptT monad transformer (Liang et al., 1995).
+Another approach is to include failures into the computation context f. Recall
+from Section 3.4 that we require tasks to be polymorphic in f and can therefore choose
+to execute a Task in an f with failures, the simplest example being f = Maybe. Below we
+deﬁne a callback that returns Just value for keys A1 and A2 but fails with Nothing on
+all other keys:
+fetchA1A2 :: String -> Maybe Integer
+fetchA1A2 k = Map.lookup k (Map.fromList [("A1", 10), ("A2", 20)])
+We can directly run any Task with this callback. For example, the task B1 = A1 + A2 from
+sprsh1 in Section 3.2 returns Just 30, whereas the task B2 = B1 * 2 returns Nothing
+because fetchA1A2 fails on B1.
+This approach is convenient if tasks are not aware of failures, for example, we can
+model EXCEL formulae as pure arithmetic functions and introduce failures “for free”
+if/when needed by instantiating Tasks with an appropriate f. In a real system, this f
+would be more complex than just Maybe, for example MaybeT (State Spreadsheet),
+thus allowing us to combine failures with access to EXCEL’s spreadsheet state using the
+MaybeT monad transformer (Liang et al., 1995).
+Finally, the task itself might not want to encode failures into the type of values v, but
+instead demand that f has a built-in notion of failures. This can be done by choosing a
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.42] ===
+42
+A. Mokhov et al.
+suitable constraint c, such as Alternative, MonadPlus or even better something speciﬁc
+to failures, such as MonadFail. Then both the callback and the task can reuse the same
+failure mechanism as shown below:
+class Monad m => MonadFail m where
+fail :: String -> m a
+sprsh4 :: Tasks MonadFail String Integer
+sprsh4 "B1" = Just $ Task $ \fetch -> do
+a1 <- fetch "A1"
+a2 <- fetch "A2"
+if a2 == 0 then fail "division by 0" else return (a1 `div` a2)
+sprsh4 _ = Nothing
+With this approach, we can implement a build system that accepts Tasks MonadFail k v
+and handles errors by aborting the build early and returning Either String (Store i k v)
+instead of just Store i k v as in our Build abstraction Section 3.3. One possible
+implementation of such a failure-handling build system is based on adding an extra
+Either String layer into the monad stack, for example, augmenting the monad
+State (Store i k v) used by the schedulers in Section 6 with exceptions. We omit the
+actual implementation: while fairly direct, it is also tedious due to additional wrapping
+and unwrapping.
+8.2 Parallelism
+We have given simple implementations assuming a single thread of execution, but all
+the build systems we address can actually build independent keys in parallel. While it
+complicates the model, the complications are restricted to the scheduler:
+1. The topological scheduler can build the full dependency graph, and whenever
+all dependencies of a task are complete, the task itself can be started.
+2. The restarting scheduler can be made parallel in a few ways, but the most direct
+is to have n threads reading keys from the build queue. As before, if a key requires
+a dependency not yet built, it is moved to the end – the difference is that sometimes
+keys will be moved to the back of the queue not because they are out of date but
+because of races with earlier tasks that had not yet ﬁnished. As a consequence, if
+the build order is persisted over successive runs (as in EXCEL), potentially racey
+dependencies will be separated, giving better parallelism over time.
+3. The suspending scheduler can be made parallel by starting multiple dependencies
+in parallel. One approach is to make the request for dependencies take a list of
+keys, as implemented by SHAKE. Another approach is to treat the Applicative
+dependencies of a Task Monad in parallel, as described by Marlow et al. (2014).
+Once sufﬁcient parallelism is available, the next challenge is preventing excess par-
+allelism and machine resource starvation, which is usually achieved with a thread
+pool/limit.
+The actual implementation of the parallel schedulers is not overly onerous, but neither
+it is beautiful or informative, so we omit it.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.43] ===
+Build systems à la carte: Theory and practice
+43
+8.3 Impure computations
+In our model, we deﬁne Task as a function – when given the same inputs it will always
+produce the same output. Alas, the real world is not so obliging. Some examples of impure
+tasks include:
+• Untracked dependencies: Some tasks depend on untracked values – for example,
+C compilation will explicitly list the source.c ﬁle as a dependency, but it may not
+record that the version of gcc is also a dependency.
+• Non-determinism: Some tasks are non-deterministic, producing any result from a
+possible set. As an example, GHC programs compiled using parallelism can change
+the order in which unique variables are obtained from the name supply, producing
+different but semantically identical results.
+• Volatility: Some tasks are deﬁned to change in every build, for example, EXCEL
+provides a “function” RANDBETWEEN producing a fresh random number in a
+speciﬁed range on each recalculation. Similarly, build systems like MAKE and
+SHAKE provide volatile phony rules. The main difference from non-deterministic
+tasks is that volatile tasks cannot be cached. They are readily modelled as depending
+on a special key RealWorld whose value is changed in every build.
+There is signiﬁcant interplay between all three sources of impurity. Systems like BAZEL
+use various sandboxing techniques to guard against missing dependencies, but none are
+likely to capture all dependencies right down to the CPU model and microcode version.
+Tasks with untracked dependencies can be marked volatile, a technique EXCEL takes with
+the INDIRECT function, ﬁxing the untracked dependency at the cost of minimality.
+Most of the implementations in Section 6 can deal with non-determinism, apart from
+BUCK, which uses the assumption of task determinism to reduce the number of cloud
+lookups: if all tasks are deterministic, one needs just a single cloud lookup for obtaining
+the value of the target key from the hash of its terminal inputs. This is highly desirable not
+only for shallow builds, but for non-shallow builds too, because under the assumption of
+task determinism all intermediate values are fully determined by the terminal inputs, and
+can therefore be requested in a single batch query to the server.
+One way of modelling non-determinism is to demand that f has a built-in source of
+non-determinism, for example, by enriching Tasks Monad to Tasks MonadRandom that
+has access to an additional method getRandom :: (Integer, Integer) -> m Integer,
+that is, a source of random numbers in a speciﬁed range. Here is a task description
+corresponding to a spreadsheet with the formula B1 = A1 + RANDBETWEEN(1,2):
+sprsh5 :: Tasks MonadRandom String Integer
+sprsh5 "B1" = Just $ Task $ \fetch -> do a1 <- fetch "A1"
+r
+<- getRandom (1,2)
+return (a1 + r)
+sprsh5 _
+= Nothing
+Such tasks can be modelled in our framework by adjusting the correctness deﬁnition
+(Section 3.6): instead of requiring that the produced value equals the result of recomputing
+the task, we now require that produced value belongs to the set of possible results of
+recomputing the task, for example, the set {A1 + 1, A1 + 2} in the above example.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.44] ===
+44
+A. Mokhov et al.
+Interestingly, Task MonadRandom is powerful enough to express dependency-level non-
+determinism, for example, INDIRECT("A" & RANDBETWEEN(1,2)), whereas most
+build tasks in real-life build systems only experience a value-level non-determinism.
+EXCEL handles this example simply by marking the cell volatile – an approach that can be
+readily adopted by any of our implementations.
+8.4 Cloud implementation
+Our model of cloud builds provides a basic framework to discuss and reason about them,
+but lacks a number of important engineering corners:
+• Communication: When traces or contents are stored in the cloud, communication
+can become a bottleneck, so it is important to send only the minimum amount of
+information, optimising with respect to build system invariants. For example, incre-
+mental data processing systems in the cloud, such as REFLOW (GRAIL, 2017), need
+to efﬁciently orchestrate terabytes of data.
+• Ofﬂoading: Once the cloud is storing build products and traces, it is possible for the
+cloud to also contain dedicated workers that can execute tasks remotely – ofﬂoading
+some of the computation and potentially running vastly more commands in parallel.
+• Eviction: The cloud storage, as modelled in Section 5.3, grows indeﬁnitely, but often
+resource constraints require evicting old items from the store. When evicting an old
+value v, one can also evict all traces mentioning the now-defunct hash v. However,
+for shallow builds (see below), it is beneﬁcial to keep these traces, allowing builds
+to “pass-through” hashes whose underlying values are not known, recreating them
+only when they must be materialised.
+• Shallow builds: Building the end target, for example, an installer package, often
+involves many intermediate tasks. The values produced by these intermediate tasks
+may be large, so some cloud build systems are designed to build end targets without
+materialising any intermediate values, producing a so-called shallow build – see an
+example in Section 2.4. Some build systems go even further, integrating with the ﬁle
+system to only materialise the ﬁle when the user accesses it (Microsoft, 2017).
+Shallow builds have a slightly weaker correctness property than in the Deﬁnition 3.6.
+Instead of demanding that all keys reachable from the target match, we only require
+matches for the target itself and the input keys reachable from the target.
+As described in Section 7.4, non-determinism (Section 8.3) is harmful for cloud builds,
+reducing the number of cache hits. However, for deep constructive traces (Section 5.4) it is
+much worse, even leading to incorrect results. Figure 12 shows a Frankenbuild Esfahani
+et al. (2016) example, where the target report.txt, which is downloaded from the cloud,
+is inconsistent with its immediate dependency main.prof. This inconsistency is caused by
+two factors: (i) inherent non-determinism of proﬁling – running a proﬁling tool on the
+very same main.exe will produce different main.prof results every time; and (ii) relying
+on deep constructive traces that cache build results based on the hashes of terminal task
+inputs (in this case main.exe). The result violates all three deﬁnitions of correctness: the
+main deﬁnition (Section 3.6), the variant for non-deterministic tasks (Section 8.3), and the
+variant for shallow builds (this section).
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.45] ===
+Build systems à la carte: Theory and practice
+45
+(a)
+(b)
+(c)
+Fig. 12. Frankenbuild example: (a) build a human-readable proﬁling report for main.exe from infor-
+mation dump main.prof produced by a proﬁling tool, saving deep constructive traces in the cloud,
+(b) remove built ﬁles locally and evict main.prof from the cloud storage, (c) rebuild main.prof (pro-
+ﬁling is non-deterministic, hence a new hash value), then build report.txt by downloading it from
+the matching deep constructive trace in the cloud. The result is a Frankenbuild because main.prof
+and report.txt are inconsistent. New and evicted cloud storage entries are highlighted; ﬁle hashes
+are shown in circles.
+8.5 Iterative computations
+Some computations are best described not by a chain of acyclic dependencies, but by a
+loop. For example, LATEX requires repeated rebuilding until it reaches a ﬁxed point, which
+can be directly expressed in build systems, such as PLUTO (Erdweg et al., 2015). Another
+example is EXCEL, where a cell can depend on itself, for example, A1 = A1 + 1. In
+such cases, EXCEL will normally not execute anything, but if the “Iterative Calculations”
+feature is enabled EXCEL will execute the formula for a speciﬁed maximum number N of
+times per calculation (where N is a setting that defaults to 100).
+For example like LATEX, we consider the proper encoding to not be circular tasks, but a
+series of iterative steps, as described by Mitchell (2013). It is important that the number of
+executions is bounded, otherwise the build system may not terminate (a legitimate concern
+with LATEX, which can be put into a situation where it is bistable or diverging over multi-
+ple executions). The examples in EXCEL tend to encode either mutable state or recurrence
+relations. The former is only required because EXCEL inherently lacks the ability to write
+mutable state and the latter is probably better solved using explicit recurrence formulae.
+We choose not to deal with cyclic dependencies – a choice that most build systems
+also follow. There are computation frameworks that support dependency cycles under the
+assumption that tasks are monotonic in a certain sense (Pottier, 2009; Radul, 2009).
+8.6 Key-dependent value types
+Key-dependent value types allow a build system to work with multiple different types of
+values, where the type of any particular value is determined by the key. As an example of
+why this might be useful, consider a build system where keys can be ﬁles (whose contents
+are strings) or system executables (represented by their version number) – using a single
+type for both values reduces type safety. SHAKE permits such key-dependent value types,
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.46] ===
+46
+A. Mokhov et al.
+for example, see the oracle rule in Mitchell (2012), and users have remarked that this
+additional type safety provides a much easier expression of concepts (Mokhov et al., 2016).
+We can encode key-dependent value types using generalised algebraic data types or
+GADTs (Peyton Jones et al., 2006). The idea is to replace the callback fetch :: k -> f v
+by its more polymorphic equivalent fetch :: k v -> f v, where k v is a GADT represent-
+ing keys tagged by the type v of corresponding values. The variable k has changed from
+kind * (a type), to * -> * (a type function), permitting the key to constrain the type of the
+value. The idea is best explained by way of an example:
+data Version = Version { major :: Int, minor :: Int }
+deriving (Eq, Ord)
+data Key a where
+File
+:: FilePath -> Key String
+Program :: String -> Key Version
+Here, we extend the usual mapping from ﬁle paths to ﬁle contents with an additional
+key type Program which maps the name of a program to its installed Version. The task
+abstraction needs to be adjusted to cope with such keys (the sufﬁx T stands for “typed”):
+type Fetch k f = forall v. k v -> f v
+newtype TaskT c k v = TaskT (forall f. c f => Fetch k f -> f v)
+type TasksT c k = forall v. k v -> Maybe (TaskT c k v)
+The changes compared to the deﬁnition in Section 3.2 are minimal: (i) the TaskT now uses
+a typed Fetch callback (we deﬁne a separate type synonym only for readability) and (ii) the
+type of TasksT is now polymorphic in v instead of being parameterised by a concrete v.
+The example below demonstrates how fetch can be used to retrieve dependencies of
+different types: the rule release.txt concatenates the contents of two Files, while the rule
+main.o uses the numeric Program "gcc" to determine how the source ﬁle should be
+compiled.
+example :: TasksT Monad Key
+example (File "release.txt") = Just $ TaskT $ \fetch -> do
+readme
+<- fetch (File "README")
+license <- fetch (File "LICENSE")
+return (readme ++ license)
+example (File "main.o") = Just $ TaskT $ \fetch -> do
+let source = "main.c"
+version <- fetch (Program "gcc")
+if version >= Version 8 0 then compileNew source
+else compileOld source
+example _ = Nothing
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.47] ===
+Build systems à la carte: Theory and practice
+47
+Note that like all key-dependent tasks, this example could be expressed without key
+dependence, at the cost of some type safety. As we will see in Sections 8.7 and 8.8, using
+key-dependent value types can make it easier to work with more complicated tasks.
+8.7 Multiple output build tasks
+Some build tasks produce multiple output keys, for example, ghc A.hs produces both A.hi
+and A.o. This pattern can be encoded by having a key A.hi+A.o which produces both
+results, then each of A.hi and A.o can extract the relevant result from A.hi+A.o. We can
+express this pattern more clearly with the extra type safety from Section 8.6:
+data Key a where
+File
+:: FilePath
+-> Key String
+Files :: [FilePath] -> Key [String]
+task :: TasksT Monad Key
+task (File "A.hi") = Just $ TaskT $ \fetch -> do
+[hi,o] <- fetch (Files ["A.hi","A.o"])
+return hi
+task (File "A.o") = Just $ TaskT $ \fetch -> do
+[hi,o] <- fetch (Files ["A.hi","A.o"])
+return o
+task (Files ["A.hi","A.o"]) = Just $ TaskT $ \fetch ->
+compileWithGHC "A.hs"
+One awkward aspect is that both A.hi and A.o must ask for exactly the same Files key.
+If one File key swapped the order of the list to Files, then it would likely run GHC twice.
+To help construct a well-formed multiple output build task, it is convenient to partition the
+set of keys into elementary subsets. We can encode such a partition with a function from
+any key to all the members of its subset (in a consistent order).
+type Partition k = k -> [k]
+In our example, the partition function on either of the output names "A.hi" or "A.o"
+would return ["A.hi","A.o"].
+With a suitable Partition, it is possible to create a mapping that resolves File keys
+automatically into the correct Files key.
+task :: Partition FilePath -> TasksT Monad Key
+task partition (File k) = Just $ TaskT $ \fetch -> do
+let ks = partition k
+let Just i = elemIndex k ks
+vs <- fetch (Files ks)
+return (vs !! i)
+task (Files ["A.hi","A.o"]) = Just $ TaskT $ \fetch ->
+compileWithGHC "A.hs"
+... -- more tasks for elementary subsets as required
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.48] ===
+48
+A. Mokhov et al.
+In the above function, we compute the elementary subset ks of the given key k, ﬁnd the
+index of k within the subset (using elemIndex), run the fetch to build every key in the
+subset, then extract out the value corresponding to k (using the indexing operation !!).
+8.8 Self-tracking
+Some build systems, for example EXCEL and NINJA, are capable of recomputing a task if
+either its dependencies change, or the task itself changes. For example:
+A1 = 20
+B1 = A1 + A2
+A2 = 10
+In EXCEL, the user can alter the value produced by B1 by either editing the inputs of
+A1 or A2, or editing the formula in B1, for example, to A1 * A2. This pattern can be
+captured by describing the rule producing B1 as also depending on the value B1-formula.
+The implementation can be given very directly in a Tasks Monad – concretely, ﬁrst look
+up the formula, then interpret it:
+sprsh6 "B1" = Just $ Task $ \fetch -> do
+formula <- fetch "B1-formula"
+evalFormula fetch formula
+The build systems that have precise self-tracking are all ones which use a non-embedded
+domain-speciﬁc language to describe build tasks, that is, a task is described by a data
+structure (or syntax tree), and tasks can be compared for equality by comparing those data
+structures. Build systems that use a full programming language, for example SHAKE, are
+faced with the challenge of implementing equality on arbitrary tasks – and a task is just a
+function. For such build systems, the only safe approach is to assume (pessimistically) that
+any change to the build system potentially changes any build task – the classic example
+being build tasks depending on the makeﬁle itself.
+Below we show how to implement self-tracking in a build system that allows users to
+describe build tasks by scripts written in a non-embedded domain speciﬁc language. We
+will denote the type of scripts by s and will assume that scripts are indexed by keys k just
+like all other values v. More speciﬁcally, we use the following GADT to tag keys k with
+corresponding result types: s for scripts and v for other values.
+data Key k v s a where
+Script :: k -> Key k v s s -- Keys for build scripts
+Value
+:: k -> Key k v s v -- Keys for all other values
+The function selfTracking deﬁned below is a generalisation of the approach explained
+in the above EXCEL example sprsh6. The function takes a parser for scripts, of
+type s -> Task Monad k v, and a description of how to build all scripts, of type
+Tasks Monad k s. For sprsh6, the latter would simply fetch B1-formula when given
+the key B1 and return Nothing otherwise, but the presented approach can cope with much
+more sophisticated scenarios where scripts themselves are derived from “script sources”,
+for example, all C compilation scripts can be obtained from a single pattern rule, such as
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.49] ===
+Build systems à la carte: Theory and practice
+49
+gcc -c [source] -o [object]. The resulting typed task description TasksT Monad (Key k v s)
+tracks both values and scripts that compute them and is therefore self-tracking.
+selfTracking :: (s -> Task Monad k v) -> Tasks Monad k s
+-> TasksT Monad (Key k v s)
+selfTracking parse tasks key = case key of
+Script k -> getScript <$> tasks k
+Value
+k -> runScript <$> tasks k
+where
+-- Build the script and return it
+getScript :: Task Monad k s -> TaskT Monad (Key k v s) s
+getScript task = TaskT $ \fetch -> run task (fetch . Script)
+-- Build the script, parse it, and then run the obtained task
+runScript :: Task Monad k s -> TaskT Monad (Key k v s) v
+runScript task = TaskT $ \fetch -> do
+script <- run task (fetch . Script)
+run (parse script) (fetch . Value)
+It is possible to implement selfTracking without relying on GADTs and typed tasks
+presented in Section 8.6, at the cost of using partial functions.
+8.9 File watching versus polling
+Most build systems use ﬁles for their inputs. When running a build, to check if a ﬁle is up
+to date, one option is to take the modiﬁcation time or compute the content hash of each
+input ﬁle. However, for the largest projects, the mere act of checking the modiﬁcation time
+for all the input ﬁles can become prohibitive. To overcome that problem, build systems
+targeted at large scale, for example, BAZEL and BUCK, rely on ﬁle watching API’s to
+detect when a ﬁle has changed. Using that information, the build can avoid performing
+many ﬁle accesses.
+File-watching build systems face new engineering challenges. Firstly, a running task
+may become obsolete due to a concurrent modiﬁcation of its direct or transitive dependen-
+cies. To minimise the amount of unnecessary work, a scheduler can cancel the obsolete
+task and restart it once its dependencies are up to date. Note that topological sched-
+ulers (Section 4.1) cannot be easily adapted to support such situations, since a new
+topological sort may be required when ﬁle dependencies change. A further complication is
+that spurious dependency cycles may form during a series of ﬁle modiﬁcations, and a ﬁle-
+watching build system integrated with an IDE should be able to cope with such spurious
+cycles gracefully instead of terminating with an error.
+Build systems that run continuously are also more likely to encounter errors caused by
+concurrent modiﬁcation of build outputs. For example, if an output ﬁle is checked into
+the source repository, then downloading a new version of the ﬁle can interfere with the
+build task producing it, resulting in a corrupted output that the build system will be unable
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.50] ===
+50
+A. Mokhov et al.
+to detect. This problem can be solved by ensuring that tasks have an exclusive access
+to their outputs, for example, by sandboxing the tasks whose outputs can be modiﬁed
+externally.
+9 Related work
+While there is research on individual build systems, there has been little research to date
+comparing different build systems. In Section 2, we covered several important build sys-
+tems – in this section, we relate a few other build systems to our abstractions and discuss
+other work where similar abstractions arise.
+9.1 Other build systems
+Most build systems, when viewed at the level we talk, can be captured with minor
+variations on the code presented in Section 6. Below, we list some notable examples:
+• DUNE (Jane Street, 2018) is a build system designed for OCaml/Reason projects. Its
+original implementation used arrows (Hughes, 2000) rather than monads to model
+dynamic dependencies, which simpliﬁed static dependency approximation. DUNE
+was later redesigned to use a ﬂavour of selective functors (Mokhov et al., 2019),
+making it a closer ﬁt to our abstractions.
+• NINJA (Martin, 2017) combines the topological scheduler of MAKE with the
+verifying traces of SHAKE – our associated implementation provides such a combi-
+nation. NINJA is also capable of modelling build rules that produce multiple results,
+a limited form of multiple value types Section 8.6.
+• NIX (Dolstra et al., 2004) has coarse-grained dependencies, with precise hashing
+of dependencies and downloading of precomputed build products. We provided a
+model of NIX in Section 6.5, although it is worth noting that NIX is not primarily
+intended as a build system and the coarse-grained nature (packages, not individual
+ﬁles) makes it targeted to a different purpose.
+• PLUTO (Erdweg et al., 2015) is based on a similar model to SHAKE, but additionally
+allows cyclic build rules combined with a user-speciﬁc resolution strategy. Often
+such a strategy can be unfolded into the user rules without loss of precision, but a
+fully general resolution handler extends the Task abstraction with new features.
+• REDO (Bernstein, 2003; Grosskurth, 2007; Pennarun, 2012) almost exactly matches
+SHAKE at the level of detail given here, differing only in aspects like rules
+producing multiple ﬁles Section 8.6. While REDO predates SHAKE, they were
+developed independently; we use SHAKE as a prototypical example of a monadic
+build system because its implementation presents a closer mapping to our Task
+abstraction.
+• TUP (Shal, 2009) functions much like MAKE, but with a reﬁned dirty-bit implemen-
+tation that watches the ﬁle system for changes and can thus avoid rechecking the
+entire graph. TUP also automatically deletes stale results.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.51] ===
+Build systems à la carte: Theory and practice
+51
+The one build system we are aware of that cannot be modelled in our framework is
+FABRICATE by Hoyt et al. (2009). In FABRICATE, a build system is a script that is run in
+order, in the spirit of:
+gcc -c util.c
+gcc -c main.c
+gcc util.o main.o -o main.exe
+To achieve minimality, each separate command is traced at the OS level, allowing
+FABRICATE to record a trace entry stating that gcc -c util.c reads from util.c. In future runs,
+FABRICATE runs the script from start to ﬁnish, skipping any commands where no inputs
+have changed. The main difference from our Tasks abstraction is that instead of supplying
+a mapping from keys to tasks, a FABRICATE script supplies a list of build statements, in a
+user-scheduled order, without declaring what each statement reads or writes.
+Taking our abstraction, it is possible to encode FABRICATE assuming that commands
+like gcc -c util.c are keys, there is a linear dependency between each successive key, and
+that the OS-level tracing can be lifted back as a monadic Task function.14 However, in
+our pure model, the mapping is not perfect as gcc writes to arbitrary ﬁles whose locations
+are not known in advance. One way of capturing arbitrary writes in our model is to switch
+from one callback fetch to two callbacks, say read and write, allowing us to track both
+reads and writes separately.
+9.2 Self-adjusting computation
+While not typically considered build systems, self-adjusting computation is a well-studied
+area, and in particular, the contrast between different formulations has been thoroughly
+investigated, for example, see Acar et al. (2007). Self-adjusting computations can auto-
+matically adjust to an external change to their inputs. A classic example is a self-adjusting
+sorting algorithm, which can efﬁciently (in O(log n) time where n is the length of the
+input) recalculate the result given an incremental change of the input. While very close to
+build systems in spirit, self-adjusting computations are mostly used for in-memory com-
+putation and rely on the ability to dynamically allocate new keys in the store for sharing
+intermediate computations – an intriguing feature rarely seen in build systems (SHAKE’s
+oracles Section 8.6 can be used to model this feature to a limited degree). Another impor-
+tant optimisation that self-adjusting computation engines often support is the incremental
+processing of deltas, where instead of marking a value as “changed to 8”, one can mark it
+as “changed by +1”, assuming it was equal to 7 before. When a delta is small, it can often
+be propagated to the output more efﬁciently than by recomputing the output value from
+scratch.
+A lot of research has been dedicated to ﬁnding efﬁcient data structures and algorithms
+for self-adjusting computations, with a few open-source implementations, for example,
+INCREMENTAL by Jane Street (2015). We plan to investigate how these insights can be
+utilised by build systems as future work.
+14 SHAKE provides support for FABRICATE-like build systems – see Development.Shake.Forward.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.52] ===
+52
+A. Mokhov et al.
+9.3 Memoisation
+Memoisation is a classic optimisation technique for storing values of a function instead of
+recomputing them each time the function is called. Minimal build systems (Section 2.1)
+certainly perform memoisation: they store values instead of recomputing them each time.
+Memoisation can, therefore, be reduced to a minimal build system (as we demonstrate
+below), but not vice versa, since minimal build systems solve a more complex optimisation
+problem.
+As a simple example of using a build system for memoisation, we solve a text-
+book dynamic programming problem – Levenshtein’s edit distance (Levenshtein, 1966):
+given two input strings a and b, ﬁnd the shortest series of edit operations that trans-
+forms a to b. The edit operations are typically inserting, deleting, or replacing a symbol.
+The dynamic programming solution of this problem is so widely known, for example,
+see Cormen et al. (2001), that we provide its encoding in our Tasks abstraction with-
+out further explanation. We address elements of strings ai and bi by keys A i and B i,
+respectively, while the cost of a subproblem cij is identiﬁed by C i j.
+data Key = A Int | B Int | C Int Int deriving Eq
+editDistance :: Tasks Monad Key Int
+editDistance (C i 0) = Just $ Task $ const $ pure i
+editDistance (C 0 j) = Just $ Task $ const $ pure j
+editDistance (C i j) = Just $ Task $ \fetch -> do
+ai <- fetch (A i)
+bj <- fetch (B j)
+if ai == bj
+then fetch (C (i - 1) (j - 1))
+else do
+insert
+<- fetch (C
+i
+(j - 1))
+delete
+<- fetch (C (i - 1)
+j
+)
+replace <- fetch (C (i - 1) (j - 1))
+return (1 + minimum [insert, delete, replace])
+editDistance _ = Nothing
+When asked to build C n m, a minimal build system will calculate the result using memoisa-
+tion. Furthermore, when an input ai is changed, only necessary, incremental recomputation
+will be performed – an optimisation that cannot be achieved just with memoisation.
+Self-adjusting computation, memoisation, and build systems are inherently related top-
+ics, which poses the question of whether there is an underlying common abstraction
+waiting to be discovered.
+10 Conclusions
+We have investigated multiple build systems, showing how their properties are conse-
+quences of two implementation choices: what order you build in and how you decide
+whether to rebuild. By ﬁrst decomposing the pieces, we show how to recompose the pieces
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.53] ===
+Build systems à la carte: Theory and practice
+53
+to ﬁnd new points in the design space. In particular, a simple recombination leads to a
+design for a monadic suspending cloud build system, which we have implemented and use
+in our day-to-day development.
+Acknowledgments
+Thanks to anonymous reviewers and everyone else who provided us with feedback
+on earlier drafts: Ulf Adams, Arseniy Alekseyev, Dan Bentley, Martin Brüstel, Ulan
+Degenbaev, Jeremie Dimino, Andrew Fitzgibbon, Georgy Lukyanov, Simon Marlow,
+Evan Martin, Yaron Minsky, Guillaume Maudoux, Philip Patsch, Michael Peyton Jones,
+Andrew Phillips, François Pottier, Rohit Ramesh, Irakli Safareli, and Zhen Zhang. Your
+contributions were incredibly valuable.
+Andrey Mokhov’s research was funded by a Royal Society Industry Fellowship
+IF160117 on the topic “Towards Cloud Build Systems with Dynamic Dependency
+Graphs”.
+Conﬂicts of Interest
+None
+References
+Acar, U. A., Blelloch, G. E. & Harper, R. (2002) Adaptive functional programming. In Proceedings
+of the 29th ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages
+(POPL). ACM, pp. 247–259.
+Acar, U. A., Blume, M. & Donham, J. (2007) A consistent semantics of self-adjusting computation.
+In European Symposium on Programming. Springer, pp. 458–474.
+Bernstein, D. J. (2003) Rebuilding target ﬁles when source ﬁles have changed. Available at: http://
+cr.yp.to/redo.html
+Capriotti, P. & Kaposi, A. (2014) Free Applicative Functors. vol. 153. Open Publishing Association.
+Claessen, K. (1999) A poor man’s concurrency monad. J. Funct. Program., 9(3), 313–323.
+Cormen, T. H., Leiserson, C. E., Rivest, R. L. & Stein, C. (2001) Introduction to Algorithms. MIT
+Press.
+De Levie, R. (2004) Advanced Excel for Scientiﬁc Data Analysis. Oxford University Press.
+Demers, A., Reps, T. & Teitelbaum, T. (1981) Incremental evaluation for attribute grammars
+with application to syntax-directed editors. In Proceedings of the 8th ACM SIGPLAN-SIGACT
+Symposium on Principles of Programming Languages (POPL). ACM, pp. 105–116.
+Dolstra, E., De Jonge, M., Visser, E., et al. (2004) Nix: A safe and policy-free system for software
+deployment. In LISA, vol. 4, pp. 79–92.
+Eichmann, D. (2019) Exploring cloud builds in Hadrian. Available at: https://web.archive.
+org/web/20191008171120/https://well-typed.com/blog/2019/08/exploring-cloud-
+builds-in-hadrian/
+Erdweg, S., Lichter, M. & Weiel, M. (2015) A sound and optimal incremental build system with
+dynamic dependencies. ACM Sigplan Notices 50(10), 89–106.
+Esfahani, H., Fietz, J., Ke, Q., Kolomiets, A., Lan, E., Mavrinac, E., Schulte, W., Sanches, N. &
+Kandula, S. (2016) Cloudbuild: Microsoft’s distributed and caching build service. In Proceedings
+of the 38th International Conference on Software Engineering Companion. ACM, pp. 11–20.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.54] ===
+54
+A. Mokhov et al.
+Estevez, P. & Shetty, D. (2019) Translation of Build Systems à la Carte to Kotlin. Available at:
+https://web.archive.org/web/20191021224324/https://github.com/arrow-kt/
+arrow/blob/paco-tsalc/modules/docs/arrow-examples/src/test/kotlin/arrow/
+BuildSystemsALaCarte.kt.
+Facebook. (2013) Buck: A high-performance build tool. Available at: https://buckbuild.com/
+Feldman, S. I. (1979) Make—a program for maintaining computer programs. Software Pract. Exp.
+9(4), 255–265.
+Gandhi, V. (2018) Translation of build systems à la Carte to Rust. Available at: https://web.
+archive.org/web/20191020001014/https://github.com/cutculus/bsalc-alt-code/
+blob/master/BSalC.rs
+Google. (2016) Bazel. Available at: http://bazel.io/
+GRAIL. (2017) Reﬂow: A system for incremental data processing in the cloud. Available at:
+https://github.com/grailbio/reflow
+Grosskurth, A. (2007) Purely top-down software rebuilding. M.Phil. thesis, University of Waterloo.
+Hoyt, B., Hoyt, B. & Hoyt, B. (2009) Fabricate: The better build tool. Available at: https://
+github.com/SimonAlfie/fabricate
+Hughes, J. (2000) Generalising monads to arrows. Sci. Comput. Program. 37(1–3), 67–111.
+Hykes, S. (2013) Docker container: A standardized unit of software. Available at: https://www.
+docker.com/what-container
+Jane Street. (2015) Incremental: A library for incremental computations. Available at: https://
+github.com/janestreet/incremental
+Jane Street. (2018) Dune: A composable build system. Available at: https://github.com/ocaml/
+dune
+Jaskelioff, M. & O’Connor, R. (2015) A representation theorem for second-order functionals.
+J. Funct. Program. 25, E13.
+Kosara, R. (2008) Decimal expansion of A(4,2). Available at: https://web.archive.org/web/
+20080317104411/http://www.kosara.net/thoughts/ackermann42.html
+Levenshtein, V. I. (1966) Binary codes capable of correcting deletions, insertions, and reversals. In
+Soviet Physics Doklady, vol. 10, No 8, pp. 707–710.
+Liang, S. Hudak, P. & Jones, M. (1995) Monad transformers and modular interpreters. In
+Proceedings of the 22nd ACM SIGPLAN-SIGACT Symposium on Principles of Programming
+Languages. ACM, pp. 333–343.
+Marlow, S., Brandy, L., Coens, J. & Purdy, J. (2014) There is no fork: An abstraction for efﬁcient,
+concurrent, and concise data access. ACM SIGPLAN Notices 49, 325–337.
+Martin, E. (2017) Ninja build system homepage. Available at: https://ninja-build.org/
+McBride, C. & Paterson, R. (2008) Applicative programming with effects. J. Funct. Program. 18(1),
+1–13.
+Microsoft. (2011) Excel recalculation (msdn documentation). Available at: https://msdn.
+microsoft.com/en-us/library/office/bb687891.aspx.
+Also
+available
+in
+Internet
+Archive
+https://web.archive.org/web/20180308150857/https://msdn.microsoft.
+com/en-us/library/office/bb687891.aspx
+Microsoft. (2017) Git Virtual File System . https://www.gvfs.io/
+Mitchell, N. (2012) Shake before building: Replacing Make with Haskell. ACM SIGPLAN Notices
+47, 55–66.
+Mitchell, N. (2013) How to write ﬁxed point build rules in Shake. Available at: https://
+stackoverflow.com/questions/14622169/how-to-write-fixed-point-build-rules-
+in-shake-e-g-latex
+Mitchell, N. (2019) GHC rebuild times – shake proﬁling. Available at: https://neilmitchell.
+blogspot.com/2019/03/ghc-rebuild-times-shake-profiling.html
+Mokhov, A., Mitchell, N., Peyton Jones, S. & Marlow, S. (2016) Non-recursive make considered
+harmful: Build systems at scale. In Proceedings of the 9th International Symposium on Haskell,
+Haskell 2016. ACM, pp. 170–181.
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press
+=== [p.55] ===
+Build systems à la carte: Theory and practice
+55
+Mokhov, A., Mitchell, N. & Peyton Jones, S. (2018) Build systems à la carte. Proc. ACM Program.
+Lang. 2(ICFP), 79:1–79:29.
+Mokhov, A., Lukyanov, G., Marlow, S. & Dimino, J. (2019) Selective applicative functors. Proc.
+ACM Program. Lang. 3(ICFP). https://dl.acm.org/doi/10.1145/3341694
+Pennarun, A. (2012) Redo: A top-down software build system. Available at: https://github.
+com/apenwarr/redo
+Peyton Jones, S., Vytiniotis, D., Weirich, S. & Washburn, G. (2006) Simple uniﬁcation-based type
+inference for GADTs. ACM SIGPLAN Notices 41, 50–61.
+Pottier, F. (2009) Lazy least ﬁxed points in ML. http://gallium.inria.fr/~fpottier/
+publis/fpottier-fix.pdf
+Radul, A. (2009) Propagation Networks: A Flexible and Expressive Substrate for Computation.
+Ph.D. thesis, MIT.
+Shal, M. (2009) Build system rules and algorithms. Available at: http://gittup.org/tup/
+build_system_rules_and_algorithms.pdf/
+The GHC Team. (2019) The Glasgow Haskell Compiler homepage. Available at: https://www.
+haskell.org/ghc/
+https://doi.org/10.1017/S0956796820000088 Published online by Cambridge University Press

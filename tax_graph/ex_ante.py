@@ -24,7 +24,7 @@ class Row:
 
     @property
     def unmodelled(self):
-        """Steps the structure needs whose tax no rule computes (口径 D19): its bounds leave them out, so it is no plan."""
+        """Steps the structure needs whose tax no rule computes (decision D19): its bounds leave them out, so it is no plan."""
         return getattr(self.graph, "unmodelled", ()) if self.graph is not None else ()
 
     @property
@@ -73,7 +73,7 @@ def _rows(template: Template, event, case: Case, cands, ctx_of, P, subject, tick
         if g0 is not None and not same_settled(g, g0, case.settled):
             continue                                     # would undo a flow already taxed somewhere: not a plan
         b = bounds(g, ctx_of, P, settled=case.settled, as_at=event.as_at, closed=case.closed, ticks=ticks)
-        steps = outside_steps(b, g)[0]                   # 口径 D30: a group-borne levy outside the library — a step
+        steps = outside_steps(b, g)[0]                   # decision D30: a group-borne levy outside the library — a step
         if steps:                                        # whose tax is unknown, as in the planner
             g.unmodelled = tuple(g.unmodelled) + tuple(x for x in steps if x not in g.unmodelled)
         rows.append(Row(a, b, len(g.entities), g, views(b, subject, g)))

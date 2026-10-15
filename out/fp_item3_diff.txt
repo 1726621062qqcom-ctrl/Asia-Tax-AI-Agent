@@ -1,0 +1,49 @@
+cases by template: {'financing': 64, 'holding': 172, 'ip': 81, 'repatriation': 69, 'services': 64}
+candidate rows by bound move:
+  lo= hi=    4689
+      financing_OPCN-ULHK_full_open_y1 {"LENDER": "SG", "payment": "False"} lo 5233550.0->5233550.0 hi 5233550.0->5233550.0
+      financing_OPCN-ULHK_full_open_y1 {"LENDER": "HK", "payment": "False"} lo 5233550.0->5233550.0 hi 5233550.0->5233550.0
+  lo= hi-    499
+      holding_OPCN-ULHK_full_open_y1__pw01 {"HOLD": "CN", "exit_route": "INDIRECT", "financing": "EQUITY", "payment": "False"} lo 5233802.5->5233802.5 hi 5234081.06->5233831.06
+      holding_OPCN-ULHK_full_open_y1__pw01 {"HOLD": "CN", "exit_route": "DIRECT", "financing": "EQUITY", "payment": "False"} lo 5234002.5->5234002.5 hi 5234256.86->5234006.86
+need keys added / removed (rule key):
+  2000 + sg.ftc.pooling payee.ftc_pooling_election:is_true
+  1368 - sg.ftc.pooling payee.ftc_pooling_election
+   936 + hk.fsie.substance.dividend payee.pure_equity_holding:is_true
+   936 + hk.fsie.substance.dividend payee.pure_equity_holding:is_false
+   936 - hk.fsie.substance.dividend payee.pure_equity_holding
+   850 + cn-sg.div.cap_qualified@cn payee.residence_cert:is_true
+   850 - cn-sg.div.cap_qualified@cn payee.residence_cert
+   850 + cn-hk.div.cap_qualified@cn payee.residence_cert:is_true
+   850 - cn-hk.div.cap_qualified@cn payee.residence_cert
+   790 + hk.fsie.substance.share_transfer payee.pure_equity_holding:is_false
+   790 + hk.fsie.substance.share_transfer payee.pure_equity_holding:is_true
+   790 - hk.fsie.substance.share_transfer payee.pure_equity_holding
+   686 + hk.fsie.substance.interest payee.pure_equity_holding:is_true
+   686 + hk.fsie.substance.interest payee.pure_equity_holding:is_false
+   686 - hk.fsie.substance.interest payee.pure_equity_holding
+   619 - cn.domestic.dividend_listed flow.holding_months:lt
+   538 + cn-hk.int.cap@cn payee.residence_cert:is_true
+   538 - cn-hk.int.cap@cn payee.residence_cert
+   467 - cn.domestic.dividend_listed flow.listed_market_trade
+   358 + sg.wht.fixed_place payee.fixed_place_in_sg:is_true
+   358 - sg.wht.fixed_place payee.fixed_place_in_sg
+   302 + cn-hk.gain.listed@cn payee.residence_cert:is_true
+   302 - cn-hk.gain.listed@cn payee.residence_cert
+   296 + sg.gain.charge payee.fixed_place_in_sg:is_true
+   296 - sg.gain.charge payee.fixed_place_in_sg
+   248 + hk.onshore_gain.certainty payee.sch17k_elected:is_true
+   248 + hk.onshore_gain.certainty flow.held_as_trading_stock:is_false
+   248 - hk.onshore_gain.certainty flow.held_as_trading_stock
+   248 - hk.onshore_gain.certainty payee.sch17k_elected
+    98 + cn-sg.int.cap_bank@cn payee.residence_cert:is_true
+    98 - cn-sg.int.cap_bank@cn payee.residence_cert
+    96 + cn-hk.roy.cap@cn payee.residence_cert:is_true
+    96 - cn-hk.roy.cap@cn payee.residence_cert
+    80 + cn-hk.pe.no_pe@cn payee.fixed_place_in_cn:is_false
+    80 + cn-hk.pe.no_pe@cn payee.residence_cert:is_true
+    80 - cn-hk.pe.no_pe@cn payee.residence_cert
+    80 - cn-hk.pe.no_pe@cn payee.fixed_place_in_cn
+    80 + cn-sg.pe.no_pe@cn payee.fixed_place_in_cn:is_false
+    80 + cn-sg.pe.no_pe@cn payee.residence_cert:is_true
+    80 - cn-sg.pe.no_pe@cn payee.fixed_place_in_cn

@@ -1,0 +1,1081 @@
+=== [p.1] ===
+Artiﬁcial Intelligence and Law manuscript No.
+(will be inserted by the editor)
+A Formal Analysis of some Factor- and Precedent-based
+Accounts of Precedential Constraint
+Henry Prakken
+Received: date / Accepted: date
+Abstract In this paper several recent factor-and dimension-based models of precedential
+constraint are formally investigated and an alternative dimension-based model is proposed.
+Simple factor- and dimension-based syntactic criteria are identiﬁed for checking whether a
+decision in a new case is forced, in terms of the relevant differences between a precedent
+and a new case, and the difference between absence of factors and negated factors in factor-
+based models is investigated. Then Horty’s and Rigoni’s recent dimension-based models
+of precedential constraint are critically examined. An alternative to their reason models is
+proposed which is less expressive but arguably easier to apply in practice.
+Keywords case-based reasoning · precedential constraint · factors · dimensions
+1 Introduction
+Reasoning with cases has long been an important topic in the computational study of legal
+argument. When interpreting general legal terms in a new case, the legal rules often ‘run
+out’ (Gardner, 1987) and judges and lawyers resort to precedents in which these terms were
+applied to concrete cases. Since the new case often does not fully match the past cases,
+reasoning with precedents is distinct from reasoning with legal rules and involves drawing
+analogies to past cases and discussing their relevant similarities and differences. Starting
+with the seminal work on the HYPO system for US trade secrets law (Rissland and Ashley,
+1987), much AI & Law research on case-based reasoning represents cases as sets of case
+features. A case feature is a legally relevant fact pattern which tends to favour one side
+or the other. Feature sets have to be weighed or balanced in each case, unlike legal rules,
+of which the conditions are ordinarily sufﬁcient for accepting their conclusion. Features
+can be boolean (e.g. ‘the secret was obtained by deceiving the plaintiff’, ‘a non-disclosure
+agreement was signed’ or ‘the product was reverse-engineerable’), in which case they are
+called factors. Features can also be multi-valued (e.g. the number of people to whom the
+plaintiff had disclosed the secret or the severity of security measures taken by the plaintiff),
+in which case they are called dimensions.
+Department of Information and Computing Sciences, Utrecht University, and Faculty of Law, University of
+Groningen, The Netherlands
+E-mail: h.prakken@uu.nl
+
+=== [p.2] ===
+2
+Henry Prakken
+The ﬁrst AI & law studies of factor- and dimension-based reasoning were not formal
+but design- and application-oriented. Moreover, the designed systems (HYPO, Rissland and
+Ashley (1987); Ashley (1990) and CATO, Aleven and Ashley (1991); Aleven (1997)) were
+primarily rhetorical in nature in that they did not compute an ‘outcome’ or ‘winner’ of a
+dispute but instead generated debates as they can take place between ‘good’ lawyers. Later
+work was more logic- and outcome-oriented (Loui et al, 1993; Hage, 1993; Prakken and
+Sartor, 1998). The present paper1 is in the latter tradition. It particularly contributes to a
+line of research initiated by Horty (2011), which aims to formalise the common-law con-
+cept of precedential constraint, that is, to characterise the conditions under which a decision
+in a new case is forced or at least allowed by a body of precedents. This is a problem not
+addressed in the initial work on the HYPO and CATO systems. Initially Horty only studied
+factor-based reasoning but recently he has adapted his approach to dimensions (Horty, 2017,
+2019, 2020). The relevance of this line of research is not conﬁned to common-law jurisdic-
+tions since the question what a body of precedents says about a particular legal problem
+can also arise in civil-law jurisdictions (although possibly in different ways; see e.g. Ashley
+(2004)).
+In this paper I present four main contributions to the line of research initiated by Horty.
+First, I will identify simple syntactic criteria for checking whether a decision in a new case
+is forced, in terms of the relevant differences between a precedent and a new case. I will
+study such criteria for both factor- and dimension-based models of precedential constraint.
+Second, I will investigate to which extent the difference between absence of factors and
+negated factors is relevant in Horty’s factor-based models of precedential constraint. Third,
+I will present a full formalisation of Rigoni’s (2018) dimension-based account of preceden-
+tial constraint with ‘complete’ dimensions. I will then go on to present my ﬁnal main con-
+tribution, in the form of an alternative to Rigoni’s and Horty’s dimension-based accounts
+of precedential constraint. The alternative is motivated by the observation (also made by
+Bench-Capon (1999)) that in practice it is often hard to specify for some or even all value
+assignments to a dimension in a case whether it is for or against the case’s outcome. Accord-
+ingly, I will propose a model in which all that needs to be speciﬁed is which change in value
+favours one outcome more and the other outcome less. Finally, I discuss how the various
+models of precedential constraint discussed in this paper could be applied in the HYPO and
+CATO systems.
+This paper is organised as follows. After presenting the formal preliminaries in Sec-
+tion 2, I will in Section 3 deﬁne the factor-based syntactic criterion for determining forced
+outcomes. In Section 4 I discus the relation between absence of positive factors and pres-
+ence of negative factors. In Section 5 I ﬁrst adapt the syntactic criterion for determining
+forced outcomes to Horty’s (2019) dimension-based result model. I then critically analyse
+Horty’s and Rigoni’s dimension-based reason models of precedential constraint and present
+my alternative. In Section 6 I address combined reasoning with factors and dimensions and
+in Section 7 I discuss the HYPO and CATO systems in light of this paper’s analyses and
+results, after which I conclude in Section 8.
+2 Formal preliminaries
+In this section I review the previous work on which this paper builds.
+1 This paper is an extended and revised version of Prakken (2019).
+
+=== [p.3] ===
+Factor- and Precedent-based Accounts of Precedential Constraint
+3
+2.1 Citing and distinguishing cases in HYPO and CATO
+All formal work discussed in this paper is inspired by the ways cases can be cited and dis-
+tinguished in the HYPO and CATO systems. Therefore I now brieﬂy summarise these ways.
+HYPO and CATO generate disputes between a plaintiff and a defendant of a legal claim
+concerning misuse of a trade secret. Each move conforms to certain rules for analogising
+and distinguishing precedents given that cases contain sets of factors for and against a deci-
+sion (in CATO) or dimension-value pairs (HYPO), plus the decision. A precedent is citable
+for side s if it has the decision wished by s and (in CATO) shares at least one pro-s factor
+with the current case or (in HYPO) the current case is on at least one dimension at least as
+strong for s as the precedent.. A citation can be countered by a counterexample, that is, by
+producing a citable precedent that has the opposite outcome. A citation may also be coun-
+tered by distinguishing the cited precedent from the current case. In CATO this happens by
+indicating a factor in the current case that is absent in the cited precedent and that supports
+the opposite outcome, or a factor in the precedent that is missing in the current case and that
+supports the outcome of the cited case. In HYPO can happen by pointing at a dimension that
+more strongly favours the decision in the precedent than in the current case. Another way in
+HYPO to distinguish a citation is in terms of dimensions ’generally favouring a particular
+side’, that is, of which all values favour the same side but to different degrees. The absence
+or presence of values for such dimensions allow distinguishing moves similar to those for
+missing or new factors, as will be discussed further in Section 7.
+2.2 Notation
+I ﬁrst recall some notions concerning factors and cases often used in AI & law (e.g. by
+Horty (2011); Horty and Bench-Capon (2012); Rigoni (2018); Horty (2019)), although with
+some differences in notation. Let o and o′ be two outcomes and Pro and Con be two disjoint
+sets of propositions called, respectively, the pro- and con factors, i.e., the factors favouring,
+respectively, outcome o and o′. The variable s (for ‘side’) ranges over {o,o′} and s denotes
+o′ if s = o while it denotes o if s = o′. We say that a set F ⊆Pro∪Con favours side s (or F
+is pro s) if s = o and F ⊆Pro or s = o′ and F ⊆Con. For any set F of factors the set Fs ⊆F
+consists of all factors in F that favour side s. A fact situation is any subset of Pro∪Con.
+The notion of a (factor-based) case can be deﬁned in two ways. If all factors of a case
+c are supposed to be relevant to its outcome (as in Horty’s (2011) result model of prece-
+dential constraint), then it can be represented as a triple (pro(c),con(c),outcome(c)) where
+outcome(c) ∈{o,o′}. Moreover, if outcome(c) = o then pro(c) ⊆Pro and con(c) ⊆Con
+and if outcome(c) = o′ then pro(c) ⊆Con and con(c) ⊆Pro. If, by contrast, a subset
+of the set of factors favouring a case’s outcome can be sufﬁcient for its outcome (as in
+Horty’s (2011) reason model of precedential constraint), then a case can be represented as a
+triple (ppro(c)∪con(c),pro(c),outcome(c)), where pro(c) ⊆ppro(c) and where the above
+constraints on pro(c) also hold for ppro(c) (the factors ‘potentially pro’ c’s outcome) and
+the other conventions and constraints are as above. Horty calls pro(c) the rule of the case.
+It consists of those pro-decision factors that according to the decision maker are jointly suf-
+ﬁcient to outweigh all the con-decision factors in the case. Rigoni (2015) modiﬁes Horty’s
+reason model to allow for multiple rules in a case, but I will for simplicity not discuss this
+modiﬁcation here.
+
+=== [p.4] ===
+4
+Henry Prakken
+Given all this, a (factor-based) case base CB is a set of factor-based cases. Below I
+assume it clear from the context whether cases are represented for the result model or for
+the reason model.
+2.3 Horty’s factor-based result model of precedential constraint
+I next summarise Horty’s (2011) factor-based result model of precedential constraint.
+Deﬁnition 1 [Preference relation on fact situations.] Let X and Y be two fact situations.
+Then X ≤s Y iff Xs ⊆Y s and Y s ⊆Xs.
+X <s Y is deﬁned as usual as X ≤s Y and Y ̸≤s X. This deﬁnition says that Y is at least as
+good for s as X iff Y contains at least all pro-s factors that X contains and Y contains no
+pro-s factors that are not in X.
+Deﬁnition 2 [Precedential constraint with factors: result model] LetCS be a case base and F
+a fact situation. Then, given CB, deciding F for s is forced iff there exists a case c = (X,Y,s)
+in CB such that X ∪Y ≤s F.
+Horty thus models a fortiori reasoning in that an outcome in a focus case is forced if a
+precedent with the same outcome exists such that all their differences make the focus case
+at least as strong for their outcome as the precedent.
+As the ﬁrst running example I use a small part of the US trade secrets domain of the
+HYPO and CATO systems. I assume the following six factors from CATO along with
+whether they favour the outcome ‘misuse of trade secrets’ (π for ‘the plaintiff wins’) or ‘no
+misuse of trade secrets’ (δ for ‘the defendant wins’): the defendant had obtained the secret
+by deceiving the plaintiff (π1) or by bribing an employee of the plaintiff (π2), the plaintiff
+had taken security measures to keep the secret (π3), the information is obtainable elsewhere
+(δ1), the product is reverse-engineerable (δ2) and the plaintiff had voluntarily disclosed the
+secret to outsiders (δ3). We assume the following precedents:
+c1(π): deceivedπ1, measuresπ3, obtainable-elsewhereδ1, disclosedδ3
+c2(δ): bribedπ2, obtainable-elsewhereδ1, disclosedδ3
+Clearly, given this case base, deciding a fact situation F for π is forced iff it has at least the
+π-factors {π1,π3} and at most the δ-factors {δ1,δ3} (by precedent c1), since then we have
+{π1,π3} ⊆Fπ and Fδ ⊆{δ1,δ3}. Likewise, deciding a fact situation for δ is forced iff it
+has at least the δ-factors {δ1,δ3} and at most the π-factor {π2} (by precedent c2).
+Consider next the following fact situation:
+F1: bribedπ2, measuresπ3, reverse-engδ2,disclosedδ3
+Comparing F1 with precedent c1 we must check whether {π1,π3,δ1,δ3} ≤π {π2,π3,δ2,δ3}.
+This is not the case, for two reasons. We have {π1,π3} ̸⊆Fπ
+1 = {π2,π3} and we have Fδ
+1 =
+{δ2,δ3} ̸⊆{δ1,δ3}. Next, comparing with precedent c2 we must check whether {π2,δ1,δ3} ≤δ
+{π2,π3,δ2,δ3}. This is also not the case for two reasons. We have {δ1,δ3} ̸⊆Fδ
+1 = {δ2,δ3}
+and we have Fπ
+1 = {π2,π3} ̸⊆{π2}. So neither deciding F1 for π nor deciding F1 for δ is
+forced.
+
+=== [p.5] ===
+Factor- and Precedent-based Accounts of Precedential Constraint
+5
+2.4 Horty’s factor-based reason model of precedential constraint
+I ﬁnally summarise Horty’s (2011) factor-based reason model of precedential constraint. The
+following deﬁnition says that a case decision expresses a preference for any pro-decision set
+containing at least the pro-decision factors of the case over any con-decision set containing at
+most the con-decision factors of the case. This allows a fortiori reasoning from a precedent
+adding pro-decision factors and/or deleting con-decision factors.
+Deﬁnition 3 [Preferences from cases with factors.] Let (ppro(c) ∪con(c),pro(c),s) be a
+case, CB a case base and X and Y sets favouring s and s, respectively. Then
+1. Y <c X iff Y ⊆con(c) and X ⊇pro(c);
+2. Y <CB X iff Y <c X for some c ∈CB.
+Deﬁnition 4 [(In)consistent case bases.] Let C be a case base with <CB the derived prefer-
+ence relation. Then CB is inconsistent if and only if there are factor sets X and Y such that
+X <CB Y and Y <CB X. And CB is consistent if and only if it is not inconsistent.
+The ﬁnal deﬁnition says that deciding a case for a particular outcome is forced if that is the
+only way to keep the updated case base consistent.2
+Deﬁnition 5 [Precedential constraint with factors: reason model.] Let CB be a case base
+and F a fact situation. Then, given CB, deciding F for s is forced iff for all cases c =
+(F,R′,outcome(c)) such that CB∪{c} is consistent it holds that outcome(c) = s.
+Horty adds to this the constraint that the court should select a rule R such thatCB∪{(F,R,s)}
+is consistent whenever CB is consistent. Note that if the CB is inconsistent, then Deﬁnition 5
+implies that both deciding for s and deciding for s is forced. Horty proves that for consistent
+cases bases his result and reason model are equivalent on the assumption that pro(c) =
+ppro(c) for all cases c.
+Suppose that in our running example the cases are modiﬁed to the effect that R(c1) =
+{deceivedπ1} and R(c2) = {obtainable-elsewhereδ1,disclosedδ3}. Then for c2 the analysis
+is as in the result model but for c1 it is different. Now deciding a fact situation F for π
+is forced iff it has at least the π-factor deceivedπ1 and at most the δ-factors {obtainable-
+elsewhereδ1,disclosedδ3}, since {obtainable-elsewhereδ1,disclosedδ3} <c1 {deceivedπ1},
+so for any F such that {deceivedπ1} ⊆Fs and Fs ⊆{obtainable-elsewhereδ1,disclosedδ3}
+we have that Fs <c Fs, so deciding F for s yields Fs <c Fs and so makes the case base
+inconsistent.
+3 Relevant differences in precedential constraint with factors
+In this section I formally deﬁne a notion of the relevant differences between a precedent and
+a focus case (i.e., a case to be decided). I then prove that it yields a simple syntactic criterion
+for checking whether some outcome in the focus case is forced. The relevant differences
+between a precedent and the focus case are those differences that are a reason not to de-
+cide the focus case as the precedent. These are the situations in which a precedent can be
+distinguished in a HYPO/CATO-style approach (Ashley, 1989; Aleven and Ashley, 1991),
+namely, when the new case lacks some factors pro its outcome that are in the precedent or
+2 This deﬁnition corrects the one in Prakken (2019), which differs from Horty’s for inconsistent case bases.
+
+=== [p.6] ===
+6
+Henry Prakken
+has new factors con its outcome that are not in the precedent. Ashley (1990, Section 9.1)
+also presents a deﬁnition of relevant differences between cases, although not for the purpose
+of characterising precedential constraint. I will discuss his deﬁnition in Section 7.
+In deﬁning the relevant differences between two cases, it is relevant whether the two
+cases have the same outcome or different outcomes. If they have the same outcome, then a
+factor in the precedent that lacks in the focus case is only relevant if it is pro that outcome;
+otherwise its absence in the focus case only makes the focus case stronger than the precedent.
+Likewise, an additional factor in the focus case is only relevant if it is con the outcome. If
+the focus case and the precedent have opposite outcomes, then this becomes different. If
+the precedent has an additional factor that is pro the outcome in the precedent (so con the
+outcome in the focus case), then its missing in the focus case makes the focus case stronger
+than the other case, so it is a relevant difference. However, if the additional factor in the
+precedent is con the outcome in that case, then its missing in the focus case as (as a factor
+pro its outcome) makes the focus case weaker compared to the precedent. So this is not
+a relevant difference. On the other hand, if the focus case has an additional factor pro its
+outcome, then its addition to the precedent (as a factor con its outcome) might have changed
+its outcome, so this is a relevant difference between the cases. Finally, if the additional
+factor in the focus case is con its outcome, then adding it to the precedent (as a factor pro its
+outcome) strengthens the precedent, so this is not a relevant difference between the cases.
+Deﬁnition 6 [Differences between cases with factors.] Let c and f be two cases. The set
+D(c, f) of differences between c and f is deﬁned as follows.
+1. If outcome(c) = outcome(f) then D(c, f) = pro(c)\pro(f)∪con(f)\con(c).
+2. If outcome(c) ̸= outcome(f) then D(c, f) = pro(f)\con(c)∪pro(c)\con(f).
+Consider again our running example and consider ﬁrst any focus case f with outcome π
+and with a fact situation that has at least the π-factors {deceivedπ1,measuresπ3} and at
+most the δ-factors {obtainable-elsewhereδ1,disclosedδ3}. Then D(c, f) = /0. Likewise with
+any focus case f with outcome δ and with a fact situation that has at least the δ-factors
+{obtainable-elsewhereδ1,disclosedδ3} and at most the π-factor {bribedπ2}. Next, let f be a
+focus case with fact situation F1 and outcome π. We have
+D(c1, f) = {deceivedπ1, reverse-engδ2}
+D(c2, f) = {measuresπ3, obtainable-elsewhereδ1}
+I next show for the reason model that for consistent case bases the above deﬁnition of
+relevant differences can be used to check whether a speciﬁc outcome of a new case is forced.
+Since the result model is the special case of the reason model where R = Fs, this result also
+holds for the result model.
+Proposition 1 Let CB be a consistent case base CB and F a fact situation. Then deciding F
+for s is forced according to the reason model given CB iff there exists a case c with outcome
+s in CB such that D(c, f) = /0, where f = (F,Fs,s).
+Proof Assume ﬁrst that deciding F for s is forced. Then every case f ′ = (Fs ∪Fs,R′,s) is
+inconsistent with the case base. Let without loss of generality R′ = Fs. Then since CB is
+consistent, by Observation 1 of Horty (2019) there exists a case c = (X ∪Y,R′′,s) ∈CB
+such that R′′ <f ′ Fs and Fs <c R′′. The former priority entails that R′′ ⊆Fs. But then
+pro(c) ⊆pro(f), so (1) pro(c) \ pro(f) = /0. The latter priority entails that Fs ⊆Y. But
+then (2) con(f) ⊆con(c) so (2) con(f)\con(c) = /0. Then observe that (1) and (2) together
+entail that D(c, f) = /0.
+
+=== [p.7] ===
+Factor- and Precedent-based Accounts of Precedential Constraint
+7
+Assume next that there exists a c ∈CB with outcome s and such that D(c, f) = /0. Then
+we have con(c) <c pro(c) and we have pro(c) ⊆pro(f) and con(f) ⊆con(c). But then we
+also have con(f) <c pro(f), so for every R ⊆con(f) we have R <c pro(f) and so R <c
+ppro(f). Any rule for deciding the facts of f for s requires adding a case c′ = (F,R,s) to CB
+but then ppro(f) <c R can be derived from CB, so CB is inconsistent. 2
+For consistent case bases this proposition yields a simple syntactic criterion for determining
+whether a decision is forced. In this case it allows us to rewrite Deﬁnition 5 by writing that
+deciding F for s is forced iff there exists a case c = (ppro(c)∪con(c),pro(c),s) in CB such
+that pro(c) ⊆Fs and Fs ⊆con(c). The latter can in turn with Deﬁnition 1 in the style of
+Deﬁnition 2 be rewritten as: . . . such that pro(c)∪con(c) ≤s F.
+Proposition 1 does not in general hold for inconsistent case bases, since for such case
+bases Deﬁnition 5 implies that every decision is forced, including decisions that have rel-
+evance differences with the focus case. However, it does hold for inconsistent knowledge
+bases for the result model.
+Proposition 2 Let CB be a case base CB and F a focus case. Then deciding F for s is forced
+according to the result model given CB iff there exists a case c with outcome s in CB such
+that D(c, f) = /0, where f = (F,Fs,s).
+Proof Assume ﬁrst that deciding F for s is forced. Then there exists a case c = (X,Y,s) in
+CB such that X ∪Y ≤s F. But then X ⊆Fs and Fs ⊆Y, so D(c, f) = /0.
+Assume next that there exists a case c with outcome s in CB such that D(c, f) = /0. Then
+X ⊆Fs and Fs ⊆Y, so X ∪Y ≤s F. 2
+Another result is that for any two cases with opposite outcomes that both have differ-
+ences with the focus case, their sets of differences with the focus case are mutually incom-
+parable (as with c1 and c2 in our running example).
+Proposition 3 Let CB be a case base, f a focus case and c and c′ two cases with oppo-
+site outcomes and with non-empty sets of differences with f. Then D(c, f) ̸⊆D(c′, f) and
+D(c′, f) ̸⊆D(c, f).
+Proof Suppose c and f have the same outcome and suppose that ϕ ∈D(c, f). Assume ﬁrst
+ϕ ∈pro(c)\pro(f). Then ϕ ̸∈pro(f), so ϕ ̸∈pro(f)\con(c′), so ϕ ̸∈D(c′, f).
+Assume next ϕ ∈con(f) \ con(c). Then ϕ ∈con(f) so ϕ ̸∈pro(c′) \ con(f), so ϕ ̸∈
+D(c′, f).
+Suppose now that c and f have different outcomes and suppose that ϕ ∈D(c, f). Assume
+ﬁrst ϕ ∈pro(f)\con(c). Then ϕ ∈pro(f), so ϕ ̸∈pro(c′)\pro(f), so ϕ ̸∈D(c′, f).
+Assume next ϕ ∈pro(c) \ con(f). Then ϕ ̸∈con(f), so ϕ ̸∈con(f) \ con(c′), so ϕ ̸∈
+D(c′, f). 2
+4 Positive and negative factors
+An interesting question is whether the fact that a factor favouring one side does not apply in a
+case favours the other side. In other words, should a closed-world assumption be applied that
+when a factor is absent from a case, then the negated factor favouring the other side should
+be included in the set of factors? Horty (2011, pp. 26-7) suggests that it may be sensible to
+decide for each factor separately whether such a closed-world assumption should be applied
+
+=== [p.8] ===
+8
+Henry Prakken
+to it. Horty refers to Aleven (1997, pp. 239-247) as support for his suggestion, who for
+each CATO factor separately lists whether the closed-world assumption applies to it, for the
+purpose of identifying whether a distinction on this factor can be ‘emphasised’ in CATO
+by pointing at a more abstract absent factor favouring the same side. Rissland and Ashley
+(2002, pp.67-9) argue that in applications like HYPO and CATO a negated factor favouring
+the other side can only be included in the set of factors if a case can be found where judges
+had said that the absence of a factor favouring one side favours the other side. This can be
+been seen as an application of the idea to consider each factor separately instead of applying
+a general closed-world assumption to the set of all factors.
+It is interesting to investigate to which extent the possible differences in approaches
+matter within the result and reason models of precedential constraint. It turns out that they
+only matter in the reason model. Recall that Pro and Con are the factors favouring, respec-
+tively, outcomes o and o′. I now assume that Pro∪Con does not contain both a factor x and
+its negation ¬x; this assumption prevents that a negated factor is introduced by the closed-
+world assumption is already present in the factor in non-negated form. Let the completion
+of Pro∪Con with respect to C ⊆Pro∪Con be deﬁned as the set Pro¬ ∪Con¬, where
+Pro¬ = Pro∪{¬x | x ∈C ∩Con} and Con¬ = Con∪{¬x | x ∈C ∩Pro}.
+The relativity of a completion to a given set C of factors is meant to accommodate Horty’s
+suggestion to decide for each factor separately whether the closed-world assumption applies
+to it. Then in the result model the completion c¬ of a factor-based case c = (X,Y,o) given
+the completion of Pro∪Con with respect to C is deﬁned as:
+c¬ = (X ∪{¬x ∈Pro¬ | x ∈Con and x ̸∈Y},Y ∪{¬x ∈Con¬ | x ∈Pro and x ̸∈X},o).
+Likewise, the completion of a fact situation F where X = Fs and Y = Fs given the comple-
+tion of Pro∪Con with respect to C is deﬁned as:
+F¬ = (X ∪{¬x ∈Pro¬ | x ∈Con and x ̸∈Y},Y ∪{¬x ∈Con¬ | x ∈Pro and x ̸∈X},o).
+Then the completion CB¬ of a factor-based case base CB given the completion of Pro∪Con
+with respect to C is the case base obtained by replacing each c ∈CB with c¬ given the
+completion.
+The following result on sets of relevant differences can be proven.
+Proposition 4 Let c and f be two factor-based cases in the result model with the same
+outcome s. Consider any completion C of Pro ∪Con and let c¬ and f ¬ be the completions
+of c and f given C. Then D(c, f) = /0 if and only if D(c¬, f ¬) = /0.
+Proof Let without loss of generality s = o. For the only-if part, assume that D(c, f) = /0.
+Then (1) pro(c) ⊆pro(f) and (2) con(f) ⊆con(c). Furthermore, let C be a completion with
+respect to set C. Then we have (3) pro(c¬) = pro(c) ∪{¬x | x ∈Con ∩C \ con(c)}, and
+(4) pro(f ¬) = pro(f) ∪{¬x | x ∈Con ∩C \ con(f)}. Moreover, the following set-theoretic
+equivalence holds: con(f) ⊆con(c) if and only if Con \ con(c) ⊆Con \ con(f). The right-
+hand-side of this equivalence implies Con∩C \con(c) ⊆Con∩C \con(f). Then given (1)
+and (2) we have by (3) and (4) that pro(c¬) ⊆pro(f ¬).
+To prove that con(f ¬) ⊆con(c¬), note that we also have (5) con(c¬) = con(c) ∪{¬x |
+x ∈Pro ∩C \ pro(c)}, and (6) con(f ¬) = con(f) ∪{¬x | x ∈Pro ∩C \ pro(f)}. Then the
+proof is as above. So D(c¬, f ¬) = /0.
+For the only-if part, assume that D(c¬, f ¬) = /0. Then pro(c¬) ⊆pro(f ¬) and con(f ¬) ⊆
+con(c¬). Assume for contradiction that pro(c) ̸⊆pro(f). Then there exists a p ∈pro(c)
+
+=== [p.9] ===
+Factor- and Precedent-based Accounts of Precedential Constraint
+9
+such that p ̸∈pro(f). Then ¬p ̸∈con(c¬) but ¬p ∈con(f ¬). But then con(f ¬) ̸⊆con(c¬).
+Contradiction, so pro(c) ⊆pro(f).
+Assume next for contradiction that con(f) ̸⊆con(c). Then there exists a p ∈con(f)
+such that p ̸∈con(c). Then ¬p ̸∈pro(f ¬) but ¬p ∈pro(c¬). But then pro(c¬) ̸⊆pro(f ¬).
+Contradiction, so con(f) ⊆con(c).
+2
+Corollary 1 Let CB be a factor-based case base with its completed counterpart CB¬ and F
+a fact situation with completion F¬. Then deciding F for s is forced given CB according to
+Deﬁnition 2 if and only if deciding F¬ for s is forced given CB¬ according to Deﬁnition 2.
+For the reason model the analysis is different. First, in the reason model the completion
+c¬ of a factor-based case c = (X ∪Y,X′,o) given the completion of Pro∪Con with respect
+to C is deﬁned as:
+c¬ = (X ∪{¬x ∈Pro¬ | x ∈Con and x ̸∈Y} ∪(Y ∪{¬x ∈Con¬ | x ∈Pro and x ̸∈
+X}),X′,o).
+In other words, a completion of case c says that the pro-outcome factors in the rule sufﬁce
+to outweigh the union of the original con-outcome factors and the absent pro-outcome fac-
+tors that are subject to the closed-world assumption. With this deﬁnition, the only-if part
+of Proposition 4 does not hold for the reason model, since then we do not always have
+equations (5) and (6) in the proof. For a counterexample, let Pro = {p1, p2}, Con = /0,
+c = ({p1, p2},{p1},s) and f = ({p1}, /0,s) and we complete with respect to Pro. We have
+that c¬ = c and f ¬ = ({p1},{¬p2},s. Then D(c, f) = /0 while D(c¬, f ¬) = {¬p2}. The
+point is that the negation of the pro-o factor p2, which is not in the rule of c, becomes a new
+con-o factor in f after completion. In the result model this cannot happen, since then the
+absence of p2 in f is a relevant difference between c and f, so D(c, f) ̸= /0. This also yields
+a counterexample to the only-if part of Corollary 1.
+However, the if-parts of the above results do hold for the reason model.
+Proposition 5 Let c and f be two factor-based cases in the reason model with the same
+outcome s. Consider any completion C of Pro ∪Con and let c¬ and f ¬ be the completions
+of c and f given C. Then D(c, f) = /0 if D(c¬, f ¬) = /0.
+Proof Assume that D(c¬, f ¬) = /0. Then pro(c¬) ⊆pro(f ¬) and con(f ¬) ⊆con(c¬). Since
+the rule of a case does not change in a completion, it is immediate that pro(c) ⊆pro(f).
+Assume next for contradiction that con(f) ̸⊆con(c). Then there exists a p ∈con(f) such
+that p ̸∈con(c). But p ∈con(f) implies p ∈con(f ¬) since Pro∪Con does not contain both
+a factor x and its negation ¬x. But then d ∈con(c). Contradiction, so con(f) ⊆con(c). 2
+These results mean that the result model cannot discriminate between two answers to the
+question what it means to say that a factor is absent in a case. In, for example, the trade-
+secrets domain the absence of the factor disclosed could either mean that there were no
+disclosures to outsiders or that there is no information about whether there were such dis-
+closures. The result model can, unlike the reason model, not distinguish between these two
+meanings.
+5 Adapting the approach to dimensions
+In this section I discuss various ways in which the above models can be and have been
+adapted to dimensions. I ﬁrst adapt the above factor-based deﬁnition of relevant differences
+
+=== [p.10] ===
+10
+Henry Prakken
+to Horty’s dimension-based result model (Horty, 2019). Then I will not do the same for
+Horty’s dimension-based reason models, for two reasons. First, as Horty himself shows, his
+(2019) dimension-based reason model collapses into his result model, which arguably fails
+to capture the distinction between ratio decidendi and obiter dicta familiar from common-
+law jurisdictions. Although Horty (2020) presents a revision of his reason model that does
+not collapse into his result model, it shares a feature with his original model (which is even
+more strongly present in Rigoni’s 2018 model) which raises some concerns about practical
+applicability. For these reasons I will ﬁrst formally reconstruct Rigoni’s (2018) model for so-
+called complete dimensions and then present an alternative which, although less expressive
+than Horty’s and Rigoni’s reaosn models, is arguably easier to apply in practice.
+5.1 Relevant differences in Horty’s dimension-based result model
+I adopt from Horty (2019) the following technical ideas (again with some notational differ-
+ences). A dimension is a tuple d = (V,≤o,≤o′) where V is a set (of values) and ≤o and ≤o′
+two partial orders on V such that v ≤o v′ iff v′ ≤o′ v. A value assignment is a pair (d,v).
+The functional notation v(d) = x denotes the value x of dimension d. Then a (dimension-
+based) case is a pair c = (F,outcome(c)) such that D is a set of dimensions, F is a set of
+value assignments to all dimensions in D and outcome(c) ∈{o,o′}. Then a (dimension-
+based) case base is as before a set of cases, but now explicitly assumed to be relative to a
+set D of dimensions in that all cases assign values to a dimension d iff d ∈D. Likewise,
+a (dimension-based) fact situation is now an assignment of values to all dimensions in D.
+As for notation, v(d,c) denotes the value of dimension d in case or fact situation c. Finally,
+v ≥s v′ is the same as v′ ≤s v. The assumption that all dimensions have a value in each case
+is, of course, a genuine limitation, but since it is also made by Horty (2019), I leave a study
+of models without this assumption to future research.
+In HYPO (Rissland and Ashley, 1987; Ashley, 1990), two of CATO’s factors from our
+running example are actually dimensions. Security-Measures-Adopted has a linearly ordered
+range, below listed in simpliﬁed form (where later items increasingly favour the plaintiff so
+decreasingly favour the defendant):
+Minimal-Measures, Access-To-Premises-Controlled, Entry-By-Visitors-Restricted,
+Restrictions-On-Entry-By-Employees
+(For simplicity I will below assume that each case contains exactly one security measure;
+generalisation to multiple measures is straightforward by deﬁning the orderings between
+sets of measures.) Moreover, disclosed has a range from 1 to some high number, where
+higher numbers increasingly favour the defendant so decreasingly favour the plaintiff. For
+the remaining four factors I assume that they have two values 0 and 1, where presence
+(absence) of a factor means that its value is 1 (0) and where for the pro-plaintiff factors we
+have 0 <π 1 (so 1 <δ 0) and for the pro-defendant factors we have 0 <δ 1 (so 1 <π 0).
+Accordingly, I change the running example as follows.
+c1(π):
+deceivedπ1, measures = Entry-By-Visitors-Restricted, obtainable-elsewhereδ1,
+disclosed = 10
+c2(δ):
+bribedπ2, measures = Minimal, obtainable-elsewhereδ1, disclosed = 5
+F1:
+bribedπ2, measures = Access-To-Premises-Controlled, reverse-engδ2,
+disclosed = 20
+In Horty’s result model a decision in a fact situation is forced iff there exists a precedent
+c for that decision such that on each dimension the fact situation is at least as favourable
+
+=== [p.11] ===
+Factor- and Precedent-based Accounts of Precedential Constraint
+11
+for that decision as the precedent. Horty formalises this idea with the help of the following
+preference relation between sets of value assignments.
+Deﬁnition 7 [Preference relation on dimensional fact situations.] Let F and F′ be two fact
+situations with the same set of dimensions. Then F ≤s F′ iff for all (d,v) ∈F and all (d,v′) ∈
+F′ it holds that v ≤s v′.
+In our running example we have for any fact situation F′ that F(c1) ≤π F′ iff F′ has π1 but
+not δ3 and v(measures,F’) ≥π Entry-By-Visitors-Restricted and v(disclosed,F’) ≥π 20 (so
+≤20). Likewise, F(c2) ≤δ F′ iff F′ has δ1 but not π1 and v(measures,F’) = Minimal and
+v(disclosed,F’) ≥δ 10 (so ≥10).
+Then adapting Horty’s factor-based result model to dimensions is straightforward.
+Deﬁnition 8 [Precedential constraint with dimensions: result model.] Let CS be a case base
+and and F a fact situation given a set D of dimensions. Then, given CB, deciding F for s is
+forced iff there exists a case c = (F′,s) in CB such that F′ ≤s F.
+In our running example, deciding F1 for π is not forced, for two reasons. First, v(c1,deceived) =
+1 while v(F1,deceived) = 0 and for deceived we have that 0 <π 1. Second, v(c1,measures) =
+Entry-By-Visitors-Restricted while v(F1,measures) = Access-To-Premises-Controlled and
+Access-To-Premises-Controlled <π Entry-By-Visitors-Restricted. Moreover, deciding F1 for
+δ is also not forced, since v(c2,measures) = Minimal while v(F1,measures) = Access-To-
+Premises-Controlled and Minimal <δ Access-To-Premises-Controlled.
+I next adapt Deﬁnition 6 of differences between cases to dimensions. Note that unlike
+in the case of factors, there is no need to indicate whether a value assignment favours a
+particular side in the case, since the ≤s ordering sufﬁces for this purpose.
+Deﬁnition 9 [Differences between cases with dimensions: result model.] Let c = (F(c),outcome(c))
+and f = (F(f),outcome(f)) be two cases. The set D(c, f) of differences between c and f is
+deﬁned as follows.
+1. If outcome(c) = outcome(f) = s then D(c, f) = {(d,v) ∈F(c) | v(d,c) ̸≤s v(d, f).
+2. If outcome(c) ̸= outcome(f) where outcome(c) = s then D(c, f) = {(d,v) ∈F(c) |
+v(d,c) ̸≥s v(d, f).
+Let c be a precedent and f a focus case. Then clause (1) says that if the outcomes of the
+precedent and the focus case are the same, then any value assignment in the focus case that
+is not at least as favourable for the outcome as in the precedent is a relevant difference.
+Clause (2) says that if the outcomes are different, then any value assignment in the focus
+case that is not at most as favourable for the outcome of the focus case as in the precedent is
+a relevant difference.
+In our running example, we have:
+D(c1, f) = {(deceived,1),(measures, Entry-By-Visitors-Restricted)}
+D(c2, f) = {(measures,Minimal)}
+We have the following counterpart of Proposition 2 for Horty’s dimension-based result
+model.
+Proposition 6 Let, given a set D of dimensions, CB be a case base and F a fact situation.
+Then deciding F for s is forced given CB according to Deﬁnition 8 iff there exists a case in
+CB with outcome s such that D(c, f) = /0, where f = (F,s).
+
+=== [p.12] ===
+12
+Henry Prakken
+Proof Consider ﬁrst any c = (F(c),s) in CB such that D(c, f) = /0. Then for all (d,v) ∈F(c)
+and all (d,v′) ∈F(f) it holds that v ≤s v′, so F(c) ≤s F(f).
+Suppose next f is forced. Then the proof is the same the other way around. 2
+The counterpart of Proposition 3 can be proven as a new result.
+Proposition 7 Let, given a set D of dimensions, CB be a case base, f a focus case and c
+and c′ be two cases with opposite outcomes and both with a non-empty set of differences
+with f. Then D(c, f) ̸⊆D(c′, f) and D(c′, f) ̸⊆D(c, f).
+Proof Suppose ﬁrst that c and f have the same outcome and suppose that (d,v) ∈D(c, f).
+Then v(d,c) ̸≤s v(d, f), so v(d,c) ̸≥s v(d, f), so (d,v) ̸∈D(c′, f). Suppose next that c and
+f have different outcomes and suppose that (d,v) ∈D(c, f). Then v(d,c) ̸≥s v(d, f), so
+v(d,c) ̸≤s v(d, f), so (d,v) ̸∈D(c′, f). 2
+5.2 A dimension-based reason model with complete rules
+I next discuss how Horty’s dimension-based result model can be turned into a dimension-
+based reason model. There are two features on which this can be done: by ‘relaxing’ an
+individual value assignment or by leaving some assignments out from a set of value assign-
+ments. In both ways a case is a triple (c = (F(c),R(c),outcome(c)), where F(c) is as in the
+result model a value assignment to a given set D of dimensions and where R(c), the rule
+of the case, is a set of value assignments that is in some way constrained by F(c). In the
+ﬁrst way, rule R(c) consists of value assignments to each dimension in D such that for each
+element (d,v) in R(c) and each element (d,v′) in F(c) it holds that v(d) ≤s v′(d). In other
+words, in this approach a rule of a case assigns to each of the case’s dimensions a value that
+is at most as favourable for the case’s outcome as its value in the case. Below I will call such
+a rule a complete rule.
+Deﬁnition 10 [Precedential constraint with dimensions: a reason model with complete rules.]
+Let, given a set D of dimensions, CS be a case base in which all cases have a complete rule
+and F a fact situation. Then deciding F for s is forced iff there exists a case c = (F′,R,s) in
+CB such that R ≤s F.
+It is easy to see that this deﬁnition includes Horty’s result model as the special case where for
+all cases the rule equals the case’s fact situation. The counterpart of Proposition 6 can easily
+be obtained for this reason model by deﬁning the relevant differences between a precedent
+and a focus case in Deﬁnition 9 relative to the precedent’s rule instead of to its fact situation.
+Deﬁnition 11 [Differences between cases with dimensions: reason model with complete
+rules.] Let c = (F(c),R(c),outcome(c)) and f = (F(f),outcome(f)) be two cases. The set
+D(c, f) of differences between c and f is deﬁned as follows.
+1. If outcome(c) = outcome(f) = s then D(c, f) = {(d,v) ∈R(c) | v(d,c) ̸≤s v(d, f).
+2. If outcome(c) ̸= outcome(f) where outcome(c) = s then D(c, f) = {(d,v) ∈R(c) |
+v(d,c) ̸≥s v(d, f).
+Proposition 8 Let, given a set D of dimensions, CB be a case base and F a fact situation.
+Then deciding F for s is forced given CB according to Deﬁnition 10 iff there exists a case in
+CB with outcome s such that D(c, f) = /0 according to Deﬁnition 11, where f = (F,R,s) for
+some R.
+
+=== [p.13] ===
+Factor- and Precedent-based Accounts of Precedential Constraint
+13
+Proof As for Proposition 6 with F(c) replaced by R(c). 2
+Note that because of this result, Deﬁnition 10 does not have to quantify over cases with
+different rules as in Deﬁnition 5.
+Since Bench-Capon and Atkinson (2017), Horty (2019, 2020) and Rigoni (2018) all
+discuss the merits of their models in terms of the ﬁscal-domicile example introduced by
+Prakken and Sartor (1998), I will from now on use that example as a running example.
+The issue is whether the ﬁscal domicile of a person who moved abroad for some time has
+changed. Let us consider two dimensions d1, the duration of the stay abroad in months
+and d2 the percentage of the tax-payer’s income that was earned abroad during the stay. For
+both values, increasingly higher values increasingly favour the outcome change and decreas-
+ingly favour the outcome no change. So, for instance, (d1,12m) <change (d1,24m) and so
+(d1,24m) <no change (d1,12m). An example of a fact situation is F = {v(d1) = 30m,v(d2) =
+60%} and an example of a case is c = (F′,change) where F′ = {v(d1) = 12m,v(d2) = 60%}.
+This example can be used to show that Deﬁnition 10 does not collapse into the dimension-
+based result model. Suppose that c has a fact situation {(v(d1) = 30m),(v(d2) = 60%)} and
+outcome change and consider again fact situation F = {(v(d1) = 24m),(v(d2) = 75%)}.
+Suppose the court in c ruled that with a percentage earned abroad of 60% a stay abroad of at
+least 12 months sufﬁces for change of ﬁscal domicile. The rule of c then is {(d1,12m),(d2,60%)}.
+Then in the reason model deciding F for change is forced, even though the stay abroad in
+F is shorter than in c, so even though F is weakened for the outcome along that dimension,
+since the stay is still longer than its value in c’s rule. By contrast, in the result model this
+difference sufﬁces to make c distinguishable and deciding F for no change allowed.
+The model of Deﬁnition 10 also avoids an arguably counterintuitive feature of Horty’s (2019)
+dimension-based model (which Horty (2017) also himself noted and which he avoids in his
+revised (2020) model). In the tax example, if the rule of c is {(d1,12m)} then in a new
+case in which the stay abroad is 24 months and the percentage of income earned abroad
+is 75% deciding for change is in Horty’s model not forced by the precedent, since it is
+weaker for change than the precedent in that the stay abroad is not 30 but 24 months. How-
+ever, this seems counterintuitive given that the court in the precedent ruled that 12 months
+abroad sufﬁce for change and given that the new case is stronger for this outcome in its
+only other dimension. With Deﬁnition 10 deciding for change is instead forced by c, since
+{(d1,12m),(d2,60%)} ≤change {(d1,24m),(d2,75%)}.
+One issue remains. Horty’s factor-based reason model requires that courts select a rule
+in the new case that leaves the case base consistent when the case is added to it. In Horty’s
+model consistency is deﬁned in terms of a preference relation between sets of reasons pro
+and con a decision (cf. Deﬁnition 3 above). However, the present model does not dis-
+tinguish between pro and con value assignments, while still a notion of consistency is
+needed. Consider again the tax example with the two dimensions d1 and d2 and consider
+two precedents c1 with rule R1 = {(d1,12m),(d2,60%)} and outcome change and c2 with
+rule R2 = {(d1,8m),(d2,60%)} and outcome no change. Consider next a fact situation F
+with d1 = 15 and d2 = 60%. Then deciding F for change is forced. Suppose the court does
+so but formulates the rule R3 = R2 = {(d1,7m),(d2,60%)}. Then in a new fact situation
+equal to rule R2 both deciding change and deciding no change would be forced, so adding
+f = (F,R3,change) would make it inconsistent in that for the same fact situation two oppo-
+site outcomes are forced. So a constraint on rule selection should be that it should leave a
+consistent case base consistent in this sense.
+
+=== [p.14] ===
+14
+Henry Prakken
+5.3 A reason model with dimensions with switching points and incomplete rules
+The second way in which the result model can be reﬁned into a reason model is by allowing
+that the rule R of a case assigns a value to a subset of its fact situation FD, while still ad-
+hering to the constraint that the rule’s values of dimensions are at most a favourable to the
+case’s decision as their actual values in the case. How can precedential constraint then be
+deﬁned? If for each relevant value assignment in a case it is known which side is favoured
+by it, that is, if each such assignment is turned into a factor, then this is relatively easy, by
+combining ideas of Rigoni (2018) and Horty (2019). As a matter of fact, neither of these
+papers contains such a combination, although it seems implicitly assumed by Rigoni. So the
+present section can be regarded as a full formalisation and a formal exploration of Rigoni’s
+ideas, although restricted to his special case of so-called ‘complete’ dimensions, which have
+a ﬁxed ‘switching point’ and a total ordering on its values, which are all known.
+Unlike Horty, Rigoni assumes that each dimension has a switching point, which is a
+subset of ‘adjacent’ values, to one side of which every value assignment favours one side
+and to the other side of which every value assignment favours the other side. Then Rigoni
+extracts ‘dimensional factors’ from dimensions, which like ‘standard factors’ favour one
+side or another except that they are not just given (as standard factors are) but derived from
+dimensions. I formalise these ideas as follows.
+Let o and o′ be two outcomes. A dimension with a switching point is a tuple d = (V,≤s
+,≤o′,Pro(d),Con(d)) where V, ≤o and ≤o′ are as before and Pro(d) and Con(d) are disjoint
+subsets of V such that
+– for all v ∈Pro(d) and v′ ̸∈Pro(d) it holds that v′ <o v;
+– for all v ∈Con(d) and v′ ̸∈Con(d) it holds that v′ <o′ v;
+– for all v,v′ ∈V: if v ∈Pro(d) and v ≤o v′ then v′ ∈Pro(d);
+– for all v,v′ ∈V: if v ∈Con(d) and v ≤o′ v′ then v′ ∈Con(d).
+This implicitly deﬁnes a dimension’s switching point S(d) as V \Pro(d)∩Con(d). Note that
+the deﬁnitions imply that for all v ∈S,v′ ∈Pro(d) and v′′ ∈Con(d) it holds that v <o v′ and
+v <o′ v′. Thus the deﬁnitions formalise Rigoni’s idea that the switching point consists of all
+values that are ‘between’ the pro-o and pro-o′ values. Note that any of the sets S, Pro(d)
+and Con(d) can be empty. This allows to capture HYPO-style dimensions that ‘generally
+favour a particular side’, namely, by leaving S and one but not both of Pro(d) and Con(d)
+empty. Finally, given a set D of dimensions with switching points, fact situations can now
+be partial in that they can consist of value assignments to any nonempty subset of D. For
+any fact situation F we say that F′ ⊆F favours s iff either s = o and F′ ⊆{(v,d) | d ∈D
+and v ∈Pro(d)} or s = o′ and F′ ⊆{(v,d) | d ∈D and v ∈Con(d)}. For any fact situation
+F, the set Fs is the subset of all value assignments in F favouring side s.
+In our tax example, we could have the following three dimensions, with o = change.
+d1 = duration; V = any number of months in natural numbers; v ≤o v′ iff v ≤v′;
+v ∈Pro(d1) iff v ≥18; v ∈Con(d1) iff v ≤6
+d2 = earned; V = any percentage in natural numbers; v ≤o v′ iff v ≤v′; v ∈Pro(d2)
+iff v ≥60; v ∈Con(d2) iff v ≤30.
+d3 = gave up house; V = {yes,no}; no <o yes; Pro(d3) = {yes}; Con(d3) = {no}.
+Given a set D of dimensions with switching points as just deﬁned, a case c is now a
+tuple (F,pro(c),con(c),s), where F is a fact situation, pro(c), the case’s reason, is a value
+assignment to a subset of D such that for each (d,v) ∈pro(c) there exists a (d′,v′) ∈Fs such
+that d = d′ and v ≤s v′, and con(c) = Fs. This notion of the reason of a case is essentially
+
+=== [p.15] ===
+Factor- and Precedent-based Accounts of Precedential Constraint
+15
+the same as the one of Horty’s factor-based reason model, in that it consists of a subset of all
+factors in the case favouring its outcome. The only difference is that now the factors favour-
+ing the two outcomes are not simply given but derived from a speciﬁcation of dimensions
+with switching points. Then, just as for the factor-based reason model, we can say that a
+case decision expresses a preference for the case’s reason pro(c) over its set con(c). It is left
+to formally deﬁne this case-related preference relation. Horty (2019) in fact deﬁnes such a
+preference relation, but on a different notion of the reason of a case, which I will brieﬂy
+discuss below in Section 5.4. For now I simply adapt Horty’s deﬁnition to the just deﬁned
+notion of a reason.
+Let (d,v) and (d,v′) be two value assignments both favouring side s. Then (d,v) entails
+(d,v′) iff v′ ≤s v. Generalising, a set X of value assignments favouring s entails a value
+assignment (d,v) favouring s iff some value assignment in X entails (d,v), and a set X
+of value assignments favouring s entails a set Y of value assignments favouring s iff each
+value assignment in Y is entailed by a value assignment in X. Note that for each case the
+set Fs entails the case’s reason pro(c). Then Deﬁnition 3 can be adapted to the case with
+dimensions as follows:
+Deﬁnition 12 Let CB a case base given a set D of dimensions with switching points and
+consisting of cases c = (F,pro(c),con(c),s), and let X and Y be sets of value assignments
+favouring s and s, respectively. Then for every every c ∈CB:
+1. Y <c X iff con(c) entails Y and X entails pro(c);
+2. Y <CB X iff Y <c X for some c ∈CB.
+Deﬁnition 4 then applies provided the superset relation between factor sets is replaced by
+the entailment relation between sets of value assignments. Then Deﬁnition 5 can be applied
+to sets of value assignments as follows.
+Deﬁnition 13 (Precedential constraint with dimensions with a switching point: a reason
+model with possibly incomplete rules) Let, given a set D of dimensions, CB be a case base
+in which all cases have a rule and F a fact situation. Then, given CB, deciding F for s is
+forced iff for all cases c = (F,pro(c),con(c),outcome(c)) such that CB∪{c} is consistent it
+holds that outcome(c) = s.
+To show that this reason model does not collapse into the result model, consider in our
+running example a case c with fact situation {(v(d1) = 30m),(v(d2) = 75%),(v(d3) = no)}
+and reason {v(d1) = 24m} and outcome change, and a new fact situation F = {(v(d1) =
+27m),(v(d2) = 50%),(v(d3) = no)}. Then deciding F for change is forced in the reason
+model but not in the result model. In the reason model the outcome of c expresses that
+{v(d3) = no} <c {v(d1) = 24m}. Moreover, we have that v(d1) = 27m entails v(d1) = 24m,
+so we have {v(d3) = no} <c {v(d1) = 27m}. By contrast, in the result model deciding F
+for change is not forced since, ﬁrstly, v(d1,F) = 27m <change v(d1,c) = 30m and, secondly,
+v(d2,F) = 50% <change v(d2,c) = 75%.
+The counterpart of Proposition 8 can be obtained for this adapted reason model by again
+redeﬁning the relevant differences between a precedent and a focus case, now also taking
+missing and new dimension-based factors into account. Essentially, this deﬁnition combines
+the factor-based Deﬁnition 6 with the dimension-based Deﬁnition 11.
+Deﬁnition 14 [Differences between cases with dimensions with switching points and in-
+complete rules.] Let c = (F(c),pro(c),con(c),outcome(c)) and f = (F(f),pro(f),con(f),outcome(f))
+be two cases. The set D(c, f) of differences between c and f is deﬁned as follows.
+
+=== [p.16] ===
+16
+Henry Prakken
+1. If outcome(c) = outcome(f) = s then D(c, f) = {(d,v) ∈pro(c) | v(d, f) ∈pro(f) and
+v(d,c) ̸≤s v(d, f)} ∪{(d,v) ∈pro(c) | v(d, f) ̸∈pro(f)} ∪{(d,v) ∈con(f) | v(d, f) ̸∈
+con(c)}.
+2. If outcome(c) ̸= outcome(f) where outcome(c) = s then D(c, f) = {(d,v) ∈pro(c) |
+v(d, f) ∈con(f) and v(d,c) ̸≥s v(d, f)}∪{(d,v) ∈pro(f) | v(d, fc ̸∈con(c)}∪{(d,v) ∈
+pro(c) | v(d, f) ̸∈con(f)}.
+Proposition 9 Let, given a set D of dimensions with switching points, CB be a case base
+and F a fact situation. Then deciding F for s is forced given CB according to Deﬁnition 13
+iff there exists a case in CB with outcome s such that D(c, f) = /0 according to Deﬁnition 14,
+where f = (F,Fs,Fs,s).
+Proof Assume ﬁrst that deciding F for s is forced. Then every case f ′ = (F,pro(f ′),Fs,s) is
+inconsistent with the case base. Let without loss of generality pro(f ′) = Fs. Then since CB
+is consistent, by Observation 1 of Horty (2019) there exists a case c = (F,pro(c),Fs,s) ∈CB
+such that pro(c) <f ′ Fs and Fs <c pro(c).
+That pro(c) <f ′ Fs implies that con(f ′) entails pro(c). But con(f ′) = Fs, so then Fs
+entails pro(c). Now consider any (d,vc) ∈pro(c). Then there exists a (d,v) ∈Fs such that
+vc ≤s v. So the ﬁrst set on the right-hand side of condition (1) of Deﬁnition 14 is empty.
+Moreover, that Fs entails pro(c) also implies that there does not exist a (d,v) ∈c such that
+d does not have a value in Fs. So the second set on the right-hand side of condition (1) of
+Deﬁnition 14 is also empty. Finally, that Fs <c pro(c) implies that con(c) entails con(f).
+So the third set on the right-hand side of condition (1) of Deﬁnition 14 is also empty. So
+D(c, f) = /0.
+Assume next that there exists a c ∈CB with outcome s and such that D(c, f) = /0. Then
+Fs <c pro(c) and since D(c, f) = /0 we also have that pro(f) entails pro(c). But then Fs <c
+pro(f), so for every X implied by Fs we have X <c pro(f). Any reason for deciding F
+for s requires adding a case c′ = (F,pro(c′),Fs,s) to CB. But then Fs <′
+c pro(c′), so also
+pro(f) <′
+c pro(c′). But pro(c′) is implied by Fs, so we have pro(c′) <c pro(f), so CB is
+inconsistent. 2
+This completes the formalisation and investigation of Rigoni’s (2018) dimension-based ac-
+count of precedential constraint with complete dimensions.
+5.4 An alternative dimension-based reason model
+While the reason model of the previous section is well-behaved, it has an important prag-
+matic limitation, since it requires that for each dimension it is deﬁned in general, abstracting
+from speciﬁc cases, whether a particular value assignment favours a side and if so, which
+side it favours. The problem is that, unlike with factors, it may in practice be hard for knowl-
+edge engineers to identify the side favoured by a particular value assignment, since often this
+will be context-dependent. See also Bench-Capon (1999) and Rissland and Ashley (2002);
+the latter remark at p. 69 that the direction of a value assignment is not for the knowledge
+engineer to decide but for the judge in a case.
+Consider, for example, in our tax example a case with fact situation {(v(d1) = 30m),(v(d2) =
+60%)} and with outcome change. Are both value assignments pro this outcome, or is one
+pro and the other con change? And if the latter, then which is pro and which is con? This
+is not easy to say in general. On the other hand, what is uncontroversial is that increasingly
+higher values for these dimensions increasingly support change and decreasingly support
+
+=== [p.17] ===
+Factor- and Precedent-based Accounts of Precedential Constraint
+17
+no change. In Horty’s (2019; 2020) approach this problem arises to a lesser extent, since he
+works with so-called magnitude factor expressions, which are of the form ‘the actual value
+of dimension d in the case favours side s at least as much as reference value p’; this expres-
+sion is meant to favour side s. Such expressions are, unlike Rigoni’s switching points, not
+part of the general speciﬁcation of dimensions but of individual case formulations, so they
+do not need to be chosen in general. Yet in this approach the problem still arises to some
+extent. For instance, in the just-given example still a reference value has to be known, as
+well as a side favoured by it for both dimensions. Such information may be hard to identify
+in case decisions.
+For these reasons I will in this subsection explore an alternative approach, in which
+all that is needed is general knowledge about which side is favoured more and which side
+less if a value of a dimension changes, as captured by the two partial orders ≤s and ≤s′
+on a dimension’s values. These partial orders will usually be obvious from the domain. Of
+course, a potential downside of my alternative approach is that it sacriﬁces some expressivity
+of Horty’s approach, as I will further illustrate below after deﬁning the approach.
+Dimensions and cases are now again deﬁned as in Section 5.2. Below for any two sets
+X and Y of value assignments, Y |X is the subset of Y that consists of value assignments to
+any dimension that is also assigned a value in X.
+Deﬁnition 15 [Precedential constraint with dimensions: an alternative reason model with
+possibly incomplete rules.] Let, given a set D of dimensions, CS be a case base in which all
+cases have a possibly incomplete rule and F a fact situation. Then deciding F for s is forced
+iff there exists a case c = (F′,R,s) in CB such that R ≤s F|R.
+So deciding F for s is forced iff there is a precedent for s such that F is at least as favourable
+for s on all dimensions in the precedent’s rule.
+Moreover, like with the reason model with complete rules, the constraint on rule selec-
+tion is needed that adding a new case to a consistent case base should leave the case base
+consistent in that for no fact situation two opposite outcomes are forced.
+To see how this deﬁnition works, consider again the tax example with dimensions d1 and
+d2 and consider precedent c with fact situation {(v(d1) = 30m),(v(d2) = 60%)}, with rule
+R = {(d1,12m)} and with outcome change. Consider next a fact situation F with v(d1) =
+24m,v(d2) = 50%. Then deciding F for change is forced since F|R = {(d1,24m)} and we
+have that R = {(d1,12m)} <change {(d1,24m)}. Note that deciding F for change is forced
+by c even though F is in both dimension weaker for change than c. The point is that with
+respect to d1 the rule declares a stay of 12 months sufﬁcient and that d2 is not in c’s rule.
+Since a rule that assigns a value to all dimensions in D is a special case, the above ex-
+ample that shows that Deﬁnition 10 does not collapse into the dimension-based result model
+also holds for this deﬁnition. It is also easy to show that Deﬁnition 15 just as its counterpart
+for cases with complete rules avoids the above-mentioned counterintuitive consequences.
+Moreover, a counterpart of Proposition 6 can be obtained for this reason model by redeﬁn-
+ing the relevant differences between a precedent and a focus case as follows. They are now
+relative to the cases’ rules instead of to its FD, and differences can now only be relevant on
+dimensions that are assigned values in both cases.
+Deﬁnition 16 [Differences between cases with dimensions and possibly incomplete rules.]
+Let c = (F(c),R(c),outcome(c)) and f = (F(f),R(f),outcome(f)) be two cases. The set
+D(c, f) of differences between c and f is deﬁned as follows.
+1. If outcome(c) = outcome(f) = s then D(c, f) = {(d,v) ∈F(f)|R(c) | v(d,c) ̸≤s v(d, f).
+
+=== [p.18] ===
+18
+Henry Prakken
+2. If outcome(c) ̸= outcome(f) where outcome(c) = s then D(c, f) = {(d,v) ∈F(f)|R(c) |
+v(d,c) ̸≥s v(d, f).
+Clause (1) says that if the outcomes of the precedent and the focus case are the same, then
+any value assignment in the focus case to a dimension in the precedent’s rule that is not
+at least as favourable for the outcome as in the precedent is a relative difference. Clause
+(2) says that if the outcomes are different, then any value assignment in the focus case to
+a dimension in the precedent’s rule that is not at most as favourable for the outcome of the
+focus case as in the precedent is a relative difference. Thus any value assignment in the focus
+case to a dimension that is not in the rule’s precedent is irrelevant for whether the precedent
+constrains the focus case, but all value assignments in the focus case to dimensions in the
+precedent’s rule are relevant for this question, regardless of whether these value assignments
+are in the focus case’s rule.
+Proposition 10 Let CB be a case base given a set D of dimensions in which all cases have
+a complete rule and let F be a fact situation. Then deciding F for s is forced given CB
+according to Deﬁnition 15 iff there exists a case c = (F(c),R(c),s) in CB such that D(c, f) =
+/0, where f = (F,R(f),s) for any R(f).
+Proof As for Proposition 6 with F(c) replaced by R(c) and F(f) replaced by F(f)|R(c). 2
+On the other hand, this approach also has limitations. Since it does not allow to indicate
+for a particular value assignment that it favours a particular outcome, some ﬁne-grained
+distinctions in Horty’s and Rigoni’s approaches between cases where a decision is, or is not
+forced cannot be made. Consider again the last example. We saw that deciding fact situation
+F for change was forced by precedent c even though F is weaker for change than c on
+dimension d2, since d2 is not in c’s rule. This might be regarded a problem since the fact
+that the percentage of income earned abroad was less in the new situation F than in the
+precedent might by a decision maker be regarded as an exception to the precedent’s rule.
+In Rigoni’s approach as formalised above this can be formalised by letting, for instance, all
+values of d2 greater than or equal to 60% be the switching point, so that every value less
+than 60% favours no change. Then d2 = 50% in F is a relevant difference with precedent c
+and deciding for change is not forced.
+Or consider a variant of this example with the same precedent c with v(d1) = 30m,v(d2) =
+60%, with outcome change and with rule {(d1,12m),(d2,60%)}, but with a focus case f
+with v(d1) = 24m,v(d2) = 75%. Next, consider a third dimension d3 on whether the tax
+payer kept his original house or gave it up, with the ordering kept <change gave up, and sup-
+pose that in c we have v(d3) = gave up while in f we have v(d3) = kept. Then f is weaker
+for change on d3 than c. Yet according to Deﬁnition 10 precedent c cannot be distinguished
+and deciding f for change is forced. In Rigoni’s approach as formalised above, v(d3) = gave
+up can be deﬁned to be a factor favouring no change, and then v(d3) = gave up is a relevant
+difference between c and f.
+It seems that the only sensible way to change the deﬁnition to allow c to be distinguished
+is to allow any value assignment to any dimension not mentioned in c’s rule to be a relevant
+difference, since we cannot indicate whether such a value assignment favours a particular
+outcome.
+Let us discuss this in more general terms. In the factor-based reason model the idea of
+a rule has a clear intuition, namely, that the pro-decision factors in the rule are sufﬁcient to
+outweigh the con-decision factors in the case. However, with dimensions, where it cannot
+always be said that a value assignment favours a particular side, this intuition does not apply,
+
+=== [p.19] ===
+Factor- and Precedent-based Accounts of Precedential Constraint
+19
+since the value assignments outside the rule do not necessarily favour the opposite outcome.
+All that can said is that by stating the rule the court has decided that, given the rule, the
+case’s value assignments to the other dimensions are irrelevant. The question then is whether
+such a ruling is defeasible. If it is not, then every new case in which the dimensions in the
+precedent’s rule have values that are at least as favourable to the decision as in the rule is
+constrained by the precedent regardless of possible differences on the other dimensions. If
+that is regarded as too rigid, then there are two options. The ﬁrst is that value assignments
+to dimensions not in a precedent’s rule can be a reason for distinguishing just in case in the
+new fact situation they are less favourable for the precedent’s outcome than in the precedent.
+But then the model collapses into the reason model with complete rules. The second option
+is that every value assignment to a dimension that is not in the rule of the case can override
+the case’s outcome. In other words, every such value assignment can be an exception to
+the original ruling that the dimensions outside the rule are irrelevant. But then a problem
+similar to the problem with Horty’s (2019) reason model arises: in our last example any
+income percentage, even a percentage higher than 60%, would sufﬁce to distinguish c. A
+possible solution to this problem might be reﬁning the model by allowing but not requiring
+to indicate that a particular value assignment favours a particular outcome. Then in the
+last example, indicating that 60% is a pro-change assignment would sufﬁce to prevent c
+from being distinguished on higher percentages. I leave the development of this idea to
+future research. For now it can be concluded that a Rigoni-style approach in which value
+assignments are always pro a particular outcome leads to ﬁner-grained distinctions between
+forced and not-forced decisions than the present approach but is arguably harder to apply
+in practice (although this should be veriﬁed in realistic applications). To a lesser extent this
+also holds for a Horty-style approach with magnitude factors.
+6 Combining factors and dimensions
+I now turn to the question how factors and dimensions can be combined in a single model
+of precedential constraint. It would at ﬁrst sight seem that factors are simply a special case
+of dimensions with just two values 0 and 1 where 0 <s 1 while 1 <s 0. However, upon
+closer inspection this is not the case, since with factors there is more to say than just that
+the two sides have opposed preferences over the presence or absence of a factor. Consider,
+for example, in the trade-secrets domain the factor bribed. That the defendant bribed one of
+the plaintiff’s employees surely is a factor pro misuse of trade secrets, but that the defendant
+did not bribe any of the plaintiff’s employees does not have to be regarded as a factor con
+that outcome: it can also be regarded as neutral with respect to that outcome. Therefore, it
+makes sense to treat factors differently than dimensions.
+Accordingly, I introduce some new terminology. Each two-valued dimension in D comes
+with a partial function td : V −→{o,o′} that assigns to zero, one or both values of the
+dimension an outcome subject to two constraints (henceforth if d is two-valued and v is one
+value of d then v denotes the other value of d):
+1. if td(v) = o then td(v) = o′ or td(v) is undeﬁned.
+2. if td(v) = o then v <o v.
+The td function captures which outcome is favoured by a value of d, if any. Any value
+assignment (d,v) to a two-valued dimension d such that td(v) = o is called a pro-o factor.
+The terminology of Section 3 also applies to such factors. Then Dt is the subset of D of
+
+=== [p.20] ===
+20
+Henry Prakken
+two-valued dimensions for which td is deﬁned for at least one value, and Dm = D \ Dt. A
+dimensional fact set Ft (Fm) assigns values to all dimensions in Dt (Dm).
+In our trade secrets example, we could have that td(v) = π for deceived and bribed with
+value 1 and td(v) = δ for obtainable-elsewhere and reverse-eng with value 1, and that in all
+other cases td(v) is undeﬁned.
+It can be proven that if Dm is empty, that is, we only have factors, then Deﬁnition 8 of the
+dimension-based result model of precedential constraint reduces to its factor-based counter-
+part. In what follows, for any set of dimensions D with associated set of functions td, and for
+any dimensional fact situation F, let Fs be {(d,x) | (d,x) ∈F and td(x) = s}. Furthermore,
+for any case base CB given a set of dimensions D with associated set of functions td such
+that Dm = /0 its factor-based counterpart CB f is obtained by replacing each c = (F,s) in CB
+with c f = (Fs,Fs,s). Note that in the translation from c to cf value assignments in c that do
+not favour a side do not occur in Fs ∪Fs.
+Proposition 11 Let CB be a case base given a set of dimensions D with associated set of
+functions td such that Dm = /0 and let CB f be its factor-based counterpart. Then deciding F
+for s is forced given CB according to Deﬁnition 8 iff deciding Fs ∪Fs for s is forced given
+CBf according to Deﬁnition 2.
+Proof It sufﬁces to prove for any pair of dimensional fact situations X and Y that (1) Xs ⊆Y s
+and Y s ⊆Xs iff (2) for all (d,v) ∈X and all (d,v′) ∈Y it holds that v(d) ≤s v′(d).
+For the only-if part, suppose (1) and consider any (d,v) ∈Y s such that (d,v) ̸∈Xs.
+Then (d,v) ∈Y while (d,v) ∈X. Moreover, by the second constraint on td we have v <s
+v. Consider next any (d,v) ∈Xs such that (d,v) ̸∈Y s. Then (d,v) ∈X while (d,v) ∈Y.
+Moreover, by the second constraint on td we have v <s v, so we have v <s v. Then (2)
+follows since ≤s and ≤s are partial orders.
+The proof in the other direction is similar and omitted here. 2
+7 Adding deﬁnitions of precedential constraint to HYPO and CATO
+In this section I further discuss the HYPO and CATO systems in light of the present paper.
+Both systems have ways of establishing the presence or absence of factors (CATO) or value
+assignments to dimensions (HYPO) from more concrete factual information. The models of
+precedential constraint discussed in this paper can abstract from these ways, although they
+may be relevant for determining their input, for instance, to which extent a closed-world
+assumption should be applied to absent factors. Given this abstraction, CATO’s factors con-
+form to the format of this paper’s factor-based models but in HYPO this is more subtle. As
+described by Ashley (1990), HYPO’s knowledge structures are dimensions and a factor is
+deﬁned as a dimension that applies in a case. So in HYPO the notion of a factor is case-
+related and a factor can be multi-valued, unlike in the line of research initiated by Horty
+(2011). Moreover, although HYPO’s dimensions are initially deﬁned as in Section 5.1 of
+the present paper, then the possibility is added to declare of a given dimension that it gener-
+ally favours a particular side. Finally, HYPO does not make the assumption of this paper’s
+Section 5 that all dimensions are assigned a value in each case.
+As noted in the introduction, the work on HYPO and CATO was not concerned with
+precedential constraint but with generating arguments. Yet it is interesting to see whether the
+notions of precedential constraint discussed in this paper can be applied in these systems.
+In CATO the present factor-based models of Section 3 can be directly applied but in HYPO
+things are more complicated given the way it deﬁnes factors in terms of dimensions. In fact,
+
+=== [p.21] ===
+Factor- and Precedent-based Accounts of Precedential Constraint
+21
+HYPO has a deﬁnition of relevant differences between two cases that essentially combines
+the present Deﬁnitions 6 and 9 (Ashley, 1990, p. 159). Slightly rephrased in this paper’s
+notation:
+Deﬁnition 17 [Differences between cases: HYPO.] Let D be a set of dimensions and Ds
+and Ds be two disjoint subsets of D of dimensions generally favouring, respectively, side s
+and s. A case c is now a pair c = (F(c),outcome(c)), where F(c) is a partial dimensional
+fact situation, that is, a value assignment to a subset of D. For any case c the set pro(c),
+respectively, con(c) is deﬁned as the set of all dimensions assigned a value in c that generally
+favour side s, respectively s. Now let c = (F(c),s) and f = (F(f),s) be two cases with the
+same outcome. Then the set D(c, f) of differences between c and f is deﬁned as follows.
+D(c, f) = [pro(c)\pro(f)∪con(f)\con(c)]∪[{(d ∈D | v(d,c) and v(d, f) are de-
+ﬁned and v(d,c) ̸≤s v(d, f)]
+It is easy to that (1) if all dimensions are assigned a value in both cases, then the deﬁnition
+reduces to Deﬁnition 9 of dimension-based differences, while (2) if for all d such that both
+v(d,c) and v(d, f) are deﬁned it holds that v(d,c) ≤s v(d, f) then the deﬁnition reduces to
+Deﬁnition 6 of factor-based differences. This suggests that Deﬁnition 17 could be directly
+applied to deﬁne precedential constraint by deﬁning that deciding f for s is forced given
+CB iff there exists a case c with outcome s in CB such that D(c, f) = /0. It would then
+be interesting to ﬁnd combinations of Deﬁnitions 2 and 8 corresponding to Deﬁnition 17.
+Note that HYPO’s most-on-point relation between cases, which looks at the set-inclusion
+relation between the factor sets of cases, is not suitable for deﬁning a notion of precedential
+constraint, since it disregards dimensions and also which side is favoured by a factor.
+8 Conclusion
+In this paper I have formally analysed some existing and new factor- and dimension-based
+models of precedential constraint. I have made several technical contributions. I formalised
+how relevant differences between cases can be used to identify forced decisions, I showed
+that in some cases the difference between absent and negated factors does not matter, and
+I identiﬁed conditions under which factors equate two-valued dimensions. I also fully for-
+malised Rigoni’s (2018) dimension-based model of precedential constraint with complete
+dimensions. In addition, I argued that Rigoni’s model and to a lesser extent Horty’s (2019;
+2020) dimension-based reason models have pragmatic limitations in that they require the
+speciﬁcation of information that may be hard to obtain in practical applications. I proposed
+an alternative dimension-based reason model without this limitation, although also with
+lesser ability to distinguish between situations in which a decision is or is not forced by a
+body of precedents. Future research should focus on whether the limitations of the various
+models can be overcome without sacriﬁcing their beneﬁts. More generally, future research
+on precedential constraint could focus on incorporating richer representations of cases into
+the models, such as recordings of the court’s arguments for their decisions. The vast body
+of existing work on legal case-based reasoning could be utilised for this purpose. Of course,
+there is the legal-theoretic issue whether the court’s arguments for their decisions are legally
+binding, but a formal theory of precedential constraint can abstract from such legal issues.
+As for related research on precedential constaint, the above sections contain detailed
+comparisions with the recent studies of Horty and Rigoni. I now brieﬂy discuss some other
+related research. In several papers, Trevor Bench-Capon has, either alone or with others,
+
+=== [p.22] ===
+22
+Henry Prakken
+argued that dimensions cannot be reduced to factors (Bench-Capon, 1999; Bench-Capon
+and Rissland, 2001; Bench-Capon and Atkinson, 2017, 2018). Similar observations were
+made by Rissland and Ashley (2002). My account in Section 5.4 respects this, since it does
+not require that value assignments to dimensions are said to favour one side or another. In
+fact, as shown in Section 6, for both this model and Horty’s dimension-based result model
+(discussed in Section 5.1), the converse also holds, namely, that factors cannot simply be
+reduced to two-valued dimensions (although we saw that properly making this distinction
+is still an open problem). Bench-Capon and Atkinson (2017) criticise Rigoni’s account on
+the grounds that it cannot deal with questions of balance and trade off. I believe that both
+my model of Section 5.4 and Horty’s dimension-based result model leave room for this but
+outside these models (likewise Horty 2020). Models of precedential constraint only address
+the problem of how a decision is constrained by a body of precedents; they do not address
+the problem of how to argue for particular outcomes in a new case that is not constrained by
+a body of precedents. I believe that the latter is where the relevance of balancing and trade
+off is located.
+References
+Aleven V (1997) Teaching Case-Based Argumentation Through a Model and Examples.
+PhD Dissertation University of Pittsburgh
+Aleven V, Ashley K (1991) Toward an intelligent tutoring system for teaching law students
+to argue with cases. In: Proceedings of the Third International Conference on Artiﬁcial
+Intelligence and Law, ACM Press, New York, pp 42–52
+Ashley K (1989) Toward a computational theory of arguing with precedents: accomodating
+multiple interpretations of cases. In: Proceedings of the Second International Conference
+on Artiﬁcial Intelligence and Law, ACM Press, New York, pp 39–102
+Ashley K (1990) Modeling Legal Argument: Reasoning with Cases and Hypotheticals. MIT
+Press, Cambridge, MA
+Ashley K (2004) Case-based models of legal reasoning in a civil law context. In: Proceed-
+ings of the International Congress of Comparative Cultures and Legal Systems of the
+Instituto de Investigaciones Juridicas, Universidad Nacional Autonoma de Mexico, Mex-
+ico City
+Bench-Capon T (1999) Some observations on modelling case based reasoning with formal
+argument models. In: Proceedings of the Seventh International Conference on Artiﬁcial
+Intelligence and Law, ACM Press, New York, pp 36–42
+Bench-Capon T, Atkinson K (2017) Dimensions and values for legal CBR. In: Wyner A,
+Casini G (eds) Legal Knowledge and Information Systems. JURIX 2017: The Thirtieth
+Annual Conference, IOS Press, Amsterdam etc., pp 27–32
+Bench-Capon T, Atkinson K (2018) Lessons from implementing factors with magnitude. In:
+Palmirani M (ed) Legal Knowledge and Information Systems. JURIX 2018: The Thirty-
+ﬁrst Annual Conference, IOS Press, Amsterdam etc., pp 11–20
+Bench-Capon T, Rissland EL (2001) Back to the future: dimensions revisited. In: Verheij
+B, Lodder A, Loui R, Muntjewerff A (eds) Legal Knowledge and Information Systems.
+JURIX 2001: The Fourteenth Annual Conference, IOS Press, Amsterdam etc, pp 41–52
+Gardner A (1987) An Artiﬁcial Intelligence Approach to Legal Reasoning. MIT Press, Cam-
+bridge, MA
+
+=== [p.23] ===
+Factor- and Precedent-based Accounts of Precedential Constraint
+23
+Hage J (1993) Monological reason-based logic: a low-level integration of rule-based rea-
+soning and case-based reasoning. In: Proceedings of the Fourth International Conference
+on Artiﬁcial Intelligence and Law, ACM Press, New York, pp 30–39
+Horty J (2011) Rules and reasons in the theory of precedent. Legal Theory 17:1–33
+Horty J (2017) Reasoning with dimensions and magnitudes. In: Proceedings of the Sixteenth
+International Conference on Artiﬁcial Intelligence and Law, ACM Press, New York, pp
+109–118
+Horty J (2019) Reasoning with dimensions and magnitudes. Artiﬁcial Intelligence and Law
+27:309–345
+Horty J (2020) Modifying the reason model. Artiﬁcial Intelligence and Law Doi:
+https://doi.org/10.1007/s10506-020-09275-z. First online 18 November 2020.
+Horty J, Bench-Capon T (2012) A factor-based deﬁnition of precedential constraint. Artiﬁ-
+cial Intelligence and Law 20:181–214
+Loui R, Norman J, Olson J, Merrill A (1993) A design for reasoning with policies, prece-
+dents, and rationales. In: Proceedings of the Fourth International Conference on Artiﬁcial
+Intelligence and Law, ACM Press, New York, pp 202–211
+Prakken H (2019) Comparing alternative factor- and precedent-based accounts of prece-
+dential constraint. In: Araszkiewicz M, Rodriguez-Doncel V (eds) Legal Knowledge and
+Information Systems. JURIX 2019: The Thirty-Second Annual Conference, IOS Press,
+Amsterdam etc., pp 73–82
+Prakken H, Sartor G (1998) Modelling reasoning with precedents in a formal dialogue game.
+Artiﬁcial Intelligence and Law 6:231–287
+Rigoni A (2015) An improved factor based approach to precedential constraint. Artiﬁcial
+Intelligence and Law 23:133–160
+Rigoni A (2018) Representing dimensions within the reason model of precedent. Artiﬁcial
+Intelligence and Law 26:1–22
+Rissland E, Ashley K (1987) A case-based system for trade secrets law. In: Proceedings of
+the First International Conference on Artiﬁcial Intelligence and Law, ACM Press, New
+York, pp 60–66
+Rissland E, Ashley K (2002) A note on dimensions and factors. Artiﬁcial Intelligence and
+Law 10:65–77
+

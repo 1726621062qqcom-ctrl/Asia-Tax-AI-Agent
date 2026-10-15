@@ -58,6 +58,8 @@ def claims(b: Bounds, settled, as_at, graph=None) -> Tuple[List[Claim], List[Tup
                 archived.append((name, jur))
                 continue
             lo, hi = _tax(b.L_lo, name, jur), _tax(b.L_hi, name, jur)
+            lo, hi = min(lo, hi), max(lo, hi)        # the group's two ends need not be this jurisdiction's: a tax credited
+                                                     # at the ceiling lowers it there (decision D42: a foreign seller's source tax)
             route_names = {r.name for r in routes(jur, OVER_WITHHELD)}
             deadlines = {k: d for lb in parts for k, d in lb.deadlines.items() if lb.deadline_jur.get(k) == jur and k in route_names}
             potential = round(max(0.0, paid - lo), 2)

@@ -1,0 +1,618 @@
+{
+ "model": "deepseek-flash",
+ "case": "K3-carote-2026",
+ "samples": 2,
+ "k": 5,
+ "locate": "retrieval",
+ "patterns": true,
+ "dense": true,
+ "temperature": 0.7,
+ "prompt_version": "2026-10-15-en",
+ "rows": [
+  {
+   "path": "roles.ULT.loc",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "On March 7, 2023, Carote Group was incorporated as a limited liability company in Hong Kong SAR.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1,
+    "passages": 9,
+    "reads": 9,
+    "values": 3,
+    "nulls": 6,
+    "rejects": 0,
+    "agree": 0.333,
+    "quote_len": 96,
+    "figures_in_quote": 2,
+    "score": 0.03095,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": 3
+  },
+  {
+   "path": "roles.ULT.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "“Carote Group” Carote Group Limited (卡羅特集團有限公司), a limited liability company incorporated in Hong Kong SAR on March 7, 2023 and one of our subsidiaries",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1,
+    "passages": 9,
+    "reads": 9,
+    "values": 3,
+    "nulls": 6,
+    "rejects": 0,
+    "agree": 0.333,
+    "quote_len": 151,
+    "figures_in_quote": 2,
+    "score": 0.03254,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": 4
+  },
+  {
+   "path": "roles.ULT.attrs.is_mne_member",
+   "kind": "derived",
+   "gold": true,
+   "value": true,
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "Carote Group Limited (卡羅特集團有限公司), a limited liability company incorporated in Hong Kong SAR on March 7, 2023 and one of our subsidiaries",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.2,
+    "quote_len": 136,
+    "figures_in_quote": 2,
+    "score": 0.03175,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "roles.ULT.attrs.group_revenue_eur",
+   "kind": "derived",
+   "gold": 201430425.49,
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "roles.HOLD.loc",
+   "kind": "disclosed",
+   "gold": "SG",
+   "value": "SG",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "Ltd, a limited liability\ncompany incorporated in Singapore on March 12, 2021 and\none of our subsidiaries",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 2,
+    "pattern_values": 2,
+    "passages": 7,
+    "reads": 7,
+    "values": 4,
+    "nulls": 3,
+    "rejects": 0,
+    "agree": 0.571,
+    "quote_len": 104,
+    "figures_in_quote": 2,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 1
+  },
+  {
+   "path": "roles.HOLD.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "SG",
+   "value": "SG",
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "Ltd, a limited liability\ncompany incorporated in Singapore on March 12, 2021 and\none of our subsidiaries",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 2,
+    "pattern_values": 2,
+    "passages": 7,
+    "reads": 7,
+    "values": 2,
+    "nulls": 5,
+    "rejects": 0,
+    "agree": 0.286,
+    "quote_len": 104,
+    "figures_in_quote": 2,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "roles.OP.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": null,
+   "status": "conflict",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [
+    "conflict: CN / HK"
+   ],
+   "conflict": [
+    {
+     "value": "CN",
+     "doc": "K3-carote-2024",
+     "quote": "Zhejiang Carote was established in China on April 28, 2007, with an initial registered share capital of RMB5,000,000.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "enum",
+     "explicit": true
+    },
+    {
+     "value": "HK",
+     "doc": "K3-carote-2024",
+     "quote": "Carote International Limited (卡羅特國際有限公司) (formerly known as Zhejiang Carote Ind & Trade Co., Limited (浙江卡羅特工貿有限公司)), a limited liability company incorporated in Hong Kong SAR on March 25, 2015 and one of our subsidiaries",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "enum",
+     "explicit": true
+    }
+   ],
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1,
+    "passages": 9,
+    "reads": 9,
+    "values": 5,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.444
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "roles.OP.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": null,
+   "status": "conflict",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [
+    "conflict: CN / HK"
+   ],
+   "conflict": [
+    {
+     "value": "CN",
+     "doc": "K3-carote-2024",
+     "quote": "Zhejiang Carote was established in China on April 28, 2007, with an initial registered share capital of RMB5,000,000.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "enum",
+     "explicit": true
+    },
+    {
+     "value": "HK",
+     "doc": "K3-carote-2024",
+     "quote": "“Carote International” Carote International Limited (卡羅特國際有限公司) (formerly known as Zhejiang Carote Ind & Trade Co., Limited (浙江卡羅特工貿有限公司)), a limited liability company incorporated in Hong Kong SAR on March 25, 2015 and one of our subsidiaries",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "enum",
+     "explicit": true
+    }
+   ],
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1,
+    "passages": 9,
+    "reads": 9,
+    "values": 6,
+    "nulls": 3,
+    "rejects": 0,
+    "agree": 0.556
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "kind": "disclosed",
+   "gold": 100.0,
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 4,
+    "passages": 9,
+    "reads": 9,
+    "values": 0,
+    "nulls": 9,
+    "rejects": 0
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "holds.ULT>OP.since",
+   "kind": "disclosed",
+   "gold": "2023-08-29",
+   "value": "2023-08-29",
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "On August 29, 2023, pursuant to share transfer agreements entered into between each of Mr. Zhang. Ms. Lyu, Zhejiang Shengen, Kesheng Technology, Legang Technology, Luoqin Enterprise and Denk Trade on one hand, and Carote Group on the other hand, Carote Group completed the registration procedures for",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.2,
+    "quote_len": 409,
+    "figures_in_quote": 3,
+    "score": 0.03,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": 1
+  },
+  {
+   "path": "holds.ULT>OP.cost",
+   "kind": "missing",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "holds.ULT>HOLD.ratio",
+   "kind": "disclosed",
+   "gold": 100.0,
+   "value": 100.0,
+   "status": "correct",
+   "means": "pattern-sentence",
+   "quote": "At completion of the transaction described above, Carote (Singapore) Management was held as to 100% by Carote Group.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 2,
+    "passages": 9,
+    "reads": 9,
+    "values": 2,
+    "nulls": 7,
+    "rejects": 0,
+    "agree": 0.222,
+    "quote_len": 116,
+    "figures_in_quote": 1,
+    "score": 1.0,
+    "channels": [
+     "pattern"
+    ]
+   },
+   "gold_rank": 3
+  },
+  {
+   "path": "holds.ULT>HOLD.since",
+   "kind": "disclosed",
+   "gold": "2024-01-23",
+   "value": "2024-01-23",
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "On January 23, 2024, pursuant to a share transfer agreement entered into on January 18, 2024, Carote Group acquired the entire issued share capital in Carote (Singapore) Management from Zhejiang Carote for a consideration of US$100,000.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.2,
+    "quote_len": 236,
+    "figures_in_quote": 6,
+    "score": 0.03306,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "holds.ULT>HOLD.cost",
+   "kind": "missing",
+   "gold": null,
+   "value": 100000.0,
+   "status": "false_fill",
+   "means": "retrieved",
+   "quote": "On January 23, 2024, pursuant to a share transfer agreement entered into on January 18, 2024, Carote Group acquired the entire issued share capital in Carote (Singapore) Management from Zhejiang Carote for a consideration of US$100,000.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 1,
+    "nulls": 4,
+    "rejects": 0,
+    "agree": 0.2,
+    "quote_len": 236,
+    "figures_in_quote": 6,
+    "score": 0.03333,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "flows.up1.foreign_taxed",
+   "kind": "derived",
+   "gold": true,
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "flows.up1.foreign_headline_rate",
+   "kind": "disclosed",
+   "gold": 25,
+   "value": 25.0,
+   "status": "correct",
+   "means": "retrieved",
+   "quote": "If the PRC tax authorities determine that we are a PRC resident enterprise for enterprise income tax purposes, we could be subject to PRC tax at a rate of 25% on our worldwide income, which could materially reduce our net income.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 3,
+    "nulls": 2,
+    "rejects": 0,
+    "agree": 0.6,
+    "quote_len": 229,
+    "figures_in_quote": 1,
+    "score": 0.03333,
+    "channels": [
+     "bm25",
+     "dense"
+    ]
+   },
+   "gold_rank": 1
+  },
+  {
+   "path": "flows.up1.deductible_at_payer",
+   "kind": "derived",
+   "gold": false,
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "flows.up2.foreign_headline_rate",
+   "kind": "disclosed",
+   "gold": 17,
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "flows.up2.deductible_at_payer",
+   "kind": "derived",
+   "gold": false,
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "present.HOLD",
+   "kind": "derived",
+   "gold": "NONE",
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "present.financing",
+   "kind": "derived",
+   "gold": "EQUITY",
+   "value": null,
+   "status": "null",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "event.on",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "event.dividend",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "event.onward",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "means": "retrieved",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 5,
+    "reads": 5,
+    "values": 0,
+    "nulls": 5,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  }
+ ],
+ "usage": {
+  "calls": 25,
+  "prompt_tokens": 14758,
+  "completion_tokens": 28303,
+  "cache_hit_tokens": 3200,
+  "seconds": 204.34353017807007,
+  "retries": 0,
+  "cached": 123
+ },
+ "wall": 152.5,
+ "error": null,
+ "notes": []
+}

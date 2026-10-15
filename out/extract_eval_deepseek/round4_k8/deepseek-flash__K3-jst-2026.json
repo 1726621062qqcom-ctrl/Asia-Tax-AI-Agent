@@ -1,0 +1,365 @@
+{
+ "model": "deepseek-flash",
+ "case": "K3-jst-2026",
+ "samples": 2,
+ "k": 8,
+ "locate": "retrieval",
+ "patterns": true,
+ "dense": true,
+ "temperature": 0.7,
+ "prompt_version": "2026-10-14c",
+ "rows": [
+  {
+   "path": "roles.ULT.loc",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "(c)\nIncorporation of an offshore subsidiary in Hong Kong\nHong Kong True Value Limited (“HK True Value”) was incorporated in Hong Kong with a limited\nliability on 4 October 2021 as an intermediate holding company of the Group.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 1,
+    "pattern_values": 1
+   },
+   "gold_rank": 1
+  },
+  {
+   "path": "roles.ULT.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "(c)\nIncorporation of an offshore subsidiary in Hong Kong\nHong Kong True Value Limited (“HK True Value”) was incorporated in Hong Kong with a limited\nliability on 4 October 2021 as an intermediate holding company of the Group.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 1,
+    "pattern_values": 1
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "roles.ULT.attrs.is_mne_member",
+   "kind": "derived",
+   "gold": true,
+   "value": true,
+   "status": "correct",
+   "means": "model",
+   "quote": "The following Group companies were incorporated to act as intermediate holding companies under our Company to hold our operating subsidiaries: (a) on September 14, 2021, True Value Limited was incorporated as an exempted company with limited liability in BVI, a direct wholly-owned subsidiary of our ",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 5,
+    "nulls": 2,
+    "rejects": 1,
+    "agree": 0.625,
+    "quote_len": 535,
+    "figures_in_quote": 4,
+    "score": 0.03279
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "roles.ULT.attrs.group_revenue_eur",
+   "kind": "derived",
+   "gold": 120885764.78,
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 0,
+    "nulls": 8,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "roles.OP.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "OVERVIEW\nOur Group commenced primary business operations through Shanghai Jushuitan, a\nlimited liability company established in the PRC on September 26, 2014 as the parent company\nof our PRC operating subsidiaries.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "roles.OP.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "means": "pattern",
+   "quote": "OVERVIEW\nOur Group commenced primary business operations through Shanghai Jushuitan, a\nlimited liability company established in the PRC on September 26, 2014 as the parent company\nof our PRC operating subsidiaries.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "pattern_hits": 4,
+    "pattern_values": 1
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "kind": "disclosed",
+   "gold": 100.0,
+   "value": null,
+   "status": "conflict",
+   "means": "pattern",
+   "quote": null,
+   "rejected": [
+    "conflict: 91.35 / 8.65 / 91.3517"
+   ],
+   "conflict": [
+    {
+     "value": 91.35,
+     "doc": "K3-jst-2025",
+     "quote": "Ltd., StoneBridge 2020, L.P.,\nStoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund) transferred to Hong\nKong True Value Limited their equity interests in Shanghai Jushuitan equivalent to\nRMB3,484,473 of registered share capital, representing 91.35% of the then share capital of\nShanghai Jushuitan, at an aggregate consideration of RMB3,484,473.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    },
+    {
+     "value": 8.65,
+     "doc": "K3-jst-2025",
+     "quote": "Ltd.,\nStoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying\nFund transferred to Hong Kong True Value Limited their equity interests in Shanghai Jushuitan\nequivalent to RMB329,878 of registered capital, representing 8.65% of the then share capital\nof Shanghai Jushuitan, at an aggregate consideration of RMB140 million and the USD\nequivalent of RMB350 million.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    },
+    {
+     "value": 91.3517,
+     "doc": "K3-jst-2025",
+     "quote": "(“StoneBridge II”) and\nZhongjin Gongying Qijiang (Shanghai) Science and Innovation Equity Investment Fund Partnership (L.P.)\n(“CICC Gongying Fund”), pursuant to which HK True Value agreed to acquire their equity interests in\nShanghai Jushuitan equivalent to RMB3,484,473 of registered share capital, representing 91.3517% of the then\nshare capital of Shanghai Jushuitan, at an aggregate consideration of RMB3,484,473, which has been paid in\n2023.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    }
+   ],
+   "features": {
+    "pattern_hits": 3,
+    "pattern_values": 3
+   },
+   "gold_rank": null
+  },
+  {
+   "path": "holds.ULT>OP.since",
+   "kind": "derived",
+   "gold": "2023-09-05",
+   "value": null,
+   "status": "conflict",
+   "means": "model",
+   "quote": null,
+   "rejected": [
+    "conflict: 2023-02-21 / 2023-09-05"
+   ],
+   "conflict": [
+    {
+     "value": "2023-02-21",
+     "doc": "K3-jst-2025",
+     "quote": "On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte. Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund) transferred to Hong Kong True Value Limited their equity interests in Shanghai Jushuitan equivalent to RMB3,484,473 of registered share capital, representing 91.35% of the then share capital of Shanghai Jushuitan, at an aggregate consideration of RMB3,484,473.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "date",
+     "explicit": true
+    },
+    {
+     "value": "2023-09-05",
+     "doc": "K3-jst-2025",
+     "quote": "On September 5, 2023, Broad Street Investments Holding (Singapore) Pte. Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund transferred to Hong Kong True Value Limited their equity interests in Shanghai Jushuitan equivalent to RMB329,878 of registered capital, representing 8.65% of the then share capital of Shanghai Jushuitan, at an aggregate consideration of RMB140 million and the USD equivalent of RMB350 million.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "date",
+     "explicit": true
+    }
+   ],
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 2,
+    "nulls": 6,
+    "rejects": 0,
+    "agree": 0.125
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "holds.ULT>OP.cost",
+   "kind": "missing",
+   "gold": null,
+   "value": 3484473.0,
+   "status": "false_fill",
+   "means": "model",
+   "quote": "On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte. Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund) transferred to Hong Kong True Value Limited their equity in",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 1,
+    "nulls": 7,
+    "rejects": 0,
+    "agree": 0.125,
+    "quote_len": 501,
+    "figures_in_quote": 7,
+    "score": 0.03227
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "flows.out.foreign_taxed",
+   "kind": "derived",
+   "gold": true,
+   "value": true,
+   "status": "correct",
+   "means": "model",
+   "quote": "According to the New Corporate Income Tax Law (“New EIT Law”), distribution of profits earned by PRC companies since 1 January 2008 to foreign investors is subject to withholding tax of 5% or 10%, depending on if the foreign investor is considered as the beneficial owner of the dividend according to",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 2,
+    "nulls": 6,
+    "rejects": 0,
+    "agree": 0.25,
+    "quote_len": 498,
+    "figures_in_quote": 4,
+    "score": 0.03154
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "flows.out.foreign_headline_rate",
+   "kind": "disclosed",
+   "gold": 25,
+   "value": 25.0,
+   "status": "correct",
+   "means": "model",
+   "quote": "The general corporate income tax rate in the PRC is 25%.",
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 3,
+    "nulls": 5,
+    "rejects": 0,
+    "agree": 0.375,
+    "quote_len": 56,
+    "figures_in_quote": 1,
+    "score": 0.03333
+   },
+   "gold_rank": 0
+  },
+  {
+   "path": "flows.out.deductible_at_payer",
+   "kind": "derived",
+   "gold": false,
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 0,
+    "nulls": 8,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "present.HOLD",
+   "kind": "derived",
+   "gold": "NONE",
+   "value": null,
+   "status": "null",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 0,
+    "nulls": 8,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "event.on",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 0,
+    "nulls": 8,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  },
+  {
+   "path": "event.dividend",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "means": "model",
+   "quote": null,
+   "rejected": [],
+   "conflict": null,
+   "features": {
+    "passages": 8,
+    "reads": 8,
+    "values": 0,
+    "nulls": 8,
+    "rejects": 0
+   },
+   "gold_rank": "n/a"
+  }
+ ],
+ "usage": {
+  "calls": 30,
+  "prompt_tokens": 18757,
+  "completion_tokens": 24441,
+  "cache_hit_tokens": 6144,
+  "seconds": 202.20410346984863,
+  "retries": 0,
+  "cached": 50
+ },
+ "wall": 82.2,
+ "error": null,
+ "notes": [
+  "roles.ULT.attrs.is_mne_member: a reading of another passage was refused (quote not found in the document); the accepted reading stands on its verified quote"
+ ]
+}

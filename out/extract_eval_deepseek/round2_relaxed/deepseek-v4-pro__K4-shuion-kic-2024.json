@@ -1,0 +1,395 @@
+{
+ "model": "deepseek-v4-pro",
+ "case": "K4-shuion-kic-2024",
+ "rows": [
+  {
+   "path": "roles.ULT.loc",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "quote": "“Top Victory” Top Victory Development Limited, a company incorporated in Hong Kong and an indirect non-wholly owned subsidiary of the Company as at the Latest Practicable Date;",
+   "rejected": []
+  },
+  {
+   "path": "roles.ULT.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "quote": "“Top Victory” Top Victory Development Limited, a company incorporated in Hong Kong and an indirect non-wholly owned subsidiary of the Company as at the Latest Practicable Date;",
+   "rejected": []
+  },
+  {
+   "path": "roles.OP.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "quote": "“KIC” Shanghai Knowledge and Innovation Community Development Co., Ltd.*(上海創智天地發展有限公司), a company incorporated in the PRC with limited liability and a non-wholly owned subsidiary of the Company as at the Latest Practicable Date;",
+   "rejected": []
+  },
+  {
+   "path": "roles.OP.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "quote": "“KIC” Shanghai Knowledge and Innovation Community Development Co., Ltd.*(上海創智天地發展有限公司), a company incorporated in the PRC with limited liability and a non-wholly owned subsidiary of the Company as at the Latest Practicable Date;",
+   "rejected": []
+  },
+  {
+   "path": "roles.BUYER.loc",
+   "kind": "derived",
+   "gold": "CN",
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "kind": "disclosed",
+   "gold": 99.0,
+   "value": 99.0,
+   "status": "correct",
+   "quote": "KIC is directly owned as to 99% by Top Victory and 1% by Yangpu Knowledge Innovation.",
+   "rejected": []
+  },
+  {
+   "path": "holds.ULT>OP.since",
+   "kind": "disclosed",
+   "gold": "2010-06-09",
+   "value": "2010-06-09",
+   "status": "correct",
+   "quote": "Shanghai Knowledge and Innovation Community Development Co., Ltd., established on 9 June 2010 with a registered capital of HK$1,550,000,000, which was jointly contributed by Shanghai Yangpu Knowledge Innovation Zone Investment and Development Co., Ltd. and Top Victory Development Limited, accounting",
+   "rejected": []
+  },
+  {
+   "path": "holds.ULT>OP.cost",
+   "kind": "missing",
+   "gold": null,
+   "value": 1116720000.0,
+   "status": "false_fill",
+   "quote": "Following the capital reduction, the registered capital of the Company was HK$1,128,000,000, of which Top Victory Development Limited adjusted its contribution amount from HK$1,149,390,000 to HK$1,116,720,000, accounting for 99% of the total registered capital, and Shanghai Yangpu Knowledge Innovati",
+   "rejected": []
+  },
+  {
+   "path": "flows.exit.immovable_ratio",
+   "kind": "derived",
+   "gold": 97.8,
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "flows.exit.listed_market_trade",
+   "kind": "derived",
+   "gold": false,
+   "value": false,
+   "status": "correct",
+   "quote": "“KIC Equity Transfer” the transfer of the 99% equity interests in KIC from Top Victory to the Limited Partnership;",
+   "rejected": []
+  },
+  {
+   "path": "present.HOLD",
+   "kind": "derived",
+   "gold": "NONE",
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "present.exit_route",
+   "kind": "disclosed",
+   "gold": "DIRECT",
+   "value": "DIRECT",
+   "status": "correct",
+   "quote": "“KIC Equity Transfer” the transfer of the 99% equity interests in KIC from Top Victory to the Limited Partnership",
+   "rejected": []
+  },
+  {
+   "path": "event.exit",
+   "kind": "disclosed",
+   "gold": 2668000000.0,
+   "value": 2668000000.0,
+   "status": "correct",
+   "quote": "the 99% equity interests in KIC will be transferred from Top Victory to the Limited Partnership at the consideration of approximately RMB2,668,000,000 (equivalent to approximately HK$2,925,000,000).",
+   "rejected": []
+  },
+  {
+   "path": "event.on",
+   "kind": "derived",
+   "gold": "2024-11-27",
+   "value": "2024-11-27",
+   "status": "correct",
+   "quote": "On 27 November 2024, the Equity Transfer Agreements were entered into by the relevant parties.",
+   "rejected": []
+  }
+ ],
+ "usage": {
+  "calls": 14,
+  "prompt_tokens": 80915,
+  "completion_tokens": 64170,
+  "cache_hit_tokens": 79744,
+  "seconds": 670.725715637207
+ },
+ "wall": 671.8,
+ "error": null,
+ "log": [
+  {
+   "prompt_head": "For each field below, list the passages of the documents that bear on it. Answer with JSON only:\n{\"<field key>\": [{\"doc\": \"<doc id>\", \"quote\": \"<verbatim passage>\"}], ...}. Quote verbatim; an empty li",
+   "reply": "{\n  \"roles.ULT.loc\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"“Top Victory” Top Victory Development Limited, a company incorporated in Hong Kong and an indirect non-wholly owned subsidiary of the Company as at the Latest Practicable Date;\"\n    }\n  ],\n  \"roles.ULT.attrs.incorporated_in\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"“Top Victory” Top Victory Development Limited, a company incorporated in Hong Kong and an indirect non-wholly owned subsidiary of the Company as at the Latest Practicable Date;\"\n    }\n  ],\n  \"roles.OP.loc\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"“KIC” Shanghai Knowledge and Innovation Community Development Co., Ltd.*(上海創智天地發展有限公司), a company incorporated in the PRC with limited liability and a non-wholly owned subsidiary of the Company as at the Latest Practicable Date;\"\n    }\n  ],\n  \"roles.OP.attrs.incorporated_in\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"“KIC” Shanghai Knowledge and Innovation Community Development Co., Ltd.*(上海創智天地發展有限公司), a company incorporated in the PRC with limited liability and a non-wholly owned subsidiary of the Company as at the Latest Practicable Date;\"\n    }\n  ],\n  \"roles.BUYER.loc\": [],\n  \"holds.ULT>OP.ratio\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"“KIC Equity Transfer” the transfer of the 99% equity interests in KIC from Top Victory to the Limited Partnership;\"\n    },\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"At the Latest Practicable Date, KIC, one of the Project Companies, is a company incorporated in the PRC with limited liability and is principally engaged in property investment and operation. KIC is directly owned as to 99% by Top Victory and 1% by Yangpu Knowledge Innovation.\"\n    }\n  ],\n  \"holds.ULT>OP.since\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"Shanghai Knowledge and Innovation Community Development Co., Ltd., established on 9 June 2010 with a registered capital of HK$1,550,000,000, which was jointly contributed by Shanghai Yangpu Knowledge Innovation Zone Investment and Development Co., Ltd. and Top Victory Development Limited, accounting for 100.00% of the total registered capital.\"\n    }\n  ],\n  \"holds.ULT>OP.cost\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"On 27 October 2022, according to the Amendment to the Articles of Association and the Resolution of the Board of Directors, the registered capital of the Company was reduced from HK$1,550,000,000 to HK$1,161,000,000, of which Top Victory Development Limited adjusted its contribution amount from HK$1,534,500,000 to HK$1,149,390,000, accounting for 99% of the total registered capital, and Shanghai Yangpu Knowledge Innovation Zone Investment and Development Co., Ltd. adjusted its contribution amount from HK$15,500,000 to HK$11,610,000, accounting for 1% of the total registered capital.\"\n    },\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"On 13 May 2024, according to its Resolution of the Board of Directors, the Company decided to reduce the registered capital by HK$33,000,000. Following the capital reduction, the registered capital of the Company was HK$1,128,000,000, of which Top Victory Development Limited adjusted its contribution amount from HK$1,149,390,000 to HK$1,116,720,000, accounting for 99% of the total registered capital, and Shanghai Yangpu Knowledge Innovation Zone Investment and Development Co., Ltd. adjusted its contribution amount from HK$11,610,000 to HK$11,280,000, accounting for 1% of the total registered capital.\"\n    }\n  ],\n  \"flows.exit.immovable_ratio\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"The original carrying amount of the properties and buildings was RMB1,494,934,918.66 and the net carrying amount was RMB1,138,452,196.55.\"\n    },\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"Based on our comprehensive estimation, all the fixed assets −properties and buildings within the scope of this valuation were valued at RMB2,769,201,708.03 by using the market comparison approach and RMB1,903,557,100.00 by using the income approach.\"\n    },\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"the carrying amount of the entire shareholders’ equity was RMB1,065,422,316.35, with an appraised value of RMB2,694,931,745.02, representing an appreciation rate of 152.94%\"\n    }\n  ],\n  \"flows.exit.listed_market_trade\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"“KIC Equity Transfer” the transfer of the 99% equity interests in KIC from Top Victory to the Limited Partnership;\"\n    },\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"the Limited Partnership shall enter into the KIC Equity Transfer Agreement with Top Victory to acquire the 99% equity interests in KIC held by Top Victory at the consideration of approximately RMB2,668,000,000 (equivalent to approximately HK$2,925,000,000). On 27 November 2024, the Equity Transfer Agreements were entered into by the relevant parties.\"\n    }\n  ],\n  \"present.HOLD\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"At the Latest Practicable Date, KIC, one of the Project Companies, is a company incorporated in the PRC with limited liability and is principally engaged in property investment and operation. KIC is directly owned as to 99% by Top Victory and 1% by Yangpu Knowledge Innovation.\"\n    }\n  ],\n  \"present.exit_route\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"“KIC Equity Transfer” the transfer of the 99% equity interests in KIC from Top Victory to the Limited Partnership;\"\n    }\n  ],\n  \"event.exit\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"the 99% equity interests in KIC will be transferred from Top Victory to the Limited Partnership at the consideration of approximately RMB2,668,000,000 (equivalent to approximately HK$2,925,000,000).\"\n    }\n  ],\n  \"event.on\": [\n    {\n      \"doc\": \"K4-shuion-2024\",\n      \"quote\": \"On 27 November 2024, the Equity Transfer Agreements were entered into by the relevant parties.\"\n    }\n  ]\n}",
+   "usage": {
+    "prompt_tokens": 76431,
+    "completion_tokens": 15891,
+    "total_tokens": 92322,
+    "prompt_tokens_details": {
+     "cached_tokens": 76416
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 14293
+    },
+    "prompt_cache_hit_tokens": 76416,
+    "prompt_cache_miss_tokens": 15
+   },
+   "seconds": 149.5
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"HK\", \"doc\": \"K4-shuion-2024\", \"quote\": \"“Top Victory” Top Victory Development Limited, a company incorporated in Hong Kong and an indirect non-wholly owned subsidiary of the Company as at the Latest Practicable Date;\"}",
+   "usage": {
+    "prompt_tokens": 295,
+    "completion_tokens": 185,
+    "total_tokens": 480,
+    "prompt_tokens_details": {
+     "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 125
+    },
+    "prompt_cache_hit_tokens": 256,
+    "prompt_cache_miss_tokens": 39
+   },
+   "seconds": 3.3
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\":\"HK\",\"doc\":\"K4-shuion-2024\",\"quote\":\"“Top Victory” Top Victory Development Limited, a company incorporated in Hong Kong and an indirect non-wholly owned subsidiary of the Company as at the Latest Practicable Date;\"}",
+   "usage": {
+    "prompt_tokens": 299,
+    "completion_tokens": 203,
+    "total_tokens": 502,
+    "prompt_tokens_details": {
+     "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 148
+    },
+    "prompt_cache_hit_tokens": 256,
+    "prompt_cache_miss_tokens": 43
+   },
+   "seconds": 3.8
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"CN\", \"doc\": \"K4-shuion-2024\", \"quote\": \"“KIC” Shanghai Knowledge and Innovation Community Development Co., Ltd.*(上海創智天地發展有限公司), a company incorporated in the PRC with limited liability and a non-wholly owned subsidiary of the Company as at the Latest Practicable Date;\"}",
+   "usage": {
+    "prompt_tokens": 311,
+    "completion_tokens": 163,
+    "total_tokens": 474,
+    "prompt_tokens_details": {
+     "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 87
+    },
+    "prompt_cache_hit_tokens": 256,
+    "prompt_cache_miss_tokens": 55
+   },
+   "seconds": 3.2
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"CN\", \"doc\": \"K4-shuion-2024\", \"quote\": \"“KIC” Shanghai Knowledge and Innovation Community Development Co., Ltd.*(上海創智天地發展有限公司), a company incorporated in the PRC with limited liability and a non-wholly owned subsidiary of the Company as at the Latest Practicable Date;\"}",
+   "usage": {
+    "prompt_tokens": 315,
+    "completion_tokens": 248,
+    "total_tokens": 563,
+    "prompt_tokens_details": {
+     "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 172
+    },
+    "prompt_cache_hit_tokens": 256,
+    "prompt_cache_miss_tokens": 59
+   },
+   "seconds": 6.9
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\": 99, \"doc\": \"K4-shuion-2024\", \"quote\": \"KIC is directly owned as to 99% by Top Victory and 1% by Yangpu Knowledge Innovation.\"}",
+   "usage": {
+    "prompt_tokens": 366,
+    "completion_tokens": 310,
+    "total_tokens": 676,
+    "prompt_tokens_details": {
+     "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 262
+    },
+    "prompt_cache_hit_tokens": 256,
+    "prompt_cache_miss_tokens": 110
+   },
+   "seconds": 4.3
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <an ISO date YYYY-MM-DD>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if",
+   "reply": "{\"value\": \"2010-06-09\", \"doc\": \"K4-shuion-2024\", \"quote\": \"Shanghai Knowledge and Innovation Community Development Co., Ltd., established on 9 June 2010 with a registered capital of HK$1,550,000,000, which was jointly contributed by Shanghai Yangpu Knowledge Innovation Zone Investment and Development Co., Ltd. and Top Victory Development Limited, accounting for 100.00% of the total registered capital.\"}",
+   "usage": {
+    "prompt_tokens": 333,
+    "completion_tokens": 428,
+    "total_tokens": 761,
+    "prompt_tokens_details": {
+     "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 327
+    },
+    "prompt_cache_hit_tokens": 256,
+    "prompt_cache_miss_tokens": 77
+   },
+   "seconds": 5.2
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\": 1116720000, \"doc\": \"K4-shuion-2024\", \"quote\": \"Following the capital reduction, the registered capital of the Company was HK$1,128,000,000, of which Top Victory Development Limited adjusted its contribution amount from HK$1,149,390,000 to HK$1,116,720,000, accounting for 99% of the total registered capital, and Shanghai Yangpu Knowledge Innovation Zone Investment and Development Co., Ltd. adjusted its contribution amount from HK$11,610,000 to HK$11,280,000, accounting for 1% of the total registered capital.\"}",
+   "usage": {
+    "prompt_tokens": 568,
+    "completion_tokens": 10455,
+    "total_tokens": 11023,
+    "prompt_tokens_details": {
+     "cached_tokens": 512
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 10317
+    },
+    "prompt_cache_hit_tokens": 512,
+    "prompt_cache_miss_tokens": 56
+   },
+   "seconds": 107.8
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\": null}",
+   "usage": {
+    "prompt_tokens": 432,
+    "completion_tokens": 15024,
+    "total_tokens": 15456,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 15018
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 432
+   },
+   "seconds": 151.1
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <true or false>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if the pass",
+   "reply": "{\"value\": false, \"doc\": \"K4-shuion-2024\", \"quote\": \"“KIC Equity Transfer” the transfer of the 99% equity interests in KIC from Top Victory to the Limited Partnership;\"}",
+   "usage": {
+    "prompt_tokens": 372,
+    "completion_tokens": 965,
+    "total_tokens": 1337,
+    "prompt_tokens_details": {
+     "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 915
+    },
+    "prompt_cache_hit_tokens": 256,
+    "prompt_cache_miss_tokens": 116
+   },
+   "seconds": 13.2
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER/NONE>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null",
+   "reply": "{\"value\": null}",
+   "usage": {
+    "prompt_tokens": 321,
+    "completion_tokens": 7671,
+    "total_tokens": 7992,
+    "prompt_tokens_details": {
+     "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 7665
+    },
+    "prompt_cache_hit_tokens": 256,
+    "prompt_cache_miss_tokens": 65
+   },
+   "seconds": 83.6
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of DIRECT/INDIRECT>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if",
+   "reply": "{\"value\": \"DIRECT\", \"doc\": \"K4-shuion-2024\", \"quote\": \"“KIC Equity Transfer” the transfer of the 99% equity interests in KIC from Top Victory to the Limited Partnership\"}",
+   "usage": {
+    "prompt_tokens": 284,
+    "completion_tokens": 336,
+    "total_tokens": 620,
+    "prompt_tokens_details": {
+     "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 285
+    },
+    "prompt_cache_hit_tokens": 256,
+    "prompt_cache_miss_tokens": 28
+   },
+   "seconds": 4.7
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\": 2668000000, \"doc\": \"K4-shuion-2024\", \"quote\": \"the 99% equity interests in KIC will be transferred from Top Victory to the Limited Partnership at the consideration of approximately RMB2,668,000,000 (equivalent to approximately HK$2,925,000,000).\"}",
+   "usage": {
+    "prompt_tokens": 310,
+    "completion_tokens": 12143,
+    "total_tokens": 12453,
+    "prompt_tokens_details": {
+     "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 12069
+    },
+    "prompt_cache_hit_tokens": 256,
+    "prompt_cache_miss_tokens": 54
+   },
+   "seconds": 131.0
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <an ISO date YYYY-MM-DD>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if",
+   "reply": "{\"value\": \"2024-11-27\", \"doc\": \"K4-shuion-2024\", \"quote\": \"On 27 November 2024, the Equity Transfer Agreements were entered into by the relevant parties.\"}",
+   "usage": {
+    "prompt_tokens": 278,
+    "completion_tokens": 148,
+    "total_tokens": 426,
+    "prompt_tokens_details": {
+     "cached_tokens": 256
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 98
+    },
+    "prompt_cache_hit_tokens": 256,
+    "prompt_cache_miss_tokens": 22
+   },
+   "seconds": 3.2
+  }
+ ]
+}

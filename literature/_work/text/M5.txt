@@ -1,0 +1,1694 @@
+=== [p.1] ===
+Findings of the Association for Computational Linguistics: EMNLP 2021, pages 1907–1919
+November 7–11, 2021. ©2021 Association for Computational Linguistics
+1907
+ContractNLI: A Dataset for Document-level Natural Language Inference
+for Contracts
+Yuta Koreeda12 and Christopher D. Manning2
+1Hitachi America Ltd, Santa Clara, CA, USA
+2Stanford University, Stanford, CA, USA
+{koreeda, manning}@stanford.edu
+Abstract
+Reviewing contracts is a time-consuming pro-
+cedure that incurs large expenses to companies
+and social inequality to those who cannot af-
+ford it. In this work, we propose document-
+level natural language inference (NLI) for con-
+tracts, a novel, real-world application of NLI
+that addresses such problems. In this task, a
+system is given a set of hypotheses (such as
+“Some obligations of Agreement may survive
+termination.”) and a contract, and it is asked
+to classify whether each hypothesis is entailed
+by, contradicting to or not mentioned by (neu-
+tral to) the contract as well as identifying ev-
+idence for the decision as spans in the con-
+tract. We annotated and release the largest cor-
+pus to date consisting of 607 annotated con-
+tracts.
+We then show that existing models
+fail badly on our task and introduce a strong
+baseline, which (1) models evidence identiﬁ-
+cation as multi-label classiﬁcation over spans
+instead of trying to predict start and end to-
+kens, and (2) employs more sophisticated con-
+text segmentation for dealing with long docu-
+ments. We also show that linguistic character-
+istics of contracts, such as negations by excep-
+tions, are contributing to the difﬁculty of this
+task and that there is much room for improve-
+ment.
+1
+Introduction
+Reviewing a contract is a time-consuming proce-
+dure. A study (Exigent Group Limited, 2019) re-
+vealed that “60-80% of all business-to-business
+transactions are governed by some form of written
+agreement, with a typical Fortune 1000 company
+maintaining 20,000 to 40,000 active contracts at
+any given time”. Contract review is carried out
+manually by professionals, costing companies a
+huge amount of money each year. Even worse,
+smaller companies or individuals may opt for sign-
+ing contracts without access to such professional
+services.
+...  
+Conﬁdential Information: means all conﬁdential information (however recorded, preserved or disclosed) disclosed by 
+a Party or its Representatives to the other Party and that Party's Representatives including but not limited to://  
+(a) the fact that discussions and negotiations are taking place concerning the Purpose and the status of those 
+     discussions and negotiations;// 
+(b) the existence and terms of this Agreement;// 
+(c) any information relating to:// 
+    (i) the business, affairs, customers, clients, suppliers, plans, intentions, or market opportunities of the Disclosing 
+        Party or of the Disclosing Party's Afﬁliates; and// 
+    (ii) the operations, processes, product information, know-how, designs, speciﬁcations, trade secrets, computer 
+         programs or software of the Disclosing Party or of the Disclosing Party's Afﬁliates; and// 
+(d) any information or analysis derived from Conﬁdential Information.// 
+...
+ Examples of hypotheses:
+Entailment
+Contradiction
+Not mentioned
+Receiving Party shall not disclose the fact that Agreement was agreed or 
+negotiated.
+(Evidence denoted with green highlight on upper half of text)
+Entailment
+Contradiction
+Not mentioned
+Conﬁdential Information shall only include technical information.
+(Evidence denoted with blue highlight on bottom half of text)
+Entailment
+Contradiction
+Not mentioned
+Receiving Party shall not use any Conﬁdential Information for any purposes other 
+than the purpose(s) stated in Agreement.
+(Evidence does not exist when the hypothesis is not mentioned)
+ 
+// denotes a span border
+Figure 1: An overview of document-level NLI for con-
+tracts. Given a contract, a system must classify whether
+each hypothesis is entailed by, contradicting to or not
+mentioned by the contract and identify evidence for the
+decision as spans in the contract.
+To address this need, there is a growing interest
+in contract review automation. Recently, Leivaditi
+et al. (2020) and Hendrycks et al. (2021) introduced
+datasets for extracting certain terms in contracts,
+which can help a user comprehend a contract by
+providing a consistent legend for what sort of terms
+are discussed in the contract. However, these works
+only aim to ﬁnd what sort of terms are present, not
+what each of such terms exactly states. For exam-
+ple, (Hendrycks et al., 2021) involves extracting
+a span in a contract that discusses about a ques-
+tion “Is there a restriction on a party’s soliciting or
+hiring employees ...?”. Being able to answer such
+questions can further beneﬁt users by automatically
+detecting terms that are against the user’s policy
+without having have to read each of the extracted
+terms.
+In this paper, we argue that contract review is
+also a compelling real-world use case for natural
+language inference (NLI). However, rather than
+evaluating a hypothesis versus a short passage, eval-
+uation is against a whole document. Concretely,
+given a contract and a set of hypotheses (such as
+“Some obligations of Agreement may survive ter-
+
+=== [p.2] ===
+1908
+mination.”), we would like to classify whether each
+hypothesis is entailed by, contradicting to or not
+mentioned by (neutral to) the contract as well as
+identifying evidence for the decision as spans in
+the contract (Figure 1). Therefore, the problem
+involves similar evidence identiﬁcation problems
+as open domain question answering, a problem less
+studied in the NLI context, and practical useful-
+ness also involves identifying the evidence spans
+justifying an NLI judgment.
+Our work presents a novel, real-world appli-
+cation of NLI. We further argue that contracts —
+which occupy a substantial amount of the text we
+produce today — exhibit interesting linguistic char-
+acteristics that are worth exploring. Our contribu-
+tions are as follows:
+1. We annotated and release1 a dataset consisting
+of 607 contracts. This is the ﬁrst dataset to uti-
+lize NLI for contracts and is also the largest
+corpus of annotated contracts.
+2. We introduce a strong baseline for our task, Span
+NLI BERT, which (a) makes the problem of evi-
+dence identiﬁcation easier by modeling the prob-
+lem as multi-label classiﬁcation over spans in-
+stead of trying to predict the start and end tokens,
+and (b) introduces more sophisticated context
+segmentation to deal with long documents. We
+show that Span NLI BERT signiﬁcantly outper-
+forms the existing models.
+3. We investigate interesting linguistic characteris-
+tics in contracts that make this task challenging
+even for Span NLI BERT.
+2
+ContractNLI Dataset
+2.1
+Task Formulation
+Our task is, given a contract and a set of hypothe-
+ses (each being a sentence), to classify whether
+each hypothesis is entailed by, contradicting to or
+not mentioned by (neutral to) the contract, and to
+identify evidence for the decision as spans in the
+contract. More formally, the task consists of:
+Natural language inference (NLI) Document-
+level three-class classiﬁcation (one of ENTAIL-
+MENT, CONTRADICTION or NOTMENTIONED).
+Evidence identiﬁcation Multi-label binary classi-
+ﬁcation over spans, where a span is a sentence
+or a list item within a sentence. This is only de-
+ﬁned when NLI label is either ENTAILMENT or
+CONTRADICTION.
+1https://stanfordnlp.github.io/
+contract-nli/
+We argue that extracting whole sentences is more
+appropriate for ContractNLI because a lawyer can
+then check the evidence with comprehensible con-
+text around it, as oppose to the token-level span
+identiﬁcation as in factoid question answering
+where users do not need to see the textual support
+for the answer. Evidence spans therefore must be as
+concise as possible (need not be contiguous) while
+being self-contained, such that a reasonable user
+should be able to understand meaning just by read-
+ing the evidence spans (e.g., the second hypothesis
+in Figure 1 includes the ﬁrst paragraph in order to
+clarify the clauses’ subject). We comprehensively
+identify evidence spans where they are redundant.
+Unlike (Hendrycks et al., 2021), we target a sin-
+gle type of contracts. This allows us to incorpo-
+rate less frequent and more ﬁne-grained hypothe-
+ses, as we can obtain a larger amount of such ex-
+amples with the same number of annotated con-
+tracts. While practioners will have to create a sim-
+ilar dataset to scale their system to another type
+of contracts, our work can be a model for how to
+generalize to other types of contracts because they
+would exhibit similar linguistic characteristics. We
+chose non-disclosure agreements (NDAs) for our
+task, which are relatively easy to collect.
+Because a lawyer would look for the same type
+of information in contracts of the same type, we
+ﬁxed the hypotheses throughout all the contracts
+including the test dataset. Given the closed set of
+hypotheses, this problem could also be addressed
+by building a text classiﬁer for each hypothesis.
+However, given the modest available data for a task
+requiring natural language understanding, we be-
+lieve more power can be achieved by viewing this
+as an NLI problem. Indeed, you can think of the
+NLI approach as building a multi-task text classi-
+ﬁer with the hypothesis serving as a “prompt” to
+the model. We will discuss whether introducing
+hypotheses is helpful to the model or not in Sec-
+tion 5.1.
+2.2
+Data Collection
+In this section, we brieﬂy discuss how we collected
+and annotated the dataset. Since it posed many chal-
+lenges that we cannot adequately describe within
+the page limit, we provide more details and caveats
+in Appendix A.1.
+We collected NDAs from Internet search engines
+and Electronic Data Gathering, Analysis, and Re-
+trieval system (EDGAR). We searched data with
+
+=== [p.3] ===
+1909
+1. Explicit identification
+2. None-inclusion of non-technical information
+3. Inclusion of verbally conveyed information
+4. Limited use
+5. Sharing with employees
+6. Sharing with third-parties
+7. Notice on compelled disclosure
+8. Confidentiality of Agreement
+9. No reverse engineering
+10. Permissible development of similar information
+11. Permissible acquirement of similar information
+12. No licensing
+13. Return of confidential information
+14. Permissible copy
+15. No solicitation
+16. Survival of obligations
+17. Permissible post-agreement possession
+220
+91
+149
+52
+65
+53
+147
+262
+363
+160
+112
+96
+241
+256
+330
+112
+111
+112
+309
+4
+7
+13
+111
+2
+1
+1
+76
+11
+194
+91
+23
+270
+364
+345
+259
+276
+159
+59
+263
+311
+327
+181
+91
+93
+300
+118
+Not mentioned
+Contradiction
+Entailment
+Figure 2: The NLI label distribution. Hypothesis names are used only for a human readability purpose. A full list
+of hypotheses can be found in Table 10.
+Format
+Source
+Train
+Development
+Test
+Total
+Plain Text
+EDGAR
+83
+12
+24
+119
+HTML
+EDGAR
+79
+11
+23
+113
+PDF
+Search engines
+261
+38
+76
+375
+Total
+423
+61
+123
+607
+Table 1: Data split
+Number per a document
+Tokens per an instance
+Average
+Min.
+Max.
+Average
+Min.
+Max.
+Paragraph
+43.7
+9
+248
+52.8
+1
+1209
+Span
+77.8
+18
+354
+29.5
+1
+289
+Token
+2,254.3
+336
+11,503
+—
+—
+—
+Table 2: Basic statistics of the training dataset
+a simple regular expression and hand-picked valid
+contracts.
+Since the collected documents came in various
+formats including PDFs, we used (Koreeda and
+Manning, 2021) to extract plain text from the doc-
+uments by removing line breaks, detecting para-
+graph boundaries and removing headers/footers. In
+order to further ensure the quality of our data, we
+manually screened all the documents and corrected
+mistakes made by the tool. We then used Stanza
+(Qi et al., 2020) to split each paragraph into sen-
+tences and further split each sentence at inline list
+items (e.g., at “(a)” or “iv)”) using another regular
+expression. Finally, we tokenized each sentence
+with Stanza and further split each token into subto-
+kens using BERT’s tokenizer (Devlin et al., 2019;
+Wu et al., 2016).
+For hypotheses, we developed 17 hypotheses by
+comparing different NDAs. We did not include hy-
+potheses that would simply reason about presence
+of certain clauses (such as “There exists an arbi-
+tration clause in the contract.”) because they are
+covered by previous studies (Leivaditi et al., 2020;
+Hendrycks et al., 2021).
+Finally, we annotated all the contracts based on
+1
+2
+3
+4
+5
+6
+7
+8
+9
+Labeled spans
+0
+400
+800
+1200
+1600
+2000
+2400
+Frequency
+(a) As number of spans
+0
+100
+200
+300
+400
+500
+600
+Labeled spans (#tokens)
+0
+400
+800
+1200
+1600
+2000
+(b) As number of tokens
+Figure 3: Number of evidence spans in each document.
+the principles discussed in Section 2.1. Since we
+employ a ﬁxed set of hypotheses unlike existing
+NLI datasets, we were able to utilize an example-
+oriented annotation guideline to improve annota-
+tion consistency.
+2.3
+Data Statistics
+We annotated a total of 607 documents, which are
+split into training, development and testing data
+at a ratio of 70:10:20 stratiﬁed by their formats
+(Table 1). We show statistics of the documents in
+Table 2. A document on average has 77.8 spans to
+choose evidence spans from. An average number of
+tokens per a document is 2,254.0, which is larger
+than maximum allowed context length of BERT
+(512 tokens). Even though an NDA is relatively
+short for a contract, 86% of documents exceed the
+maximum allowed context length of BERT.
+The distribution of NLI labels is shown in Fig-
+ure 2. ENTAILMENT and NOTMENTIONED oc-
+cupy a signiﬁcant ratio of the dataset, but around
+half of the hypotheses contain both ENTAILMENT
+and CONTRADICTION. The distribution of evi-
+dence spans is shown in Figure 3. The most of
+entailed/contradicting hypotheses have one or two
+evidence spans, but some have up to nine spans.
+
+=== [p.4] ===
+1910
+1𝑦"E
+1𝑦"N
+1𝑦"C
+…
+…
+[CLS]
+Receiving
+[SEP]
+[SPAN]
+Confidential
+and
+[SPAN]
+…
+This
+Confidential
+BERT
+[Confidentiality and Non-disclosure Agreement] [This ... Information.] [1. Definitions and Interpretation] [Confidential ...  not limited to] [(a) the existence …] […]
+…
+…
+[CLS]
+Receiving
+[SEP]
+[SPAN]
+1.
+Definitions
+[SPAN]
+…
+Confidential
+Information
+BERT
+0𝑦"E
+0𝑦"N
+0𝑦"C
+0𝑠̂0
+0𝑠̂1
+1𝑠̂2
+1𝑠̂3
+Hypothesis
+Contract
+Hypothesis
+Figure 4: Model architecture of proposed Span NLI BERT
+3
+Span NLI BERT for ContractNLI
+Transformer-based models have become a domi-
+nant approach for many NLP tasks. Previous works
+implemented span identiﬁcation on the Trans-
+former architecture by predicting start and end to-
+kens, scaling it to a document by splitting the doc-
+ument into multiple contexts with a static window
+and a stride size (Devlin et al., 2019; Hendrycks
+et al., 2021). The start/end token prediction makes
+the problem unnecessarily difﬁcult because the
+model has to solve span boundary detection and
+evidence identiﬁcation concurrently, whereas the
+deﬁnition of spans is usually ﬁxed for many appli-
+cations. Splitting a document can be problematic
+when a span is split into multiple contexts or when
+a span does not receive enough surrounding con-
+text.
+To that end, we introduce Span NLI BERT, a
+multi-task Transformer model that can jointly solve
+NLI and evidence identiﬁcation, as well as address-
+ing the above shortcomings of the previous works
+(Figure 4). Instead of predicting start and end to-
+kens, we propose to insert special [SPAN] tokens
+each of which represents a span consisting of sub-
+sequent tokens, and model the problem as straight-
+forward multi-label binary classiﬁcation over the
+[SPAN] tokens. We also propose to split docu-
+ments with dynamic stride sizes such that there
+exists at least one context setting for each span in
+which the span is not split and receives enough
+context.
+First, we split each document into contexts us-
+ing Algorithm 1. Given a user-speciﬁed maximum
+context length l and a minimum number of sur-
+rounding tokens n, the algorithm adds ﬁrst l tokens
+to a context and marks the spans whose tokens have
+all been added to the context. For the next context,
+it will start again from n tokens before the next un-
+Input: Span boundary token indices B = [b0, b1, ...],
+Tokens T = [t0, t1, ...], min. # of surrounding
+tokens n, max. context length l
+Output: List of overlapping contexts
+1 contexts = [] ;
+2 start = 0 ;
+3 while len(B) > 0 do
+4
+for bi in B where bi −start <= l do
+5
+B.remove(bi−1) ;
+6
+end = bi−1 ;
+7
+end
+8
+contexts.append(T[start : (start + l)]) ;
+9
+start = end −n ;
+10 end
+11 return contexts ;
+Algorithm 1: Dynamic context segmentation
+marked span and repeat this until all the spans are
+marked. We mark variables associated with m-th
+context with a left superscript m where necessary.
+For each context, contract tokens and hypothe-
+sis tokens are concatenated with a [SEP] token
+and fed into a Transformer-based model. For evi-
+dence identiﬁcation, we place a randomly initial-
+ized multi-layer perceptron (MLP) on top of each
+[SPAN] token followed by sigmoid activation to
+predict a span probability ˆsi ∈R. Likewise for
+NLI, we place a randomly initialized MLP on top
+of the [CLS] token followed by a softmax layer to
+predict ENTAILMENT, CONTRADICTION and NOT-
+MENTIONED probabilities mˆyE, mˆyC, mˆyN ∈R,
+respectively.
+For evidence identiﬁcation loss ℓspan of a single
+context, we employ cross entropy loss between the
+predicted span probability ˆsi and the ground truth
+span label si ∈{0, 1}.
+ℓspan =
+X
+i
+(−si log ˆsi −(1 −si) log(1 −ˆsi))
+Although there exists no evidence span when NLI
+label is NOTMENTIONED, we nevertheless incorpo-
+
+=== [p.5] ===
+1911
+rate such an example in the evidence identiﬁcation
+loss with negative span labels si = 0.
+For NLI loss ℓNLI, we likewise employ cross
+entropy loss between the predicted NLI probabil-
+ities ˆyE, ˆyC, ˆyN and the ground truth span labels
+yE, yC, yN ∈{0, 1}. However, there are contexts
+without an evidence span despite the NLI label
+being ENTAILMENT or CONTRADICTION. This
+causes inconsistency between what the model sees
+and its teacher signal. Thus, we ignore the NLI
+predictions for the contexts that do not contain an
+evidence span.
+ℓNLI =
+(
+−P
+L∈{E,C,N} yL log ˆyL,
+if ∃si = 1,
+0,
+otherwise.
+The multitask loss ℓfor a single context is then
+ℓ= ℓspan + λℓNLI,
+where λ is a hyperparameter that controls the bal-
+ance between the two losses. We mix contexts from
+different documents during training, thus contexts
+from a single document may appear in different
+mini batches.
+Since each document is predicted as multiple
+contexts, results from these contexts have to be
+aggregated to obtain a single output for a document.
+For the evidence identiﬁcation, we simply take the
+average of span probabilities over different model
+outputs.
+∗ˆsi = 1
+Mi
+X
+m
+mˆsi,
+where Mi is the number of contexts that have the
+full i-th span in its context.
+For NLI, we weighted the NLI probabilities by
+the sum of the span probabilities:
+∗ˆy• =
+1
+P
+m
+1
+Sm
+P
+i
+mˆsi
+X
+m
+ 
+mˆy• · 1
+Sm
+X
+i
+mˆsi
+!
+,
+where Sm is the number of [SPAN] tokens in the
+m-th context. This is based on an intuition that con-
+texts with evidence spans should contribute more
+to NLI.
+4
+Experiments
+4.1
+Baselines
+In order to study the dataset’s characteristics, we
+implemented ﬁve baselines with different capabili-
+ties. We brieﬂy explain the ﬁve baselines that we
+implemented below, but more details can be found
+in Appendix A.2.1
+Majority vote A baseline that outputs an oracle
+majority label for each hypothesis (NLI only).
+Doc TF-IDF+SVM A document-level multi-class
+linear Support Vector Machine (SVM; Chang
+and Lin, 2011) with unigram bag-of-words fea-
+tures (NLI only).
+Span TF-IDF+Cosine Evidence
+identiﬁcation
+based on unigram TF-IDF cosine similarities be-
+tween each hypothesis and each span (evidence
+identiﬁcation only).
+Span TF-IDF+SVM A span-level binary Linear
+SVM with unigram bag-of-words features (evi-
+dence identiﬁcation only).
+SQuAD BERT A Transformer-based model as in
+the previous works discussed in Section 3. In-
+stead of allowing it to predict spans at arbitrary
+boundaries, we calculate a score for each of pre-
+deﬁned spans by averaging token scores asso-
+ciated with the start and end of the span over
+different context windows. This makes sure that
+its performance is not discounted for getting span
+boundaries wrong.
+4.2
+Experiment Settings
+For evidence identiﬁcation, we report mean average
+precision (mAP) that is micro averaged over labels.
+We also report precision at recall 0.8 (P@R80)
+that is micro averaged over documents and labels.
+P@R80 is the precision score when the threshold
+for evidence identiﬁcation is adjusted to achieve
+a recall score of 0.8. It was used in (Hendrycks
+et al., 2021) to measure efﬁcacy of a system under
+a required coverage level that is similar to typical
+human’s.
+For NLI, we report accuracy, a F1 score for con-
+tradiction (F1 (C)) and for entailment (F1 (E)). We
+micro average these scores over documents and
+then macro average over labels. This is to avoid the
+label imbalance to cancel out with micro averaging
+and the results to appear too optimistic.
+For our Span NLI BERT, we ran the same ex-
+periment ten times with different hyperparameters
+(detailed in Appendix A.2.2) and report the average
+score of three models with the best development
+scores. Since NLI is more challenging than evi-
+dence identiﬁcation, we used macro average NLI
+accuracy for the criterion. For the SQuAD BERT
+baseline, we ran hyperparameter search over 18
+hyperparameter sets as described in (Devlin et al.,
+2019) and likewise report the average score of the
+three best models. The metrics for the experiments
+
+=== [p.6] ===
+1912
+Evidence
+NLI
+Backbone Model
+Fine-tuning Method
+mAP
+P@R80
+Acc.
+F1 (C)
+F1 (E)
+BERTbase
+None
+.885.025
+.663.093
+.838.020
+.287.022
+.765.035
+BERTlarge
+None
+.922.006
+.793.018
+.875.006
+.357.039
+.834.002
+DeBERTa v2xlarge
+None
+.933.002
+.859.008
+.885.001
+.360.027
+.855.002
+BERTbase
+Pretrained from scratch using a case law corpus (Zheng et al., 2021)
+.870.015
+.578.052
+.831.032
+.289.026
+.783.040
+BERTbase
+Fine-tuned on case law and contract corpora (Chalkidis et al., 2020)
+.925.004
+.811.002
+.794.008
+.272.008
+.746.018
+DeBERTa v2xlarge
+Fine-tuned on span identiﬁcation (Hendrycks et al., 2021)
+.936.002
+.860.003
+.892.001
+.405.016
+.859.005
+BERTbase
+Fine-tuned on NDAs
+.892.002
+.690.014
+.864.004
+.326.014
+.820.010
+BERTlarge
+Fine-tuned on NDAs
+.922.003
+.837.008
+.875.000
+.389.009
+.839.003
+Refer to Section 4.2 for the details on the metrics.
+Table 3: Results for different backbone and pretrained models
+Evidence
+NLI
+mAP
+P@R80
+Acc.
+F1 (C)
+F1 (E)
+Majority vote
+—
+—
+.674
+.083
+.428
+Doc TF-IDF+SVM
+—
+—
+.733
+.197
+.641
+Random
+.024
+.000
+—
+—
+—
+Span TF-IDF+Cosine .381
+.057
+—
+—
+—
+Span TF-IDF+SVM
+.836
+.322
+—
+—
+—
+SQuAD (BERTbase)
+.825.004 .574.004
+—
+—
+—
+SQuAD (BERTlarge)
+.869.005 .661.043
+—
+—
+—
+Ours (BERTbase)
+.885.025 .663.093 .838.020 .287.022 .765.035
+Ours (BERTlarge)
+.922.006 .793.018 .875.006 .357.039 .834.002
+Refer to Section 4.2 for the details on the metrics.
+Table 4: Main results
+with the hyperparameter search are followed by
+subscript numbers each of which denotes standard
+deviation of metrics over three runs.
+4.3
+Results
+We ﬁrst compared Span NLI BERT against base-
+lines (Table 4). Span NLI BERT performed sig-
+niﬁcantly better than the baselines, both in terms
+of evidence identiﬁcation and NLI. Nevertheless,
+the performance for contradiction labels is much
+worse than that of entailment labels, due to the im-
+balanced label distribution. In terms of evidence
+identiﬁcation, SQuAD BERT’s mAP score was no
+better than that of Span TF-IDF+SVM, which il-
+lustrates the importance of explicitly incorporating
+span boundaries to input.
+We then compared Span NLI BERT’s perfor-
+mance with different backbone models and pre-
+training corpora including DeBERTa v2 (He et al.,
+2021) which was most successful in (Hendrycks
+et al., 2021) (Table 3). We can observe that making
+the models bigger beneﬁts both evidence identiﬁca-
+tion and NLI. Fine-tuning models on legal corpora
+had mixed results. Using a model pretrained on a
+case law corpus (Zheng et al., 2021) did not ben-
+eﬁt evidence identiﬁcation nor NLI. Fine-tuning
+BERTbase on NDAs has slightly improved the per-
+formance but the beneﬁt is no longer visible for
+BERTlarge. Transferring DeBERTaxlarge trained on
+Evidence
+NLI
+Hypothesis Usage
+mAP
+P@R80
+Acc.
+F1 (C)
+F1 (E)
+Symbol (BERTbase) .857.044 .574.136 .830.014 .294.075 .751.027
+Symbol (BERTlarge) .894.020 .703.092 .849.006 .303.058 .794.026
+Text (BERTbase)
+.885.025 .663.093 .838.020 .287.022 .765.035
+Text (BERTlarge)
+.922.006 .793.018 .875.016 .357.039 .834.002
+Refer to Section 4.2 for the details on the metrics.
+Table 5: A controlled experiment using a randomly ini-
+tialized special token for each hypothesis (Symbol) in-
+stead of hypothesis’ surface tokens (Text)
+CUAD (Hendrycks et al., 2021) gave marginal im-
+provement on NLI, making it the best performing
+model on the ContractNLI dataset.
+5
+Discussion
+5.1
+Controlled Experiments
+In order to identify what is and what is not capable
+by the models, we carried out controlled experi-
+ments where we modiﬁed the input of the models.
+Is Hypothesis Information Useful?
+It is non-
+trivial that hypotheses surface tokens which were
+merely used as an instruction to the annotators can
+be useful in evidence identiﬁcation. The fact that
+Span TF-IDF+Cosine performed signiﬁcantly bet-
+ter than the random baseline (Table 4) implies that
+hypothesis surface tokens do convey useful infor-
+mation. Furthermore, we also experimented with
+a condition where we used a randomly initialized
+special token for each hypothesis instead of the hy-
+pothesis’ surface tokens. Removing the hypothesis
+surface tokens resulted in consistent decrease of
+performance for both evidence identiﬁcation and
+NLI (Table 5). This implies that the hypothesis
+surface tokens are somewhat meaningful, but these
+narrow differences suggest that there could be a
+better way to utilize the hypothesis surface tokens.
+Can Better Evidence Identiﬁcation Lead to Bet-
+ter NLI?
+In ContractNLI, evidence identiﬁcation
+
+=== [p.7] ===
+1913
+NLI
+Accuracy
+F1 (C)
+F1 (E)
+Majority vote
+.814
+.239
+.645
+Span NLI (BERTbase)
+.883 .006
+.490.007
+.795.005
+Span NLI (BERTlarge)
+.899 .004
+.492.065
+.820.012
+Oracle NLI (BERTbase)
+.918 .005
+.657.062
+.816.006
+Oracle NLI (BERTlarge) .908 .011
+.620.082
+.806.015
+Refer to Section 4.2 for the details on the metrics.
+Table 6: A controlled experiment of document-level
+binary classiﬁcation over ENTAILMENT and CONTRA-
+DICTION utilizing oracle evidence spans.
+NLI Accuracy
+Condition
+Majority Minority Weighted % minority label
+w/o (local)
+.91
+.77
+.84
+21
+w/ (local)
+.92
+.40
+.66
+7
+w/o (non-local)
+.98
+.72
+.85
+19
+w/ (non-local)
+.90
+.00
+.45
+6
+Accuracy has been calculated for majority and minority ground-truth NLI
+labels separately in order to rule out the effect of the label distribution.
+“Weighted” denotes an average of the two accuracy scores that are weighted
+disproportionally to the number of occurances of each label. Only the
+hypotheses that exhibit negation by exception are used for this experiment (#1,
+4, 5, 6, 14, 16 and 17 for local, and #4, 5, 6 and 17 for non-local).
+Table 7: NLI accuracy in instances with and without
+(non-)local negation by exception
+and NLI are dependent on each other. We experi-
+mented whether good evidence identiﬁcation can
+beneﬁt NLI by feeding models with oracle evidence
+spans for NLI. For the oracle model (Oracle NLI),
+we concatenated a hypothesis and ground truth evi-
+dence spans as an input and predicted a binary label
+of ENTAILMENT or CONTRADICTION. We can ob-
+serve in Table 6 that giving models oracle spans
+substantially improves NLI performance, notably
+the F1 score of CONTRADICTION. This suggests
+that there is still much room for improvement on
+NLI just by improving evidence identiﬁcation.
+5.2
+Challenges of ContractNLI
+Our task is challenging from a machine learning
+perspective. The label distribution is imbalanced
+and it is naturally multi-task, all the while training
+data being scarce. Furthermore, we argue that there
+exist multiple linguistic characteristics of contracts
+that make the task challenging.
+We annotated the development dataset on
+whether each document-hypothesis pair exhibits
+certain characteristics and evaluated impact of each
+characteristic on the performance of the best Span
+NLI BERT (BERTlarge) from Table 4. Since evi-
+dence spans are only available when the NLI la-
+bel is either ENTAILMENT or CONTRADICTION,
+document-hypothesis pairs with NOTMENTIONED
+label are excluded from the evaluations in this sec-
+# spans read before ﬁnding:
+n
+# spans one span
+all spans
+mAP
+Continuous
+128
+2.64
+1.09
+3.82
+0.91
+Discontinuous 128
+2.34
+1.04
+3.84
+0.94
+Continuous
+64
+2.64
+1.16
+4.33
+0.89
+Discontinuous 64
+2.34
+1.01
+4.85
+0.94
+“# spans read before ﬁnding one (all) span(s)” refers to the number of spans a
+user needs to read until the user ﬁnds one (all) span(s) if the user reads the
+spans in an order of a system’s span probability output. Thus, it is better
+when it is lower and 1.0 is the best possible value.
+Table 8: Evidence identiﬁcation performance of mod-
+els with different minimum number of surrounding to-
+kens n on documents with dis-/continuous spans
+tion.
+Negation by Exception
+Contracts often state a
+general condition and subsequently add exceptions
+to the general condition. For example, in “Recipi-
+ent shall not disclose Conﬁdential Information to
+any person or entity, except its employees or part-
+ners ...”, the ﬁrst half clearly forbids sharing conﬁ-
+dential information to an employee, but the latter
+part ﬂips this decision and it is actually permitting
+the party to share conﬁdential information. This
+phenomenon can occur both locally (i.e., within a
+single span) or non-locally, sometimes pages away
+from each other. In our dataset, the local case hap-
+pens in 12% of document-hypothesis pairs, which
+corresponds to 59% of documents with at least one
+of such hypotheses. The non-local case happens
+in 7% of document-hypothesis pairs and 44% of
+documents. By comparing document-hypothesis
+pairs with and without such phenomena, we can
+see that local and non-local negation by exception
+is hurting the model’s NLI accuracy (Table 7).
+Discontinous Spans
+As sketched in Figure 1, ev-
+idence spans can be discontinous and may even be
+pages apart. Such discontinous spans occur in 28%
+of document-hypothesis pairs, which corresponds
+to 81% of documents with at least one of such
+hypotheses.
+Contrary to our expectation, discontinuous set-
+ting did not have a negative effect on overall evi-
+dence identiﬁcation mAP score (Table 8). This can
+be attributed to the fact ﬁnding a single span was
+easier in the discontinuous setting, which is evi-
+dent from “the number of spans read before ﬁnding
+one span”. “Number of spans read before ﬁnding
+all spans” is nevertheless affected by discontinous
+spans, especially when the model’s minimum num-
+ber of surrounding tokens n is small2. Furthermore,
+2This is the best BERTlarge with n = 64 and the ﬁfth best
+
+=== [p.8] ===
+1914
+NLI Accuracy
+Condition
+Majority Minority Weighted % minority label
+w/o Reference
+.91
+.88
+.89
+26
+w/ Reference
+.93
+—
+—
+0
+Accuracy has been calculated for majority and minority ground-truth NLI
+labels separately in order to rule out the effect of the label distribution.
+“Weighted” denotes an average of the two accuracy scores that are weighted
+disproportionally to the number of occurances of each label. Only the
+hypotheses that exhibit references are used in this experiment (#5 and 6).
+Table 9: NLI accuracy on documents with and without
+references to deﬁnitions
+there was a positive correlation between the gap
+between the discontinuous spans and “number of
+spans read before ﬁnding all spans” (a Spearman
+correlation of ρ = 0.205, p = 0.015). This is be-
+cause many hypothesis-distinctive spans (e.g., a
+span starting with “(ii)” in the second hypothesis of
+Figure 1) can be inferred without access to its con-
+text, but ﬁnding the accompanying spans (e.g., the
+ﬁrst span in Figure 1) is impossible when they do
+not ﬁt onto a single context window. Nevertheless,
+the effect of discontinous spans is very small and
+Span NLI BERT can overcome this with a larger
+number of surrounding tokens.
+Reference to Deﬁnition
+Contracts often have
+references to deﬁnitions. In our dataset, hypothe-
+ses #5 and 6 “Sharing with employees/third-parties”
+tend to have such references. For example, if a con-
+tract says “The Receiving Party undertakes to per-
+mit access to the Conﬁdential Information only to
+its Representatives ....”, the hypothesis #5 “Sharing
+with employees” is entailed by such span but the
+hypothesis #6 “Sharing with third-parties” is not.
+Only when the contract includes a deﬁnition such
+as “ “Representatives” shall mean directors, em-
+ployees, professional advisors or anyone involved
+with the Party in a professional or business capac-
+ity.”, hypothesis #6 is also entailed by the contract.
+We speculated that this could make NLI more difﬁ-
+cult because the model has to refer to both spans in
+order to get NLI right. However, our observation
+discovered that examples with references are no
+more difﬁcult than those without them (Table 9).
+6
+Related Works
+Helped by their accessibility, there exist multiple
+prior works on “legal NLI” for case and statute
+laws. One of the subtasks in COLIEE-2020 shared
+task (Rabelo et al., 2020) was, given a court deci-
+sion Q and relevant cases, to extract relevant para-
+model overall.
+graphs from the cases and to classify whether those
+paragraphs entail “Q” or “not Q”. Holzenberger
+et al. (2020) introduced a dataset for predicting an
+entailment relationship between a statement and a
+statute excerpt. While they are both “legal” and
+“NLI”, statutes and contracts exhibit different char-
+acteristics including the fact that statutes/cases tend
+to be written in consistent vocabulary and styles.
+Moreover, there only exists a single right answer
+for a hypothesis in case/statute law NLI, whereas
+a hypothesis can be entailed by or contradicting to
+each contract in our task; i.e., hypotheses and docu-
+ments have one-to-one relationships in case/statute
+law NLI, but they have many-to-many relationships
+in our task.
+As discussed in Section 1, our task has practical
+and scientiﬁc signiﬁcance compared to informa-
+tion extraction for contracts (Leivaditi et al., 2020;
+Hendrycks et al., 2021). We showed in our experi-
+ments that the NLI part of our task is much more
+challenging than the evidence identiﬁcation task.
+Furthermore, we gave observations to linguistic
+characteristics of our dataset that are lacking in
+these prior works.
+Lippi et al. (2019) presented a dataset where
+certain types of contract clauses are identiﬁed and
+annotated with “clearly fair”, “potentially unfair”
+or “clearly unfair”. While the format of the task
+input and output is quite similar, our task requires
+reasoning over a much diverse set of hypotheses
+than just fair or unfair. Similarly, fact extraction
+and claim veriﬁcation tasks (Thorne et al., 2018;
+Jiang et al., 2020), where the task is to extract facts
+from Wikipedia articles and to classify whether the
+claim is entailed by the facts, have similar input
+and output formats. Such claims and our hypothe-
+ses are quite different in nature and working on
+contracts poses unique challenges as discussed in
+Section 5.2.
+7
+Conclusion
+In this work, we introduced a novel, real-world ap-
+plication of NLI, document-level NLI for contracts
+which aim to assist contract review. We annotated
+a dataset consisting of 607 contracts and showed
+that linguistic characteristics of contracts, particu-
+larly negations by exceptions, make the problem
+difﬁcult.
+We introduced Span NLI BERT that incorporates
+more natural solution to evidence identiﬁcation by
+modeling the problem as multi-label classiﬁcation
+
+=== [p.9] ===
+1915
+over spans instead of trying to predict the start and
+the end token as in previous works. Span NLI
+BERT performed signiﬁcantly better than existing
+Transformer-based models.
+Notwithstanding the performance gain by Span
+NLI BERT, there exists much room for improve-
+ment. Span NLI BERT still has poor performance
+on rare labels, as well as being easily impacted by
+negations by exceptions.
+For future works, we will also explore systems
+that can generalize to different types of contracts
+and hypotheses. We believe that studying how hy-
+pothesis phrasing can affect performance and de-
+veloping a better way to utilize hypothesis text can
+be the key to such goal.
+We hope that the dataset and Span NLI BERT
+will serve as a starting point for tackling the inter-
+esting challenges in our ContractNLI task.
+Ethical Consideration
+In this work, we collected contracts from EDGAR
+and Internet search engines.
+For the former,
+EDGAR states that all ﬁled documents are pub-
+lic information and can be redistributed without a
+further consent3. For the latter, we obtained pub-
+licly accessible documents and our academic use
+is within the scope of fair use. Nevertheless, we
+placed a contact form for a concerned individual
+or organization in a similar way as other crawled
+datasets.
+For the annotation, we hosted our annotation task
+on Amazon Mechanical Turk so that each worker
+can participate voluntarily and withdraw at any
+time. We made sure each worker receives at least
+the US federal wage and the actual average pay
+was 18.31 US dollars per hour (excluding Amazon
+Mechanical Turk fees). Our annotation procedure
+did not go through an institutional review board
+since we are not directly collecting information
+from human subjects.
+While we did not run computationally expensive
+pretraining of Transformer-based models, we ran
+ﬁne-tuning of the models 156 times for this paper.
+Running experiments multiple times was neces-
+sary in order to ensure validity and reproducibility
+of the experiments when our dataset is modest in
+size from a machine learning perspective. We be-
+lieve this energy consumption can be justiﬁed by
+resources that we can potentially save by assisting
+3https://www.sec.gov/privacy.htm#
+dissemination
+contract review. Moreover, we introduced an ar-
+chitectural change that beneﬁts the models more
+than simply making the model larger (e.g., Span
+NLI BERT with BERTbase performed better than
+SQuAD BERT with BERTlarge in Table 4).
+There was a concern that publication of our an-
+notations or models may be regarded as an unau-
+thorized practice of law (i.e., giving a legal advice
+without a license), which is forbidden in many ju-
+risdictions. This also means that an individual may
+suffer from a loss by relying on information from
+our annotation or model outputs as a legal advice.
+We have consulted an attorney regarding this issue
+and were advised that releasing general information
+(the annotations and the models) does not constitute
+an unauthorized practice of law. We were never-
+theless advised to place a disclaimer that warns
+users not to rely on the information and to seek an
+attorney’s advice instead. Furthermore, we took ad-
+ditional measures, such as forbidding a crawler to
+index our annotations, in order to minimize a risk
+of an individual from referencing our annotation as
+a legal advice.
+Acknowledgements
+We used computational resource of AI Bridging
+Cloud Infrastructure (ABCI) provided by the Na-
+tional Institute of Advanced Industrial Science and
+Technology (AIST) for the experiments.
+References
+Ilias Chalkidis, Manos Fergadiotis, Prodromos Malaka-
+siotis, Nikolaos Aletras, and Ion Androutsopoulos.
+2020. LEGAL-BERT: The Muppets straight out of
+Law School. In Findings of the Association for Com-
+putational Linguistics: EMNLP 2020, pages 2898–
+2904.
+Chih-Chung Chang and Chih-Jen Lin. 2011. LIBSVM:
+A Library for Support Vector Machines. ACM Trans-
+actions on Intelligent Systems and Technology, 2(3).
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and
+Kristina Toutanova. 2019.
+BERT: Pre-training of
+Deep Bidirectional Transformers for Language Un-
+derstanding. In Proceedings of the 2019 Conference
+of the North American Chapter of the Association
+for Computational Linguistics: Human Language
+Technologies.
+Exigent Group Limited. 2019. How GCs can thrive,
+not just survive. Technical report.
+Pengcheng He, Xiaodong Liu, Jianfeng Gao, and
+Weizhu Chen. 2021.
+DeBERTa:
+Decoding-
+
+=== [p.10] ===
+1916
+enhanced
+BERT
+with
+Disentangled
+Attention.
+arXiv:2006.03654 [cs].
+Dan Hendrycks,
+Collin Burns,
+Anya Chen,
+and
+Spencer Ball. 2021. CUAD: An Expert-Annotated
+NLP Dataset for Legal Contract Review. arXiv.
+Nils Holzenberger, Andrew Blair-Stanek, and Ben-
+jamin Van Durme. 2020.
+A Dataset for Statutory
+Reasoning in Tax Law Entailment and Question An-
+swering. In Proceedings of the 2020 Natural Legal
+Language Processing (NLLP) Workshop.
+Yichen Jiang, Shikha Bordia, Zheng Zhong, Charles
+Dognin, Maneesh Singh, and Mohit Bansal. 2020.
+HoVer: A Dataset for Many-Hop Fact Extraction
+And Claim Veriﬁcation. In Findings of the Associ-
+ation for Computational Linguistics: EMNLP 2020,
+pages 3441–3460. Association for Computational
+Linguistics.
+Yuta Koreeda and Christopher D. Manning. 2021. Cap-
+turing Logical Structure of Visually Structured Doc-
+uments with Multimodal Transition Parser. arXiv.
+Spyretta
+Leivaditi,
+Julien
+Rossi,
+and
+Evangelos
+Kanoulas. 2020. A Benchmark for Lease Contract
+Review. arXiv.
+Marco Lippi,
+Przemysław Pałka,
+Giuseppe Con-
+tissa, Francesca Lagioia, Hans-Wolfgang Mick-
+litz, Giovanni Sartor, and Paolo Torroni. 2019.
+CLAUDETTE: an automated detector of potentially
+unfair clauses in online terms of service. Artiﬁcial
+Intelligence and Law, 27(2):117–139.
+F. Pedregosa, G. Varoquaux, A. Gramfort, V. Michel,
+B. Thirion, O. Grisel, M. Blondel, P. Prettenhofer,
+R. Weiss, V. Dubourg, J. Vanderplas, A. Passos,
+D. Cournapeau, M. Brucher, M. Perrot, and E. Duch-
+esnay. 2011.
+Scikit-learn:
+Machine learning in
+Python.
+Journal of Machine Learning Research,
+12:2825–2830.
+Peng Qi, Yuhao Zhang, Yuhui Zhang, Jason Bolton,
+and Christopher D. Manning. 2020.
+Stanza:
+A
+python natural language processing toolkit for many
+human languages. In Proceedings of the 58th An-
+nual Meeting of the Association for Computational
+Linguistics.
+Juliano Rabelo, Mi-Young Kim, Randy Goebel, Masa-
+haru Yoshioka, Yoshinobu Kano, and Ken Satoh.
+2020. COLIEE 2020: Methods for Legal Document
+Retrieval and Entailment.
+The U.S. Securities and Exchange Commission. 2018.
+EDGAR® Public Dissemination Service Technical
+Speciﬁcation.
+James
+Thorne,
+Andreas
+Vlachos,
+Christos
+Christodoulopoulos,
+and
+Arpit
+Mittal.
+2018.
+FEVER: a Large-scale Dataset for Fact Extraction
+and VERiﬁcation.
+In Proceedings of the 2018
+Conference of the North American Chapter of the
+Association for Computational Linguistics: Human
+Language Technologies, Volume 1 (Long Papers),
+pages 809–819. Association for Computational
+Linguistics.
+Yonghui Wu, Mike Schuster, Zhifeng Chen, Quoc V.
+Le,
+Mohammad Norouzi,
+Wolfgang Macherey,
+Maxim Krikun,
+Yuan Cao,
+Qin Gao,
+Klaus
+Macherey, Jeff Klingner, Apurva Shah, Melvin John-
+son, Xiaobing Liu, Łukasz Kaiser, Stephan Gouws,
+Yoshikiyo Kato, Taku Kudo, Hideto Kazawa, Keith
+Stevens, George Kurian, Nishant Patil, Wei Wang,
+Cliff Young, Jason Smith, Jason Riesa, Alex Rud-
+nick, Oriol Vinyals, Greg Corrado, Macduff Hughes,
+and Jeffrey Dean. 2016. Google’s Neural Machine
+Translation System: Bridging the Gap between Hu-
+man and Machine Translation. arXiv.
+Lucia Zheng, Neel Guha, Brandon R. Anderson, Peter
+Henderson, and Daniel E. Ho. 2021. When Does
+Pretraining Help? Assessing Self-Supervised Learn-
+ing for Law and the CaseHOLD Dataset.
+In Pro-
+ceedings of the 18th International Conference on Ar-
+tiﬁcial Intelligence and Law. Association for Com-
+puting Machinery.
+
+=== [p.11] ===
+1917
+A
+Appendix
+A.1
+Details on Data Collection
+In this section, we provide supplemental informa-
+tion regarding the data collection discussed in Sec-
+tion 2.2.
+As discussed in Section 2.1, our dataset consists
+exclusively of non-disclosure agreements (NDAs)
+in order to incorporate more ﬁne-grained hypothe-
+ses. More speciﬁcally, we used unilateral or bilat-
+eral NDAs or conﬁdentiality agreement between
+two parties.
+We excluded employer-employee
+NDAs and those that are part of larger agreements
+(such as a conﬁdentiality agreement inside a larger
+merger agreement), because they are quite different
+from the rest of NDAs.
+We collected NDAs from Internet search engines
+and Electronic Data Gathering, Analysis, and Re-
+trieval system (EDGAR). For the collection from
+the search engines, we queried Google search en-
+gines with a search query “ “non-disclosure” agree-
+ment ﬁletype:pdf” and downloaded the PDF ﬁles
+that the search engines returned. We note that
+Google search engines in different domains return
+different results. Therefore, we used seven domains
+from countries where English is widely spoken (US
+“.com”, UK “.co.uk”, Australia “.com.au”, New
+Zealand “.co.nz”, Singapore “.com.sg”, Canada
+“.ca” and South Africa “.co.za”). Since collected
+PDFs contain irrelevant documents, we manually
+screened all 557 documents and removed all the
+irrelevant documents. We also removed NDAs that
+do not have embedded texts (i.e., glyphs are em-
+bedded as an image) or those that have more than
+one columns, since they are difﬁcult to preprocess.
+For the collection from EDGAR, we ﬁrst down-
+load all the ﬁled documents from 1996 to 2020
+in a form of daily archives4. We uncompressed
+each archive and deserialized ﬁles using regular
+expressions by referencing to the EDGAR speciﬁ-
+cations (The U.S. Securities and Exchange Com-
+mission, 2018), which gave us 12,851,835 ﬁl-
+ings each of which contains multiple documents.
+We then extracted NDA candidates by a rule-
+based ﬁltering.
+Using meta-data obtained dur-
+ing the deserialization, we extracted documents
+whose ﬁle type starts with “EX” (denotes that
+it is an exhibit), its ﬁle extension is one of
+“.pdf”, “.PDF”, “.txt”, “.TXT”, “.html”, “.HTML”,
+“.htm” or “HTM”, and its content is matched by a
+4https://www.sec.gov/Archives/edgar/
+Oldloads/
+(a) Evidence identiﬁcation
+(b) NLI
+Figure 5: Question answering with evidence annotation
+interface
+regular expression “(?<![a-zA-Z˙,"()] *)([Nn]on[-
+][Dd]isclosure)|(NON[- ]DISCLOSURE)”. We
+manually screened all 28,780 NDA candidates
+and obtained 236 NDAs. All of the NDAs from
+EDGAR were either in HTML or plain text format.
+A.1.1
+Details on Contract Annotation
+We developed 17 hypotheses by comparing differ-
+ent NDAs and had them reviewed by paralegals.
+List of hypotheses can be found in Table 10.
+Since we employ a ﬁxed set of hypotheses unlike
+existing NLI datasets, we employed an example-
+oriented annotation guideline for each hypothesis
+in order to improve annotation consistency. Fur-
+thermore, we developed an annotation interface in
+order to efﬁciently and consistently annotate the
+NDAs. The interface allows the users to select
+spans (Figure 5a) and then a NLI label (Figure 5b).
+Annotation was conducted by a computational
+linguistic researcher (the primary annotator) with
+a help from workers at Amazon Mechanical Turk.
+We chose two workers at Amazon Mechanical Turk
+who were consistently performing well and asked
+them to redundantly annotate each document with
+a priority on coverage. We merged annotated spans
+for each document. Finally, the primary annotator
+
+=== [p.12] ===
+1918
+#
+Title
+Hypothesis
+1
+Explicit identiﬁcation
+All Conﬁdential Information shall be expressly identiﬁed by the Disclosing Party.
+2
+Non-inclusion of non-technical information
+Conﬁdential Information shall only include technical information.
+3
+Inclusion of verbally conveyed information
+Conﬁdential Information may include verbally conveyed information.
+4
+Limited use
+Receiving Party shall not use any Conﬁdential Information for any purpose other than
+the purposes stated in Agreement.
+5
+Sharing with employees
+Receiving Party may share some Conﬁdential Information with some of Receiving
+Party’s employees.
+6
+Sharing with third-parties
+Receiving Party may share some Conﬁdential Information with some third-parties
+(including consultants, agents and professional advisors).
+7
+Notice on compelled disclosure
+Receiving Party shall notify Disclosing Party in case Receiving Party is required by
+law, regulation or judicial process to disclose any Conﬁdential Information.
+8
+Conﬁdentiality of Agreement
+Receiving Party shall not disclose the fact that Agreement was agreed or negotiated.
+9
+No reverse engineering
+Receiving Party shall not reverse engineer any objects which embody Disclosing
+Party’s Conﬁdential Information.
+10
+Permissible development of similar information
+Receiving Party may independently develop information similar to Conﬁdential In-
+formation.
+11
+Permissible acquirement of similar information
+Receiving Party may acquire information similar to Conﬁdential Information from a
+third party.
+12
+No licensing
+Agreement shall not grant Receiving Party any right to Conﬁdential Information.
+13
+Return of conﬁdential information
+Receiving Party shall destroy or return some Conﬁdential Information upon the ter-
+mination of Agreement.
+14
+Permissible copy
+Receiving Party may create a copy of some Conﬁdential Information in some circum-
+stances.
+15
+No solicitation
+Receiving Party shall not solicit some of Disclosing Party’s representatives.
+16
+Survival of obligations
+Some obligations of Agreement may survive termination of Agreement.
+17
+Permissible post-agreement possession
+Receiving Party may retain some Conﬁdential Information even after the return or
+destruction of Conﬁdential Information.
+Table 10: List of hypotheses. The titles are only used for human readabilities.
+reviewed the merged annotations and adjusted the
+annotations where necessary. For the train split,
+the primary annotator only reviewed the annotated
+spans to judge NLI labels and to consolidate the
+span boundaries. For most of the test split, the pri-
+mary annotator went through the whole contracts to
+further improve coverage. Most of the development
+dataset and some of the test dataset were annotated
+exclusively by the primary annotator without a help
+from the workers. This allowed us to obtain consis-
+tent and high coverage annotations.
+A.2
+Detailed Experiment Settings
+A.2.1
+Baselines
+We provide supplemental information of the base-
+lines discussed in Section 4.1.
+For Doc TF-IDF+SVM, Span TF-IDF+Cosine
+and Span TF-IDF+SVM, we tokenized the input us-
+ing Stanza (Qi et al., 2020) and extracted unigram
+TF-IDF vectors using Scikit-learn’s (Pedregosa
+et al., 2011) TfidfVectorizer with the default
+conﬁguration (i.e., no stopwords apart from punc-
+tuations, minimum document frequencies of one,
+and smoothed inverse document frequencies). For
+Doc TF-IDF+SVM and Span-TF-IDF+SVM, we
+used a Support Vector Machine (SVM; Chang and
+Lin, 2011) with a linear kernel with the default
+hyperparameters implemented in Scikit-learn (i.e.,
+C = 1.0 with a stopping tolerance of 0.001).
+For SQuAD BERT, we tried to be as faithful
+to a commonly used implementation as possible.
+Thus, we implemented SQuAD BERT by imple-
+menting preprocessing and postprocessing scripts
+for the Huggingface’s implementation5. Because
+the SQuAD BERT only utilizes the ﬁrst span even
+if a training example included multiple spans, we
+created an example for each span of each document-
+hypothesis pair. Within the Huggingface’s imple-
+mentation, each example is further split into con-
+texts with a ﬁxed window size. It is trained to point
+at starting and ending tokens of the span, or at
+[CLS] token when a span is not present. Instead
+of allowing it to predict spans at arbitrary bound-
+aries, we calculate a score for each of predeﬁned
+spans by averaging token scores associated with
+the start and end of the span over different context
+windows. This makes sure that its performance is
+not discounted for getting span boundaries wrong.
+A.2.2
+Hyperparameters
+For Span NLI BERT, we ran the same experiment
+ten times with different hyperparameters (Table 11).
+5https://github.com/
+huggingface/transformers/blob/
+0c9bae09340dd8c6fdf6aa2ea5637e956efe0f7c/
+examples/question-answering/run_squad.py;
+We have slightly modiﬁed their implementation so that we
+have access to start/end token probabilities.
+
+=== [p.13] ===
+1919
+Hyperparameter
+BERTbase
+BERTlarge
+DeBERTaxlarge
+Batch size
+32
+32
+32
+Learning rate
+1e-5, 2e-5, 3e-5, 5e-5
+1e-5, 2e-5, 3e-5, 5e-5
+5e-6, 8e-6, 9e-6, 1e-5
+AdamW’s ϵ
+1e-8
+1e-8
+1e-6
+Weight decay
+0.0, 0.1
+0.0, 0.1
+0.01
+Max. gradient norm
+1.0
+1.0
+1.0
+Warmup steps
+0, 1000
+0, 1000
+50, 100, 500, 1000
+# epochs
+3, 4, 5
+3, 4, 5
+3, 4, 5
+Min. # surrounding tokens n
+64, 128
+64, 128
+64, 128
+Loss weight λ
+0.05, 0.1, 0.2, 0.4
+0.05, 0.1, 0.2, 0.4
+0.05, 0.1, 0.2, 0.4
+Use weighted NLI
+True, False
+True, False
+True, False
+Table 11: Hyperparameter search space. The hyperparameters below the middle line are the hyperparameters
+speciﬁc to Span NLI BERT. The bold values denote the best hyperparameters in our experiment.
+Hyperparameter search spaces for BERT and De-
+BERTa have been adopted from (Devlin et al.,
+2019) and (He et al., 2021), respectively. For the
+SQuAD BERT baseline, we ran hyperparameter
+search over 18 hyperparameter sets as described in
+(Devlin et al., 2019).
+In both cases, we report the average score of
+three models with the best development scores.
+Since NLI is more challenging than evidence iden-
+tiﬁcation, we used macro average NLI accuracy for
+the criterion.
+The choice of weighted/unweighted NLI prob-
+ablities was a part of our hyperparameters and
+we found that the best models (for BERTbase,
+BERTlarge
+and DeBERTaxlarge) preferred the
+weighted probablities. The models with weighted
+probablities had on average 0.782 (BERTbase) and
+0.803 (BERTlarge) macro average NLI accuracies
+whereas the models with unweighted probablities
+had on average 0.458 (BERTbase) and 0.454 (large)
+macro average NLI accuracies. This implies that it
+is critical to incorporate the weighted probablities.
+As for the loss weight λ, we found in pilot ex-
+periments that NLI starts to overﬁt faster than span
+detection, thus we searched values in λ < 1. A
+possible hypothesis is that there is less diversity
+in teacher signal for NLI than that for evidence
+span detection; Contexts extracted from a single
+hypothesis-document pair have the same NLI label
+which could be somewhat redundant, whereas each
+context has a different span label.
+

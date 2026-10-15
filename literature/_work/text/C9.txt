@@ -1,0 +1,694 @@
+=== [p.1] ===
+SOLVING VERSUS VERIFYING: CATCHING CONTRADICTIONS IN
+TAX REASONING SYSTEMS
+Albert Sadowski
+Faculty of Electronics and Information Technology
+Warsaw University of Technology
+Warsaw, Poland
+albert.sadowski.stud@pw.edu.pl
+Jarosław A. Chudziak
+Faculty of Electronics and Information Technology
+Warsaw University of Technology
+Warsaw, Poland
+jaroslaw.chudziak@pw.edu.pl
+ABSTRACT
+Large language models now compute correct tax liabilities on over 90% of well-formed cases in
+statutory benchmarks, which makes them candidates for the tax-advisory and compliance systems
+that consume such an answer directly. Real legal inputs, however, are frequently defective: required
+facts are missing, or stated facts contradict one another. Accuracy on clean benchmarks says nothing
+about how a model behaves then, and a system that computes straight through a defective input
+returns a confident number with no sign that anything is wrong. This raises two questions: does
+a model asked to solve a case abstain when the input is defective, and when it does not, can the
+same model catch the defect when asked instead to verify the input? We study six recent models
+on SARA-derived tax cases under missing-fact and contradictory-fact perturbations. The strongest
+models abstain when a fact is missing but compute through injected contradictions, returning the
+clean-input answer 63-76% of the time with no signal of the conflict; asked instead to verify the same
+input, they flag most of those contradictions. We wire that verification call into a simple contradiction
+gate: one extra call that abstains when the model reports a conflict. Across all six models it recovers
+most of the missed contradiction abstention at a clean-accuracy cost of at most about 5 percentage
+points, with no training and no external tooling. High accuracy on well-formed inputs is therefore an
+incomplete measure of reliability, and the detection the solver misses is cheaply recoverable with a
+single self-check.
+Keywords large language models · legal reasoning · contradiction detection · self-verification · tax calculation
+1
+Introduction
+Large language models (LLMs) have reached accuracy levels on statutory legal reasoning benchmarks that make
+deployment in legal advisory, tax preparation, and compliance workflows a realistic prospect. On the StAtutory
+Reasoning Assessment (SARA) Holzenberger et al. [2020] tax calculation task from LegalBench Guha et al. [2023],
+recent models compute correct answers within ±10% on over 90% of well-formed inputs. This level of performance
+has prompted growing interest in using LLMs as components of legal reasoning systems Matak and Chudziak [2025],
+Sadowski and Chudziak [2025a], Jurayj et al. [2026].
+However, accuracy on well-formed inputs tells us little about how models behave when the input itself is defective. In
+real-world legal practice, inputs are routinely incomplete or inconsistent: clients omit required information, records
+conflict with each other, and documents contain contradictory statements Mantravadi et al. [2025]. A model that
+computes through such inputs poses a risk that is not captured by standard accuracy benchmarks.
+Recent work has shown that LLMs struggle to abstain on unanswerable inputs in mathematics, general question
+answering, financial reasoning, and healthcare Kirichenko et al. [2026], Sun et al. [2024], Dai et al. [2026], Presacan
+et al. [2025], and that legal knowledge retrieval is prone to hallucination Dahl et al. [2024]. Statutory tax calculation
+differs from these settings: it applies legal rules to facts in structured multi-step reasoning, where missing or contradictory
+arXiv:2609.05928v1  [cs.CL]  5 Sep 2026
+=== [p.2] ===
+Catching Contradictions in Tax Reasoning Systems
+information is routine Shi et al. [2026]. Existing abstention benchmarks primarily test underspecification, but real legal
+inputs also fail by contradiction, and whether models distinguish these failure modes remains unexplored.
+In this paper, we address two questions. First, can current LLMs recognise when a legal reasoning question cannot be
+reliably answered, either because required information is missing or because the input contains logical contradictions?
+Second, when a model fails to recognise a contradiction while solving, can the same model recognise it when asked
+instead to verify the input? We evaluate six recent LLMs on tax cases derived from the SARA benchmark Holzenberger
+et al. [2020] under three conditions (Fig. 1): clean (unperturbed), redacted (a required numeric fact removed), and
+contradicted (a categorical fact supplemented with a conflicting value). We pair each defect type with the fact category
+where it appears clearly (§3), and we evaluate the verification check from our second question entirely within the
+contradiction condition.
+We make two contributions. The first is a diagnosis with a deployment consequence: high benchmark accuracy does
+not predict safe behaviour on inputs containing contradictory facts. On injected contradictions the four high-accuracy
+models abstain on at most 15% while solving (three of the four under 5%), and return the clean-input answer 63-76% of
+the time instead, with no signal that the input was defective. Asked to verify the same inputs rather than solve them,
+the same models flag 75-83% of those identical contradictions, so the detection is recoverable. As a calibration, on
+missing facts the same models almost never return the clean answer (preservation under 2%), so the failure to abstain
+on contradictions is selective. The second is that this gap is cheaply actionable: a trivial one-call check, using the
+model itself as an input verifier and abstaining when it reports a contradiction (the contradiction gate), recovers 70-83%
+contradiction abstention at 0-5.1 percentage points of clean-accuracy cost, across all six models with no fine-tuning and
+no external tooling.
+2
+Related Work
+Our methodology draws on three established areas of research: LLM applications in legal reasoning, selective prediction
+(abstention), and how language models process contradictory information.
+2.1
+LLMs for Legal Reasoning
+AI for legal reasoning dates back to expert systems for tax law McCarty [1977]. The SARA dataset Holzenberger et al.
+[2020], later included in LegalBench Guha et al. [2023], benchmarks statutory reasoning over the US Internal Revenue
+Code; Blair-Stanek et al. Blair-Stanek et al. [2023] showed GPT-3 still made clear reasoning errors on it, especially on
+synthetic statutes.
+Other benchmarks evaluate realistic practice scenarios Shi et al. [2026] and safety across professional domains Hui et al.
+[2026], and Jurayj et al. Jurayj et al. [2026] combine LLMs with Prolog for tax reasoning. Prior work also explores
+multi-agent frameworks for verifiable legal reasoning Sadowski and Chudziak [2025a] and structured prompting for rule
+application Sadowski and Chudziak [2025b]. These show LLMs are accurate enough to warrant deployment discussions
+while highlighting persistent reasoning gaps.
+2.2
+Abstention and Selective Prediction
+The ability of a model to recognise when it should not answer is related to the broader literature on selective prediction
+and uncertainty estimation. Kirichenko et al. Kirichenko et al. [2026] introduce AbstentionBench, evaluating 20 frontier
+LLMs on unanswerable questions across 20 datasets. A key finding is that reasoning fine-tuning degrades abstention
+performance by 24% on average, even in domains where reasoning models excel. Sun et al. Sun et al. [2024] confirm
+this pattern using unanswerable math word problems (UMWP), showing that LLMs tend to hallucinate answers rather
+than recognise unsolvable questions. Zhou et al. Zhou et al. [2026] show reinforcement learning can teach abstention,
+with limited out-of-distribution generalisation.
+In specialised domains, Dai et al. Dai et al. [2026] introduce RealFin, showing that general-purpose models tend
+to over-commit when financial questions have missing premises. Ren et al. Ren et al. [2026] detect unanswerable
+text-to-SQL queries from hidden-layer signals. Presacan et al. Presacan et al. [2025] review abstention in healthcare,
+distinguishing uncertainty-driven from safety-driven abstention and proposing a conceptual evaluation framework.
+Other frameworks give formal guarantees through conformal, entropy-based, and ensemble methods Lee et al. [2024],
+Noh et al. [2026], Xu and Lu [2025], Wang et al. [2024], Fadeeva et al. [2023], Badshah et al. [2026]. A simpler
+mechanism is to ask the model itself whether an input is answerable, which can expose a reliability signal the answering
+pass does not; we apply this to input validation and measure its effect directly.
+2
+=== [p.3] ===
+Catching Contradictions in Tax Reasoning Systems
+Figure 1: Experimental design and the contradiction gate. The same model is asked to solve (return the tax liability or
+null) and to verify (flag missing or contradictory facts) on perturbed SARA cases; it abstains on missing facts but
+computes straight through injected contradictions (returning the clean answer 63-76% of the time, top vs. bottom), while
+the same model asked to verify flags 75-83% of them. The gate (P1) runs the verify call in parallel and overrides the
+solver to abstain on the contradiction label, recovering 70-83% abstention at 0-5.1 percentage points of clean-accuracy
+cost (§3.6).
+These works focus on mathematics, general question answering, and knowledge retrieval; abstention in legal reasoning
+under information deficit has not been their focus.
+2.3
+Contradiction Detection and Reasoning Under Conflict
+The question of how models handle contradictory information has been studied in several contexts. Hou et al. Hou
+et al. [2024] introduce WikiContradict, showing that models typically rely on one passage and disregard conflicting
+information when presented with contradictory evidence from Wikipedia. Mantravadi et al. Mantravadi et al. [2025]
+propose LegalWiz, a multi-agent framework for contradiction detection in legal documents, finding that cross-document
+contradictions remain a major challenge. These works study contradiction at the retrieval or document level, not at the
+level of input facts provided directly to a reasoning model.
+Our work differs from these lines in that the problem lies in the input itself (missing or contradictory facts), not in the
+model’s knowledge or retrieval pipeline, and we compare model behaviour across both defect types.
+3
+Methodology
+We construct a controlled evaluation by taking clean tax cases and applying two types of perturbation (redaction
+and contradiction), then measuring whether models detect the resulting defects. The dataset, perturbation pipeline,
+evaluation scripts, and all results are publicly available.1
+3.1
+Base Dataset
+We use 91 tax cases taken from the SARA (StAtutory Reasoning Assessment) subset of the LegalBench benchmark Guha
+et al. [2023], Holzenberger et al. [2020]. SARA tests statutory reasoning over the US Internal Revenue Code; the
+subset included in LegalBench contains cases that have been standardised for benchmark use. Each case describes a
+taxpayer’s situation (income, filing status, dependents, deductions) in natural language and asks for the tax liability,
+with ground-truth answers computed from the applicable statute.
+3.2
+Perturbation Design
+We apply two types of perturbation, each corresponding to a way legal inputs fail in practice: required facts are missing,
+and stated facts contradict one another. We pair each perturbation type with the fact category for which it produces a
+clear, unambiguous defect: redaction targets numeric facts, contradiction targets categorical facts. The reverse pairings
+1https://doi.org/10.5281/zenodo.22329077
+3
+=== [p.4] ===
+Catching Contradictions in Tax Reasoning Systems
+Table 1: Example case under three conditions (question: “How much tax does Alice have to pay in 2017?”; ground
+truth $6,621). Bold marks the perturbation.
+Condition
+Case description (abridged)
+Output
+Clean
+In 2017, Alice was paid $39,212, and Bob had no income. Alice and Bob have been married since Feb 3rd,
+2017. Alice and Bob file separately in 2017.
+$6,621
+Redacted
+In 2017, Alice had income, and Bob had no income. Alice and Bob have been married . . . file separately in
+2017.
+null
+Contradicted
+In 2017, Alice was paid $39,212, and Bob had no income. Alice and Bob file jointly in 2017. Alice and
+Bob ... file separately in 2017.
+$6,621
+are less clean: a redacted categorical fact is often inferable from context, and two conflicting numeric values read as an
+update or an approximation rather than a clear contradiction.
+Redaction removes a required numeric input, such as the taxpayer’s income, making the question unanswerable: any
+dollar answer is unsupported. We generate 78 redacted variants across the 91 source cases; the drop from 91 reflects the
+manual-review filter below, which excludes cases where redaction still left the answer determined (e.g., only zero-valued
+fields were available). Each redaction targets a non-zero numeric fact the computation requires, and an LLM rewrites
+the text to omit the value without leaving placeholders. A model that recognises the gap should abstain.
+Contradiction injects a contradictory statement about a categorical fact, creating a case where two logically incompatible
+claims coexist. After the validation described below, we retain 108 contradiction variants across three categories:
+marital status (49 cases), filing status (38 cases), and dependent count (21 cases). The variants come from 59 of the
+91 source cases: a case yields one variant per eligible categorical fact, so a single case contributes between one and
+five variants. The contradictory sentence is inserted verbatim into the description at least one sentence away from the
+original fact, without hedging language. A model that recognises the conflict should abstain.
+We generated the perturbations in three LLM-assisted phases: extracting and classifying facts (numeric vs. categorical),
+deterministically selecting which to perturb (non-zero numeric facts for redaction, categorical facts with a supported
+contrary mapping for contradiction), and rewriting the case text to apply the perturbation. All phases used GPT-5-nano2
+(OpenAI). The contradictory sentence itself comes from a fixed rule table (for example, files jointly maps to files
+separately); the LLM only rewrites the surrounding text. GPT-5-nano shares a provider with two evaluated models,
+GPT-5 mini and GPT-5.2. Because the injected sentence is rule-generated, inserted verbatim, and manually reviewed,
+we do not expect the generator to favour these two models.
+Automated checks verified textual integrity for each perturbation (value absent, no placeholders, no length inflation,
+no hedging language, no prompt leakage, verbatim contradictory sentence).3 Every case was then manually reviewed
+against fixed criteria, and cases that failed were removed; for contradictions, the criterion is that the injected sentence
+directly negates a stated fact, with both present and the conflict computationally relevant. A subsequent review removed
+8 contradiction cases where the injected sentence did not produce a genuine conflict: consistent restatements (e.g.,
+does not file jointly alongside files separately), statuses already entailed by the narrative (e.g., a widow or a completed
+divorce paired with not married), and no dependents injected where the only child belongs to a different taxpayer.
+Table 1 illustrates the three conditions for one case with GPT-5 mini’s responses: it computes the correct $6,621 on the
+clean input, abstains when the income is redacted, but ignores the injected “file jointly”/“file separately” contradiction
+and again returns $6,621.
+3.3
+Models Evaluated
+We evaluate six recent LLMs spanning four providers: GPT-5 mini and GPT-5.2 (OpenAI), Claude Sonnet 4.6
+(Anthropic), Qwen3.7-Plus (Alibaba), Kimi K2.5 (Moonshot), and Gemini 2.5 Flash (Google).4 Four of these are
+chain-of-thought (“thinking”) reasoners: GPT-5 mini, Kimi K2.5, Gemini 2.5 Flash, and Qwen3.7-Plus; GPT-5.2 and
+Claude Sonnet answer directly. This distinction matters because one might expect step-by-step reasoning to help on
+both clean-input accuracy and contradiction detection.
+2https://developers.openai.com/api/docs/models/gpt-5-nano
+3Full criteria and validation code are available in the project repository.
+4Qwen3.7-Plus and Kimi K2.5 were accessed via Fireworks AI; the others via the providers’ own APIs. Exact model identifiers
+are listed in the project repository.
+4
+=== [p.5] ===
+Catching Contradictions in Tax Reasoning Systems
+Models were queried through their providers’ APIs with structured output (a JSON schema constraining the response
+to a single nullable numeric field) at temperature 0 where the API supported it. We query each model in its default
+configuration with no model-specific thinking parameters; for several models thinking cannot be disabled in any case,
+so the thinking-versus-direct split reflects defaults under a uniform setup. Each of the six models was evaluated three
+times on the full dataset to assess result stability.
+3.4
+Evaluation Prompt and Response Classification
+Each model receives the applicable statute, the case description (clean, redacted, or contradicted), and the question,
+with instructions to act as an expert tax attorney and return the tax liability in USD, or null if the answer cannot be
+determined from the provided facts (full prompt in the project repository). We deliberately constrain the output to this
+binary choice rather than free text: the model has an explicit way to abstain, and hedging language cannot obscure
+whether it detected a problem. The trade-off is that we do not observe the model’s reasoning trace, only its final decision.
+This simulates a deployment setting in which a downstream pipeline consumes the model’s numeric output to compute
+the tax due.
+We classify each response into three categories:
+• Numeric (non-zero): the model returned a specific dollar amount greater than zero.
+• Zero: the model returned exactly $0, which is a valid computed answer (some cases have zero tax liability).
+• Absent: the model returned null or produced no parseable number. Only this category counts as abstention,
+since the prompt explicitly instructs the model to return null when it chooses to abstain.
+3.5
+Metrics
+We measure model behaviour along three dimensions:
+• Baseline accuracy: the proportion of clean (unperturbed) inputs where the model’s answer is within ±10% of
+the ground truth.
+• Abstention rate: the proportion of perturbed inputs where the model returns an absent response.
+• Answer preservation: the proportion of perturbed inputs where the model’s answer is within ±10% of the
+clean-input ground truth. Cases where the model abstains count as non-preserved.
+Abstention is the primary metric: it is the behaviour a defective input should trigger. Answer preservation is a diagnostic
+measure: high preservation means the model reproduced the clean answer despite the defect, the failure mode we
+measure. A low value is ambiguous on its own, so we read it alongside abstention; the remainder is wrong-different (a
+number outside the ±10% band). For the high-accuracy models preservation reliably captures the model reproducing
+its clean answer; for GPT-5.2 and Claude Sonnet, whose clean answers are often wrong, it is less meaningful, so we
+instead compare error sizes on perturbed versus clean inputs.
+3.6
+Self-Verification and the Contradiction Gate
+So far each model has been asked to solve: to return the tax liability or abstain. We now add a second task and ask
+the model instead to verify the input. In a separate call, the same model receives the same statute, case description,
+and question, but is asked only whether the facts are sufficient and internally consistent to answer the question, not to
+compute anything. The response is constrained to a single categorical label: none (the input is well-formed), missing
+(a required fact is absent), or contradiction (two facts conflict). As with the solver, we use structured output, so the
+verifier emits a decision rather than hedging prose.
+We define two pipelines. P0 is the solver alone: its output is whatever number or null the model returns. P1 is the
+contradiction gate: take the P0 output, but override it to abstention (null) whenever the verifier returns contradiction.
+The gate is deliberately contradiction-specific: it does not act on missing, because the solver already abstains on
+missing facts (§4) and gating there would conflate the two effects. P1 adds exactly one model call to P0 and changes
+nothing on inputs the verifier passes. It adds no logic beyond overriding the answer on the contradiction label; we
+include it to test whether the detected conflict converts into abstention, not as a system we propose for deployment.
+We report three quantities for the gate: the detection rate (the share of contradicted inputs the verifier labels
+contradiction), the false-flag rate (the share of clean inputs it labels contradiction, which drives the gate’s cost),
+and the clean-accuracy cost (the difference in baseline ±10% accuracy on clean inputs with versus without the gate).
+5
+=== [p.6] ===
+Catching Contradictions in Tax Reasoning Systems
+Table 2: Baseline accuracy (%) on 91 clean cases at several tolerances. The ±10% column, our primary tolerance
+throughout (answer preservation and the gate’s cost use it), is the mean over three runs; the other columns are from a
+single run and shown only to convey the accuracy profile.
+Model
+±1%
+±5%
+±10%
+±20%
+GPT-5 mini
+87.9
+93.4
+96.7
+100.0
+Qwen3.7-Plus
+90.1
+93.4
+93.4
+98.9
+Gemini 2.5 Flash
+82.4
+87.9
+91.6
+94.5
+Kimi K2.5
+81.3
+89.0
+89.4
+96.7
+GPT-5.2
+6.6
+20.9
+29.7
+50.5
+Claude Sonnet 4.6
+4.4
+12.1
+17.9
+31.9
+The verifier is the same model as the solver: this holds the model fixed (same weights, solve versus verify), at the cost
+of correlated errors (§6). Each of the six models is run through the verifier three times.
+4
+Results
+We first establish baseline accuracy on clean inputs, then examine model behaviour under redaction and contradiction.
+All results are means across three independent runs per model, with standard deviations reported where relevant. Three
+runs is a small sample for variance, so we read the standard deviations as rough indications of stability, not precise
+estimates.
+4.1
+Baseline Accuracy on Clean Inputs
+Table 2 shows each model’s accuracy on the 91 unperturbed cases. Four models cluster at the top at the ±10% tolerance:
+GPT-5 mini (96.7%), Qwen3.7-Plus (93.4%, σ=2.7%), Gemini 2.5 Flash (91.6%, σ=0.5%), and Kimi K2.5 (89.4%,
+σ=2.3%). The other two score far lower: GPT-5.2 (29.7%, σ=6.8%) and Claude Sonnet (17.9%, σ=1.9%). We refer
+to the first four as “high-accuracy models” throughout, as they are well separated from the rest, and to GPT-5.2 and
+Claude Sonnet, which answer directly (§3), as the “direct-answer models”.
+All four high-accuracy models reason step by step and both direct-answer models score far lower, so reasoning mode
+and clean-input accuracy coincide in our set. GPT-5 mini answered all 91 clean cases, while Claude Sonnet abstained
+on 16.5%.
+We include all six models, but the two contributions rest on different subsets. The diagnosis (the solve-versus-verify
+gap) is established on the four high-accuracy models, where preservation reliably reflects answer inertia. The two
+direct-answer models test whether the gate transfers to models that behave differently while solving; what the gate
+needs is only the change from P0 to P1 on a fixed model. On these two, verification raises contradiction abstention from
+7.4% and 43.2% to 70.7% and 78.4% (§4.3). Their low clean accuracy may partly reflect the single-number schema,
+which leaves a model that does not reason internally little room to work through the arithmetic; it is not a parsing
+artifact, since they return plausible but wrong dollar amounts rather than nulls. The schema cannot explain the gate
+result, because the verification call asks for one consistency label, not a computation. We therefore interpret these two
+models only through the P0-to-P1 change and do not prompt-engineer to raise their baseline.
+4.2
+Contradiction: Models Do Not Report Inconsistency While Solving
+Before turning to contradictions, we confirm that abstention works at all. On redacted inputs (Table 3) no model
+returns the clean-input answer (preservation at most 1.3%): models abstain on 27-92% of them, or less safely emit
+an unsupported number or $0. The contrast is starkest for Qwen3.7-Plus, the model most accurate at the tightest
+tolerance on clean inputs (±1%, Table 2): it abstains on only 27.4% of redacted inputs, so even for it the missing-
+versus-contradiction asymmetry is in preservation (0.9% versus 63.3%), not abstention. The models do abstain when a
+required fact is missing, so the contradiction behaviour we turn to next is selective, not general caution.5
+The high-accuracy models produce numeric answers on most contradictory inputs. Three of them rarely abstain: Kimi
+K2.5 never (0.0%), GPT-5 mini 1.2% (σ=1.2%), and Gemini 2.5 Flash 4.6% (σ=0.8%); Qwen3.7-Plus is somewhat
+more cautious at 14.8% (σ=3.0%). All four nonetheless return the clean-input answer on the majority of contradictions:
+5We treat $0 as a computed output, not an abstention; $0 rates on redacted inputs reach 47% (Qwen3.7-Plus). A confident $0 on
+an unanswerable input is as unsafe as any other wrong number.
+6
+=== [p.7] ===
+Catching Contradictions in Tax Reasoning Systems
+Table 3: Abstention and answer-preservation rates (%) on perturbed inputs. “Abstain” denotes the percentage of inputs
+for which the model returned no answer. “Preserve” denotes the percentage of outputs matching the ground truth within
+±10%. Values are means across three runs (σ ≤4.2%, largest for the direct-answer models).
+Redacted (n=78)
+Contradicted (n=108)
+Model
+Abstain
+Preserve
+Abstain
+Preserve
+GPT-5 mini
+64.5
+1.3
+1.2
+74.7
+Qwen3.7-Plus
+27.4
+0.9
+14.8
+63.3
+Gemini 2.5 Flash
+92.3
+0.0
+4.6
+76.2
+Kimi K2.5
+67.5
+1.3
+0.0
+67.6
+GPT-5.2
+59.8
+1.3
+7.4
+22.5
+Claude Sonnet 4.6
+85.0
+0.0
+43.2
+7.4
+Figure 2: Contradiction abstention while solving (P0) versus with the self-check gate (P1), per model. The P0-to-P1
+jump is the abstention that solving leaves unused and the gate recovers; the label above each P1 bar is the clean-accuracy
+cost (percentage points). Error bars are the standard deviation across runs.
+76.2% (Gemini), 74.7% (GPT-5 mini), 67.6% (Kimi), and 63.3% (Qwen3.7-Plus). They largely ignore the contradiction
+and compute as if the conflicting statement were not present.
+The two direct-answer models are interpreted only for the gate, as noted above (§4.1). Their error magnitudes on
+contradictions match their clean-input errors (Claude Sonnet: median 0.282 vs. 0.271; GPT-5.2: 0.218 vs. 0.189), so the
+abstention they show (Claude Sonnet 43.2%, GPT-5.2 7.4%) reflects general uncertainty rather than targeted detection.
+Asked instead to verify the input (§3.6), the four high-accuracy models flag 75-83% of these contradictions as
+inconsistent, well above the 0-15% they abstain on while solving. The example from Table 1 is typical: GPT-5 mini
+returns the clean-input $6,621 on the contradicted case while solving, but the same model, asked to verify that same
+input, returns contradiction and names the conflict: “the facts state both that Alice and Bob file jointly in 2017 and
+that they file separately in 2017.” The conflict is legible to the model when the task is to check the input; the solving
+pipeline never asks. We apply this as a simple check next.
+4.3
+The Contradiction Gate
+Table 4 reports the verifier and the gate. The detection column is the share of contradictions each model flags as
+contradiction when asked to verify. It is high and fairly uniform across capability tiers: 75-83% for the four
+high-accuracy models and 68-77% for the two direct-answer models. Set against solve-time abstention (Table 3: 0-15%
+for the four high-accuracy models, 7.4% and 43.2% for the two direct-answer models), the verification step recovers a
+detection ability that solving leaves unused.
+Applying P1 raises contradiction abstention to 70-83% across all six models, from a P0 baseline as low as 0% (Fig. 2).
+The answer-preservation rates that defined the diagnosis fall accordingly: for the high-accuracy models, the share of
+contradicted inputs answered with the clean-input value drops from 63-76% to 11-15%.
+7
+=== [p.8] ===
+Catching Contradictions in Tax Reasoning Systems
+Table 4: Self-verification and the contradiction gate on the 108 contradiction cases (means across three runs). Detect:
+contradictions flagged contradiction. FalseFlag: clean inputs flagged contradiction. Abstain (P1): contradiction
+abstention with the gate, versus P0 in Table 3. Cost: drop in baseline ±10% accuracy from the gate.
+Model
+Detect
+FalseFlag
+Abstain (P1)
+Cost
+GPT-5 mini
+77.2
+5.5
+77.2
+5.1
+Qwen3.7-Plus
+75.3
+0.7
+77.8
+0.4
+Gemini 2.5 Flash
+79.9
+0.0
+79.9
+0.0
+Kimi K2.5
+83.0
+4.4
+83.0
+4.0
+GPT-5.2
+68.5
+0.0
+70.7
+0.0
+Claude Sonnet 4.6
+77.2
+4.4
+78.4
+0.0
+Table 5: Verifier detection rate (%) by contradiction type for high-accuracy models (Gemini = Gemini 2.5 Flash,
+Kimi = Kimi K2.5, Qwen = Qwen3.7-Plus), means across three runs. Wilson 95% intervals over the n items are
+wide for dependent count (e.g., GPT-5 mini 32% [16,53]). Detection is the percentage of contradicted inputs flagged
+contradiction.
+Contradiction type
+GPT-5 mini
+Gemini
+Kimi
+Qwen
+Marital status (n=49)
+83.0
+78.9
+82.3
+77.6
+Filing status (n=38)
+94.7
+94.7
+97.4
+97.4
+Dependent count (n=21)
+31.7
+55.6
+58.7
+30.2
+The false-flag rate (the share of clean inputs the verifier wrongly calls a contradiction) is 0.0-5.5%. Among the capable
+models it is a real but modest clean-accuracy cost: 5.1 points for GPT-5 mini and 4.0 for Kimi K2.5, but essentially zero
+for Gemini 2.5 Flash and Qwen3.7-Plus (0.4). The two direct-answer models pay nothing measurable, partly because
+the clean cases they false-flag were already answered incorrectly.
+The gate adds an inference call, so one might ask whether a second independent sample, rather than the verification step,
+is what helps. Treating a model’s three solve runs as a self-consistency ensemble and abstaining when they disagree
+flags only 11-35% of contradictions (11-21% for the three strongest models, 35% for Qwen3.7-Plus), well below the
+75-83% the verifier detects, and at a higher clean false-flag (3-14% versus the gate’s 0-5.5%). This comparison has a
+limit: four of the six models run at temperature 0, so disagreement across their runs reflects nondeterminism rather than
+sampled diversity. Under our setup, resampling the solve task does not surface the contradiction, while asking the model
+to check the input does; a resampling baseline at nonzero temperature could behave differently, and we did not run one.
+The verifier’s labels are imperfect, but the gate tolerates this. Pooled across models, the verifier labels 77% of
+contradicted inputs contradiction, 16% missing, and 7% none. On clean inputs it says missing 80% of the time
+(60-98% per model) and none only 17.5%. This has a plain reading: SARA descriptions omit facts a strict reader
+can require, such as filing status, adjustments to income, itemised deductions, or age and blindness, and the verifier’s
+justifications cite exactly these. The verifier is therefore not a general well-formedness judge. It works as a contradiction
+detector because the contradiction label is precise on clean inputs (2.5% false flags) and the gate acts on that label
+alone. Its behaviour on the 78 redacted inputs is consistent with this: it says missing on 95-100% of them per model
+and contradiction on only 0-4.7%, so the contradiction label keeps its precision on defective inputs as well.
+4.4
+Contradiction Type Analysis
+Detection is not uniform across contradiction types. Table 5 breaks the verifier’s detection rate down by category for the
+high-accuracy models. Filing-status conflicts are caught almost always (95-97%), marital-status conflicts moderately
+(78-83%), and dependent-count conflicts much less often (30-59%; only 6% for the direct-answer GPT-5.2). The
+ordering matches logical hardness: file jointly versus file separately in the same year is a strict contradiction, whereas has
+a child versus no dependents is defeasible, since a child is a dependent only if it meets age and support tests. The lower
+dependent-count rate is therefore in part the verifier correctly declining to call a defeasible relation a strict contradiction,
+not only missed detection. The filing-versus-dependent gap is robust to sampling uncertainty (non-overlapping Wilson
+intervals), but the marital-versus-dependent ordering is not for Gemini and Kimi, where dependent-count detection is
+poorly constrained (n=21), so we draw no conclusion on that pair. Within each type the variants come from distinct
+source cases, except for one duplicated case in marital status and one in filing status, so the per-type intervals are not
+distorted by sibling variants of one case.
+8
+=== [p.9] ===
+Catching Contradictions in Tax Reasoning Systems
+Dependent-count conflicts are the hardest to flag even when asked, because the injected claim is often not a strict
+contradiction. The residual misses concentrate here, and we do not read them all as detection failures; many are
+defeasible relations rather than strict conflicts, which is also why the clearest misfires were removed from the set (§3).
+This reading does not conflict with the retention criterion in §3. That criterion is textual: the injected sentence directly
+negates a stated fact, as no dependents negates has a child. Defeasibility concerns the legal relation between the facts:
+the child counts as a dependent only if age, residency, and support tests are met. A case can meet the textual criterion
+and still be legally defeasible. The verifier’s fallback labels do not settle how to read the misses. On the undetected
+dependent-count cases it returns missing more often than none, but missing is also its dominant label on clean inputs
+(§4.3), so the label distribution carries little evidence either way.
+5
+Discussion
+For a deployment pipeline the practical finding is simple: asked to solve, the model computes through an injected
+contradiction and emits a confident answer; asked to check the same input, the model reports the conflict. We do not
+settle why solving misses it. One possibility: redaction creates a gap, a step with no input, so the model cannot proceed,
+while contradiction provides two competing inputs, so the model has something to work with at every step and resolves
+the conflict on its own, likely by defaulting to one value. Whatever the mechanism, the verification step recovers the
+missed abstention, which is what the gate exploits.
+5.1
+Implications for Legal AI Deployment
+High benchmark accuracy alone is not sufficient evidence that a model will behave safely on real-world legal inputs,
+where contradictory client information is common. This adds to documented reliability concerns in legal contexts Dahl
+et al. [2024], Hui et al. [2026], Shi et al. [2026]: the model may fail to recognise the task should not be solved at all,
+even when it could solve a clean version correctly.
+The missed detection is easy to recover: the gate is one self-verification call, with no training and no external solver
+(Table 4). It is the simplest of a range of options: upstream input checks Mantravadi et al. [2025] and output-side
+checks such as multi-agent disagreement, conformal ensembles Noh et al. [2026], Wang et al. [2024], Xu and Lu [2025],
+Badshah et al. [2026], and neuro-symbolic verification Sadowski and Chudziak [2025a,b], Kant et al. [2025], Pan et al.
+[2024], Calanzone et al. [2025]. These are heavier but catch the defeasible conflicts the gate misses (§6); we see it as a
+cheap first check, not a replacement.
+6
+Evaluation and Future Work
+Our findings connect to the three lines of work in §2. The abstention literature reports that reasoning-tuned models often
+abstain less rather than more Kirichenko et al. [2026]; in our set the step-by-step reasoners are the models that preserve
+the clean-input answer on contradicted inputs (the direct-answer models also return numbers, but do not reproduce the
+clean value), consistent with that pattern, though we cannot separate reasoning mode from capability, so we read it
+as agreement rather than confirmation. Work on unanswerable questions studies underspecified or missing-premise
+inputs Sun et al. [2024], Dai et al. [2026]; our models reproduce that behaviour on missing facts, but a contradiction is
+over-specified rather than under-specified, and the same models do not catch it, so contradiction is a distinct failure
+mode that underspecification benchmarks do not isolate. Finally, computing through a conflict by defaulting to one
+value is the input-level analogue of what WikiContradict Hou et al. [2024] found at the retrieval level, where models
+rely on one passage and disregard the conflicting one. Against this background our addition is the solve-versus-verify
+gap and the same-model gate that turns it into safe behaviour.
+This result comes with several bounds. It is narrow in scope: the SARA-derived cases are stylised compared to
+real-world tax inputs, which involve natural-language narratives with more ambiguity and complexity, and they cover a
+single legal domain (US federal income tax) and a single benchmark. Whether the missing-vs-contradictory asymmetry
+generalises to other legal settings (contract analysis, regulatory compliance, criminal procedure) is an open question; the
+SARA-specific scope is a deliberate choice for this study rather than a claim about all legal AI. Since each defect type
+is paired with one fact category (§3), the asymmetry is also measured across fact categories, and we do not disentangle
+the two.
+The verifier, too, is a deliberate choice: the same model and weights as the solver, so shared blind spots can let a
+contradiction pass both stages. Yet it is the right design for the diagnostic claim: it shows that the same weights that
+compute through the conflict report it when the task changes, with no external knowledge added. A cross-model or
+external verifier answers a complementary question, whether the detection is recoverable from a different model. A
+9
+=== [p.10] ===
+Catching Contradictions in Tax Reasoning Systems
+specific external verifier can of course do worse than the same-model gate. But the same-model verifier remains one of
+the available choices, so the best gate over verifier choices is at least what we report; in that sense our numbers are a
+lower bound on what verification gating can recover.
+Detection is weakest on dependent-count contradictions (6-59%), many of which are defeasible rather than strict
+conflicts; where strict treatment is wanted, a stronger consistency check would be needed.
+These limits leave several directions open. The methodology and gate should be tested in other legal domains, to see
+whether the effect and the check transfer beyond tax. The diagnosis can be sharpened: logging reasoning traces would
+show whether the solver detects the conflict internally. A cross-model or external verifier would test whether detection
+is recoverable from different weights, and stronger verifiers, neuro-symbolic Calanzone et al. [2025], Kant et al. [2025],
+Pan et al. [2024] or conformal and ensemble methods Noh et al. [2026], Wang et al. [2024], Xu and Lu [2025], Fadeeva
+et al. [2023], Badshah et al. [2026], Lee et al. [2024], could catch the defeasible conflicts the same-model gate misses.
+7
+Conclusion
+Large language models now solve well-formed statutory tax cases accurately enough to be considered for advisory and
+compliance systems, but real inputs are often defective: required facts are missing, or stated facts conflict. We evaluated
+six recent models on SARA-derived tax cases under both defects and found opposite behaviour. When a required fact is
+missing, the models abstain, or at least almost never reproduce the clean answer. When the input contradicts itself, the
+strongest models compute straight through the conflict and return the answer they would give to the clean case, with no
+signal that anything is wrong. The detection ability is there: asked to verify the same input rather than solve it, the same
+models report the conflict.
+This solve-versus-verify gap gives a diagnosis and a simple check that acts on it. The diagnosis is that high accuracy on
+well-formed inputs does not predict safe behaviour on contradictory ones, so benchmark accuracy alone is an incomplete
+measure of reliability for legal reasoning. The check is the contradiction gate: a single self-verification call that reuses
+the same model, with no training and no external tooling, and it converts the recovered detection into abstention across
+all six models at little clean-accuracy cost. The gate is an easy first check, not a complete solution; extending it to other
+legal domains and to stronger verifiers that catch defeasible conflicts (§6) is future work.
+References
+Nils Holzenberger, Andrew Blair-Stanek, and Benjamin Van Durme. A dataset for statutory reasoning in tax law
+entailment and question answering, 2020. URL https://arxiv.org/abs/2005.05257.
+Neel Guha, Julian Nyarko, Daniel E. Ho, Christopher Ré, Adam Chilton, Aditya Narayana, Alex Chohlas-Wood, Austin
+Peters, Brandon Waldon, Daniel N. Rockmore, Diego Zambrano, Dmitry Talisman, Enam Hoque, Faiz Surani, Frank
+Fagan, Galit Sarfaty, Gregory M. Dickinson, Haggai Porat, Jason Hegland, Jessica Wu, Joe Nudell, Joel Niklaus,
+John Nay, Jonathan H. Choi, Kevin Tobia, Margaret Hagan, Megan Ma, Michael Livermore, Nikon Rasumov-Rahe,
+Nils Holzenberger, Noam Kolt, Peter Henderson, Sean Rehaag, Sharad Goel, Shang Gao, Spencer Williams, Sunny
+Gandhi, Tom Zur, Varun Iyer, and Zehua Li. Legalbench: a collaboratively built benchmark for measuring legal
+reasoning in large language models. In Proceedings of the 37th International Conference on Neural Information
+Processing Systems, NIPS ’23, Red Hook, NY, USA, 2023. Curran Associates Inc.
+Michał Matak and Jarosław Chudziak. Gaius: Combining genai with legal clauses retrieval for knowledge-based
+assistant. In Proceedings of the 17th International Conference on Agents and Artificial Intelligence, page 868–875.
+SCITEPRESS - Science and Technology Publications, 2025. doi:10.5220/0013191800003890. URL http://dx.
+doi.org/10.5220/0013191800003890.
+Albert Sadowski and Jaroslaw A. Chudziak. On verifiable legal reasoning: A multi-agent framework with formalized
+knowledge representations. In Proceedings of the 34th ACM International Conference on Information and Knowledge
+Management, CIKM ’25, page 2535–2545, New York, NY, USA, 2025a. Association for Computing Machinery.
+ISBN 9798400720406. doi:10.1145/3746252.3761057. URL https://doi.org/10.1145/3746252.3761057.
+William Jurayj, Nils Holzenberger, and Benjamin Van Durme. Language models and logic programs for trustworthy tax
+reasoning, 2026. URL https://arxiv.org/abs/2508.21051.
+Ananya Mantravadi, Shivali Dalmia, Olga Pospelova, Abhishek Mukherji, Nand Dave, and Anudha Mittal. Legalwiz:
+A multi-agent generation framework for contradiction detection in legal documents, 2025. URL https://arxiv.
+org/abs/2510.03418.
+10
+=== [p.11] ===
+Catching Contradictions in Tax Reasoning Systems
+Polina Kirichenko, Mark Ibrahim, Kamalika Chaudhuri, and Samuel Bell. Abstentionbench: Reasoning LLMs fail on
+unanswerable questions. In The Thirty-ninth Annual Conference on Neural Information Processing Systems Datasets
+and Benchmarks Track, 2026. URL https://openreview.net/forum?id=OkHC30LLpO.
+YuHong Sun, Zhangyue Yin, Qipeng Guo, Jiawen Wu, Xipeng Qiu, and Hui Zhao. Benchmarking hallucination in large
+language models based on unanswerable math word problem. In Nicoletta Calzolari, Min-Yen Kan, Veronique Hoste,
+Alessandro Lenci, Sakriani Sakti, and Nianwen Xue, editors, Proceedings of the 2024 Joint International Conference
+on Computational Linguistics, Language Resources and Evaluation (LREC-COLING 2024), pages 2178–2188,
+Torino, Italia, May 2024. ELRA and ICCL. URL https://aclanthology.org/2024.lrec-main.196/.
+Yuyang Dai, Yan Lin, Zhuohan Xie, and Yuxia Wang. Realfin: How well do llms reason about finance when users leave
+things unsaid?, 2026. URL https://arxiv.org/abs/2602.07096.
+Oriana Presacan, Alireza Hossein Zadeh Nik, Jaya Ojha, Vajira Thambawita, Bogdan Ionescu, and Michael Riegler.
+When silence is safer: a review of llm abstention in healthcare. Research Square preprint, 2025.
+Matthew Dahl, Varun Magesh, Mirac Suzgun, and Daniel E Ho.
+Large legal fictions: Profiling legal halluci-
+nations in large language models. Journal of Legal Analysis, 16(1):64–93, January 2024. ISSN 1946-5319.
+doi:10.1093/jla/laae003. URL http://dx.doi.org/10.1093/jla/laae003.
+Yuzhen Shi, Huanghai Liu, Yiran Hu, Gaojie Song, Xinran Xu, Yubo Ma, Tianyi Tang, Li Zhang, Qingjing Chen,
+Di Feng, Wenbo Lv, Weiheng Wu, Kexin Yang, Sen Yang, Wei Wang, Rongyao Shi, Yuanyang Qiu, Yuemeng Qi,
+Jingwen Zhang, Xiaoyu Sui, Yifan Chen, Yi Zhang, An Yang, Bowen Yu, Dayiheng Liu, Junyang Lin, Weixing
+Shen, Bing Zhao, Charles L. A. Clarke, and Hu Wei. Plawbench: A rubric-based benchmark for evaluating llms in
+real-world legal practice, 2026. URL https://arxiv.org/abs/2601.16669.
+L. Thorne McCarty. Reflections on taxman: An experiment in artificial intelligence and legal reasoning. Harvard Law
+Review, 90(5):837–893, 1977.
+Andrew Blair-Stanek, Nils Holzenberger, and Benjamin Van Durme. Can gpt-3 perform statutory reasoning? In Pro-
+ceedings of the Nineteenth International Conference on Artificial Intelligence and Law, ICAIL ’23, page 22–31, New
+York, NY, USA, 2023. Association for Computing Machinery. ISBN 9798400701979. doi:10.1145/3594536.3595163.
+URL https://doi.org/10.1145/3594536.3595163.
+Zheng Hui, Yijiang River Dong, Ehsan Shareghi, and Nigel Collier. TRIDENT: Benchmarking LLM safety in finance,
+medicine, and law, 2026. URL https://openreview.net/forum?id=Fj7adDEWm4.
+Albert Sadowski and Jarosław A. Chudziak.
+Explainable rule application via structured prompting:
+A
+neural-symbolic approach.
+Procedia Computer Science,
+270:2166–2175,
+2025b.
+ISSN 1877-0509.
+doi:https://doi.org/10.1016/j.procs.2025.09.337. 29th International Conference on Knowledge-Based and Intel-
+ligent Information and Engineering Systems (KES 2025).
+Xinyu Zhou, Chang Jin, Carsten Eickhoff, Zhijiang Guo, and Seyed Ali Bahrainian. When silence is golden: Can
+LLMs learn to abstain in temporal QA and beyond? In The Fourteenth International Conference on Learning
+Representations, 2026. URL https://openreview.net/forum?id=PhUCxfS0yf.
+Xuancheng Ren, Shijing Hu, Zhihui Lu, Jiangqi Huang, and Qiang Duan. Latentrefusal: Latent-signal refusal for
+unanswerable text-to-sql queries, 2026. URL https://arxiv.org/abs/2601.10398.
+Minjae Lee, Kyungmin Kim, Taesoo Kim, and Sangdon Park. Selective generation for controllable language models. In
+The Thirty-eighth Annual Conference on Neural Information Processing Systems, 2024. URL https://openreview.
+net/forum?id=glfYOAzh2f.
+Kangjun Noh, Seongchan Lee, Ilmun Kim, and Kyungwoo Song. Multi-LLM adaptive conformal inference for
+reliable LLM response. In The Fourteenth International Conference on Learning Representations, 2026. URL
+https://openreview.net/forum?id=opuQH9Xyu9.
+Beining Xu and Yongming Lu. Tecp: Token-entropy conformal prediction for llms. Mathematics, 13(20), 2025. ISSN
+2227-7390. doi:10.3390/math13203351. URL https://www.mdpi.com/2227-7390/13/20/3351.
+Zhiyuan Wang, Jinhao Duan, Lu Cheng, Yue Zhang, Qingni Wang, Xiaoshuang Shi, Kaidi Xu, Heng Tao Shen, and
+Xiaofeng Zhu. ConU: Conformal uncertainty in large language models with correctness coverage guarantees. In Yaser
+Al-Onaizan, Mohit Bansal, and Yun-Nung Chen, editors, Findings of the Association for Computational Linguistics:
+EMNLP 2024, pages 6886–6898, Miami, Florida, USA, November 2024. Association for Computational Linguistics.
+doi:10.18653/v1/2024.findings-emnlp.404. URL https://aclanthology.org/2024.findings-emnlp.404/.
+Ekaterina Fadeeva, Roman Vashurin, Akim Tsvigun, Artem Vazhentsev, Sergey Petrakov, Kirill Fedyanin, Daniil
+Vasilev, Elizaveta Goncharova, Alexander Panchenko, Maxim Panov, Timothy Baldwin, and Artem Shelmanov.
+LM-polygraph: Uncertainty estimation for language models. In Yansong Feng and Els Lefever, editors, Proceedings
+11
+=== [p.12] ===
+Catching Contradictions in Tax Reasoning Systems
+of the 2023 Conference on Empirical Methods in Natural Language Processing: System Demonstrations, pages 446–
+461, Singapore, December 2023. Association for Computational Linguistics. doi:10.18653/v1/2023.emnlp-demo.41.
+URL https://aclanthology.org/2023.emnlp-demo.41/.
+Sher Badshah, Ali Emami, and Hassan Sajjad. Scope: Selective conformal optimized pairwise llm judging, 2026. URL
+https://arxiv.org/abs/2602.13110.
+Yufang Hou, Alessandra Pascale, Javier Carnerero-Cano, Tigran T. Tchrakian, Radu Marinescu, Elizabeth M. Daly,
+Inkit Padhi, and Prasanna Sattigeri. Wikicontradict: A benchmark for evaluating LLMs on real-world knowledge
+conflicts from wikipedia. In The Thirty-eight Conference on Neural Information Processing Systems Datasets and
+Benchmarks Track, 2024. URL https://openreview.net/forum?id=5t7DtLwTVC.
+Manuj Kant, Sareh Nabi, Manav Kant, Roland Scharrer, Megan Ma, and Marzieh Nabi. Towards robust legal reasoning:
+Harnessing logical llms in law, 2025. URL https://arxiv.org/abs/2502.17638.
+Shirui Pan, Linhao Luo, Yufei Wang, Chen Chen, Jiapu Wang, and Xindong Wu. Unifying large language models and
+knowledge graphs: A roadmap. IEEE Transactions on Knowledge and Data Engineering, 36(7):3580–3599, July 2024.
+ISSN 2326-3865. doi:10.1109/tkde.2024.3352100. URL http://dx.doi.org/10.1109/TKDE.2024.3352100.
+Diego Calanzone, Stefano Teso, and Antonio Vergari. Logically consistent language models via neuro-symbolic
+integration. In The Thirteenth International Conference on Learning Representations, 2025. URL https://
+openreview.net/forum?id=7PGluppo4k.
+12

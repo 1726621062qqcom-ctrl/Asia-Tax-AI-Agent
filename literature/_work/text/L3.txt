@@ -1,0 +1,801 @@
+=== [p.1] ===
+Takustr. 7
+14195 Berlin
+Germany
+Zuse Institute Berlin
+KEVIN K. H. CHEUNG, AMBROS GLEIXNER, AND DANIEL E. STEFFY
+Verifying Integer Programming Results
+This report has been published in the proceedings of IPCO 2017. Please cite as:
+K.K.H. Cheung, A. Gleixner, and D.E. Steffy. Verifying Integer Programming Result. In F. Eisenbrand and J. Koenemann, eds., Integer Programming and Combina-
+torial Optimization: 19th International Conference, IPCO 2017, pp. 148–160, 2017, DOI:10.1007/978-3-319-59250-3 13
+ZIB Report 16-58 (Revised version March 2017)
+arXiv:1611.08832v2  [math.OC]  1 Jan 2019
+=== [p.2] ===
+Zuse Institute Berlin
+Takustr. 7
+14195 Berlin
+Germany
+Telephone: +49 30-84185-0
+Telefax: +49 30-84185-125
+E-mail: bibliothek@zib.de
+URL: http://www.zib.de
+ZIB-Report (Print) ISSN 1438-0064
+ZIB-Report (Internet) ISSN 2192-7782
+=== [p.3] ===
+Verifying Integer Programming Results
+Kevin K. H. Cheung∗and Ambros Gleixner† and Daniel E. Steﬀy‡
+March 9, 2017
+Abstract
+Software for mixed-integer linear programming can return incorrect results for a
+number of reasons, one being the use of inexact ﬂoating-point arithmetic. Even solvers
+that employ exact arithmetic may suﬀer from programming or algorithmic errors, mo-
+tivating the desire for a way to produce independently veriﬁable certiﬁcates of claimed
+results. Due to the complex nature of state-of-the-art MIP solution algorithms, the
+ideal form of such a certiﬁcate is not entirely clear. This paper proposes such a certiﬁ-
+cate format designed with simplicity in mind, which is composed of a list of statements
+that can be sequentially veriﬁed using a limited number of inference rules. We present
+a supplementary veriﬁcation tool for compressing and checking these certiﬁcates inde-
+pendently of how they were created. We report computational results on a selection
+of MIP instances from the literature. To this end, we have extended the exact rational
+version of the MIP solver SCIP to produce such certiﬁcates.
+Keywords:
+correctness, veriﬁcation, proof, certiﬁcate, optimality, infeasibility,
+mixed-integer linear programming
+1
+Introduction
+The performance of algorithms for solving mixed-integer linear programs to optimality
+has improved signiﬁcantly over the last decades [3, 4]. As the complexity of the solvers
+increases, a question emerges: How does one know if the computational results are correct?
+Although rarely, MIP solvers do occasionally return incorrect or dubious results [13].
+Despite such errors, maintaining a skeptical attitude that borders on paranoia is arguably
+neither healthy nor practical. After all, machines do outperform humans on calculations by
+orders of magnitude and many tasks in life are now entrusted to automation. Hence, the
+motivation for asking how to verify correctness of computational results is not necessarily
+because of an inherent distrust of solvers. Rather, it is the desire to seek ways to identify
+and reduce errors and to improve conﬁdence in the computed results. Previous research
+on computing accurate solutions for MIP has utilized various techniques including interval
+arithmetic [37], exact rational arithmetic [6, 13, 17], and safely derived cuts [12]. Never-
+theless, as stated in [13], “even with a very careful implementation and extensive testing,
+a certain risk of an implementation error remains”.
+One way to satisfy skeptics is formal code veriﬁcation as is sometimes found in software
+for medical applications and avionics. For global optimization, progress in this direction has
+been made very recently [36, 41]. For modern MIP solvers, which easily consist of several
+100,000 lines of code, this may be an ambitious goal. An alternative is to build solvers
+∗School
+of
+Mathematics
+and
+Statistics,
+Carleton
+University,
+Ottawa,
+ON,
+Canada,
+kevin.cheung@carleton.ca.
+†Department Optimization, Zuse Institute Berlin, Takustr. 7, 14195 Berlin, Germany, gleixner@zib.de,
+ORCID: 0000-0003-0391-5903.
+‡Department
+of
+Mathematics
+and
+Statistics,
+Oakland
+University,
+Rochester,
+MI,
+USA,
+steffy@oakland.edu.
+1
+=== [p.4] ===
+that output extra information that facilitates independent checking. We shall use the word
+certiﬁcate to refer to such extra information for a given problem that has been solved.
+Ideally, the certiﬁcate should allow for checking the results using fewer resources than what
+are needed to solve the problem from scratch. Such a certiﬁcate could in principle be used
+in formal veriﬁcation using a proof checker as done in the Flyspeck Project [19, 39, 42] for a
+formal proof of Kepler’s Conjecture, or informal veriﬁcation as done by Applegate et al. [5]
+for the Traveling Salesman Problem and by Carr et al. [11] in their unpublished work for
+MIP in general. Naturally, certiﬁcates should be as simple to verify as possible if they are
+to be convincing.
+We highlight two speciﬁc applications where solution veriﬁcation is desirable. First,
+Achterberg [1] presented MIP formulations for circuit design veriﬁcation problems, for which
+solvers have been shown to return incorrect results [13]. Second, Pulaj [40] has recently
+used MIP to settle open questions related to Frankl’s conjecture. Software developed in
+connection with this paper has been successfully used to generate and check certiﬁcates for
+MIP models coming from both of these applications.
+For linear programming, duality theory tells us that an optimal primal solution and an
+optimal dual solution are suﬃcient to facilitate eﬀective veriﬁcation of optimality. In the
+case of checking infeasibility, a Farkas certiﬁcate will do. Therefore, verifying LP results, at
+least in the case when exact rational arithmetic is used, is rather straightforward. However,
+the situation with MIP is drastically diﬀerent. From a theoretical perspective, even though
+some notions of duality for MIP have been formulated [24], small (i.e. polynomial size)
+certiﬁcates for infeasibility or optimality may not even exist. As a result, there are many
+forms that certiﬁcates could take: a branch-and-bound tree, a list of derived cutting planes,
+a superadditive dual function, or other possibilities for problems with special structures
+such as pure integer linear programming and binary programming [10, 16, 31, 33]. Which
+format would be preferred for certiﬁcate veriﬁcation is not entirely clear, and in this paper
+we provide reasoning behind our choice.
+From a software perspective, MIP result certiﬁcation is also considerably more compli-
+cated than LP certiﬁcation. Even though most solvers adopt the branch-and-cut paradigm,
+they typically do not make the computed branch-and-bound tree or generated cuts readily
+available, and they may also utilize many other techniques including constraint propa-
+gation, conﬂict analysis, or reduced cost ﬁxing. Thus, even if a solver did print out all
+information used to derive its solution, a veriﬁer capable of interpreting such information
+would itself be highly complex, contradicting our desire for a simple veriﬁer. As a result,
+other than accepting the results of an exact solver such as [13], the best that many people
+can do today to “verify” the results of a solver on a MIP instance is to solve the instance by
+several diﬀerent solvers and check if the results match or minimally check that a returned
+solution is indeed feasible and has the objective function value claimed, as is done by the
+solution checker in [32].
+The main contribution of this paper is the development of a certiﬁcate format for the
+veriﬁcation of mixed-integer linear programs. Compared to the previous work of Applegate
+et al. [5] for the Traveling Salesman Problem and the unpublished work of Carr et al. [11]
+for general MIP, our certiﬁcate format has a signiﬁcantly simpler structure. It consists
+of a sequence of statements that can be veriﬁed one by one using simple inference rules,
+facilitating veriﬁcation in a manner akin to natural deduction. The approach is similar
+to that for veriﬁcation of unsatisﬁability proofs for SAT formulas. (See for example [27,
+43].) This simple certiﬁcate structure makes it easier for researchers to develop their own
+independent certiﬁcate veriﬁcation programs, or check the code of existing veriﬁers, even
+without any expert knowledge of MIP solution algorithms.
+To demonstrate the utility of the proposed certiﬁcate format, we have developed a
+reference checker in C++ and added the capability to produce such certiﬁcates to the exact
+version of the MIP solver SCIP [13, 21]. We used these tools to verify results reported in
+[13]. To the best of our knowledge, this work also represents the ﬁrst software for general
+2
+=== [p.5] ===
+MIP certiﬁcate veriﬁcation that has been made available to the mathematical optimization
+community.
+Organization of the paper.
+Even though the proposed format for the certiﬁcate is
+straightforward, some of the details are nevertheless technical. Therefore, in this paper,
+we discuss the certiﬁcate format at a conceptual level. The full technical speciﬁcation is
+found in the accompanying computer ﬁles.1 We begin with the necessary ingredients for
+the simple case of LP in Section 2. In Section 3, the ideas for dealing with LP are extended
+to pure integer linear programming. The full conceptual description of the format of the
+certiﬁcate is then given in Section 4. Computational experiments are reported in Section 5,
+and concluding remarks are given in Section 6. Throughout this paper, we assume that
+problems are speciﬁed and solved with exact rational arithmetic.
+2
+Certiﬁcates for linear programming
+A certiﬁcate of optimality for an LP is a dual feasible solution whose objective function
+value matches the optimal value. However, there is no need to specify the dual when one
+views the task of certiﬁcation as an inference procedure, see, e.g., [28]. Suppose we are
+given the system of linear constraints
+Ax ≥b, A′x ≤b′, A′′x = b′′,
+(S)
+where x is a vector of variables, A ∈Rm×n, A′ ∈Rm′×n, A′′ ∈Rm′′×n, b ∈Rm, b′ ∈Rm′,
+and b′′ ∈Rm′′ for some nonnegative integers n, m, m′, and m′′.
+We say that cTx ≥v is obtained by taking a suitable linear combination of the con-
+straints in (S) if
+cT = dTA + d′TA′ + d′′TA′′, v = dTb + d′Tb′ + d′′Tb′′
+for some d ∈Rm, d′ ∈Rm′, and d′′ ∈Rm′′ with d ≥0 and d′ ≤0. If x satisﬁes (S), then it
+necessarily satisﬁes cTx ≥v. We say that the inequality cTx ≥v is inferred from (S). We
+will refer to this general inference procedure as linear inequality inference.
+Remark 1. Together, d, d′, d′′ is simply a feasible solution to the linear programming dual
+of the linear program
+min{cTx | Ax ≥b, A′x ≤b′, A′′x = b′′}.
+(LP)
+The inequality cTx ≥v is sometimes called a surrogate of (S). (See [28].)
+Suppose that an optimal solution to (LP) exists and the optimal value is v. Linear
+programming duality theory guarantees that cTx ≥v can be inferred from (S). Therefore,
+linear inequality inference is suﬃcient to certify optimality for linear programming. Con-
+ceptually, the certiﬁcate that we propose is a listing of the constraints in (S) followed by
+the inequality cTx ≥v with the associated multipliers used in the inference as illustrated
+in the following example.
+Example 1. The following shows an LP problem and its associated certiﬁcate.
+min
+2x + y
+s.t.
+C1 :
+5x −y ≥2
+C2 :
+3x −2y ≤1.
+Given
+C1 :
+5x −y ≥2
+C2 :
+3x −2y ≤1
+Derived
+Reason
+obj :
+2x + y ≥1
+{1 × C1 + (−1) × C2}
+1See https://github.com/ambros-gleixner/VIPR
+3
+=== [p.6] ===
+Here, C1 and C2 are constraint labels. Taking the suitable linear combination 1 × C1 +
+(−1)×C2 gives 2x+y ≥1, thus establishing that 1 is a lower bound for the optimal value.
+Remark 2. This type of linear inference can also be used to derive ≤-inequalities or
+equality constraints. Assuming that all problem data is rational, rational multipliers are
+suﬃcient to certify infeasibility or optimality.
+3
+Handling Chv´atal-Gomory cutting planes
+Gomory [23] showed in theory that, for pure integer linear programming (IP), optimality
+or infeasibility can be established by a pure cutting-plane approach. Such an approach can
+also work in practice [8, 44]. In addition to linear inequality inference, a rounding operation
+is needed.
+Suppose that cTx ≥v can be inferred from (S) by taking a suitable linear combination
+of the constraints. If ci ∈Z for i ∈I for some I ⊆{1, . . . , n} and ci = 0 for i /∈I, then
+any x ∈Rn satisfying (S) with xi ∈Z for i ∈I must also satisfy cTx ≥⌈v⌉. We say that
+cTx ≥⌈v⌉is obtained from cTx ≥v by rounding. When I = {1, . . . , n}, the inequality
+cTx ≥⌈v⌉is known as a Chv´atal-Gomory cut (CG-cut in short). It can then be added to
+the system and the process of obtaining another CG-cut can be repeated. Conceptually, a
+certiﬁcate for an IP instance solved using only CG-cuts can be given as a list of the original
+constraints followed by the derived constraints.
+Example 2. The following shows an IP problem and its associated certiﬁcate.
+min
+x + y
+s.t.
+C1 :
+4x + y ≥1
+C2 :
+4x −y ≤2
+x, y ∈Z
+Given
+x, y ∈Z
+C1 :
+4x + y ≥1
+C2 :
+4x −y ≤2
+Derived
+Reason
+C3 :
+y ≥−1
+2
+ 1
+2 × C1 +
+ −1
+2
+
+× C2
+	
+C4 :
+y ≥0
+{round up C3}
+C5 :
+x + y ≥1
+4
+ 1
+4 × C1 + 3
+4 × C4
+	
+C6 :
+x + y ≥1
+{round up C5}
+Note that the derived constraints in the certiﬁcate can be processed in a sequential man-
+ner. In the next section, we see how to deal with branching without sacriﬁcing sequential
+processing.
+4
+Branch-and-cut certiﬁcates
+In practice, most MIP instances are not solved by cutting planes alone. Thus, certiﬁcates
+as described in the previous section are of limited utility.
+We now propose a type of
+certiﬁcate for optimality or infeasibility established by a branch-and-cut procedure in which
+the generated cuts at any node can be derived as split cuts and branching is performed on
+a disjunction of the form aTx ≤δ ∨aTx ≥δ + 1 where δ ∈Z and aTx is integral for all
+feasible x.
+The use of split disjunctions allows us to consider branching and cutting under one
+umbrella. Many of the well-known cuts generated by MIP solvers can be derived as split
+cuts [14] and they are eﬀective in closing the integrality gap in practice [18]. Branching
+typically uses only simple split disjunctions (where the a above is a unit vector), although
+some studies have considered the computational performance of branching on general dis-
+junctions [15, 20, 30, 38].
+Recall that each branching splits the solution space into two subcases. At the end of a
+branch-and-bound (or branch-and-cut) procedure, each leaf of the branch-and-bound tree
+4
+=== [p.7] ===
+corresponds to one of the cases and the leaves together cover all the cases that need to be
+considered. Hence, if the branch-and-bound tree is valid, all one needs to look at are the
+LP results at the leaves.
+Our proposal is to “ﬂatten” the branch-and-bound tree into a list of statements that can
+be veriﬁed sequentially. Thus, our approach departs from the approaches in [5] and [11],
+which require explicit handling of the tree structure. The price we pay is that we can no
+longer simply examine the leaves of the tree. Instead, we process the nodes in a bottom-up
+fashion and discharge assumptions as we move up towards the root. We illustrate the ideas
+with an example.
+Example 3. It is known that the following has no solution.
+C1 :
+2x1 + 3x2 ≥1
+C2 :
+3x1 −4x2 ≤2
+C3 :
+−x1 + 6x2 ≤3
+x1, x2 ∈Z
+Note that (x1, x2) = ( 10
+17, −1
+17) is an extreme point of the region deﬁned by C1, C2, and
+C3. Branching on the integer variable x1 leads to two cases:
+• Case 1. A1 : x1 ≤0
+Note that (x1, x2) = (0, 1
+3) satisﬁes C1, C2, C3, A1. We branch on x2:
+Case 1a. A3 : x2 ≤0
+Taking C1 + (−2) × A1 + (−3) × A3 gives the absurdity C4 : 0 ≥1.
+Case 1b. A4 : x2 ≥1
+Taking
+ −1
+3
+
+× C3 +
+ −1
+3
+
+× A1 + 2 × A4 gives the absurdity C5 : 0 ≥1.
+• Case 2. A2 : x1 ≥1
+Taking
+ −1
+4
+
+× C2 +
+  3
+4
+
+× A2 gives C6 : x2 ≥1
+4. Rounding gives C7 : x2 ≥1.
+Taking
+ −1
+3
+
+× C2 + (−1) × C3 + 14
+3 × C7 gives the absurdity C8 : 0 ≥1.
+As all cases lead to 0 ≥1, we conclude that there is no solution. To issue a certiﬁcate as
+a list of derived constraints, we need a way to specify the diﬀerent cases. To this end, we
+allow the introduction of constraints as assumptions.
+Figure 1 shows a conceptual certiﬁcate for the instance. Notice how the constraints A1,
+A2, A3, and A4 are introduced to the certiﬁcate as assumptions. Since we want to end
+with 0 ≥1 without additional assumptions attached, we get there by gradually undoing
+the case-splitting operations. We call the undoing operation unsplitting. For example, C4
+and C5 are both the absurdity 0 ≥1 with a common assumption A1. Since A3 ∨A4 is
+true for all feasible x, we can infer the absurdity C9 : 0 ≥1 assuming only A1 in addition
+to the original constraints. We say that C9 is obtained by unsplitting C4, C5 on A3, A4.
+Similarly, both C8 and C9 are the absurdity 0 ≥1 and A2∨A1 is true for all feasible x, we
+can therefore unsplit on C8, C9 on A2, A1 to obtain C10 : 0 ≥1 without any assumption
+in addition to the original constraints.
+In practice, the list of assumptions associated with each derived constraint needs not
+be speciﬁed explicitly in the certiﬁcate, but can be deduced on the ﬂy by a checker. For
+example, when processing C4, we see that it uses A1 and A3, both of which are assumptions.
+Hence, we associate C4 with the list of assumptions A1, A3. As any linear inequality can
+be introduced as an assumption, branching can be performed on general disjunctions.
+5
+=== [p.8] ===
+Given
+x, y ∈Z
+C1 :
+2x1 + 3x2 ≥1
+C2 :
+3x1 −4x2 ≤2
+C3 :
+−x1 + 6x2 ≤3
+Derived
+Reason
+Assumptions
+A1 :
+x1 ≤0
+{assume}
+A2 :
+x1 ≥1
+{assume}
+A3 :
+x2 ≤0
+{assume}
+C4 :
+0 ≥1
+{C1 + (−2) × A1 + (−3) × A3}
+A1, A3
+A4 :
+x2 ≥1
+{assume}
+C5 :
+0 ≥1
+ −1
+3
+
+× C3 +
+ −1
+3
+
+× A1 + 2 × A4
+	
+A1, A4
+C6 :
+x2 ≥1
+4
+ −1
+4
+
+× C2 +
+  3
+4
+
+× A2
+	
+A2
+C7 :
+x2 ≥1
+{round up C6}
+A2
+C8 :
+0 ≥1
+ −1
+3
+
+× C2 + (−1) × C3 + 14
+3 × C7
+	
+A2
+C9 :
+0 ≥1
+{unsplit C4, C5 on A3, A4}
+A1
+C10 :
+0 ≥1
+{unsplit C8, C9 on A2, A1}
+Figure 1: Certiﬁcate for Example 3
+Remark 3. Our proposed certiﬁcate can also be used to represent split cuts. Split cuts
+are inequalities that are valid for the deﬁning inequalities taken together with each one of
+the inequalities in a split disjunction, aTx ≤δ ∨aTx ≥δ + 1, where δ is an integer and a
+is an integer vector that is nonzero only in components corresponding to integer variables.
+To derive a proof of a split cut’s validity, the inequalities in the split disjunction can each
+be introduced as assumptions, the cut can be derived for each side of the split disjunction
+using linear inequality inference, and then unsplitting can be applied to discharge the
+assumptions.
+5
+Computational experiments
+In this section, we describe software developed to produce and check certiﬁcates for MIP
+results using the certiﬁcate format developed in this paper. It is freely available for down-
+load, along with a precise technical speciﬁcation of the ﬁle format.2 One of its features
+is that after each derived constraint an integer is printed to specify the largest index of
+any derived constraint that references it. This allows constraints to be freed from memory
+when they will no longer be needed. The following C++ programs are provided:
+• viprchk veriﬁes MIP results provided in our speciﬁed ﬁle format. All computations
+are performed in exact rational arithmetic using the GMP library [22].
+• viprttn performs simple modiﬁcations to “tighten” certiﬁcates. It removes unnec-
+essary derived constraints to reduce the ﬁle size. In order to decrease peak memory
+usage during checking, it reorders the remaining ones using a depth-ﬁrst topological
+sort and for each derived constraint that remains, it computes the largest index over
+constraints that references it.
+• vipr2html converts a certiﬁcate ﬁle to a “human-readable” HTML ﬁle.
+We again emphasize that the format was designed with simplicity in mind; the certiﬁcate
+veriﬁcation program we have provided is merely a reference and others should be able to
+write their own veriﬁers without much diﬃculty.
+2See https://github.com/ambros-gleixner/VIPR
+6
+=== [p.9] ===
+In addition, we created a modiﬁed version of the exact rational MIP solver described in
+[13] and used it to compute certiﬁcates for several MIP instances from the literature. The
+exact rational MIP solver is based on SCIP [21] and uses a hybrid of ﬂoating-point and
+exact rational arithmetic to eﬃciently compute exact solutions using a pure branch-and-
+bound algorithm. In our experiments, the rational MIP solver uses CPLEX 12.6.0.0 [29] as
+its underlying ﬂoating-point LP solver and a modiﬁed version of QSopt ex 2.5.10 [7] as its
+underlying exact LP solver. The exact MIP solver supports several methods for computing
+valid dual bounds and our certiﬁcate printing functionality is currently supported by the
+Project-and-shift method (for dual solutions only) and the Exact LP method (for both dual
+solutions and Farkas proofs), for details on these methods see [13]. This developmental
+version is currently available from the authors by request. We note that the certiﬁcate is
+printed concurrently with the solution process which leads to certiﬁcates that have potential
+for reduction and simpliﬁcation by viprttn, or other routines. For example, as each node
+is processed its derived dual bound is printed to the certiﬁcate even though it may become
+redundant if branching is performed and new dual bounds are computed at the child nodes;
+also, discovery of a new primal solution might allow pruning of a large subtree, rendering
+many bound derivations redundant.
+The program viprttn processes the list of derived constraints in two passes. In the
+ﬁrst pass, it builds the dependency graph with nodes representing the derived constraints
+and arcs uv such that the derived constraint represented by u is referenced by the reason
+for deriving the constraint represented by v. In the second pass, it performs a topological
+sort using depth-ﬁrst search on the component that contains the ﬁnal constraint and writes
+out the reordered list of derived constraints with updated constraint indices.
+In the following, we report some computational results on the time and memory required
+to produce and verify certiﬁcates. We considered the easy and numerically diﬃcult (referred
+to here as ‘hard’) test sets from [13]; these test sets consist of instances from well known
+libraries including [2, 9, 32, 34, 35]. Experiments were conducted on a cluster of Intel(R)
+Xeon(R) CPU E5-2660 v3 at 2.60 GHz; jobs were run exclusively to ensure accurate time
+measurement. Table 1 reports a number of aggregate statistics on these experiments. The
+columns under the heading SCIP report results from tests using the exact version of SCIP,
+using its default dual bounding strategy.
+The columns under SCIP+C report on tests
+involving the version of exact SCIP that generates certiﬁcates as it solves instances; it uses
+only the dual bounding methods Project-and-shift and Exact LP that support certiﬁcate
+printing, contributing to its slower speed. Columns under the heading VIPR report time
+and memory usage for certiﬁcate checking.
+For each of the easy and hard test sets, we report information aggregated into four
+categories: ‘all’ reports statistics over all instances; ‘solved’ reports over instances solved
+by both SCIP and SCIP+C within a 1 hour time limit and a 10 GB limit on certiﬁcate
+ﬁle size; ‘memout’ reports on instances where SCIP+C stopped because the certiﬁcate ﬁle
+size limit was reached; and ‘timeout’ reports on the remaining instances, where one of the
+solvers hit the time limit. All averages are reported as shifted geometric means with a
+shift of 10 sec. for time and 1 MB for memory. The column N represents the number of
+instances in each category; Nsol represents the number in each category that were solved
+to optimality (or infeasibility) by a given solver; tMIP represents the time (sec.) used to
+solve the instance and, when applicable, output a certiﬁcate; tttn is the time (sec.) required
+by the viprttn routine to tighten the certiﬁcate ﬁle; tchk is the time (sec.) required to
+for viprchk to check the certiﬁcate ﬁle – on instances in the memout and timeout rows
+this represents the time to verify the primal and dual bounds present in the intermediate
+certiﬁcate printed before the solver was halted. The ﬁnal three columns list the size of
+the certiﬁcate (in MB), before tightening, after tightening and then after being compressed
+to a gzipped ﬁle. Timings and memory usage for individual instances are available in a
+document hosted together with the accompanying software.
+From this table, we can make a number of observations. First, there is a noticeable,
+7
+=== [p.10] ===
+Table 1: Aggregated computational results over 107 instances from [13].
+SCIP
+SCIP+C
+VIPR
+Test set
+N
+Nsol
+tMIP
+Nsol
+tMIP
+tttn
+tchk
+sizeraw
+sizettn
+sizegz
+easy-all
+57
+54
+63.3
+39
+190.9
+8.9
+27.2
+227
+77
+24
+-solved
+39
+39
+23.2
+39
+48.0
+3.6
+11.5
+77
+34
+10
+-memout
+5
+4
+600.6
+0
+1760.4
+47.8
+138.3
+10286
+513
+157
+-timeout
+13
+11
+338.3
+0
+3600.0
+23.3
+102.7
+1309
+434
+129
+hard-all
+50
+23
+725.2
+14
+975.6
+7.9
+12.1
+373
+38
+11
+-solved
+13
+13
+22.9
+13
+40.7
+2.2
+5.3
+49
+15
+5
+-memout
+12
+2
+2476.4
+0
+1713.1
+32.7
+59.8
+10266
+235
+67
+-timeout
+25
+8
+2052.1
+1
+3518.1
+4.3
+5.3
+216
+25
+7
+but not prohibitive, cost to generate the certiﬁcates. The diﬀerences in tMIP between SCIP
+and SCIP+C are due to both the diﬀerence in dual bounding strategies, and the overhead
+for writing the certiﬁcate ﬁles. In some additional experiments, we observed that on the 39
+instances in the easy-solved category, the ﬁle I/O amounted to roughly 7% of the solution
+time, based on this we believe that future modiﬁcations to the code will allow us to solve
+and print certiﬁcates in times much closer to those in the SCIP column. Perhaps most
+importantly, we observe that the time to check the certiﬁcates is signiﬁcantly less than the
+time to solve the instances.
+Moreover, the certiﬁcate tightening program viprttn is able to make signiﬁcant re-
+ductions in the certiﬁcate size, and the resulting certiﬁcate sizes are often surprisingly
+manageable. Most striking is the tightening in the memout categories, which signiﬁcantly
+exceed the approximately 50% reduction that could be expected by removing the redun-
+dant linear inferences derived for internal nodes of the branch-and-bound tree. The most
+extreme tightening was achieved for the instance markshare1 1 in ‘easy-memout’, from
+10 GB to 8 kB. This is explained by the fact that the root dual bound is already zero and
+the tree search is only performed for ﬁnding the optimal solution. Hence, the certiﬁcate is
+highly redundant and the derived constraints for all but the root node can be removed.
+The average reductions in the other categories are smaller, but also strictly above 50%.
+This shows that viprttn performs more than just a removal of internal nodes.
+These
+results also show two aspects in which SCIP’s certiﬁcate printing can be improved: by
+avoiding printing dual bound derivations for internal nodes using a buﬀering scheme, and
+by not generating dual bound derivations for nodes that do not improve upon the bound
+of the parent node.
+6
+Conclusion
+This paper presented a certiﬁcate format for verifying integer programming results. We
+have demonstrated the practical feasibility of generating and checking such certiﬁcates on
+well-known MIP instances. We see this as the ﬁrst step of many in verifying the results of
+integer programming solvers. We now discuss some future directions made possible by this
+work.
+Even in the context of ﬂoating-point arithmetic, our certiﬁcate format could serve a
+number of purposes. Using methods described by [12, 37], directed rounding and inter-
+val arithmetic may allow us to compute and represent valid certiﬁcates exclusively using
+ﬂoating-point data, allowing for faster computation and smaller certiﬁcate size. Addition-
+ally, generating approximate certiﬁcates with inexact data could be used for debugging
+solvers, or measuring the maximum or average numerical violation over all derivations. In
+a more rigorous direction, one could also convert our certiﬁcates to a form that could be
+8
+=== [p.11] ===
+formally veriﬁed by a proof assistant such as HOL Light [25].
+Acknowledgements.
+We thank Kati Wolter for the exact version of SCIP [13] and Daniel
+Espinoza for QSopt ex [7], which provided the basis for our experiments, and Gregor Hendel
+for his Ipet package [26], which was a big help in analyzing the experimental results. This
+work has been supported by the Research Campus MODAL Mathematical Optimization
+and Data Analysis Laboratories funded by the Federal Ministry of Education and Research
+(BMBF Grant 05M14ZAM). All responsibility for the content of this publication is assumed
+by the authors.
+References
+[1] Achterberg, T.: Constraint Integer Programming. PhD Thesis, TU Berlin (2007)
+[2] Achterberg, T., Koch, T., Martin, A.: The mixed integer programming library: MI-
+PLIB 2003. Oper. Res. Lett. 34(4), 361–372 (2006)
+[3] Achterberg, T. and Wunderling, R.: Mixed integer programming: Analyzing 12 years
+of progress. In J¨unger, M. and Reinelt, G., editors, Facets of Combinatorial Optimiza-
+tion: Festschrift for Martin Gr¨otschel, 449–481 (2013)
+[4] Bixby, R.E., Fenelon, M., Gu, Z., Rothberg, E., Wunderling, R.: MIP: Theory and
+Practice – Closing the Gap. In Powell, M.J.D. and Scholtes, S., System Modelling and
+Optimization, 19–49 (2000)
+[5] Applegate, D.L., Bixby, R.E., Chv´atal, V. Cook, W., Espinoza, D.G., Goycoolea,
+M., Helsgaun, K.
+Certiﬁcation of an optimal TSP tour through 85,900 cities.
+Oper. Res. Lett. 37, 11–15 (2009)
+[6] Applegate, D.L., Cook, W.J., Dash, S., Espinoza, D.G.:
+Exact solutions to linear
+programming problems. Oper. Res. Lett. 35(6), 693-699 (2007)
+[7] Applegate, D.L., Cook, W.J., Dash, S., Espinoza, D.G.:
+QSopt ex: http://www.
+math.uwaterloo.ca/~bico/qsopt/ex/ Last accessed on November 13, 2016
+[8] Balas, E., Fischetti, M., Zanette, A.: A hard integer program made easy by lexicog-
+raphy. Math. Program., Ser. A 135, 509–514 (2012)
+[9] Bixby, R.E., Ceria, S., McZeal, C.M., Savelsbergh, M.W.: An updated mixed integer
+programming library: MIPLIB 3.0. Optima 58, 12–15 (1998)
+[10] Boland, N.L. and Eberhard, A.C.
+On the augmented Lagrangian dual for integer
+programming. Math. Program., Ser. A 150(2), 491–509.(2015)
+[11] Carr, R., Greenberg, H., Parekh, O., Phillips, C.:
+Towards certiﬁcates for integer
+programming computations. Presentation, 2011 DOE Applied Mathematics PI meet-
+ing, October 2011. Slides www.csm.ornl.gov/workshops/applmath11/documents/
+talks/Phillips_talk.pdf Last accessed on November 13, 2016
+[12] Cook, W., Dash, S., Fukasawa, R., and Goycoolea, M.: Numerically safe Gomory
+mixed-integer cuts. INFORMS J. Comput., 21(4), 641-649 (2009)
+[13] Cook, W., Koch, T., Steﬀy, D., and Wolter, K.: A hybrid branch-and-bound approach
+for exact rational mixed-integer programming. Math. Program. Comput., 3, 305–344
+(2013)
+9
+=== [p.12] ===
+[14] Cornu´ejols, G.:
+Valid inequalities for mixed integer linear programs.
+Math. Pro-
+gram. Ser. B, 112, 3–44 (2008)
+[15] Cornu´ejols, G., Liberti, L., Nannicini, G.: Improved strategies for branching on general
+disjunctions. Math. Program. Ser. A, 130, 225–247 (2011)
+[16] De Loera, J.A., Lee, J., Malkin, P.N., Margulies, S.: Computing infeasibility certiﬁ-
+cates for combinatorial problems through Hilberts Nullstellensatz. J. Symbolic Comp.,
+46(11), 1260–1283 (2011)
+[17] Dhiﬂaoui, M., Funke, S., Kwappik, C., Mehlhorn, K., Seel, M., Schomer, E., Schulte,
+R., Weber, D.:
+Certifying and repairing solutions to large LPs, how good are LP-
+solvers? In: SODA 2003, 255-256. ACM/SIAM, New York (2003)
+[18] Fukasawa, R. and Goycoolea, M.: On the exact separation of mixed integer knapsack
+cuts. Math. Program. Ser. A, 128, 19–41 (2008)
+[19] The Flyspeck Project. https://code.google.com/archive/p/flyspeck/. Last ac-
+cessed on November 13, 2016.
+[20] Gamrath, G., Melchiori, A., Berthold, T., Gleixner, A.M., Salvagnin, D.: Branching
+on multi-aggregated variables. In Integration of AI and OR Techniques in Constraint
+Programming, volume 9075, 141–156 (2015)
+[21] Gamrath, G., et al.: The SCIP Optimization Suite 3.2. ZIB-Report (15-60) (2016)
+[22] GNU MP: The GNU Multiple Precision Arithmetic Library version 6.1.1. http://
+gmplib.org. Last accessed on November 16, 2016.
+[23] Gomory, R.E.:
+Outline of an algorithm for integer solutions to linear programs.
+Bull. Amer. Math. Soc. 64, 275–278 (1958)
+[24] Guzelsoy, M. and Ralphs, T.K.:
+Duality for mixed-integer linear programs.
+Int. J. Oper. Res. 4(3), 118–137 (2007)
+[25] Harrison, J.: HOL Light: A tutorial introduction. Inter. Conf. on Formal Methods in
+Comp.-Aided Design., 265–269 (1996)
+[26] Hendel, G.: Empirical analysis of solving phases in mixed integer programming. Mas-
+ter’s thesis, Technische Universit¨at Berlin (2014). urn:nbn:de:0297-zib-54270
+[27] Heule, M.J.H., Hunt, Jr., W.A., Wetzler, N.: Verifying refutations with extended res-
+olution. In Conference on Automated Deductio (CADE), LNAI, 7898:345–359 (2013)
+[28] Hooker, J.N.:
+Integrated Methods for Optimization (2nd ed.), Springer, New York
+(2012)
+[29] IBM
+ILOG.
+CPLEX.
+https://www-01.ibm.com/software/commerce/
+optimization/cplex-optimizer/. Last accessed on November 16, 2016.
+[30] Karamanov, M. and Cornu´ejols, G.: Branching on general disjunctions. Math. Pro-
+gram. Ser. A, 128, 403–436 (2011)
+[31] Klabjan, D.:
+Subadditive approaches in integer programming. Eur. J. Oper. Res,
+183, 525–545 (2007)
+[32] Koch, T., Achterberg, T., Andersen, E., Bastert, O., Berthold, T., Bixby, R.E., Danna,
+E., Gamrath, G., Gleixner, A.M., Heinz, S., Lodi, A., Mittelmann, H., Ralphs, T.,
+Salvagnin, D., Steﬀy, D.E., Wolter, K.: MIPLIB 2010 Math. Program. Comp., 3(2),
+103–163 (2011)
+10
+=== [p.13] ===
+[33] Lasserre, J.B.: Generating functions and duality for integer programs. Discrete Optim.
+1(2), 167–187 (2004)
+[34] Lehigh University COR@L mixed integer programming collection. http://coral.
+ie.lehigh.edu/wiki/doku.php/info:datasets:mip. Last accessed on November 18,
+2016.
+[35] Mittelmann, H.D.: Benchmarks for Optimization Software. http://plato.asu.edu/
+bench.html Last accessed on November 18, 2016.
+[36] Narkawicz, A. and Mu˜noz, C.
+A Formally Veriﬁed Generic Branching Algorithm
+for Global Optimization Veriﬁed Software: Theories, Tools, Experiments (VSTTE),
+LNCS 8164, 326–343 (2014)
+[37] Neumaier, A., Shcherbina, O.: Safe bounds in linear and mixed-integer linear pro-
+gramming. Math. Program. 99(2), 283–296 (2004)
+[38] Owen, J.H. and Mehrotra, S.:
+Experimental results on using general disjunctions
+in branch-and-bound for general-integer linear programs. Comput. Optim. Appl. 20,
+159–170 (2001)
+[39] Obua, S. and Nipkow, T.:
+Flyspeck II: the basic linear programs. Ann. Math. Ar-
+tif. Intell 56, 245–272 (2009)
+[40] Pulaj, J.:
+Cutting Planes for Families Implying Frankl’s Conjecture.
+ZIB-report
+(16-51), (2016). urn:nbn:de:0297-zib-60626
+[41] Smith, A.P., Mu˜noz, C.A., Narkawicz, A.J. and Markevicius, M.:
+Kodiak:
+An
+Implementation Framework for Branch and Bound Algorithms
+Technical report:
+NASA/TM-2015-218776, (2015)
+[42] Solovyev, A. and Hales, T.: Eﬃcient formal veriﬁcation of bounds of linear programs.
+Lecture Notes in Comp. Sci. 6824, 123–132 (2011)
+[43] Wetzler, N., Heule, M.J.H., Hunt, Jr., W.A.:
+DRAT-trim: Eﬃcient checking and
+trimming using expressive clausal proofs. In Theory and Applications of Satisﬁability
+Testing (SAT), LNCS 8561, 422–429 (2014)
+[44] Zanette, A., Fischetti, M., Balas, E.: Lexicography and degeneracy: can a pure cutting
+plane algorithm work? Math. Program., Ser. A 130, 153–176 (2011)
+11

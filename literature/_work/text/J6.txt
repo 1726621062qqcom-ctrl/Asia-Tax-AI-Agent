@@ -1,0 +1,653 @@
+=== [p.1] ===
+arXiv:1807.03705v1  [math.PR]  9 Jul 2018
+Matthias C. M. Troﬀaes. Decision making under uncertainty using imprecise probabilities.
+International Journal of Approximate Reasoning, 45:17-29, 2007.
+https://doi.org/10.1016/j.ijar.2006.06.001
+DECISION MAKING UNDER UNCERTAINTY USING IMPRECISE
+PROBABILITIES
+MATTHIAS C. M. TROFFAES
+Abstract. Various ways for decision making with imprecise probabilities—admissibility, max-
+imal expected utility, maximality, E-admissibility, Γ-maximax, Γ-maximin, all of which are
+well-known from the literature—are discussed and compared.
+We generalize a well-known
+suﬃcient condition for existence of optimal decisions. A simple numerical example shows how
+these criteria can work in practice, and demonstrates their diﬀerences. Finally, we suggest an
+eﬃcient approach to calculate optimal decisions under these decision criteria.
+1. Introduction
+Often, we ﬁnd ourselves in a situation where we have to make some decision d, which we
+may freely choose from a set D of available decisions. Usually, we do not choose d arbitrarily
+in D: indeed, we wish to make a decision that performs best according to some criterion, i.e.,
+an optimal decision. It is commonly assumed that each decision d induces a real-valued gain
+Jd: in that case, a decision d is considered optimal in D if it induces the highest gain among all
+decisions in D. This holds for instance if each decision induces a lottery over some set of rewards,
+and these lotteries form an ordered set satisfying the axioms of von Neumann Morgenstern [1],
+or more generally, the axioms of for instance Herstein and Milnor [2], if we wish to account for
+unbounded gain.
+So, we wish to identify the set opt (D) of all decisions that induce the highest gain. Since, at
+this stage, there is no uncertainty regarding the gains Jd, d ∈D, the solution is simply
+opt (D) = arg max
+d∈D Jd.
+(1)
+Of course, opt (D) may be empty; however, if the set {Jd : d ∈D} is a compact subset of R—this
+holds for instance if D is ﬁnite—then opt (D) contains at least one element. Secondly, note that
+even if opt (D) contains more than one decision, all decisions d in opt (D) induce the same gain
+Jd; so, if, in the end, the gain is all that matters, it suﬃces to identify only one decision d∗in
+opt (D)—often, this greatly simpliﬁes the analysis.
+However, in many situations, the gains Jd induced by decisions d in D are inﬂuenced by
+variables whose values are uncertain. Assuming that these variables can be modelled through
+a random variable X that takes values in some set X (the possibility space), it is customary to
+consider the gain Jd as a so-called gamble on X, that is, we view Jd as a real-valued gain that is
+a bounded function of X, and that is expressed in a ﬁxed state-independent utility scale. So, Jd
+is a bounded X–R-mapping, interpreted as an uncertain gain: taking decision d, we receive an
+amount of utility Jd(x) when x turns out to be the realisation of X. For the sake of simplicity,
+we shall assume that the outcome x of X is independent of the decision d we take: this is called
+act-state independence. What decision should we take?
+Irrespective of our beliefs about X, a decision d in D is not optimal if its gain gamble Jd is
+point-wise dominated by a gain gamble Je for some e in D, i.e., if there is an e in D such that
+Key words and phrases. decision, optimality, uncertainty, probability, maximality, E-admissibility, maximin,
+lower prevision.
+=== [p.2] ===
+2
+MATTHIAS C. M. TROFFAES
+Je(x) ≥Jd(x) for all x ∈X and Je(x) > Jd(x) for at least one x ∈X: choosing e guarantees a
+higher gain than choosing d, possibly strictly higher, regardless of the realisation of X. So, as a
+ﬁrst selection, let us remove all decisions from D whose gain gambles are point-wise dominated
+(see Berger [3, Section 1.3.2, Deﬁnition 5 ﬀ., p. 10]):
+opt≥(D) := {d ∈D: (∀e ∈D)(Je ̸≥Jd or Je = Jd)}
+(2)
+where Je ≥Jd is understood to be point-wise, and Je ̸≥Jd is understood to be the negation
+of Je ≥Jd. The decisions in opt≥(D) are called admissible, the other decisions in D are called
+inadmissible. Note that we already recover Eq. (1) if there is no uncertainty regarding the gains
+Jd, i.e., if all Jd are constant functions of X. When do admissible decisions exist? The set
+opt≥(D) is non-empty if {Jd : d ∈D} is a non-empty and weakly compact subset of the set
+L(X) of all gambles on X (see Theorem 3 further on). Note that this condition is suﬃcient, but
+not necessary.
+In what follows, we shall try to answer the following question: given additional information
+about X, how can we further reduce the set opt≥(D) of admissible decisions? The paper is
+structured as follows. Section 2 discusses the classical approach of maximising expected utility,
+and explains why it is not always a desirable criterion for selecting optimal decisions. Those
+problems are addressed in Section 3, discussing alternative approaches to deal with uncertainty
+and optimality, all of which attempt to overcome the issues raised in Section 2, and all of which are
+known from the literature. Finally, Section 4 compares these alternative approaches, and explains
+how optimal decisions can be obtained in a computationally eﬃcient way. A few technical results
+are deferred to the appendix, where we, among other things, generalize a well-known technical
+condition on the existence of optimal decisions.
+2. Maximising Expected Utility?
+In practice, beliefs about X are often modelled by a (possibly ﬁnitely additive) probability
+measure µ on a ﬁeld F of subsets of X, and one then arrives at a set of optimal decisions by
+maximising their expected utility with respect to µ; see for instance Raiﬀa and Schlaifer [4,
+Section 1.1.4, p. 6], Levi [5, Section 4.8, p. 96, ll. 23–26], or Berger [3, Section 1.5.2, Paragraph I,
+p. 17]. Assuming that the ﬁeld F is suﬃciently large such that the gains Jd are measurable with
+respect to F—this means that every Jd is a uniform limit of F-simple gambles—the expected
+utility of the gain gambles Jd is given by:
+Eµ(Jd) :=
+Z
+Jddµ,
+where we take for instance the Dunford integral on the right hand side; see Dunford [6, p. 443,
+Sect. 3], and Dunford and Schwartz [7, Part I, Chapter III, Deﬁnition 2.17, p. 112]—this linear
+integral extends the usual textbook integral (see for instance Kallenberg [8, Chapter 1]) to case
+where µ is not σ-additive. Recall that we have assumed act-state independence: µ is independent
+of d.
+As far as it makes sense to rank decisions according to the expected utility of their gain
+gambles, we should maximise expected utility:
+optEµ (D) := arg
+max
+d∈opt≥(D) Eµ(Jd).
+(3)
+When do optimal solutions exist? The set optEµ (D) is guaranteed to be non-empty if {Jd : d ∈
+D} is a non-empty and compact subset of the set L(X) of all gambles on X, with respect to
+the supremum norm. Actually, this technical condition is suﬃcient for existence with regard to
+all of the optimality conditions we shall discuss further on. Therefore, without further ado, we
+=== [p.3] ===
+DECISION MAKING UNDER UNCERTAINTY USING IMPRECISE PROBABILITIES
+3
+shall assume that {Jd : d ∈D} is non-empty and compact with respect to the supremum norm.
+A slightly weaker condition is assumed in Theorem 5, in the appendix of this paper.
+Unfortunately, it may happen that our beliefs about X cannot be modelled by a probability
+measure, simply because we have insuﬃcient information to identify the probability µ(A) of every
+event A in F. In such a situation, maximising expected utility usually fails to give an adequate
+representation of optimality.
+For example, let X be the unknown outcome of the tossing of a coin; say we only know that
+the outcome will be either heads or tails (so X = {H, T }), and that the probability of heads lays
+between 28% and 70%. Consider the decision set D = {1, 2, 3, 4, 5, 6} and the gain gambles
+J1(H) = 4,
+J1(T ) = 0,
+J2(H) = 0,
+J2(T ) = 4,
+J3(H) = 3,
+J3(T ) = 2,
+J4(H) = 1
+2,
+J4(T ) = 3,
+J5(H) = 47
+20,
+J5(T ) = 47
+20,
+J6(H) = 41
+10,
+J6(T ) = −3
+10,
+Clearly, opt≥(D) = {1, 2, 3, 4, 5, 6}, and
+optEµ (D) =
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{2},
+if µ(H) < 2
+5,
+{2, 3},
+if µ(H) = 2
+5,
+{3},
+if 2
+5 < µ(H) < 2
+3,
+{1, 3},
+if µ(H) = 2
+3,
+{1},
+if µ(H) > 2
+3.
+Concluding, if we have no additional information about X, but still insist on using a particular
+(and necessarily arbitrary) µ, which is only required to satisfy 0.28 ≤µ(H) ≤0.7, we ﬁnd that
+optEµ (D) is not very robust against changes in µ. This shows that maximising expected utility
+fails to give an adequate representation of optimality in case of ignorance about the precise value
+of µ.
+3. Generalising to Imprecise Probabilities
+Of course, if we have suﬃcient information such that µ can be identiﬁed, nothing is wrong
+with Eq. (3). We shall therefore try to generalise Eq. (3). In doing so, following Walley [9], we
+shall assume that our beliefs about X are modelled by a real-valued mapping P deﬁned on a—
+possibly only very small—set K of gambles, that represents our assessment of the lower expected
+utility P(f) for each gamble f in K;1 note that K can be chosen empty if we are completely
+ignorant. Essentially, this means that instead of a single probability measure on F, we now
+identify a closed convex set M of ﬁnitely additive probability measures µ on F, described by the
+linear inequalities
+(∀f ∈K)(P(f) ≤Eµ(f)).
+(4)
+We choose the domain F of the measures µ suﬃciently large such that all gambles of interest, in
+particular those in K and the gain gambles Jd, are measurable with respect to F. Without loss
+1The upper expected utility of a gamble f is P(f) if and only if the lower expected utility of −f is −P(f).
+So, for any gamble f in K, P(−f) = −P(f), and therefore, without loss of generality, we can restrict ourselves to
+lower expected utility.
+=== [p.4] ===
+4
+MATTHIAS C. M. TROFFAES
+of generality, we can assume F to be the power set of X, although in practice, it may be more
+convenient to choose a smaller ﬁeld.
+For a given F-measurable gamble g, not necessarily in K, we may also derive a lower expected
+utility EP(g) by minimising Eµ(g) subject to the above constraints, and an upper expected
+utility EP(g) = −EP(−g) by maximising Eµ(g) over the above constraints. In case X and K
+are ﬁnite, this simply amounts to solving a linear program.
+In the literature, M is called a credal set (see for instance Giron and Rios [10], and Levi [5,
+Section 4.2, pp. 76–78], for more comments on this model), and P is called a lower prevision
+(because they generalise the previsions, which are fair prices, of De Finetti [11, Vol. I, Section 3.1,
+pp. 69–75]).
+The mapping EP obtained, corresponds exactly to the so-called natural extension of P (to
+the set of F-measurable gambles), where P(f) is interpreted as a supremum buying price for f
+(see Walley [9, Section 3.4.1, p. 136]). In this interpretation, for any s < P(f), we are willing to
+pay any utility s < P(f) prior to observation of X, if we are guaranteed to receive f(x) once x
+turns out to be the outcome of X. The natural extension then corresponds to the highest price
+we can obtain for an arbitrary gamble g, taken into account the assessed prices P(f) for f ∈K.
+Speciﬁcally,
+EP(g) = sup
+(
+α +
+n
+X
+i=1
+λiP(fi): α +
+n
+X
+i=1
+λifi ≤g
+)
+,
+(5)
+where α varies over R, n over N, λ1, . . . , λn vary over R+, and f1, . . . , fn over K.
+It may happen that M is empty, in which case EP is undeﬁned (the supremum in Eq. (5) will
+always be +∞). This occurs exactly when P incurs a sure loss as a lower prevision, that is, if
+we can ﬁnd a ﬁnite collection of gambles f1, . . . , fn in K such that Pn
+i=1 P(fi) > sup [Pn
+i=1 fi],
+which means that we are willing to pay more for this collection than we can ever gain from it,
+which makes no sense of course.
+Finally, it may happen that EP does not coincide with P on K. This points to a form of
+incoherence in P: this situation occurs exactly when we can ﬁnd a ﬁnite collection of gambles
+f0, f1, . . . , fn and non-negative real numbers λ1, . . . , λn, such that
+α +
+n
+X
+i=1
+λifi ≤f0, but also P(f0) < α +
+n
+X
+i=1
+λiP(fi).
+This means that we can construct a price for f0, using the assessed prices P(fi) for fi, which is
+strictly higher than P(f0). In this sense, EP corrects P, as is apparent from Eq. (5).
+Although the belief model described above is not the most general we may think of, it is
+suﬃciently general to model both expected utility and complete ignorance: these two extremes
+are obtained by taking M either equal to a singleton, or equal to the set of all ﬁnitely additive
+probability measures on F (i.e., K = ∅). It also allows us to demonstrate the diﬀerences between
+diﬀerent ways to make decisions with imprecise probabilities on the example we presented before.
+In that example, the given information can be modelled by, say, a lower prevision P on
+K = {IH, −IH}, deﬁned by P(IH) = 0.28 and P(−IH) = −0.7, where IH is the gamble deﬁned
+by IH(H) = 1 and IH(T ) = 0. For this P, the set M corresponds exactly to the set of all
+probability measures µ on F = {∅, {H}, {T }, {H, T }}, such that 0.28 ≤µ(H) ≤0.7. We also
+easily ﬁnd for any gamble f on X that
+EP(f) = min{0.28f(H) + 0.72f(T ), 0.7f(H) + 0.3f(T )}.
+3.1. Γ-Maximin and Γ-Maximax. As a very simple way to generalise Eq. (3), we could take
+the lower expected utility EP as a replacement for the expected utility Eµ (see for instance
+=== [p.5] ===
+DECISION MAKING UNDER UNCERTAINTY USING IMPRECISE PROBABILITIES
+5
+Gilboa and Schmeidler [12], or Berger [3, Section 4.7.6, pp. 215–223]):
+optEP (D) := arg
+max
+d∈opt≥(D) EP(Jd);
+(6)
+this criterion is called Γ-maximin, and amounts to worst-case optimisation: we take a decision
+that maximises the worst expected gain. For example, if we consider the decision as a game
+against nature, who is assumed to choose a distribution in M aimed at minimizing our expected
+gain, then the Γ-maximin solution is the best we can do. Applied on the example of Section 2,
+we ﬁnd as a solution optEP (D) = {5}.
+In case K = ∅, i.e., in case of complete ignorance about X, it holds that EP(f) = infx∈X f(x).
+Hence, in that case, Γ-maximin coincides with maximin (see Berger [3, Eq. (4.96), p. 216]),
+ranking decisions by the minimal (or inﬁmum, to be more precise) value of their gain gambles.
+Some authors consider best-case optimisation, taking a decision that maximises the best ex-
+pected gain (see for instance Satia and Lave [13]). In our example, the “Γ-maximax” solution is
+optEP (D) = {2}.
+3.2. Maximality. Eq. (3) is essentially the result of pair-wise preferences based on expected
+utility: deﬁning the strict partial order >µ on D as d >µ e whenever Eµ(Jd) > Eµ(Je), or
+equivalently, whenever Eµ(Jd −Je) > 0, we can simply write
+optEµ (D) = max>µ
+ opt≥(D)
+
+,
+where the operator max>µ (·) selects the >µ-maximal, i.e., the >µ-undominated elements from
+a set with strict partial order >µ.
+Using the supremum buying price interpretation, it is easy to derive pair-wise preferences from
+P: deﬁne >P as d >P e whenever EP(Jd −Je) > 0. Indeed, EP(Jd −Je) > 0 means that we
+are disposed to pay a strictly positive price in order to take decision d instead of e, which clearly
+indicates strict preference of d over e (see Walley [9, Sections 3.9.1–3.9.3, pp. 160–162]). Since
+>P is a strict partial order, we arrive at
+opt>P (D) :=max>P
+ opt≥(D)
+
+={d ∈opt≥(D) : (∀e ∈opt≥(D))(EP(Je −Jd) ≤0)}
+(7)
+as another generalisation of Eq. (3), called maximality. Note that >P can also be viewed as a
+robustiﬁcation of >µ over µ in M. Applied on the example of Section 2, we ﬁnd opt>P (D) =
+{1, 2, 3, 5} as a solution.
+Note that Walley [9, Sections 3.9.2, p. 161] has a slightly diﬀerent deﬁnition: instead of
+working from the set of admissible decisions as in Eq. (7), Walley starts with ranking d > e if
+EP(Jd −Je) > 0 or (Jd ≥Je and Jd ̸= Je), and then selects those decisions from D that are
+maximal with respect to this strict partial order. Using Theorem 3 from the appendix, it is easy
+to show that Walley’s deﬁnition of maximality coincides with the one given in Eq. (7) whenever
+the set {Jd : d ∈D} is weakly compact. This is something we usually assume to ensure the
+existence of admissible elements; in particular, weak compactness is assumed in Theorem 5 (see
+appendix). The beneﬁt of Eq. (7) over Walley’s deﬁnition is that Eq. (7) is easier to manage in
+the proofs in the appendix.
+3.3. Interval Dominance. Another robustiﬁcation of >µ is the strict partial ordering ⊐P de-
+ﬁned by d ⊐P e whenever EP(Jd) > EP(Je); this means that the interval [EP(Jd), EP(Jd)] is
+completely on the right hand side of the interval [EP(Je), EP(Je)]. The above ordering is there-
+fore called interval dominance (see Zaﬀalon, Wesnes, and Petrini [14, Section 2.3.3, pp. 68–69]
+=== [p.6] ===
+6
+MATTHIAS C. M. TROFFAES
+for a brief discussion and references).
+opt⊐P (D) :=max⊐P
+ opt≥(D)
+
+={d ∈opt≥(D) : (∀e ∈opt≥(D))(EP(Je) ≤EP(Jd))}
+(8)
+The resulting notion is weaker than maximality: applied on the example of Section 2, opt⊐P (D) =
+{1, 2, 3, 5, 6}, which is strictly larger than opt>P (D).
+3.4. E-Admissibility. In the example of Section 2, we have shown that optEµ (D) may not be
+very robust against changes in µ. Robustifying optEµ (D) against changes of µ in M, we arrive
+at
+optM (D) :=
+[
+µ∈M
+optEµ (D) ;
+(9)
+this provides another way to generalise Eq. (3). The above criterion selects those admissible
+decisions in D that maximize expected utility with respect to at least one µ in M; i.e., they
+select the E-admissible (see Good [15, p. 114, ll. 8–9], or Levi [5, Section 4.8, p. 96, ll. 8–20])
+decisions among the admissible ones. We ﬁnd optM (D) = {1, 2, 3} for the example.
+In case µ is deﬁned on ℘(X) and µ({x}) > 0 for all x ∈X, then every E-admissible decision
+is also admissible, and hence, in that case, optM (D) gives us exactly the set of E-admissible
+options.
+4. Which Is the Right One?
+Evidently, it is hard to pinpoint the right choice. Instead, let us ask ourselves: what properties
+do we want our notion of optimality to satisfy? Let us summarise a few important guidelines.
+Clearly, whatever notion of optimality, it seems reasonable to exclude inadmissible decisions.
+For ease of exposition, let’s assume that the inadmissible decisions have already been removed
+from D, i.e., D = opt≥(D); this implies in particular that optM (D) gives us the set of E-
+admissible decisions.
+Now note that, in general, the following implications hold:
+Γ-maximax
+Γ-maximin
+E-admissible
+maximal
+interval dominance
+❄
+❍❍❍❍❍❍
+❥
+❄
+✲
+❍❍❍❍❍❍
+❥
+❄
+as is also demonstrated by our example. A proof is given in the appendix, Theorem 1.
+E-admissibility, maximality, and interval dominance have the nice property that the more
+determinate our beliefs (i.e., the smaller M), the smaller the set of optimal decisions. In con-
+tradistinction, Γ-maximin and Γ-maximax lack this property, and usually only select a single
+decision, even in case of complete ignorance. However, if we are only interested in the most pes-
+simistic (or most optimistic) solution, disregarding other reasonable solutions, then Γ-maximin
+(or Γ-maximax) seems appropriate. Utkin and Augustin [16] have collected a number of nice
+algorithms for ﬁnding Γ-maximin and Γ-maximax solutions, and even mixtures of these two.
+Seidenfeld [17] has compared Γ-maximin to E-admissibility, and argued against Γ-maximin in
+sequential decision problems.
+=== [p.7] ===
+DECISION MAKING UNDER UNCERTAINTY USING IMPRECISE PROBABILITIES
+7
+If we do not settle for Γ-maximin (or Γ-maximax), should we choose E-admissibility, maximal-
+ity, or interval dominance? As already mentioned, interval dominance is weaker than maximality,
+so in general we will end up with a larger (and arguably too large) set of optimal options. As-
+suming the non-admissible decisions have been weeded, a decision d is not optimal in D with
+respect to interval dominance if and only if
+EP(Jd) < sup
+e∈D
+EP(Je).
+(10)
+Thus, if D has n elements, interval dominance requires us to calculate 2n natural extensions,
+and make 2n comparisons, whereas for maximality, by Eq. (7), we must calculate n2 −n natural
+extensions, and perform n2−n comparisons—roughly speaking, each natural extension is a linear
+program in m (size of X) variables and r (size of K) constraints, or vice versa if we solve the
+dual program. So, comparing maximality and interval dominance, we face a tradeoﬀbetween
+computational speed and number of optimal options.
+However, this also means that interval dominance is a means to speed up the calculation of
+maximal and E-admissible decisions: because every maximal decision is also interval dominant,
+we can invoke interval dominance as a ﬁrst computationally eﬃcient step in eliminating non-
+optimal decisions, if we eventually opt for maximality or E-admissibility. Indeed, eliminating
+those decisions d that satisfy Eq. (10), we will also eliminate those decisions that are neither
+maximal, nor E-admissible.
+Regarding sequential decision problems, we note that dynamic programming techniques can-
+not be used when using interval dominance (see De Cooman and Troﬀaes [18]), and therefore,
+since dynamic programming yields an exponential speedup, maximality and E-admissibility are
+certainly preferred over interval dominance once dynamics enter the picture.
+This leaves E-admissibility and maximality.
+They are quite similar: they coincide on all
+decision sets D that contain two decisions. In case we consider larger decision sets, they coincide
+if the set of gain gambles is convex (for instance, if we consider randomised decisions). As already
+mentioned, E-admissibility is stronger than maximality, and also has some other advantages over
+maximality. For instance, 1
+5J2 + 4
+5J3 >P J5, so, choosing decision 2 with probability 20% and
+decision 3 with probability 80% is preferred to decision 5. Therefore, we should perhaps not
+consider decision 5 as optimal.
+E-admissibility is not vulnerable to such argument, since no E-admissible decision can be
+dominated by randomized decisions: if for some µ ∈M it holds that Eµ(Jd −Je) ≥0 for all
+e ∈D, then also
+Eµ
+ 
+Jd −
+n
+X
+i=1
+λiJei
+!
+=
+n
+X
+i=1
+λiEµ (Jd −Jei) ≥0
+for any convex combination Pn
+i=1 λiJei of gain gambles, and hence, it also holds that
+EP
+ n
+X
+i=1
+λiJei −Jd
+!
+≤0
+which means that no convex combination Pn
+i=1 λiJei can dominate Jd with respect to >P.
+A powerful algorithm for calculating E-admissible options has been recently suggested by
+Utkin and Augustin [16, pp. 356–357], and independently by Kikuti, Cozman, and de Campos
+[19, Sec. 3.4]. If D has n elements, ﬁnding all (pure) E-admissible options requires us to solve n
+linear programs in m variables and r + n constraints.
+As we already noted, through convexiﬁcation of the decision set, maximality and E-admissibility
+coincide. Utkin and Augustin’s algorithm can also cope with this case, but now one has to con-
+sider in the worst case n! linear programs, and usually several less: the worst case only obtains
+=== [p.8] ===
+8
+MATTHIAS C. M. TROFFAES
+if all options are E-admissible. For instance, if there are only ℓE-admissible pure options, one
+has to consider only at most ℓ! + n −ℓof those linear programs, and again, usually less.
+In conclusion, the decision criterion to settle for in a particular application, depends at least
+on the goals of the decision maker (what properties should optimality satisfy?), and possibly also
+on the size and structure of the problem if computational issues arise.
+Acknowledgements. I especially want to thank Teddy Seidenfeld for the many instructive
+discussions about maximality versus E-admissibility. I also wish to thank two anonymous referees
+for their helpful comments. This paper has been supported by the Belgian American Educational
+Foundation. The scientiﬁc responsibility rests with its author.
+Appendix A. Proofs
+This appendix is dedicated to proving the connections between the various optimality criteria,
+and existence results mentioned throughout the paper. In the whole appendix, we assume the
+following:
+Recall, D denotes some set of decisions, and every decision d ∈D induces a gain gamble
+Jd ∈L(X), where L(X) is the set of all gambles (bounded X–R mappings).
+P denotes a lower prevision, deﬁned on a subset K of L(X). With F we denote a ﬁeld on
+X such that all gain gambles Jd and gambles in K are measurable with respect to F, i.e., are a
+uniform limit of F-simple gambles. F could be for instance the power set of X.
+P is assumed to avoid sure loss, and EP is its natural extension to the set of all F-measurable
+gambles. M is the credal set representing P, as deﬁned in Section 3. We will make deliberate use
+of the properties of natural extension (for instance, superadditivity: EP(f +g) ≥EP(f)+EP(g),
+and hence also EP(f −g) ≤EP(f)−EP(g)). We refer to Walley [9, Sec. 2.6, p. 76, and Sec. 3.1.2,
+p. 123] for an overview and proof of these properties.
+We use the symbol µ for an arbitrary ﬁnitely additive probability measure on F, and Eµ
+denotes the Dunford integral with respect to µ. This integral is deﬁned on (at least) the set of
+all F-measurable gambles.
+A.1. Connections between Decision Criteria.
+Theorem 1. The following relations hold.
+optEP (D) ⊆optM (D) ⊆opt>P (D) ⊆opt⊐P (D)
+optEP (D) ⊆opt>P (D)
+Proof. Let J = {Jd : d ∈D}.
+Suppose that d is Γ-maximax in D: Jd maximises EP in max≥(J ). Since EP is the upper
+envelope of M, and M is weak-* compact (see Walley [9, Sec. 3.6]), there is a µ in M such that
+EP(Jd) = Eµ(Jd). But, Eµ(Je) ≤EP(Je) ≤EP(Jd) = Eµ(Jd), for every Je ∈max≥(J ) because
+d is Γ-maximax. Thus, d belongs to optM (D).
+Suppose that d ∈optM (D): there is a µ in M such that Jd maximises Eµ in max≥(J ). But
+then, because EP is the lower envelope of M, EP(Je −Jd) ≤Eµ(Je −Jd) = Eµ(Je)−Eµ(Jd) ≤0
+for all Je in max≥(J ). Hence, by Eq. (7) on p. 5, d must be maximal.
+Suppose that d is maximal. Then, again by Eq. (7), EP(Je −Jd) ≤0 for all Je in max≥(J ).
+But, EP(Je) −EP(Jd) ≤EP(Je −Jd), hence, also EP(Je) ≤EP(Jd) for all Je in max≥(J ),
+which means that d belongs to opt⊐P (D).
+Finally, suppose that d is Γ-maximin: Jd maximises EP in max≥(J ). But then EP(Je −Jd) ≤
+EP(Je) −EP(Jd) ≤0 for all Je in max≥(J ); d must be maximal.
+□
+=== [p.9] ===
+DECISION MAKING UNDER UNCERTAINTY USING IMPRECISE PROBABILITIES
+9
+A.2. Existence. We ﬁrst prove a technical but very useful lemma about the existence of optimal
+elements with respect to preorders; it’s an abstraction of a result proved by De Cooman and
+Troﬀaes [18]. Let’s start with a few deﬁnitions.
+A preorder is simply a reﬂexive and transitive relation.
+Let V be any set, and let Q be any preorder on V. An element v of a subset S of V is called
+Q -maximal in S if, for all w in S, w Q v implies v Q w. The set of Q -maximal elements is
+denoted by
+maxQ (S) :=
+n
+v ∈S : (∀w ∈S)(w Q v =⇒v Q w)
+o
+.
+(11)
+For any v in S, we also deﬁne the up-set of v relative to S as
+↑S
+Qv := {w ∈S : w Q v}.
+Lemma 2. Let V be a Hausdorﬀtopological space. Let Q be any preorder on V such that for
+any v in V, the set ↑V
+Qv is closed. Then, for any non-empty compact subset S of V, the following
+statements hold.
+(i) For every v in S, the set ↑S
+Qv is non-empty and compact.
+(ii) The set maxQ (S) of Q -maximal elements of S is non-empty.
+(iii) For every v in S, there is a Q -maximal element w of S such that w Q v.
+Proof. (i). Since Q
+is reﬂexive, it follows that v Q v, so ↑S
+Qv is non-empty. Is it compact?
+Clearly, ↑S
+Qv = S ∩↑V
+Qv, so ↑S
+Qv is the intersection of a compact set and a closed set, and therefore
+↑S
+Qv must be compact too.
+(ii). Let S′ be any subset of the non-empty compact set S that is linearly ordered with respect
+to Q . If we can show that S′ has an upper bound in S with respect to Q , then we can infer
+from a version of Zorn’s lemma [20, (AC7), p. 144] (which also holds for preorders) that S has a
+Q -maximal element. Let then {v1, v2, . . . , vn} be an arbitrary ﬁnite subset of S′. We can assume
+without loss of generality that v1 Q v2 Q · · · Q vn, and consequently ↑S
+Qv1 ⊆↑S
+Qv2 ⊆· · · ⊆↑S
+Qvn.
+This implies that the intersection Tn
+k=1 ↑S
+Qvk = ↑S
+Qv1 of these up-sets is non-empty: the collection
+{↑S
+Qv: v ∈S′} of compact and hence closed (V is Hausdorﬀ) subsets of S has the ﬁnite intersection
+property. Consequently, since S is compact, the intersection T
+v∈S′ ↑S
+Qv is non-empty as well,
+and this is the set of upper bounds of S′ in S with respect to Q . So, by Zorn’s lemma, S has a
+Q -maximal element: maxQ (S) is non-empty.
+(iii). Combine (i) and (ii) to show that the non-empty compact set ↑S
+Qv has a maximal element
+w with respect to Q . It is then a trivial step to prove that w is also Q -maximal in S: we must
+show that for any u in S, if u Q w, then w Q u. But, if u Q w, then also u Q v since w Q v by
+construction. Hence, u ∈↑S
+Qv, and since w is Q -maximal in ↑S
+Qv, it follows that w Q u.
+□
+The weak topology on L(X) is simply the topology of point-wise convergence. That is, a net
+fα in L(X) converges weakly to f in L(X) if limα fα(x) = f(x) for all x ∈X.
+Theorem 3. If J = {Jd : d ∈D} is a non-empty and weakly compact set, then D contains at
+least one admissible decision, and even more, for every decision e in D, there is an admissible
+decision d in D such that Jd ≥Je.
+Proof. It is easy to derive from Eq. (2) that
+opt≥(D) = {d ∈D: (∀e ∈D)(Je ≥Jd =⇒Jd ≥Je)}.
+Hence, a decision is admissible in D exactly when its gain gamble is ≥-maximal in J . We must
+show that J has ≥-maximal elements.
+By Lemma 2, it suﬃces to prove that, for every f ∈L(X), the set Gf = {g ∈L(X): g ≥f}
+is closed with respect to the topology of point-wise convergence.
+=== [p.10] ===
+10
+MATTHIAS C. M. TROFFAES
+Let gα be a net in Gf, and suppose that gα converges point-wise to g ∈L(X): for every
+x ∈X, limα gα(x) = g(x). But, since gα(x) ≥f(x) for every X, it must also hold that g(x) =
+limα gα(x) ≥f(x). Hence, g ∈Gf. We have shown that every converging net in Gf converges to
+a point in Gf. Thus, Gf is closed. This establishes the theorem.
+□
+Let’s now introduce a slightly stronger topology on L(X). This topology has no particular
+name in the literature, so let’s just call it the τ-topology. It is determined by the following
+convergence.
+Deﬁnition 4. Say that a net fα in L(X) τ-converges to f in L(X), if
+(i) limα fα(x) = f(x) for all x ∈X (point-wise convergence), and
+(ii) limα EP(|fα −f|) = 0 (convergence in EP(| · |)-norm).
+This convergence induces a topology τ on L(X): it turns L(X) into a locally convex topological
+vector space, which also happens to be Hausdorﬀ. A topological basis at 0 consists for instance
+of the convex sets
+{f ∈L(X): EP(|f|) < ǫ and f(x) < δ(x)},
+for ǫ > 0, and δ(x) > 0 for all x ∈X. It has more open sets and more closed sets than the
+weak topology, but it has less compact sets than the weak topology. On the other hand, this
+topology is weaker than the supremum norm topology, so it has fewer open and closed sets, and
+more compact sets, compared to the supremum norm topology. Note that in case X is ﬁnite,
+it reduces to the weak topology, which is in that case also equivalent to the supremum norm
+topology.
+Note that EP, EP, and Eµ for all µ ∈M, are τ-continuous, simply because
+EP(|fα −f|) ≥|EP(fα) −EP(f)|,
+EP(|fα −f|) ≥|EP(fα) −EP(f)|, and
+EP(|fα −f|) ≥|Eµ(fα) −Eµ(f)|
+(see Walley [9, p. 77, Sec. 2.6.1(l)]). We will exploit this fact in the proof of the following theorem,
+generalising a result due to Walley [9, p. 161, Sec. 3.9.2].
+Theorem 5. If J = {Jd : d ∈D} is non-empty and compact with respect to the τ-topology, then
+the following statements hold.
+(i) optEµ (D) is non-empty for all µ ∈M.
+(ii) optEP (D) is non-empty.
+(iii) optEP (D) is non-empty.
+(iv) opt>P (D) is non-empty.
+(v) opt⊐P (D) is non-empty.
+(vi) optM (D) is non-empty.
+Proof. (i). Introduce the following order on L(X): say that f Q g whenever Eµ(f) ≥Eµ(g).
+Let’s ﬁrst show that, for all f ∈L(X), the set Gf = {g ∈L(X): g Q f} is τ-closed.
+Let gα be a net in Gf, and suppose that gα τ-converges to g ∈L(X). Since the integral Eµ
+is τ-continuous, it follows that Eµ(g) = limα Eµ(gα) ≥Eµ(f). Concluding, g belongs to Gf. We
+have established that every converging net in Gf converges to a point in Gf. Thus, Gf is τ-closed.
+By Lemma 2, it follows that J has at least one Q -maximal element Je, that is, Je maximises
+Eµ in J . Since any τ-compact set is also weakly compact, there is a ≥-maximal element Jd in
+J such that Jd ≥Je, by Theorem 3. But then, Eµ(Jd) ≥Eµ(Je), and hence, Jd also maximises
+Eµ in J . Because Jd is ≥-maximal in J , it also maximises Eµ in max≥(J ). This establishes
+that d belongs to optEµ (D): this set is non-empty.
+=== [p.11] ===
+DECISION MAKING UNDER UNCERTAINTY USING IMPRECISE PROBABILITIES
+11
+(ii).
+Introduce the following order on L(X): say that f Q g whenever EP(f) ≥EP(g).
+Continue along the lines of (i), using the fact that EP is τ-continuous.
+(iii). Again along the lines of (i), with f Q g whenever EP(f) ≥EP(g).
+(iv)&(v)&(vi). Immediate, by (iii) and Theorem 1.
+□
+References
+[1] J. von Neumann, O. Morgenstern, Theory of Games and Economic Behavior, Princeton University Press,
+1944.
+[2] I. N. Herstein, J. Milnor, An axiomatic approach to measurable utility, Econometrica 21 (2) (1953) 291–297.
+[3] J. O. Berger, Statistical Decision Theory and Bayesian Analysis, 2nd Edition, Springer, 1985.
+[4] H. Raiﬀa, R. Schlaifer, Applied Statistical Decision Theory, MIT Press, 1961.
+[5] I. Levi, The Enterprise of Knowledge. An Essay on Knowledge, Credal Probability, and Chance, MIT Press,
+Cambridge, 1983.
+[6] N. Dunford, Integration in general analysis, Transactions of the American Mathematical Society 37 (3) (1935)
+441–453.
+[7] N. Dunford, J. T. Schwartz, Linear Operators, John Wiley & Sons, New York, 1957.
+[8] O. Kallenberg, Foundations of Modern Probability, 2nd Edition, Probability and Its Applications, Springer,
+2002.
+[9] P. Walley, Statistical Reasoning with Imprecise Probabilities, Chapman and Hall, London, 1991.
+[10] F. J. Giron, S. Rios, Quasi-Bayesian behaviour: A more realistic approach to decision making?, in: J. M.
+Bernardo, J. H. DeGroot, D. V. Lindley, A. F. M. Smith (Eds.), Bayesian Statistics, University Press,
+Valencia, 1980, pp. 17–38.
+[11] B. De Finetti, Theory of Probability: A Critical Introductory Treatment, Wiley, New York, 1974–5, two
+volumes.
+[12] I. Gilboa, D. Schmeidler, Maxmin expected utility with non-unique prior, Journal of Mathematical Economics
+18 (2) (1989) 141–153.
+[13] J. K. Satia, J. Roy E. Lave, Markovian decision processes with uncertain transition probabilities, Operations
+Research 21 (3) (1973) 728–740.
+[14] M. Zaﬀalon, K. Wesnes, O. Petrini, Reliable diagnoses of dementia by the naive credal classiﬁer inferred from
+incomplete cognitive data, Artiﬁcial Intelligence in Medicine 29 (1–2) (2003) 61–79.
+[15] I. J. Good, Rational decisions, Journal of the Royal Statistical Society, Series B 14 (1) (1952) 107–114.
+[16] L. V. Utkin, T. Augustin, Powerful algorithms for decision making under partial prior information and general
+ambiguity attitudes, in: F. G. Cozman, R. Nau, T. Seidenfeld (Eds.), Proceedings of the Fourth International
+Symposium on Imprecise Probabilities and Their Applications, 2005, pp. 349–358.
+[17] T. Seidenfeld, A contrast between two decision rules for use with (convex) sets of probabilities: Gamma-
+maximin versus E-admissibility, Synthese 140 (1–2) (2004) 69–88.
+[18] G. de Cooman, M. C. M. Troﬀaes, Dynamic programming for deterministic discrete-time systems with
+uncertain gain, International Journal of Approximate Reasoning 39 (2–3) (2004) 257–278.
+[19] D. Kikuti, F. G. Cozman, C. P. de Campos, Partially ordered preferences in decision trees: Computing
+strategies with imprecision in probabilities, in: R. Brafman, U. Junker (Eds.), Multidisciplinary IJCAI-05
+Workshop on Advances in Preference Handling, 2005, pp. 118–123.
+[20] E. Schechter, Handbook of Analysis and Its Foundations, Academic Press, San Diego, 1997.
+Carnegie Mellon University, Department of Philosophy, Baker Hall 135, Pittsburgh, PA 15213,
+US
+E-mail address: matthias.troffaes@gmail.com

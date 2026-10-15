@@ -21,8 +21,8 @@ Design notes and the papers behind each part: literature/notes/I_综合.md.
                         a date before an instrument's coverage is answered "not covered", never with today's text (I20).
   clause_time           validity of each clause (expression dates; substitution dates from superseded.csv).
   anchor                every param / gap / decision quote resolved to an exact character span of its clause (I14, I21).
-  decision              decisions.csv: the readings (口径) the engine relies on, each with the verbatim words it rests on;
-                        the engine names them in code ("口径 D04"), and the build checks both directions (I21, J11).
+  decision              decisions.csv: the readings (decisions) the engine relies on, each with the verbatim words it rests on;
+                        the engine names them in code (the literal marker "口径 D04"), and the build checks both directions (I21, J11).
   constraint_result     declarative quality constraints, Error or Warning, run at every build; the counts are compared
                         with the previous build in INDEX.md (J10).
   unit_fts              FTS5 BM25 index over units; CJK as character bigrams, Latin words stemmed (I1, I6, I9).
@@ -116,35 +116,35 @@ DROP = ["work", "expression", "provision", "clause_meta", "clause_time", "unit",
 
 # ---------------------------------------------------------------- constraints (J10): id, severity, what, violating rows
 CONSTRAINTS = [
-    ("E01", "Error", "引文（参数、缺口、口径）在所引条款里找不到原文",
+    ("E01", "Error", "Quote (parameter, gap or decision) not found in the cited clause",
      "SELECT owner || ' @ ' || cite_id FROM anchor WHERE status = 'missing'"),
-    ("E02", "Error", "已解析的关系指向不存在的条款",
+    ("E02", "Error", "Resolved relation points to a clause that does not exist",
      "SELECT src || ' -> ' || dst FROM edge WHERE kind IN ('contains','cites','same_provision','param_cites','gap_cites',"
      "'decision_cites') AND status IN ('resolved','ancestor') AND dst NOT LIKE 'work:%' AND dst NOT IN (SELECT cite_id FROM clause)"),
-    ("E03", "Error", "规则层引用了库里没有的条款或参数",
+    ("E03", "Error", "Rule layer cites a clause or parameter the library does not have",
      "SELECT src || ' -> ' || dst FROM edge WHERE kind IN ('rule_cites','rule_uses_param') AND status = 'unresolved'"),
-    ("E04", "Error", "已废止（removed.csv）的文件仍有条文留在库里",
+    ("E04", "Error", "Repealed document (removed.csv) still has provisions in the library",
      "SELECT c.cite_id FROM clause c WHERE c.doc_id IN (SELECT id FROM tombstone)"),
-    ("E05", "Error", "口径没有被引擎代码引用（代码里写“口径 Dnn”）",
+    ("E05", "Error", "Decision not referenced by the engine's code (the code names it as “口径 Dnn” or “decision Dnn”)",
      "SELECT DISTINCT d.id FROM decision d WHERE d.id NOT IN (SELECT id FROM decision_ref)"),
-    ("E06", "Error", "引擎代码引用了 decisions.csv 里没有的口径",
+    ("E06", "Error", "Engine code references a decision that is not in decisions.csv",
      "SELECT id || ' @ ' || location FROM decision_ref WHERE id NOT IN (SELECT id FROM decision)"),
-    ("E07", "Error", "口径所依条文已失效（valid_to 已过）",
+    ("E07", "Error", "Provision a decision rests on is no longer valid (valid_to has passed)",
      "SELECT d.id || ' @ ' || d.cite_id FROM decision d JOIN clause_time t ON t.cite_id = d.cite_id "
      "WHERE t.valid_to IS NOT NULL AND t.valid_to != '' AND t.valid_to <= date('now')"),
-    ("W01", "Warning", "引文在条款里出现不止一次（锚点取第一处）",
+    ("W01", "Warning", "Quote occurs more than once in the clause (the anchor takes the first occurrence)",
      "SELECT owner || ' @ ' || cite_id FROM anchor WHERE status = 'ambiguous'"),
-    ("W02", "Warning", "参数没有原文引语",
+    ("W02", "Warning", "Parameter has no verbatim quote",
      "SELECT owner FROM anchor WHERE status = 'no_quote'"),
-    ("W03", "Warning", "参数或口径所依条文有替换事件（superseded.csv），值需复核",
+    ("W03", "Warning", "Provision a parameter or decision rests on has a substitution event (superseded.csv): the value needs re-checking",
      "SELECT DISTINCT a.owner || ' @ ' || a.cite_id FROM anchor a JOIN event e ON e.target = a.cite_id WHERE e.kind = 'substitution'"),
-    ("W04", "Warning", "显式交叉引用未能解析（保留原文，不猜）",
+    ("W04", "Warning", "Explicit cross-reference could not be resolved (original text kept, not guessed)",
      "SELECT src || ' -> ' || substr(dst, 1, 60) FROM edge WHERE kind = 'cites' AND status = 'unresolved'"),
-    ("W05", "Warning", "条款的生效日期未知",
+    ("W05", "Warning", "Clause's commencement date unknown",
      "SELECT cite_id FROM clause_time WHERE valid_from IS NULL OR valid_from = ''"),
-    ("W06", "Warning", "复核下载与登记的哈希不一致（verify.csv）：来源页面可能已改",
+    ("W06", "Warning", "Re-downloaded hash differs from the registered one (verify.csv): the source page may have changed",
      "SELECT id FROM verify_result WHERE match != 'yes'"),
-    ("W07", "Warning", "条款里有未转写的公式图片（formulas.csv 未登记）：该处公式在文本层缺失",
+    ("W07", "Warning", "Clause has an untranscribed formula image (not registered in formulas.csv): the formula is missing from the text layer",
      "SELECT cite_id FROM clause WHERE text LIKE '%[formula image %'"),
 ]
 
@@ -550,7 +550,7 @@ def rule_edges():
                 rows.append((src, "param:" + leaf.param, "rule_uses_param"))
         for pid in ([r.value] if isinstance(r.value, str) and not r.value.startswith("observed:") else []) + list(r.uses or ()):
             rows.append((src, "param:" + pid, "rule_uses_param"))
-        if getattr(r, "before", ()):                             # 口径 D30: the law's commencement clause
+        if getattr(r, "before", ()):                             # decision D30: the law's commencement clause
             rows.append((src, r.before[1], "rule_cites"))
     return rows
 
@@ -733,7 +733,7 @@ def build(dense=False):
         status = "missing" if a is None else ("unique" if n == 1 else "ambiguous")
         anchors.append((owner, cid, a, b, n, status))
 
-    # decisions (口径): anchored like params; the engine's code names them
+    # decisions: anchored like params; the engine's code names them ("口径 Dnn")
     dec_path = ROOT / "decisions.csv"
     decisions = read_csv(dec_path) if dec_path.exists() else []
     con.executemany("INSERT INTO decision VALUES (?,?,?,?,?,?)",
@@ -749,7 +749,7 @@ def build(dense=False):
     refs = []
     for py in sorted((PROJECT / "tax_graph").rglob("*.py")):
         for i, line in enumerate(py.read_text(encoding="utf-8").splitlines(), 1):
-            for m in re.finditer(r"口径\s?(D\d{2})", line):
+            for m in re.finditer(r"(?:口径|decision)\s?(D\d{2})", line):
                 refs.append((m.group(1), "%s:%d" % (py.relative_to(PROJECT).as_posix(), i)))
     con.executemany("INSERT INTO decision_ref VALUES (?,?)", refs)
     if (ROOT / "verify.csv").exists():
@@ -811,36 +811,36 @@ def build_vectors(con, model_name=DEFAULT_DENSE):
 
 def report(con, xref_stats, problems):
     q = lambda s: con.execute(s).fetchall()
-    lines = ["# INDEX", "", "由 `tools/graph.py` 生成，不要手改。知识层的设计、原理与依据见 [README.md](README.md) 第 3.3、6.2、7–9 节，参考文献在第 16 节。", "",
-             "| 表 | 行数 |", "|---|---|"]
+    lines = ["# INDEX", "", "Generated by `tools/graph.py`; do not edit by hand. The design, rationale and sources of the knowledge layer are in [README.md](README.md) sections 3.3, 6.2 and 7–9; references in section 16.", "",
+             "| table | rows |", "|---|---|"]
     for t in ("work", "expression", "provision", "clause_meta", "unit", "edge", "term", "event", "tombstone", "anchor", "alias"):
         lines.append("| %s | %d |" % (t, q("SELECT COUNT(*) FROM %s" % t)[0][0]))
-    lines += ["", "## 关系（edge）", "", "| kind | status | 条数 |", "|---|---|---|"]
+    lines += ["", "## Relations (edge)", "", "| kind | status | count |", "|---|---|---|"]
     for k, s, n in q("SELECT kind, status, COUNT(*) FROM edge GROUP BY kind, status ORDER BY kind, status"):
         lines.append("| %s | %s | %d |" % (k, s, n))
-    lines += ["", "## 交叉引用的解析", ""]
+    lines += ["", "## Resolution of cross-references", ""]
     tot = sum(v for (k, s), v in xref_stats.items() if k == "cites")
     res = sum(v for (k, s), v in xref_stats.items() if k == "cites" and s in ("resolved", "ancestor"))
-    lines.append("显式引用 %d 条，解析到条款 %d 条（其中只到上级条款的 %d 条），未解析 %d 条；未解析的保留原文，不猜。" % (
+    lines.append("%d explicit references, %d resolved to a clause (%d of them only to a parent clause), %d unresolved; unresolved ones keep the original text, never guessed." % (
         tot, res, xref_stats[("cites", "ancestor")], xref_stats[("cites", "unresolved")]))
     top = q("SELECT substr(dst, 12, 60), COUNT(*) n FROM edge WHERE status='unresolved' GROUP BY 1 ORDER BY n DESC LIMIT 12")
     if top:
-        lines += ["", "未解析最多的目标：", ""] + ["- `%s` ×%d" % (t, n) for t, n in top]
-    lines += ["", "## 检索单元", ""]
+        lines += ["", "Most frequent unresolved targets:", ""] + ["- `%s` ×%d" % (t, n) for t, n in top]
+    lines += ["", "## Retrieval units", ""]
     for k, n, avg, mx in q("SELECT kind, COUNT(*), AVG(\"end\"-start), MAX(\"end\"-start) FROM unit GROUP BY kind"):
-        lines.append("- %s：%d 个，平均 %d 字符，最长 %d" % (k, n, avg, mx))
-    lines += ["", "## 引文锚定", ""]
+        lines.append("- %s: %d units, average %d characters, longest %d" % (k, n, avg, mx))
+    lines += ["", "## Quote anchoring", ""]
     for s, n in q("SELECT status, COUNT(*) FROM anchor GROUP BY status"):
-        lines.append("- %s：%d" % (s, n))
-    lines += ["", "## 定义词", ""]
+        lines.append("- %s: %d" % (s, n))
+    lines += ["", "## Defined terms", ""]
     for r, n in q("SELECT rule, COUNT(*) FROM term GROUP BY rule"):
-        lines.append("- %s：%d" % (r, n))
-    lines += ["", "## 口径（decisions.csv）", "", "| 口径 | 锚点 | 代码引用 | 内容 |", "|---|---|---|---|"]
+        lines.append("- %s: %d" % (r, n))
+    lines += ["", "## Decisions (decisions.csv)", "", "| decision | anchors | code references | statement |", "|---|---|---|---|"]
     for did, stmt in q("SELECT id, statement FROM decision WHERE seq = 1 ORDER BY id"):
         st = q("SELECT status, COUNT(*) FROM anchor WHERE owner LIKE 'decision:%s.%%' GROUP BY status" % did)
         nref = q("SELECT COUNT(*) FROM decision_ref WHERE id = '%s'" % did)[0][0]
         lines.append("| %s | %s | %d | %s |" % (did, ", ".join("%s %d" % x for x in st), nref, stmt))
-    lines += ["", "## 约束（每次构建检查；Error 使构建失败）", "", "| 约束 | 级别 | 内容 | 违反 | 示例 |", "|---|---|---|---|---|"]
+    lines += ["", "## Constraints (checked at every build; an Error fails the build)", "", "| constraint | severity | description | violations | sample |", "|---|---|---|---|---|"]
     cons = q("SELECT id, severity, description, violations, sample FROM constraint_result ORDER BY id")
     for cid_, sev, what, n, sample in cons:
         lines.append("| %s | %s | %s | %d | %s |" % (cid_, sev, what, n, (sample or "")[:120].replace("|", "/")))
@@ -852,16 +852,16 @@ def report(con, xref_stats, problems):
     import json as _json
     prev = _json.loads(mpath.read_text(encoding="utf-8")) if mpath.exists() else {}
     changed = [(k, prev.get(k), v) for k, v in sorted(metrics.items()) if prev.get(k) != v]
-    lines += ["", "## 与上次构建对照", ""]
+    lines += ["", "## Compared with the previous build", ""]
     if not prev:
-        lines.append("（首次记录）")
+        lines.append("(first record)")
     elif not changed:
-        lines.append("无变化。")
+        lines.append("No change.")
     else:
-        lines += ["| 指标 | 上次 | 本次 |", "|---|---|---|"] + ["| %s | %s | %s |" % (k, "—" if a is None else a, b) for k, a, b in changed]
+        lines += ["| metric | previous | this build |", "|---|---|---|"] + ["| %s | %s | %s |" % (k, "—" if a is None else a, b) for k, a, b in changed]
     mpath.parent.mkdir(exist_ok=True)
     mpath.write_text(_json.dumps(metrics, ensure_ascii=False, indent=1, sort_keys=True), encoding="utf-8")
-    lines += ["", "## 检查", ""] + (["- " + p for p in problems] or ["- 无 Error。"])
+    lines += ["", "## Checks", ""] + (["- " + p for p in problems] or ["- No Errors."])
     (ROOT / "INDEX.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     return dict(units=q("SELECT COUNT(*) FROM unit")[0][0], edges=q("SELECT COUNT(*) FROM edge")[0][0],
                 xref_total=tot, xref_resolved=res)
@@ -875,9 +875,7 @@ def main(argv):
         elif a.startswith("--dense="):
             dense = a.split("=", 1)[1]
     marker = ROOT / "_index" / "dense_model.txt"
-    if "--no-dense" in argv:
-        dense = None
-    elif dense:
+    if dense:
         marker.parent.mkdir(exist_ok=True)
         marker.write_text(dense, encoding="utf-8")
     elif marker.exists():

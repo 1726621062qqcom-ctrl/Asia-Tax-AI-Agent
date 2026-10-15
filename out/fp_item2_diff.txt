@@ -1,0 +1,68 @@
+cases on one side only: 3 (repatriation_OPCN-ULHK_full_open_y1__thr_cn-domestic-dividend_listed_months_above, repatriation_OPCN-ULHK_full_open_y1__thr_cn-domestic-dividend_listed_months_at, repatriation_OPCN-ULHK_full_open_y1__thr_cn-domestic-dividend_listed_months_below)
+cases by template: {'financing': 38, 'holding': 119, 'inbound': 27, 'ip': 89, 'repatriation': 76, 'services': 72}
+candidate rows by bound move:
+  lo+ hi+    3205
+      financing_OPCN-ULHK_full_open_y2 {"LENDER": "CN", "payment": "False"} lo 5239900.0->10473700.0 hi 5239900.0->10473700.0
+      financing_OPCN-ULHK_full_open_y2 {"LENDER": "SG", "payment": "False"} lo 5239900.0->10473700.0 hi 5239900.0->10473700.0
+  lo= hi+    1193
+      financing_OPHK-ULCN_sparse_open_y2 {"LENDER": "CN", "payment": "False"} lo -500.0->-500.0 hi 6740400.0->11974200.0
+      financing_OPHK-ULCN_sparse_open_y2 {"LENDER": "SG", "payment": "False"} lo -500.0->-500.0 hi 6740400.0->11974200.0
+  lo= hi=    765
+      financing_OPCN-ULSG_full_closed_y1 {"LENDER": "HK", "payment": "False"} lo 3330350.0->3330350.0 hi 3330350.0->3330350.0
+      financing_OPCN-ULSG_full_open_y1 {"LENDER": "CN", "payment": "False"} lo 3330350.0->3330350.0 hi 3330350.0->3330350.0
+  lo+ hi-    204
+      holding_OPCN-ULHK_full_open_y1 {"HOLD": "HK", "exit_route": "DIRECT", "financing": "DEBT", "payment": "False"} lo 5233822.5->5233903.96 hi 5234297.5->5234288.54
+      holding_OPCN-ULHK_full_open_y1__pw01 {"HOLD": "HK", "exit_route": "DIRECT", "financing": "DEBT", "payment": "False"} lo 5233622.5->5233703.96 hi 5234297.5->5234288.54
+  lo+ hi=    73
+      holding_OPHK-ULCN_full_open_y1 {"HOLD": "SG", "exit_route": "INDIRECT", "financing": "DEBT", "payment": "False"} lo 5234017.01->5234044.51 hi 5235306.75->5235306.75
+      holding_OPHK-ULCN_full_open_y1 {"HOLD": "SG", "exit_route": "DIRECT", "financing": "DEBT", "payment": "False"} lo 5234022.01->5234151.46 hi 5234555.0->5234555.0
+  lo- hi-    40
+      holding_OPCN-ULSG_full_open_y1 {"HOLD": "SG", "exit_route": "DIRECT", "financing": "DEBT", "payment": "False"} lo 3330722.5->3330706.85 hi 3331112.5->3331096.85
+      holding_OPCN-ULSG_full_open_y1_listed {"HOLD": "SG", "exit_route": "DIRECT", "financing": "DEBT", "payment": "False"} lo 3330722.5->3330706.85 hi 3331112.5->3331096.85
+  lo- hi+    14
+      holding_OPCN-ULSG_full_open_y1 {"HOLD": "SG", "exit_route": "INDIRECT", "financing": "DEBT", "payment": "False"} lo 3330520.0->3330504.35 hi 3330835.34->3332104.35
+      holding_OPCN-ULSG_full_open_y1_listed {"HOLD": "SG", "exit_route": "INDIRECT", "financing": "DEBT", "payment": "False"} lo 3330520.0->3330504.35 hi 3330811.14->3331604.35
+  lo- hi=    12
+      holding_OPSG-ULCN_full_open_y1 {"HOLD": "SG", "exit_route": "DIRECT", "financing": "DEBT", "payment": "False"} lo 3330946.22->3330930.58 hi 3331350.0->3331350.0
+      holding_OPSG-ULCN_full_open_y1_listed {"HOLD": "SG", "exit_route": "DIRECT", "financing": "DEBT", "payment": "False"} lo 3330946.22->3330930.58 hi 3331350.0->3331350.0
+need keys added / removed (rule key):
+  2456 - data.p2_income HOLD.globe_income
+  1897 - sg.ftc.pooling flow.foreign_headline_rate
+  1897 - sg.ftc.pooling flow.foreign_taxed
+  1156 - sg.ftc.pooling payee.ftc_pooling_election
+   316 - data.p2_income IPCO.globe_income
+   248 - data.p2_income SERVICER.globe_income
+    24 + cn.gaar payee.reasonable_commercial_purpose_absent
+    24 + cn.gain.base flow.cost_basis
+    24 - sg.ftc.pooling payee.ftc_pooling_election:is_true
+    22 - cn.ftc.dividend_indirect flow:up2@2027.distributed_profit_year:most_tax
+    20 - sg.ftc.pooling flow.foreign_tax_rate
+    20 - sg.fsie.charge flow.receipt_kind
+    16 - cn-hk.int.cap@cn payee.no_adverse_bo_factors
+    16 - hk.onshore.charge payee.income_sourced_in_hk
+    16 - hk.fsie.charge flow.receipt_kind
+    16 - cn-hk.int.cap@cn payee.residence_cert:is_true
+    16 - cn.indirect.gain.base flow.cost_basis
+    16 - cn-hk.ppt@cn payee.ppt
+    16 - cn.wht.service_as_royalty payee.service_fee_is_royalty_for_know_how
+    12 + hk.tp.local_file payer.is_mne_member
+    12 - hk.onshore_gain.certainty payee.sch17k_elected
+    12 - hk.onshore_gain.certainty flow.held_as_trading_stock
+    12 - hk.onshore_gain.certainty flow.holding_months:ge
+    12 - hk.gain.capital payee.capital_asset
+    12 - hk.gain.base flow.cost_basis
+    10 + cn.ftc.dividend_indirect flow:up2.distributed_profit_year:most_tax
+     8 - hk.fsie.substance.share_transfer payee.pure_equity_holding:is_false
+     8 - hk.fsie.substance.share_transfer payee.adequate_substance
+     8 - hk.fsie.participation.share_transfer payee.no_main_purpose_of_tax_benefit
+     8 - hk.fsie.substance.share_transfer payee.substance_ruled_adequate
+     8 - hk.fsie.substance.share_transfer payee.pure_equity_holding:is_true
+     8 - hk.fsie.substance.share_transfer payee.registration_filing_compliant:is_true
+     8 - sg.gain.s13w flow.holding_months:ge
+     8 - sg.gain.base flow.cost_basis
+     8 - sg.gain.charge payee.fixed_place_in_sg
+     8 - sg.gain.capital payee.gain_is_capital_in_nature
+     8 - sg.s10l.gain payee.adequate_substance
+     8 - sg.s10l.gain payee.is_excluded_entity
+     8 - sg.service.base flow.profit_margin
+     6 + cn.ftc.dividend_indirect flow:up2@2027.distributed_profit_year:most_tax

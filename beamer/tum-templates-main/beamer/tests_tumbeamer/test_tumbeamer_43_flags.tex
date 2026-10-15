@@ -1,0 +1,44 @@
+\documentclass[english, partpage, aspectratio=43]{tumbeamer}
+
+\usepackage{lipsum}
+\usepackage{booktabs}
+\usepackage{listings}
+\lstset{
+  language = [LaTeX]TeX,
+  tabsize = 2,
+  basicstyle = \ttfamily\footnotesize ,
+}
+
+
+\TUMbeamersetup{
+  title page = TUM flags,
+  part page = TUM shaded tower,
+  section page = TUM centered,
+  content page = TUM default,
+  headline = TUM logo threeliner,
+  footline = TUM default,
+  headline on = {title page, part page, section page},
+  footline on = {part page, section page, content page},
+}
+
+
+\title[TUM beamer]{A new TUM beamer presentation}
+\subtitle{A \LaTeX\ template for pretty presentations}
+\author{Michael~Rinderle}
+
+\provideName{\theGroupName}{Simulation of Nanosystems for Energy Conversion}
+{Simulation von Nanosystemen für Energieumwandlungen}
+
+\institute{\theGroupName\\\theSchoolName\\\theUniversityName}
+\date[12/08/2019]{December 8\textsuperscript{th}, 2019}
+
+\footline{\insertauthor~|~\insertshorttitle~|~\insertshortdate}
+
+
+\begin{document}
+% Titlepage
+\maketitle
+
+\input{content.tex}
+
+\end{document}

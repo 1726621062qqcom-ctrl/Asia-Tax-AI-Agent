@@ -19,17 +19,20 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 from .data.domain import DEBT, DIRECT, DIVIDEND_OUT, EQUITY, INDIRECT, Event
 from .engine import Bounds
-from .model import (CAPITAL_REDUCTION, COMPANY, DIVIDEND, INTEREST, IP_TRANSFER, JURISDICTIONS, LIQUIDATION, RECURRING,
+from .model import (CAPITAL_REDUCTION, COMPANY, DIVIDEND, GOODS, INTEREST, IP_TRANSFER, JURISDICTIONS, LIQUIDATION, PROPERTY, RECURRING, RENT,
                     ROYALTY, SERVICE_FEE, SHARE_TRANSFER, Entity, FlowEdge, Graph, HoldEdge, months)
 
 OP, HOLD, ULT, IPCO, LENDER, BUYER, SERVICER, CLIENT = "OP", "HOLD", "ULT", "IPCO", "LENDER", "BUYER", "SERVICER", "CLIENT"
+TRADER, CUSTOMER = "TRADER", "CUSTOMER"                                   # decision D42: the trading template
+OWNER = "OWNER"                                                           # decision D48: the property template's owner
+TENANT = "TENANT"                                                         # decision D49: its outside tenant
 ANYWHERE = list(JURISDICTIONS)                 # a role the plan places: any jurisdiction in the list
 OPTIONAL = [None] + ANYWHERE                   # ... or absent
 GROUP = "GROUP"
-NEW = "_NEW"                                   # 口径 D19: the new company that takes a group role over in another jurisdiction
-GROUP_ROLES = (HOLD, IPCO, SERVICER)           # roles a group company plays (BUYER, LENDER, CLIENT are counterparties)
+NEW = "_NEW"                                   # decision D19: the new company that takes a group role over in another jurisdiction
+GROUP_ROLES = (HOLD, IPCO, SERVICER, TRADER)   # roles a group company plays (BUYER, LENDER, CLIENT, CUSTOMER are counterparties)
 
-# 口径 D21: flow facts that describe one party of the flow. The case states them for the parties of its own structure;
+# decision D21: flow facts that describe one party of the flow. The case states them for the parties of its own structure;
 # where the candidate's party is a company the plan creates (a new HOLD, IPCO_NEW, ...), they describe another company
 # or none, so they are not carried: the law gives what it can (facts.py), the plan designs what it controls
 # (DESIGNABLE_FLOW), the rest is asked under the flow's own fact key "<flow>~<company>-<jurisdiction>"
@@ -37,7 +40,9 @@ PAYER_SIDE = frozenset({"foreign_taxed", "underlying_profits_taxed", "underlying
                         "foreign_headline_rate", "foreign_tax_rate", "listed_market_trade"})
 PAYEE_SIDE = frozenset({"receipt_kind", "held_as_trading_stock", "qualifying_rd_expenditure", "non_qualifying_expenditure",
                         "ip_never_owned_by_hk_business", "lender_interest_taxable_in_hk",
-                        "profit_margin"})                       # the profit in a fee: the recipient's own accounts
+                        "profit_margin",                        # the profit in a fee: the recipient's own accounts
+                        "operating_costs", "purchase_effected_in_hk", "sale_effected_in_hk",    # a trader's own (decision D42)
+                        "routed_via_trader"})                                                   # (decision D43)
 # (whether a dividend is reinvested in the Mainland describes the event's money, not the recipient: it is carried)
 BUYER_SIDE = frozenset({"acquirer_chargeable_in_hk"})                    # a share transfer's payer
 SELLER_SIDE = PAYEE_SIDE | {"foreign_taxed", "foreign_tax_rate"}          # its payee: was the gain taxed at source
@@ -46,7 +51,9 @@ TARGET_SIDE = frozenset({"listed_market_trade", "foreign_headline_rate", "underl
 # facts that belong to an entity in one jurisdiction; a role placed elsewhere does not carry them (they become pending)
 JURISDICTION_BOUND = frozenset({"residence_cert", "cert_years", "circumstances_changed_on", "substance_ruled_adequate",
                                 "sch17k_elected", "registration_filing_compliant", "fixed_place_in_sg", "fixed_place_in_cn",
-                                "fixed_place_in_hk", "ftc_pooling_election", "is_excluded_entity"})
+                                "fixed_place_in_hk", "ftc_pooling_election", "is_excluded_entity"}
+                               | {"%s_%s" % (k, j) for k in ("branch_profit", "branch_period_end", "branch_receipt", "branch_taxed")
+                                  for j in ("cn", "hk", "sg")})   # decision D47: a company's branches abroad
 
 
 @dataclass
@@ -66,6 +73,9 @@ class Case:
     settled: Dict[str, Dict[str, float]] = field(default_factory=dict)        # flow name -> {jurisdiction: tax actually paid}
     closed: frozenset = frozenset()                                           # (flow name, jurisdiction) declared final
     extra: Dict[str, dict] = field(default_factory=dict)                      # answered facts of companies the plan creates
+    transactions: Dict[str, dict] = field(default_factory=dict)              # explicit, dated transactions of a recorded assessment
+    currency: str = "CNY"
+    names: Dict[str, str] = field(default_factory=dict)
 
     def entity(self, role, loc=None):
         """The role as an entity in loc: the client's own facts when it already sits there, otherwise only the facts
@@ -81,7 +91,7 @@ class Case:
         return Entity(role, loc, rf.type, attrs)
 
     def place(self, role, loc):
-        """The group company that plays `role` in loc (口径 D19): the client's own when it sits there; a company the plan
+        """The group company that plays `role` in loc (decision D19): the client's own when it sits there; a company the plan
         creates when the client has none; when the client's own sits elsewhere, a new company ROLE_NEW — none of the
         three jurisdictions lets a company take its place of incorporation out (HK CO Part 17A and SG CA Part 10A admit
         foreign companies only; the Mainland has no such regime), so the client's own company cannot simply move."""
@@ -131,20 +141,36 @@ class Template:
 
     def check_case(self, event, case):
         missing = [r for r in self.fixed if r not in case.roles or not case.roles[r].loc]
-        if event.exit and BUYER not in case.roles:
+        if (event.exit or getattr(event, "property_sale", None)) and BUYER not in case.roles:
             missing.append(BUYER)
+        if getattr(event, "property_rent", None) and TENANT not in case.roles:
+            missing.append(TENANT)
         return missing
 
 
+def created_members(graph: Graph) -> Graph:
+    """A group the case declares takes in the group companies the plan creates — HOLD, IPCO, SERVICER, or a ROLE_NEW
+    that takes one of those roles over (decision D19): wholly owned by the group by design, so their tax is the group's.
+    Without this a candidate could place a new holding company outside the objective and look tax-free. A counterparty
+    the case does not name (an outside buyer) is created as well, but plays no group role and stays outside."""
+    if graph.members is not None:
+        base = lambda e: e[:-len(NEW)] if e.endswith(NEW) else e
+        graph.members = set(graph.members) | {e for e, x in graph.entities.items()
+                                              if x.attrs.get("created_by_plan") and base(e) in GROUP_ROLES}
+    return graph
+
+
 def finish(graph: Graph, case) -> Graph:
-    """口径 D21. Each flow with a party the plan creates drops the case's facts about that party's side and takes the
+    """decision D21. Each flow with a party the plan creates drops the case's facts about that party's side and takes the
     facts stated under its own key instead; the key rides on the flow (attrs["fact_key"]) so that questions and answers
     about that side never touch the facts of the case's own structure."""
+    created_members(graph)
     for f in graph.flows:
+        f.currency = case.currency
         made = lambda x: x is not None and graph.entities[x].attrs.get("created_by_plan")
         if f.income == SHARE_TRANSFER:
             sides = ((f.payer, BUYER_SIDE), (f.payee, SELLER_SIDE), (f.target, TARGET_SIDE))
-        elif f.income == IP_TRANSFER:                  # 口径 D22: its facts are the IP's and the present owner's (never created)
+        elif f.income == IP_TRANSFER:                  # decision D22: its facts are the IP's and the present owner's (never created)
             sides = ((f.payer, frozenset()), (f.payee, PAYEE_SIDE))
         else:
             sides = ((f.payer, PAYER_SIDE), (f.payee, PAYEE_SIDE))
@@ -155,6 +181,8 @@ def finish(graph: Graph, case) -> Graph:
         key = "%s~%s" % (f.id, "+".join("%s-%s" % (x, graph.entities[x].loc) for x in new))
         f.attrs = dict({k: v for k, v in f.attrs.items() if k not in drop}, **case.facts(key))
         f.attrs["fact_key"] = key
+        f.attrs["fact_key_fields"] = sorted(drop)           # only these are asked under the key; the flow's other facts
+                                                            # are the case's whoever the party is (regions.absolute)
     return graph
 
 
@@ -164,9 +192,11 @@ def _repeat(flows, event, case=None):
     out = list(flows)
     for k in range(1, int(getattr(event, "years", 1) or 1)):
         for f in flows:
-            if f.income in RECURRING:
+            if f.income in RECURRING and not f.attrs.get("capitalised"):      # decision D46: a capitalisation is one step
                 fid = "%s@%d" % (f.id, f.on.year + k)
                 attrs = dict(f.attrs)
+                if attrs.get("purchase_flow"):                # decision D42: a resale resells that year's purchase
+                    attrs["purchase_flow"] = "%s@%d" % (attrs["purchase_flow"], f.on.year + k)
                 if case is not None:
                     attrs.update(case.facts(fid))
                 out.append(replace(f, id=fid, on=f.on.replace(year=f.on.year + k), attrs=attrs))
@@ -177,11 +207,12 @@ def _shift(flows, cross_year):
     """payment = cross_year: recurring payments are made in the following calendar year (dates move, flows do not vanish)."""
     if not cross_year:
         return flows
-    return [replace(f, on=f.on.replace(year=f.on.year + 1)) if f.income not in (SHARE_TRANSFER, IP_TRANSFER) else f for f in flows]
+    return [replace(f, on=f.on.replace(year=f.on.year + 1)) if f.income not in (SHARE_TRANSFER, IP_TRANSFER) and not f.attrs.get("capitalised")
+            else f for f in flows]
 
 
 def restructuring(event, case, hid=HOLD):
-    """口径 D18. The plan puts a holding company hid between ULT and OP — one it creates (HOLD; HOLD_NEW when the
+    """decision D18. The plan puts a holding company hid between ULT and OP — one it creates (HOLD; HOLD_NEW when the
     client's own HOLD sits elsewhere) or the client's own HOLD that holds no stake in OP yet: ULT transfers its stake in
     OP to hid — a share transfer at the consideration the case states (unknown: the step's tax is unbounded, the engine
     asks), on the first modelled date, never repeated. hid's holding starts with the step: its length is the plan's to
@@ -207,7 +238,7 @@ def restructuring(event, case, hid=HOLD):
 
 
 def unwinding(event, case, a):
-    """口径 D19. The client's holding company HOLD (at L0) leaves the chain: dissolved (a[HOLD] None) or replaced by a new
+    """decision D19. The client's holding company HOLD (at L0) leaves the chain: dissolved (a[HOLD] None) or replaced by a new
     company HOLD_NEW in another jurisdiction (a[HOLD] = L1 != L0; Case.place). HOLD passes its stake in OP on and is
     wound up, both on the first modelled date, never repeated:
         unwind  HOLD's stake in OP to ULT (dissolution) or to HOLD_NEW, at its market value (the case's "unwind" amount)
@@ -275,7 +306,10 @@ def chain(event, a, case):
     return ents, list(step[1:]), [step[0]], e.id
 
 
-# ---- holding: ULT -> (HOLD) -> OP; upward distribution as dividend or interest; exit by selling OP or HOLD
+# ---- holding: ULT -> (HOLD) -> OP; upward distribution as dividend or interest; exit by selling OP or HOLD; before
+#      the exit OP may capitalise retained earnings for its holder (decision D46: "cap", a dividend booked as share capital —
+#      no money moves, so it does not repeat or move with the payments; its facts are the case's "cap" facts, which may
+#      name another reserve the client capitalised)
 def build_holding(event, a, case):
     ents, holds, flows, holder = chain(event, a, case)
     if event.dividend:
@@ -283,6 +317,10 @@ def build_holding(event, a, case):
         flows.append(FlowEdge("up1", OP, holder, income, event.dividend, event.on, attrs=case.facts("up1")))
         if holder != ULT:
             flows.append(FlowEdge("up2", holder, ULT, DIVIDEND, event.onward or event.dividend, event.on, attrs=case.facts("up2")))
+    if event.exit and event.capitalisable and a.get("capitalise"):
+        on = min(event.on, event.exit_on or event.on)
+        flows.append(FlowEdge("cap", OP, holder, DIVIDEND, event.capitalisable, on,
+                              attrs=dict({"capitalised_from": "retained_earnings"}, **case.facts("cap"), capitalised=True)))
     if event.exit:
         ents[BUYER] = case.entity(BUYER)
         if a.get("exit_route") == INDIRECT:
@@ -294,8 +332,9 @@ def build_holding(event, a, case):
 
 HOLDING = Template(
     "holding", fixed=(OP, ULT), free={HOLD: OPTIONAL},
-    structure={"financing": [EQUITY, DEBT], "payment": [False, True], "exit_route": [DIRECT, INDIRECT]},
-    live=lambda e: (["financing", "payment"] if e.dividend else []) + (["exit_route"] if e.exit else []),
+    structure={"financing": [EQUITY, DEBT], "payment": [False, True], "exit_route": [DIRECT, INDIRECT], "capitalise": [False, True]},
+    live=lambda e: (["financing", "payment"] if e.dividend else []) + (["exit_route"] if e.exit else [])
+    + (["capitalise"] if e.exit and e.capitalisable else []),
     infeasible=lambda e, a, c: a.get(HOLD) is None and a.get("exit_route") == INDIRECT,   # nothing to sell indirectly
     build=build_holding)
 
@@ -316,7 +355,7 @@ MARKET, BOOK = "MARKET", "BOOK"                       # the IP step: a sale at m
 
 
 def book_transfer_ok(case, a):
-    """口径 D28. 财税〔2014〕109号 第三条 with 公告2015年第40号 第一条: a transfer at book value only between resident
+    """decision D28. 财税〔2014〕109号 第三条 with 公告2015年第40号 第一条: a transfer at book value only between resident
     enterprises one of which holds the other wholly and directly, or which the same resident enterprise(s) hold wholly
     and directly. In the ip template OP and the IP company are both held by ULT: both in the Mainland, ULT a Mainland
     company holding each wholly (a company the plan creates: by design)."""
@@ -336,7 +375,7 @@ def book_transfer_ok(case, a):
 
 
 def ip_transfer(event, case, buyer, seller, mode=MARKET):
-    """口径 D22. The step `iptx`: the new owner buys the IP from the present one at the price the case states (its market
+    """decision D22. The step `iptx`: the new owner buys the IP from the present one at the price the case states (its market
     value at the transfer; unknown: the step's tax is unbounded, the engine asks — never filled), on the first modelled
     date, never repeated. Its facts (the IP's kind, the seller's tax basis and allowances, the contract's terms) are the
     case's "iptx" facts; ip_horizon_years: the modelled years the buyer's amortisation falls in."""
@@ -349,7 +388,7 @@ def ip_transfer(event, case, buyer, seller, mode=MARKET):
 
 
 def build_ip(event, a, case):
-    """口径 D22 (replacing D19's marker): a candidate in which another company holds the IP than today has the IP
+    """decision D22 (replacing D19's marker): a candidate in which another company holds the IP than today has the IP
     transferred (ip_transfer) — the seller's gain, the Mainland's withholding, VAT and stamp duty and the buyer's
     amortisation are computed like every flow's tax. The present owner stays in the graph: it keeps the proceeds, and
     what it does with them is outside the template."""
@@ -374,7 +413,7 @@ def build_ip(event, a, case):
 IP = Template(
     "ip", fixed=(OP, ULT), free={IPCO: OPTIONAL}, structure={"payment": [False, True], "ip_transfer": [MARKET, BOOK]},
     live=lambda e: ["payment", "ip_transfer"],
-    infeasible=lambda e, a, c: a.get("ip_transfer") == BOOK and not book_transfer_ok(c, a),   # 口径 D28
+    infeasible=lambda e, a, c: a.get("ip_transfer") == BOOK and not book_transfer_ok(c, a),   # decision D28
     build=build_ip)
 
 
@@ -441,7 +480,68 @@ INBOUND_SERVICES = Template(
     infeasible=lambda e, a, c: False,
     build=build_inbound_services)
 
-TEMPLATES = {t.name: t for t in (HOLDING, IP, SERVICES, REPATRIATION, FINANCING, INBOUND_SERVICES)}
+# ---- decision D42: trading — OP makes the goods and sells them to the outside CUSTOMER, directly or through a group TRADER
+def build_trading(event, a, case):
+    """OP sells to CUSTOMER at goods_sale; with a TRADER (the client's own where it sits, else a new company, Case.place)
+    OP sells to the trader at the case's price (goods_supply) and the trader resells. A new trader buys at the supply's
+    arm's-length price — the plan prices at arm's length (decision D41) — asked when the case does not give it."""
+    ents = {OP: case.entity(OP), ULT: case.entity(ULT), CUSTOMER: case.entity(CUSTOMER)}
+    holds = [case.hold(ULT, OP)]
+    if a[TRADER] is None:
+        flows = [FlowEdge("sale", CUSTOMER, OP, GOODS, event.goods_sale, event.on, attrs=case.facts("sale"))]
+    else:
+        tr = case.place(TRADER, a[TRADER])
+        ents[tr.id] = tr
+        holds.append(case.hold(ULT, tr.id))
+        attrs = case.facts("supply")
+        price = attrs.get("arms_length_value") if tr.attrs.get("created_by_plan") else event.goods_supply
+        if price is None:                                     # decision D19: asked, never filled
+            attrs["amount_unknown"] = True
+        flows = [FlowEdge("supply", tr.id, OP, GOODS, float(price or 0.0), event.on, attrs=attrs),
+                 FlowEdge("resale", CUSTOMER, tr.id, GOODS, event.goods_sale, event.on,
+                          attrs=dict(case.facts("resale"), purchase_flow="supply"))]
+    return finish(Graph(ents, holds, _shift(_repeat(flows, event, case), a.get("payment")), case.members), case)
+
+
+TRADING = Template(
+    "trading", fixed=(OP, ULT, CUSTOMER), free={TRADER: OPTIONAL}, structure={"payment": [False, True]},
+    live=lambda e: ["payment"],
+    infeasible=lambda e, a, c: False,
+    build=build_trading)
+
+# ---- decision D48: property — OWNER, held by ULT, sells its land or building to an outside BUYER at property_sale; the sale's
+#      facts are the case's "sale" facts (where the property lies, its use, when and for how much OWNER acquired it). Selling
+#      OWNER's shares instead is not offered yet: Singapore's duty on equity interests in property-holding entities (SDA s23,
+#      Article 3A) is not modelled, and without it the choice would favour the share sale falsely
+def build_property(event, a, case):
+    ents = {OWNER: case.entity(OWNER), ULT: case.entity(ULT)}
+    flows = []
+    if event.property_sale:
+        ents[BUYER] = case.entity(BUYER)
+        flows.append(FlowEdge("sale", BUYER, OWNER, PROPERTY, event.property_sale, event.on, attrs=case.facts("sale")))
+    if event.property_rent:                                   # decision D49: the lease, a year at a time
+        ents[TENANT] = case.entity(TENANT)
+        flows.append(FlowEdge("rent", TENANT, OWNER, RENT, event.property_rent, event.on, attrs=case.facts("rent")))
+    return finish(Graph(ents, [case.hold(ULT, OWNER)], _repeat(flows, event, case), case.members), case)
+
+
+PROPERTY_TEMPLATE = Template("property", fixed=(OWNER, ULT), free={}, structure={}, live=lambda e: [],
+                             infeasible=lambda e, a, c: False, build=build_property)
+
+def build_recorded(event, assignment, case):
+    """Assess exactly the entered structure. No companies, ownership links or transactions are inferred."""
+    entities = {r: case.entity(r) for r in case.roles}
+    flows = [FlowEdge(fid, tx["payer"], tx["payee"], tx["income"], tx["amount"], tx["on"],
+                      currency=case.currency, target=tx.get("target"), attrs=case.facts(fid))
+             for fid, tx in case.transactions.items()]
+    return Graph(entities, list(case.holds.values()), flows, case.members)
+
+
+RECORDED = Template("recorded", fixed=(), free={}, structure={}, live=lambda e: [],
+                    infeasible=lambda e, a, c: False, build=build_recorded)
+
+
+TEMPLATES = {t.name: t for t in (HOLDING, IP, SERVICES, REPATRIATION, FINANCING, INBOUND_SERVICES, TRADING, PROPERTY_TEMPLATE)}
 CHAIN = ("holding", "repatriation")                # the templates that decide who holds OP
 
 
@@ -493,7 +593,7 @@ def composite(names):
                 held_by.setdefault(h.held, t.name)
                 holds.append(h)
             flows.extend(g.flows)
-        return Graph(ents, holds, flows, case.members, steps)
+        return created_members(Graph(ents, holds, flows, case.members, steps))
 
     return Template("+".join(t.name for t in parts), fixed=tuple(dict.fromkeys(r for t in parts for r in t.fixed)), free=free,
                     structure=structure, live=live, infeasible=infeasible, build=build)
@@ -501,6 +601,8 @@ def composite(names):
 
 def template_of(name):
     """A template by name; "a+b" composes them (composite)."""
+    if name == "recorded":
+        return RECORDED
     if name in TEMPLATES:
         return TEMPLATES[name]
     if name not in _COMPOSED:

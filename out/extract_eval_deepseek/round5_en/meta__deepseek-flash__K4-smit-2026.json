@@ -1,0 +1,77 @@
+{
+ "model": "deepseek-flash",
+ "case": "K4-smit-2026",
+ "tests": [
+  {
+   "path": "roles.ULT.attrs.cit_rate",
+   "test": "substitute",
+   "token": "15%",
+   "new": "25%",
+   "replaced": 5,
+   "gold": 15.0,
+   "expected": 25.0,
+   "value": 25.0,
+   "status": "follows",
+   "why": null,
+   "quote": "This is calculated based on a 25% preferential enterprise income tax rate, which is applicable to the valid High/New Technology Enterprise certificate as recognised by the respective PRC tax authorities under the New Enterprise Income Tax Law.",
+   "conflict": null
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "test": "substitute",
+   "token": "7.8125%",
+   "new": "8.8125%",
+   "replaced": 8,
+   "gold": 7.8125,
+   "expected": 8.8125,
+   "value": null,
+   "status": "missing",
+   "why": "conflict: 8.8125 / 0.99",
+   "quote": null,
+   "conflict": [
+    {
+     "value": 8.8125,
+     "doc": "K4-smit-2026",
+     "quote": "the RMB100 million registered capital in Shenzhen Giga subscribed by the Vendor, representing 8.8125% of the total registered capital and 8.9835% of the total paid-in capital of Shenzhen Giga",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    },
+    {
+     "value": 0.99,
+     "doc": "K4-smit-2026",
+     "quote": "On 21 May 2019, the Vendor first acquired RMB10 million fully paid-up capital in Shenzhen Giga, representing approximately 0.99% equity interest in Shenzhen Giga at the time.",
+     "origin": "same document",
+     "modality": "text",
+     "kind": "number",
+     "explicit": true
+    }
+   ]
+  },
+  {
+   "path": "event.exit",
+   "test": "substitute",
+   "token": "266.2 million",
+   "new": "366.2 million",
+   "replaced": 1,
+   "gold": 266200000.0,
+   "expected": 366200000.0,
+   "value": 266200000.0,
+   "status": "old figure stated elsewhere",
+   "why": null,
+   "quote": "Pursuant to the Sale and Purchase Agreement, the Consideration of approximately RMB266.2 million (equivalent to approximately USD37.0 million) shall be settled by cash during 2025.",
+   "conflict": null
+  }
+ ],
+ "usage": {
+  "calls": 0,
+  "prompt_tokens": 0,
+  "completion_tokens": 0,
+  "cache_hit_tokens": 0,
+  "seconds": 0.0,
+  "retries": 0,
+  "cached": 19
+ },
+ "prompt_version": "2026-10-15-en"
+}

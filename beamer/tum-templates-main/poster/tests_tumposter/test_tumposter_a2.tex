@@ -1,0 +1,157 @@
+\documentclass[a2paper,english]{tumposter}
+
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{lipsum}
+
+\title{A new approach to beautiful \LaTeX\ posters}
+\author[affil=1]{First Author}
+\author[affil=2]{Second Author}
+\author[affil=1]{Last Author}
+
+\affil[mark=1]{\theSchoolName, \theUniversityName}
+\affil[mark=2]{School of Applied \LaTeX, University of \TeX nology}
+
+% You can configure your poster style globally, here in the preamble
+% or you execute this command inside the document, directly before your
+% poster content (if you want multiple posters in one document)
+\TUMpostersetup{
+  columns = 3,
+  rows = 6,
+  boxes = TUMBoxBlank,
+  printaffil = true,
+  showframe = true,
+}
+
+
+\begin{document}
+
+
+% .:: Example poster with 3 columns
+% ----------------------------------------------------------------------------
+
+\TUMpostersetup{
+  columns = 3,
+  rows = 6,
+  boxes = TUMBoxBlank,
+  printaffil = true,
+  showframe = true,
+}
+\maketitle
+\begin{tcbposter}
+  % footer with some contact information
+  \posterbox[fontupper=\small, enlarge top initially by = .5\TUMposterboxsep
+  ]{
+    name=footer, column=1, span=3, above=bottom
+  }{
+    \begin{tabularx}{\textwidth}{p{.3\textwidth}XXX}
+      \textbf{\theUniversityName}\newline\theSchoolName
+       &
+      \textbf{First Author}\newline Some contact information\newline
+      E-mail: \href{mailto:first.author@tum.de}{first.author@tum.de}
+       &
+      \textbf{Dr. Second Author}\newline Don't contact me!
+       &
+      \textbf{Prof. Dr. Last Author}\newline Arcisstr. 21, 80333 Munich (D)
+      \newline E-mail: \href{mailto:last.author@tum.de}{last.author@tum.de}
+      \newline \href{www.ei.tum.de}{www.ei.tum.de}
+    \end{tabularx}
+  }
+
+  % figure on the top right
+  \posterbox{name=fig1, column=3, below=top}{
+    \includegraphics[width=\columnwidth, height=15cm]{example-image-a}
+    \captionof{figure}{This is a figure caption. The figure contains a
+      placeholder to test the layout.}
+  }
+
+  % main text box is a sequence over the rest of the page
+  \posterbox{name=text,
+    sequence = 1 between top and footer then
+    2 between top and footer then
+    3 between fig1 and footer
+  }{
+    \lipsum[1-2] \cite{einstein1905elektrodynamik}\par
+    \lipsum[3-4] \cite{feynman1958theory}\par
+    \lipsum[5-7]
+
+    \bibliographystyle{unsrt}
+    \bibliography{sample}
+  }
+\end{tcbposter}
+
+
+% .:: Example poster with single column
+% ----------------------------------------------------------------------------
+
+\clearpage
+\TUMpostersetup{
+  columns = 1,
+  rows = 6,
+  boxes = TUMBoxBlank,
+  printaffil = false,
+  showframe = false,
+}
+\maketitle
+\begin{tcbposter}
+  % figure
+  \posterbox[blankest]{name=fig1, below=top, rowspan=5}{
+    \includegraphics[width=\tcbtextwidth, height=\tcbtextheight
+    ]{example-image}
+  }
+
+  % main text box
+  \posterbox[fontupper=\usekomafont{TUM.H2}]{
+    name=text, between=fig1 and bottom
+  }{
+    This figure will change the world!
+  }
+\end{tcbposter}
+
+
+% .:: Example poster with boxes (2 columns)
+% ----------------------------------------------------------------------------
+
+\clearpage
+\TUMpostersetup{
+  columns = 2,
+  rows = 6,
+  boxes = TUMBox,
+  printaffil = true,
+  showframe = false,
+}
+\maketitle
+\begin{tcbposter}
+  \posterbox[adjusted title=Box 1]{
+    name=box1, below=top, rowspan=3
+  }{
+    Content
+  }
+  \posterbox[adjusted title=Box 2]{
+    name=box2, below=box1, rowspan=2
+  }{
+    Content
+  }
+  \posterbox[TUMBox=TUMOrange, adjusted title=Box 3]{
+    name=box3, below=top, column=2, rowspan=2
+  }{
+    Content
+  }
+  \posterbox[adjusted title=Box 4]{
+    name=box4, below=box3, column=2, rowspan=2
+  }{
+    Content
+  }
+  \posterbox[adjusted title=Box 5]{
+    name=box5, below=box4, column=2, rowspan=1
+  }{
+    Content
+  }
+  \posterbox[TUMBox=TUMGreen]{
+    name=box6, above=bottom, column=1, span=2, rowspan=1
+  }{
+    A box without title.
+  }
+\end{tcbposter}
+
+\end{document}

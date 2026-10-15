@@ -1,0 +1,350 @@
+{
+ "model": "deepseek-v4-pro",
+ "case": "K3-jst-2026",
+ "rows": [
+  {
+   "path": "roles.ULT.loc",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "quote": "Hong Kong True Value Limited was incorporated as a limited liability company in Hong Kong",
+   "rejected": []
+  },
+  {
+   "path": "roles.ULT.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "HK",
+   "value": "HK",
+   "status": "correct",
+   "quote": "Hong Kong True Value Limited was incorporated as a limited liability company in Hong Kong and a direct wholly-owned subsidiary of True Value Limited.",
+   "rejected": []
+  },
+  {
+   "path": "roles.ULT.attrs.is_mne_member",
+   "kind": "derived",
+   "gold": true,
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "roles.ULT.attrs.group_revenue_eur",
+   "kind": "derived",
+   "gold": 120885764.78,
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "roles.OP.loc",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "quote": "Shanghai Jushuitan Network Technology Co., Ltd. (上海聚水潭網絡科技有限公司), a limited liability company established under the laws of the PRC on September 26, 2014 and our wholly-owned subsidiary",
+   "rejected": []
+  },
+  {
+   "path": "roles.OP.attrs.incorporated_in",
+   "kind": "disclosed",
+   "gold": "CN",
+   "value": "CN",
+   "status": "correct",
+   "quote": "Shanghai Jushuitan Network Technology Co., Ltd. (上海聚水潭網絡科技有限公司), a limited liability company established under the laws of the PRC on September 26, 2014 and our wholly-owned subsidiary",
+   "rejected": []
+  },
+  {
+   "path": "holds.ULT>OP.ratio",
+   "kind": "disclosed",
+   "gold": 100.0,
+   "value": 100.0,
+   "status": "correct",
+   "quote": "After the completion of the above transfers of equity interests, Shanghai Jushuitan has become a wholly foreign-owned enterprise wholly-owned by Hong Kong True Value Limited, and thus an indirect wholly-owned subsidiary of our Company.",
+   "rejected": []
+  },
+  {
+   "path": "holds.ULT>OP.since",
+   "kind": "derived",
+   "gold": "2023-09-05",
+   "value": "2023-02-21",
+   "status": "wrong",
+   "quote": "On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte. Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund) transferred to Hong Kong True Value Limited their equity in",
+   "rejected": []
+  },
+  {
+   "path": "holds.ULT>OP.cost",
+   "kind": "missing",
+   "gold": null,
+   "value": 493484473.0,
+   "status": "false_fill",
+   "quote": "On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte. Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund) transferred to Hong Kong True Value Limited their equity in",
+   "rejected": []
+  },
+  {
+   "path": "flows.out.foreign_taxed",
+   "kind": "derived",
+   "gold": true,
+   "value": true,
+   "status": "correct",
+   "quote": "The EIT Law provides that since January 1, 2008, an income tax rate of 10% will normally be applicable to dividends declared to non-PRC resident enterprise investors which do not have an establishment or place of business in the PRC, or which have an establishment or place of business that is not ef",
+   "rejected": []
+  },
+  {
+   "path": "flows.out.foreign_headline_rate",
+   "kind": "disclosed",
+   "gold": 25,
+   "value": 10.0,
+   "status": "wrong",
+   "quote": "The EIT Law provides that since January 1, 2008, an income tax rate of 10% will normally be applicable to dividends declared to non-PRC resident enterprise investors which do not have an establishment or place of business in the PRC, or which have an establishment or place of business that is not ef",
+   "rejected": []
+  },
+  {
+   "path": "flows.out.deductible_at_payer",
+   "kind": "derived",
+   "gold": false,
+   "value": null,
+   "status": "null",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "present.HOLD",
+   "kind": "derived",
+   "gold": "NONE",
+   "value": "HK",
+   "status": "wrong",
+   "quote": "After the completion of the above transfers of equity interests, Shanghai Jushuitan has become a wholly foreign-owned enterprise wholly-owned by Hong Kong True Value Limited, and thus an indirect wholly-owned subsidiary of our Company.",
+   "rejected": []
+  },
+  {
+   "path": "event.on",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "quote": null,
+   "rejected": []
+  },
+  {
+   "path": "event.dividend",
+   "kind": "synthetic",
+   "gold": null,
+   "value": null,
+   "status": "abstained",
+   "quote": null,
+   "rejected": []
+  }
+ ],
+ "usage": {
+  "calls": 11,
+  "prompt_tokens": 339472,
+  "completion_tokens": 19621,
+  "cache_hit_tokens": 0,
+  "seconds": 248.68208193778992
+ },
+ "wall": 250.2,
+ "error": null,
+ "log": [
+  {
+   "prompt_head": "For each field below, list the passages of the documents that bear on it. Answer with JSON only:\n{\"<field key>\": [{\"doc\": \"<doc id>\", \"quote\": \"<verbatim passage>\"}], ...}. Quote verbatim; an empty li",
+   "reply": "{\n  \"roles.ULT.loc\": [\n    {\n      \"doc\": \"K3-jst-2025\",\n      \"quote\": \"Hong Kong True Value Limited was incorporated as a limited liability company in Hong Kong and a direct wholly-owned subsidiary of True Value Limited.\"\n    }\n  ],\n  \"roles.ULT.attrs.incorporated_in\": [\n    {\n      \"doc\": \"K3-jst-2025\",\n      \"quote\": \"Hong Kong True Value Limited was incorporated as a limited liability company in Hong Kong and a direct wholly-owned subsidiary of True Value Limited.\"\n    }\n  ],\n  \"roles.ULT.attrs.is_mne_member\": [\n    {\n      \"doc\": \"K3-jst-2025\",\n      \"quote\": \"Offshore\\nOnshore\\nOur Company\\n(Cayman Islands)\\nHong Kong True Value Limited\\n(Hong Kong)\\nShanghai Jushuitan\\n(PRC)\\nTrue Value Limited\\n(BVI)\"\n    }\n  ],\n  \"roles.ULT.attrs.group_revenue_eur\": [],\n  \"roles.OP.loc\": [\n    {\n      \"doc\": \"K3-jst-2025\",\n      \"quote\": \"“Shanghai Jushuitan” Shanghai Jushuitan Network Technology Co., Ltd. (上海聚水潭網絡科技有限公司), a limited liability company established under the laws of the PRC on September 26, 2014 and our wholly-owned subsidiary\"\n    }\n  ],\n  \"roles.OP.attrs.incorporated_in\": [\n    {\n      \"doc\": \"K3-jst-2025\",\n      \"quote\": \"“Shanghai Jushuitan” Shanghai Jushuitan Network Technology Co., Ltd. (上海聚水潭網絡科技有限公司), a limited liability company established under the laws of the PRC on September 26, 2014 and our wholly-owned subsidiary\"\n    }\n  ],\n  \"holds.ULT>OP.ratio\": [\n    {\n      \"doc\": \"K3-jst-2025\",\n      \"quote\": \"After the completion of the above transfers of equity interests, Shanghai Jushuitan has become a wholly foreign-owned enterprise wholly-owned by Hong Kong True Value Limited, and thus an indirect wholly-owned subsidiary of our Company.\"\n    }\n  ],\n  \"holds.ULT>OP.since\": [\n    {\n      \"doc\": \"K3-jst-2025\",\n      \"quote\": \"On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte. Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund) transferred to Hong Kong True Value Limited their equity interests in Shanghai Jushuitan equivalent to RMB3,484,473 of registered share capital, representing 91.35% of the then share capital of Shanghai Jushuitan, at an aggregate consideration of RMB3,484,473.\"\n    }\n  ],\n  \"holds.ULT>OP.cost\": [\n    {\n      \"doc\": \"K3-jst-2025\",\n      \"quote\": \"On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte. Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund) transferred to Hong Kong True Value Limited their equity interests in Shanghai Jushuitan equivalent to RMB3,484,473 of registered share capital, representing 91.35% of the then share capital of Shanghai Jushuitan, at an aggregate consideration of RMB3,484,473.\"\n    },\n    {\n      \"doc\": \"K3-jst-2025\",\n      \"quote\": \"On September 5, 2023, Broad Street Investments Holding (Singapore) Pte. Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund transferred to Hong Kong True Value Limited their equity interests in Shanghai Jushuitan equivalent to RMB329,878 of registered capital, representing 8.65% of the then share capital of Shanghai Jushuitan, at an aggregate consideration of RMB140 million and the USD equivalent of RMB350 million.\"\n    }\n  ],\n  \"flows.out.foreign_taxed\": [\n    {\n      \"doc\": \"K3-jst-2025\",\n      \"quote\": \"Dividend Withholding Tax\\nThe EIT Law provides that since January 1, 2008, an income tax rate of 10% will normally be applicable to dividends declared to non-PRC resident enterprise investors which do not have an establishment or place of business in the PRC, or which have an establishment or place of business that is not effectively connected with the relevant income, to the extent such dividends are derived from sources within the PRC.\"\n    }\n  ],\n  \"flows.out.foreign_headline_rate\": [\n    {\n      \"doc\": \"K3-jst-2025\",\n      \"quote\": \"Dividend Withholding Tax\\nThe EIT Law provides that since January 1, 2008, an income tax rate of 10% will normally be applicable to dividends declared to non-PRC resident enterprise investors which do not have an establishment or place of business in the PRC, or which have an establishment or place of business that is not effectively connected with the relevant income, to the extent such dividends are derived from sources within the PRC.\"\n    }\n  ],\n  \"flows.out.deductible_at_payer\": [\n    {\n      \"doc\": \"K3-jst-2025\",\n      \"quote\": \"Under the current regulatory regime in the PRC, foreign-invested enterprises in the PRC may pay dividends only out of their retained earnings, if any, determined in accordance with PRC accounting standards and regulations. A PRC company is required to set aside as statutory reserve funds at least 10% of its after-tax profit...\"\n    }\n  ],\n  \"present.HOLD\": [\n    {\n      \"doc\": \"K3-jst-2025\",\n      \"quote\": \"After the completion of the above transfers of equity interests, Shanghai Jushuitan has become a wholly foreign-owned enterprise wholly-owned by Hong Kong True Value Limited, and thus an indirect wholly-owned subsidiary of our Company.\"\n    }\n  ],\n  \"event.on\": [],\n  \"event.dividend\": []\n}",
+   "usage": {
+    "prompt_tokens": 336139,
+    "completion_tokens": 13195,
+    "total_tokens": 349334,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 11835
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 336139
+   },
+   "seconds": 158.6
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"HK\", \"doc\": \"K3-jst-2025\", \"quote\": \"Hong Kong True Value Limited was incorporated as a limited liability company in Hong Kong\"}",
+   "usage": {
+    "prompt_tokens": 277,
+    "completion_tokens": 134,
+    "total_tokens": 411,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 95
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 277
+   },
+   "seconds": 5.2
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"HK\", \"doc\": \"K3-jst-2025\", \"quote\": \"Hong Kong True Value Limited was incorporated as a limited liability company in Hong Kong and a direct wholly-owned subsidiary of True Value Limited.\"}",
+   "usage": {
+    "prompt_tokens": 281,
+    "completion_tokens": 144,
+    "total_tokens": 425,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 94
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 281
+   },
+   "seconds": 3.4
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"CN\", \"doc\": \"K3-jst-2025\", \"quote\": \"Shanghai Jushuitan Network Technology Co., Ltd. (上海聚水潭網絡科技有限公司), a limited liability company established under the laws of the PRC on September 26, 2014 and our wholly-owned subsidiary\"}",
+   "usage": {
+    "prompt_tokens": 303,
+    "completion_tokens": 201,
+    "total_tokens": 504,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 132
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 303
+   },
+   "seconds": 4.3
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if ",
+   "reply": "{\"value\": \"CN\", \"doc\": \"K3-jst-2025\", \"quote\": \"Shanghai Jushuitan Network Technology Co., Ltd. (上海聚水潭網絡科技有限公司), a limited liability company established under the laws of the PRC on September 26, 2014 and our wholly-owned subsidiary\"}",
+   "usage": {
+    "prompt_tokens": 307,
+    "completion_tokens": 158,
+    "total_tokens": 465,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 89
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 307
+   },
+   "seconds": 4.9
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\": 100, \"doc\": \"K3-jst-2025\", \"quote\": \"After the completion of the above transfers of equity interests, Shanghai Jushuitan has become a wholly foreign-owned enterprise wholly-owned by Hong Kong True Value Limited, and thus an indirect wholly-owned subsidiary of our Company.\"}",
+   "usage": {
+    "prompt_tokens": 303,
+    "completion_tokens": 191,
+    "total_tokens": 494,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 124
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 303
+   },
+   "seconds": 3.9
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <an ISO date YYYY-MM-DD>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if",
+   "reply": "{\"value\": \"2023-02-21\", \"doc\": \"K3-jst-2025\", \"quote\": \"On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte. Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund) transferred to Hong Kong True Value Limited their equity interests in Shanghai Jushuitan equivalent to RMB3,484,473 of registered share capital, representing 91.35% of the then share capital of Shanghai Jushuitan, at an aggregate consideration of RMB3,484,473.\"}",
+   "usage": {
+    "prompt_tokens": 377,
+    "completion_tokens": 435,
+    "total_tokens": 812,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 283
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 377
+   },
+   "seconds": 5.7
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\":493484473,\"doc\":\"K3-jst-2025\",\"quote\":\"On February 21, 2023, the Pre-Reorganization Shareholders of Shanghai Jushuitan (other than Broad Street Investments Holding (Singapore) Pte. Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund) transferred to Hong Kong True Value Limited their equity interests in Shanghai Jushuitan equivalent to RMB3,484,473 of registered share capital, representing 91.35% of the then share capital of Shanghai Jushuitan, at an aggregate consideration of RMB3,484,473. On September 5, 2023, Broad Street Investments Holding (Singapore) Pte. Ltd., StoneBridge 2020, L.P., StoneBridge 2020 Offshore Holdings II, L.P., and CICC Gongying Fund transferred to Hong Kong True Value Limited their equity interests in Shanghai Jushuitan equivalent to RMB329,878 of registered capital, representing 8.65% of the then share capital of Shanghai Jushuitan, at an aggregate consideration of RMB140 million and the USD equivalent of RMB350 million.\"}",
+   "usage": {
+    "prompt_tokens": 502,
+    "completion_tokens": 2155,
+    "total_tokens": 2657,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 1902
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 502
+   },
+   "seconds": 22.7
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <true or false>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null} if the pass",
+   "reply": "{\"value\": true, \"doc\": \"K3-jst-2025\", \"quote\": \"The EIT Law provides that since January 1, 2008, an income tax rate of 10% will normally be applicable to dividends declared to non-PRC resident enterprise investors which do not have an establishment or place of business in the PRC, or which have an establishment or place of business that is not effectively connected with the relevant income, to the extent such dividends are derived from sources within the PRC.\"}",
+   "usage": {
+    "prompt_tokens": 338,
+    "completion_tokens": 879,
+    "total_tokens": 1217,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 771
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 338
+   },
+   "seconds": 10.4
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <a number; ratios in percent, periods in whole months, amounts as stated>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim pa",
+   "reply": "{\"value\": 10, \"doc\": \"K3-jst-2025\", \"quote\": \"The EIT Law provides that since January 1, 2008, an income tax rate of 10% will normally be applicable to dividends declared to non-PRC resident enterprise investors which do not have an establishment or place of business in the PRC, or which have an establishment or place of business that is not effectively connected with the relevant income, to the extent such dividends are derived from sources within the PRC.\"}",
+   "usage": {
+    "prompt_tokens": 350,
+    "completion_tokens": 335,
+    "total_tokens": 685,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 226
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 350
+   },
+   "seconds": 7.6
+  },
+  {
+   "prompt_head": "Read the value of one field from the passages. Answer with JSON only:\n{\"value\": <one of CN/HK/SG/OTHER/NONE>, \"doc\": \"<doc id>\", \"quote\": \"<the verbatim passage the value rests on>\"}\nor {\"value\": null",
+   "reply": "{\"value\":\"HK\",\"doc\":\"K3-jst-2025\",\"quote\":\"After the completion of the above transfers of equity interests, Shanghai Jushuitan has become a wholly foreign-owned enterprise wholly-owned by Hong Kong True Value Limited, and thus an indirect wholly-owned subsidiary of our Company.\"}",
+   "usage": {
+    "prompt_tokens": 295,
+    "completion_tokens": 1794,
+    "total_tokens": 2089,
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 1732
+    },
+    "prompt_cache_hit_tokens": 0,
+    "prompt_cache_miss_tokens": 295
+   },
+   "seconds": 22.3
+  }
+ ]
+}

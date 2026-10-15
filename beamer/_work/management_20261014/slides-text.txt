@@ -1,0 +1,378 @@
+PAGE 1
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+跨境税务决策支持
+项目价值、方法原理与下一阶段验证
+Project Study
+2026 年10 月
+
+PAGE 2
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+已跑通规则分析，下一步验证真实业务
+当前阶段：可演示原型；范围：中国内地、香港、新加坡的公司
+把集团税负、落地条件和原文依据放在一起比较
+1. 已具备
+结构化案例的方案比较、补问与已缴税评估。
+输出税额区间、具体动作、办理期限和待确认条件。
+2. 方法基础
+固定规则计算，保留未知信息，并按保守税额选方案。
+每项结果可追溯到规则、参数与官方条文。
+3. 下一阶段
+接通真实材料抽取，开展限定场景的专业复核。
+先验证业务可用性，再决定范围扩展与模型优化。
+跨境税务决策支持| Project Study | 2026
+2
+
+PAGE 3
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+跨境方案需要同时回答三个问题
+目标是支持可复核的决策，而不只是展示一个税率
+1
+整体成本
+公司结构与交易安排怎样影响集团总税负？
+2
+落地条件
+哪些动作要先完成，哪些判断仍需取得认可？
+3
+风险与期限
+已缴税有哪些追回空间、补税风险和办理时限？
+预期价值：统一比较口径，明确不确定性，减少遗漏
+节税收益与工作量改善仍需通过真实业务试点衡量。
+跨境税务决策支持| Project Study | 2026
+3
+
+PAGE 4
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+信息充分给方案，信息不足给补问单
+两种输出都说明依据和下一步动作
+方案报告
+■建议结构与需要落实的动作
+■各法域及集团总税额区间
+■税项依据、期限与待认可条件
+■已缴税的追回空间与补税风险
+补问单
+■缺少哪项数据或确认
+■通常从哪些材料取得
+■答复为什么会影响方案
+■哪些缺口必须优先补齐
+答复进入案例后重新计算；无法界定税额的候选，先补齐必要信息。
+跨境税务决策支持| Project Study | 2026
+4
+
+PAGE 5
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+同一案例贯通方案比较与已缴税评估
+当前入口是结构化案例，计算始终使用已编码的规则
+共同依据：官方法条、参数、规则与生效日期
+集团事实
+公司、交易
+候选结构
+模板与安排
+税额区间
+规则与条件
+比较补问
+保守端优先
+方案报告
+动作与期限
+补齐事实或确认后，重新计算
+已缴税按同一组计算区间评估：可追回金额、补税风险与处理路线。
+跨境税务决策支持| Project Study | 2026
+5
+
+PAGE 6
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+图模型把持股关系与交易分开表示
+同一结构既有控制关系，也有不同方向的资金流
+母公司
+新加坡
+控股公司
+香港
+运营公司
+内地
+持股100%
+持股100%
+股息
+股息
+■持股边
+记录比例、取得日期与成本，派生比例和持有期。
+■交易流
+明确收入类型、收付双方、金额与发生日期。
+■各法域分别计算交易税项，再合并集团承担的总税额。
+三层控股结构为教学示意，不是客户方案；候选搜索限于当前模板与范围。
+跨境税务决策支持| Project Study | 2026
+6
+
+PAGE 7
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+规则把法律条件转成可复算的判断
+先编码适用范围、条件与效果，再对案例字段执行比较
+条件A
+居民证明已取得
+条件B
+持股门槛已满足
+A 且B
+AND
+两项均为真
+该组条件满足
+■数字门槛从参数表读取，并核对原文引用与生效日期。
+■例外、反滥用与抵免等规则按预定关系继续处理。
+条件组合示意，省略其他法定条件；不代表已满足完整优惠资格。
+跨境税务决策支持| Project Study | 2026
+7
+
+PAGE 8
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+未知信息保留下来，并进入税额区间
+三值逻辑：条件可以是真、假或未知
+“且”的判断示例
+条件A
+条件B
+结果
+真
+真
+真
+假
+未知
+假
+真
+未知
+未知
+一项已确定不满足时，不必为该条件组继续
+补齐另一项。
+税额保留两端
+有利端
+最好情形
+不利端
+保守情形
+待定条件影响区间宽度
+缺数据、未确认的动作与机关裁量分开记录；
+补齐后再收窄区间。
+跨境税务决策支持| Project Study | 2026
+8
+
+PAGE 9
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+按保守税额选方案，减少乐观依赖
+稳健决策：比较各方案在不利情形下的集团税负
+0
+10
+20
+30
+40
+50
+60
+方案A
+方案B
+最好10
+保守60
+最好25
+保守40
+税负
+本例选择B：保守税额40，低于A 的60
+即使A 的最好情形更低，也不把尚未确认的有利结果作为承诺。
+教学示例：数字与单位为示意，不是客户测算。方法：𝛤-maximin。
+跨境税务决策支持| Project Study | 2026
+9
+
+PAGE 10
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+优先补齐会改变决策的信息
+信息价值：看答复是否可能改变方案或降低保守税额
+当前选择B
+保守税额40
+关键问题Q
+有利答复获确认时
+A 的保守税额降至30
+重新选择A
+保守税额30
+■必须问
+缺失使税额无法界定的数据。
+■优先问
+能影响方案、动作可行性或关键裁定的信息。
+■多项条件共同影响结果时，列出需要一起确认的事项。
+延续上一页教学示例；潜在影响为40 −30 = 10，不是按成功概率计算的预期收益。
+跨境税务决策支持| Project Study | 2026
+10
+
+PAGE 11
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+AI 辅助找依据，材料抽取仍待接通
+混合检索综合词面、含义与条款关系
+问题
+编号与关键词
+精确匹配+ BM25
+含义相近的文本
+BGE-M3 向量模型
+显式条款关系
+引用与图邻居
+融合排名
+相关条文与原文
+■已配置
+BGE-M3检索；税额与方案选择由固定规则执行。
+■待接通
+真实LLM 从合同、财报中抽取事实与证据。
+AI 可在开发阶段辅助编码规则；规则仍需原文核对和专业复核。
+跨境税务决策支持| Project Study | 2026
+11
+
+PAGE 12
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+用独立答案与可推导关系核验结果
+验证计算正确性，也检查边界和依据是否完整
+官方算例
+独立期望结果
+同一输入
+系统计算结果
+比较
+一致：保留证据
+差异：定位并修正
+■关系与边界
+金额缩放、门槛两侧、条件反转及抵免上限。
+■依据核对
+引语、条款、时点，以及事实是否附来源。
+■业务确认
+真实材料与专业复核，验证方案是否适用、可落实。
+跨境税务决策支持| Project Study | 2026
+12
+
+PAGE 13
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+已具备演示基础，业务证据仍需补齐
+资料与规则快照：2026 年10 月14 日
+3
+当前法域
+内地、香港、新加坡
+472
+入库官方文件
+含原件分片
+250
+当前编译规则
+有引用与生效区间
+已有
+结构化分析、补问与方案报告、自动核验、部分公开案例比对。
+待验证
+抽取准确性、方案可落实性、机关认可条件，以及新增规则覆盖。
+既有测试支持原型验证；实际业务收益与效率改善将在试点中衡量。
+跨境税务决策支持| Project Study | 2026
+13
+
+PAGE 14
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+下一阶段先验证一个限定业务场景
+建议路径：真实案例→可靠事实→可复核方案
+1. 选定试点与专业基准
+优先从现有股息或服务费场景选择，取得完整材料与专业判断。
+2. 接通真实材料抽取
+验证字段准确性、原文证据和缺失识别；再送入现有分析链路。
+3. 复核方案、解释差异
+检查税额、待定条件、办理路径与可落实性，并补齐回归测试。
+用试点证据决定范围扩展与模型优化的优先级
+跨境税务决策支持| Project Study | 2026
+14
+
+PAGE 15
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+明确试点范围与专业支持
+建议本轮确认
+1. 优先验证哪一类跨境交易
+2. 案例材料与三地复核的提供方
+3. 试点通过所需的验收证据
+试点交付
+可追溯方案、未决条件清单、验证结果
+跨境税务决策支持| Project Study | 2026
+15
+
+PAGE 16
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+补充：核心组件与证据链
+将资料、规则、事实、计算与核验分开维护
+组件
+职责
+主要位置
+知识库
+条文、参数、检索、引文及时效
+official/
+规则层
+范围、条件、效果与编译校验
+rules/
+图与事实
+实体、持股、交易与事实派生
+model / facts
+计算引擎
+税项、区间、跨流交互与未决项
+engine.py
+规划器
+候选比较、信息价值与补问
+planner.py
+已缴税
+追回、补税风险、时限与路线
+claims / ex_post
+核验与输出
+算例、溯源、先例因素与报告
+verify / run
+抽取接口
+字段与原文；真实模型待接通
+llm/extract.py
+先例分析用于辅助依据核验；当前默认规划入口不自动据此确认裁量。
+跨境税务决策支持| Project Study | 2026
+16
+
+PAGE 17
+Self-defined Project Study
+Cross-Border Tax Graph
+Technical University of Munich
+补充：验证记录与适用边界
+现有报告按保存批次解释，不等同于当前代码全量复跑
+证据
+已保存记录
+如何解读
+案例电池
+1,058例，0 缺陷
+合成测试；该报告评估237 条规则。
+触发覆盖
+3 条规则未触发
+新增规则及未触发规则仍需补测。
+规划器对照
+78 对补全后方案一致
+历史批次，验证补问后的结果一致性。
+原文溯源
+条款、引语与时点核对
+还需检查案例事实是否附可靠来源。
+专业复核
+待开展限定场景试点
+计算通过不等于业务适用或机关认可。
+资料：out/battery_report.md、out/check_planner.txt、out/*.grounding.md。
+方法依据：三值逻辑、稳健决策与信息价值、混合检索、独立核验及关系测试。
+跨境税务决策支持| Project Study | 2026
+17
