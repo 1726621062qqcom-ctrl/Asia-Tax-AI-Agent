@@ -1,36 +1,46 @@
-# B 自由对话工具执行循环
+<a id="b-自由对话工具执行循环"></a>
 
-## 技术选择与开源参考
+# B Free-Form Conversation Tool Execution Loop
 
-2026-10-04 查阅以下官方开源方案：
+<a id="技术选择与开源参考"></a>
 
-- [LangGraph Workflows and agents](https://docs.langchain.com/oss/python/langgraph/workflows-agents)：状态图承载动态模型与工具循环。
-- [LangChain middleware](https://docs.langchain.com/oss/python/langchain/middleware/built-in)：工具错误、重试、模型/工具调用限制与上下文管理。
-- [Deep Agents architecture](https://github.com/langchain-ai/deepagents/blob/main/libs/ARCHITECTURE.md)：在运行时上组织工具、中间件、规划与上下文；无需在本项目启用文件系统、Shell 或委派能力。
-- [OpenAI Agents SDK runner](https://github.com/openai/openai-agents-python/blob/main/docs/running_agents.md) 和 [tool guardrails](https://github.com/openai/openai-agents-python/blob/main/docs/guardrails.md)：模型选动作、工具执行、结果回传、最大轮次及执行前后校验。
+## Technical choice and open-source references
 
-本项目沿用 LangGraph 与现有模型适配器，增加自定义工具循环；不迁移 SDK，不增加框架依赖。工具选择使用结构化 JSON，兼容当前模型供应商；这不是供应商原生 function calling。未来可增加原生调用适配而保留同一执行契约。
+Official open-source approaches reviewed on 2026-10-04:
 
-## 运行路径
+- [LangGraph Workflows and agents](https://docs.langchain.com/oss/python/langgraph/workflows-agents): state graphs for dynamic model/tool loops.
+- [LangChain middleware](https://docs.langchain.com/oss/python/langchain/middleware/built-in): tool errors, retries, model/tool limits, context management.
+- [Deep Agents architecture](https://github.com/langchain-ai/deepagents/blob/main/libs/ARCHITECTURE.md): tools, middleware, planning, and context organized on a runtime; this project need not enable filesystem, shell, or delegation capabilities.
+- [OpenAI Agents SDK runner](https://github.com/openai/openai-agents-python/blob/main/docs/running_agents.md) and [tool guardrails](https://github.com/openai/openai-agents-python/blob/main/docs/guardrails.md): model-selected actions, tool execution/results, maximum turns, and pre/post-execution validation.
 
-固定入口、普通聊天、既有追问、更正、权限与分析准入保持现有流程。自由业务对话可切换为：
+Retain LangGraph and the existing model adapter, adding a custom tool loop without SDK migration or framework dependencies. Tool selection uses structured JSON compatible with the current provider, not provider-native function calling. A future native adapter can retain the same execution contract.
 
-意图/事实处理 → 工具目录 → 模型提出一个动作 → 服务端参数及权限校验 → 工具执行 → 安全观察 → 下一动作或结束 → 原有输出校验与一次提交。
+<a id="运行路径"></a>
 
-工具：read_case_facts、check_fact_gaps、search_law、search_guidance、search_cases、prepare_analysis。finish 是控制动作。数据层仍为 KnowledgeProvider，不给模型 SQL、连接信息、任意账号/案件 ID。
+## Runtime path
 
-模型观察仅包含结构化状态、字段名、证据数量、缺口原因、已执行工具和剩余预算，不含证据原文与账号密钥。最终答复由已校验工具结果组成，调度器不能自由撰写税务结论。
+Fixed entry points, ordinary chat, existing follow-ups, corrections, permissions, and analysis admission retain their current flow. Free-form business conversation can use:
 
-## 强制边界
+Intent/fact processing → tool catalog → one model-proposed action → server parameter/permission validation → execution → safe observation → next action or finish → existing output validation and one commit.
 
-- 仅支持当前香港股息范围；查询不得改变用户地区、期间、编号；独立查询不继承旧案过滤。
-- read_case_facts/check_fact_gaps 为只读，读取当前请求案件；不确认事实、不改变缺口许可。
-- prepare_analysis 只有用户明确要求且事实确认/部分许可准入满足时可执行；本轮事实变化必须重新确认。
-- 保留一次一个主要追问，等待用户时结束本轮；最终顾问复核仍是唯一人工节点。
-- 统一 RunBudget；工具参数签名去重，检索改写最多一次；达到预算停止并保留结果。
-- 工具异常转换为不含原始异常文本的状态；不自动切 Mock。JSON 与 SSE 共用准备/提交路径。
+Tools: read_case_facts, check_fact_gaps, search_law, search_guidance, search_cases, prepare_analysis. finish is a control action. KnowledgeProvider remains the data layer; models receive no SQL, connection details, or arbitrary account/case IDs.
 
-## 开关与回滚
+Model observations contain structured statuses, field names, evidence counts, gap reasons, executed tools, and remaining budgets only, excluding evidence originals and account keys. Final answers combine validated tool results; the scheduler cannot freely write tax conclusions.
+
+<a id="强制边界"></a>
+
+## Mandatory boundaries
+
+- Support only the current Hong Kong dividend scope. Queries cannot alter user jurisdictions, periods, or identifiers; independent inquiries do not inherit old case filters.
+- read_case_facts/check_fact_gaps are read-only for the current requested case; they neither confirm facts nor change gap consent.
+- prepare_analysis requires explicit user request and fact confirmation/partial-consent admission. Fact changes in this turn require reconfirmation.
+- Retain one main follow-up at a time and end the turn when waiting for the user. Final advisor review remains the only human decision stage.
+- Share RunBudget, deduplicate parameter signatures, and allow at most one retrieval rewrite. Stop at budget limits while retaining results.
+- Convert tool exceptions into statuses without raw error text; never switch automatically to Mock. JSON and SSE share preparation/commit paths.
+
+<a id="开关与回滚"></a>
+
+## Switches and rollback
 
 ```dotenv
 FSIE_AGENT_ORCHESTRATION=hybrid
@@ -38,29 +48,33 @@ FSIE_AGENT_DYNAMIC_PLANNER=true
 FSIE_AGENT_HARNESS_MODE=tools
 ```
 
-默认 harness_mode=rewrite，保留上一版无匹配查询改写。tools 模式仅用于 entry_hint=auto 的业务请求，三个快捷入口保持现有子图。部署先在测试环境启用；切回 rewrite 或关闭 dynamic_planner 即回滚。真实模型未配置时应返回明确失败，不冒充在线成功。
+Default harness_mode=rewrite retains the previous no-match query rewriting. tools applies only to business requests with entry_hint=auto; the three shortcuts retain current subgraphs. Enable in test environments first; switch to rewrite or disable dynamic_planner to roll back. Missing live model configuration must produce explicit failure, not claimed online success.
 
-## 验收
+<a id="验收"></a>
 
-多工具顺序、不同资料类型查询、只读事实/缺口、重复工具停止、非法参数/编号/范围/越权分析拒绝、入模/展示受限原文不进入规划、部分成功后模型失败保留、预算停止、普通聊天/固定入口不触发额外调度；已有 JSON/SSE、追问与最终复核回归。真实 C 和真实模型仍需另行在线验收。
+## Acceptance
 
-## 实现与验证记录
+Cover multi-tool order, source types, read-only facts/gaps, duplicate-tool stopping, rejection of invalid parameters/identifiers/scope/unauthorized analysis, exclusion of restricted originals from planning, retained partial success after model failure, budget stopping, no extra scheduling for ordinary chat/fixed entry points, and existing JSON/SSE/follow-up/final-review regression. Actual C and models still need separate online acceptance.
 
-- `packages/agent/tools.py`：工具目录、严格参数契约、允许动作与查询校验。
-- `packages/agent/tool_harness.py`：LangGraph plan/execute 循环、元数据观察、去重、结果保存和停止。
-- `packages/agent/harness.py::plan_tool`：生产模型选择与有限 JSON 修复，修复时使用剩余期限。
-- `packages/agent/hybrid.py`：接入父图，自由对话可启用；已有明确多任务队列保持一次执行，减少重复和额外模型请求。
-- `tests/agent/test_tool_harness.py`：31 项工程验收；测试模型选择用脚本，检索为合成 Mock。
-- `tests/agent/test_real_eval.py`：额外保留生产 Prompt、解析器、LangGraph、实际消息 API 和持久化，替换模型 HTTP 响应进行流程验收。不是在线成功。
+<a id="实现与验证记录"></a>
 
-在线验收命令（私有 `.env` 先配置 OpenRouter 密钥，每脚本最多四次请求；小额度先只选一条）：
+## Implementation and validation
+
+- `packages/agent/tools.py`: catalog, strict parameters, allowed actions, query validation.
+- `packages/agent/tool_harness.py`: LangGraph plan/execute loop, metadata observations, deduplication, result retention, stopping.
+- `packages/agent/harness.py::plan_tool`: production model selection and bounded JSON repair using the remaining deadline.
+- `packages/agent/hybrid.py`: parent-graph integration, optionally enabled for free conversation; explicit multitask queues retain single execution to avoid duplicates/extra model calls.
+- `tests/agent/test_tool_harness.py`: 31 engineering acceptance tests; scripted model choices and synthetic Mock retrieval.
+- `tests/agent/test_real_eval.py`: retains production prompts/parser/LangGraph/actual message APIs/persistence, replacing model HTTP responses for workflow acceptance; not online success.
+
+Online command (configure OpenRouter key privately in `.env`; at most four requests per script; select one first with a small quota):
 
 ```sh
 .venv/bin/python scripts/evaluate_b_workflow.py --dataset evals/b_workflow/v0.1/tool_harness.json --harness-mode tools --select BWF-TOOLS-001 --max-calls 4 --output evals/b_workflow/runs/tool-live.json
 ```
 
-评测严格检查工具序列；如果生产意图解析选择了预先分解任务队列，而未进入工具循环，将记录为不满足本次工具循环验收，不伪装成功。两种路径的任务重复执行工程检查已覆盖。
+Evaluation strictly checks tool sequences. If production intent parsing selects a predecomposed queue instead of the loop, record failure to meet this loop's acceptance rather than success. Engineering checks cover duplicate task execution across the two paths.
 
-这次配置预检为两个脚本 blocked、零模型调用。真实模型工具选择质量、C 真实服务、专业税务正确性及 PostgreSQL 验收仍需继续；没有新自由生成法律解释节点，也未实现相似案例比较算法。
+This preflight had two blocked scripts and zero model calls. Actual model tool-selection quality, C service, professional tax correctness, and PostgreSQL acceptance remain outstanding. No new free-form legal explanation node or similar-case comparison algorithm was added.
 
-最终工程回归（2026-10-04）：318 项 Python 通过、11 项真实 PostgreSQL 测试未运行；26 项既有页面兼容回归通过；TypeScript/Vite 构建、知识包及两套评测集格式检查通过。新工具循环的 JSON 与 SSE API 验收包含在 Python 测试中，页面兼容回归使用原测试服务，不作为真实模型工具选择质量证明。
+Final engineering regression (2026-10-04): 318 Python tests passed; 11 actual PostgreSQL tests not run; 26 existing page compatibility tests passed; TypeScript/Vite build, knowledge package, and two evaluation-set format checks passed. Python tests include JSON/SSE acceptance of the new loop. Page compatibility uses the original test service and does not establish actual model tool-selection quality.

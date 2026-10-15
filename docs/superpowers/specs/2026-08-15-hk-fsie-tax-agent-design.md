@@ -1,34 +1,42 @@
-# 东亚税务 AI 平台（香港 FSIE MVP）— 设计索引
+<a id="东亚税务-ai-平台香港-fsie-mvp-设计索引"></a>
 
-日期：2026-08-15
-状态：设计已获用户确认；尚未进入 MVP 实施
+# East Asian Tax AI Platform (Hong Kong FSIE MVP) — Design Index
 
-## 设计决策
+Date: 2026-08-15
+Status: design confirmed by the user; MVP implementation has not started
 
-- 从香港开始，首个垂直场景为跨国企业实体取得境外股息；
-- 直接用户为香港税务顾问，输出为内部复核稿；
-- 自然语言交互采用逐步访谈，不使用固定表单作为主要入口；
-- 采用混合型架构：AI 访谈和表达、确定性规则、RAG 引证、人工复核；
-- 权威资料、税务规则和专家案例分别管理；
-- 首版采用模块化单体、Python API、PostgreSQL、全文检索和 pgvector；
-- 首个试点优先单租户隔离环境；
-- 当前无香港税务专家不阻止研究原型开发，但所有候选规则和案例必须标记为未验证；
-- 香港税务专家验证核心规则、判断边界和金标案例，是进入封闭顾问试点的强制门槛；
-- 2026 年项目范围限定为中国内地、香港、日本和韩国，香港为深度 MVP，其他三个地区为标准企业税务包；
-- 其他亚太地区推迟至东亚 Release 1 验收后规划；
-- 在设计和文档批准前不实施 MVP。
+<a id="设计决策"></a>
 
-## 正式文档
+## Design decisions
 
-- [产品需求文档](../../product/PRD.md)
-- [技术路线图](../../architecture/TECHNICAL_ROADMAP.md)
-- [2026 项目计划](../../project/PROJECT_PLAN_2026.md)
+- Start with Hong Kong; the first vertical scenario is foreign-sourced dividends received by multinational enterprise entities.
+- Direct users are Hong Kong tax advisors; outputs are internal review drafts.
+- Natural-language interaction uses a step-by-step interview rather than fixed forms as the primary entry point.
+- Use a hybrid architecture: AI interviews and expression, deterministic rules, RAG citations, and human review.
+- Manage authoritative sources, tax rules, and expert cases separately.
+- The first release uses a modular monolith, Python API, PostgreSQL, full-text retrieval, and pgvector.
+- Prefer an isolated single-tenant environment for the first pilot.
+- The absence of Hong Kong tax experts does not block research prototype development, but all candidate rules and cases must be marked unverified.
+- Hong Kong expert validation of core rules, judgment boundaries, and gold cases is mandatory before a closed advisor pilot.
+- The 2026 scope is mainland China, Hong Kong, Japan, and South Korea; Hong Kong is the in-depth MVP and the other three receive standard corporate tax packages.
+- Plan other Asia-Pacific jurisdictions after East Asia Release 1 acceptance.
+- Do not implement the MVP before design and documentation approval.
 
-## 研究参考
+<a id="正式文档"></a>
 
-- [香港税务局 FSIE 专页](https://www.ird.gov.hk/eng/tax/bus_fsie.htm)
-- [香港税务局 FSIE FAQ](https://www.ird.gov.hk/eng/faq/fsie.htm)
-- [香港税务局 FSIE 官方示例](https://www.ird.gov.hk/eng/tax/fsie_example.htm)
-- [OpenFisca Core](https://github.com/openfisca/openfisca-core)：参考规则与参数分离；因许可和产品定位不直接作为商业底座
-- [LQ.AI](https://github.com/LegalQuants/lq-ai)：参考法律引用和审计设计
-- [pgvector](https://github.com/pgvector/pgvector)：MVP 的 PostgreSQL 向量检索扩展
+## Formal documents
+
+- [Product requirements document](../../product/PRD.md)
+- [Technical roadmap](../../architecture/TECHNICAL_ROADMAP.md)
+- [2026 project plan](../../project/PROJECT_PLAN_2026.md)
+
+<a id="研究参考"></a>
+
+## Research references
+
+- [IRD FSIE page](https://www.ird.gov.hk/eng/tax/bus_fsie.htm)
+- [IRD FSIE FAQ](https://www.ird.gov.hk/eng/faq/fsie.htm)
+- [IRD official FSIE examples](https://www.ird.gov.hk/eng/tax/fsie_example.htm)
+- [OpenFisca Core](https://github.com/openfisca/openfisca-core): reference for separating rules and parameters; not used directly as a commercial foundation because of licensing and product positioning.
+- [LQ.AI](https://github.com/LegalQuants/lq-ai): reference for legal citations and audit design.
+- [pgvector](https://github.com/pgvector/pgvector): PostgreSQL vector retrieval extension for the MVP.

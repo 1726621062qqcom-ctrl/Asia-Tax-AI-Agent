@@ -1,6 +1,6 @@
 # Hong Kong Foreign Dividend Consultations: User Cases and Guided-Input Templates
 
-[中文版](HK_FSIE_USER_CASE_TEMPLATES.md)
+[Primary document](HK_FSIE_USER_CASE_TEMPLATES.md)
 
 This document supports Taxora product demonstrations, user interviews, and frontend planning. All companies, amounts, dates, and transactions below are **fictional**. They are not tax conclusions or filing advice. Each case has two input formats: a long question that can be pasted into chat, followed by a guided form showing how to enter **the same stated facts**. A separate case-template picker has not yet been released.
 

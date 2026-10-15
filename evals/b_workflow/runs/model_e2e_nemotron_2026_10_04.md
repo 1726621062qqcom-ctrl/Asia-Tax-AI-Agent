@@ -1,13 +1,15 @@
-# B Agent 实际模型评测记录
+<a id="b-agent-实际模型评测记录"></a>
 
-时间：2026-10-04T05:12:46.354377+00:00。层次：M-model/D-knowledge/API。模型：nvidia/nemotron-3.5-lightning:free。
+# B Agent Live Model Evaluation Record
 
-选中 1 个脚本；通过 0，失败 1，阻断 0。
+Time: 2026-10-04T05:12:46.354377+00:00. Layer: M-model/D-knowledge/API. Model: nvidia/nemotron-3.5-lightning:free.
 
-真实模型调用 1 次。全局状态：incomplete。
+Selected 1 scripts; 0 passed, 1 failed, 0 blocked.
 
-检索与身份为合成替身，不代表真实 C、登录、PG 或专业税务验收。
+Actual model calls: 1. Overall status: incomplete.
 
-| 脚本 | 状态 | 问题 |
+Retrieval and identity use synthetic test doubles. These results do not establish actual C, sign-in, PostgreSQL, or professional tax acceptance.
+
+| Script | Status | Issue |
 |---|---|---|
 | BWF-E2E-001 | failed | error expected=None actual=model_failed |

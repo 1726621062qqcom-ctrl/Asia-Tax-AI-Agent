@@ -1,24 +1,30 @@
-# 网页研究链路 · 实现与验证
+<a id="网页研究链路--实现与验证"></a>
 
-日期：2026-09-27。范围是用户批准的第一轮接线：提问、追问、事实确认、现有规则分析和案件恢复；并非完整 PRD 或 L1 验收。
+# Web Research Workflow · Implementation and Validation
 
-后续云端和检索进展见 [CLOUD_KNOWLEDGE_SLICE.md](CLOUD_KNOWLEDGE_SLICE.md)。下方验证数字保留第一轮记录，当前连接状态以该新记录为准。
+Date: 2026-09-27. The scope is the user-approved initial integration: questions, follow-ups, fact confirmation, existing rule analysis, and case recovery. It is not acceptance of the complete PRD or L1.
 
-## 已实现
+See [CLOUD_KNOWLEDGE_SLICE.md](CLOUD_KNOWLEDGE_SLICE.md) for later cloud and retrieval progress. Validation counts below retain the initial round's record; the newer record is authoritative for current connection status.
 
-- FastAPI 案件、消息、事实修改、确认、分析接口；前端真实调用这些接口。
-- 模型适配器使用根目录 `.env` 的 `FSIE_MODEL_BASE_URL`、`FSIE_MODEL_API_KEY`、`FSIE_MODEL_NAME`。每次请求重新加载配置，填好密钥后无需重启。
-- 模型只提出候选事实，经过字段、选项、数值范围和日期校验；不能提交专家批准状态或改变工作流。
-- 后端根据已知信息选择核心追问；显式未知不重复询问，冲突要求手工修订。后续字段仍可在事实卡补充。当前追问是确定性核心访谈，不是覆盖全部规则依赖的完整动态访谈引擎。
-- 用户确认后保存事实快照，再调用已有规则引擎；现有 5 个业务节点、人工门槛和 5 个未实现节点分别显示。允许对不完整但无冲突的事实执行部分研究，保留阻断项。
-- 消息、事实修订、确认快照、规则包快照/哈希、来源清单哈希与来源记录、分析历史持久化；修改事实或补充消息使旧分析失效。
-- 乐观版本比较阻止旧页面覆盖新事实；操作幂等键使响应丢失后的同次重试不会重复保存消息或结果。模型调用失败不改变已保存案件，输入保留在当前页面。
-- 原文检索沿用已实现的规则条文定位方式；知识数据库不可用时返回官方索引链接并明确未取得原文，不生成替代引用。
-- 前端中英文、移动布局、加载/失败/重试、确认后展示结果、刷新恢复已连接。
+<a id="已实现"></a>
 
-## 运行
+## Implemented
 
-本地首次配置：
+- FastAPI endpoints for cases, messages, fact changes, confirmation, and analysis; the frontend calls these actual endpoints.
+- The model adapter uses `FSIE_MODEL_BASE_URL`, `FSIE_MODEL_API_KEY`, and `FSIE_MODEL_NAME` from the root `.env`. Configuration is reloaded for each request, so setting a key does not require restarting.
+- The model proposes only candidate facts, subject to field, option, numeric range, and date validation; it cannot submit expert approval statuses or change the workflow.
+- The backend chooses core follow-ups from known information. Explicitly unknown facts are not asked repeatedly, and conflicts require manual revision. Later fields may still be added through fact cards. Current follow-ups form a deterministic core interview, not a complete dynamic interview engine covering all rule dependencies.
+- After user confirmation, the fact snapshot is saved and the existing rule engine is called. The existing 5 business nodes, human gate, and 5 unimplemented nodes are shown separately. Partial research is allowed on incomplete but conflict-free facts, retaining blockers.
+- Messages, fact revisions, confirmation snapshots, rule package snapshots/hashes, source manifest hashes and records, and analysis history are persisted. Fact changes or additional messages invalidate earlier analysis.
+- Optimistic version comparisons prevent old pages from overwriting new facts. Operation idempotency keys prevent a retry after a lost response from saving duplicate messages or results. Model failures do not change saved cases, and input remains on the current page.
+- Original-text retrieval uses the implemented statutory-location mechanism for rules. If the knowledge database is unavailable, official index links are returned with an explicit notice that original text was not obtained; substitute citations are not generated.
+- Chinese/English frontend interfaces, mobile layouts, loading/failure/retry states, results after confirmation, and recovery after refresh are connected.
+
+<a id="运行"></a>
+
+## Running
+
+Initial local configuration:
 
 ```powershell
 python -m venv .venv
@@ -30,29 +36,33 @@ cd ../..
 .venv/Scripts/python.exe scripts/run_chat.py
 ```
 
-打开 <http://127.0.0.1:8000>。API 同时提供构建好的前端，无需另开 Vite。开发时可额外运行 `apps/web` 下的 `npm run dev`，打开 <http://127.0.0.1:5173>；该页面通过同源 `/api` 代理到 8000。修改前端后需重建才能更新 8000 的静态页面。
+Open <http://127.0.0.1:8000>. The API also serves the built frontend, so a separate Vite server is unnecessary. For development, optionally run `npm run dev` in `apps/web` and open <http://127.0.0.1:5173>; that page uses a same-origin `/api` proxy to port 8000. Rebuild after frontend changes to update the static page on port 8000.
 
-根目录 `.env` 填写 `FSIE_MODEL_API_KEY`。密钥不能加 `VITE_` 前缀，也不能粘贴到聊天或提交 Git。模型连接错误只向网页返回安全错误码。首次发送前用户确认仅提交合成研究资料。正常启动路径不包含测试模型或固定答案。
+Set `FSIE_MODEL_API_KEY` in the root `.env`. Do not use a `VITE_` prefix, paste the key into chat, or commit it to Git. Model connection failures return only safe error codes to the page. Before the first send, the user confirms that only synthetic research data will be submitted. The normal startup path includes no test model or fixed answers.
 
-## 存储及部署边界
+<a id="存储及部署边界"></a>
 
-会话与知识库现使用云端 PostgreSQL，默认共享 `FSIE_DATABASE_URL`。`FSIE_WEB_DATABASE_URL` 可指定独立 PostgreSQL 会话存储。旧版 SQLite 记录保留且不自动搬迁；与原有 CaseFile / Fact / FactVersion 表的统一迁移仍需后续工作。
+## Storage and deployment boundaries
 
-随机 HttpOnly、SameSite=Strict cookie 将浏览器工作空间隔离；写入需要同源和自定义头，Host 只允许回环域名。仅绑定 `127.0.0.1`；本轮没有账号登录、组织角色或公开部署授权。删除浏览器 cookie 后原案件仍在数据库，但不能从新工作空间访问；完整账号恢复与数据保留策略尚未实现。`/health` 已移除原始数据库连接字符串。
+Sessions and knowledge now use cloud PostgreSQL, sharing `FSIE_DATABASE_URL` by default. `FSIE_WEB_DATABASE_URL` can specify separate PostgreSQL session storage. Old SQLite records remain and are not moved automatically. Unified migration with the existing CaseFile / Fact / FactVersion tables requires later work.
 
-事实确认表示用户核对输入，不是税务专家批准。分析状态只有“待复核”，没有伪造的已批准或已归档状态。当前网页结果保存于会话库，不等于已完成报告审批和归档。
+A random HttpOnly, SameSite=Strict cookie isolates browser workspaces. Writes require the same origin and a custom header; Host is restricted to loopback names. The service binds only to `127.0.0.1`. This round includes no account sign-in, organization roles, or public deployment authorization. Deleting the browser cookie leaves original cases in the database but removes access from a new workspace; complete account recovery and data retention policies are not implemented. The raw database connection string has been removed from `/health`.
 
-## 验证
+Fact confirmation means the user has checked the inputs, not that a tax expert has approved them. Analysis has only a “pending review” status, with no fabricated approved or archived state. Saving current page results in the session database does not establish completion of report approval and archiving.
 
-- 独立安装本仓库 `.venv`，不再依赖旧 worktree 的解释器；`pip check` 通过。
-- 后端离线测试 94 项通过（含新增 20 项）；数据库集成测试 11 项未运行。
-- 浏览器 6 项通过：真实 API、临时数据库及实际规则引擎；**仅模型提取边界和知识库检索使用受控测试返回**。测试服务器只存在于 `tests/chat/serve_browser.py`，正常应用不读取测试开关。
-- 前端 TypeScript/Vite 构建通过，检查过中英文首页、手机和研究结果截图。
-- 本地 8000 页面、健康检查及 5173 同源 API 代理返回 200。
-- 用户填写密钥后，真实 DeepSeek 冒烟验证通过：通过本地 API 创建独立测试工作空间，首轮提取 11 个候选字段并追问跨国企业集团身份；第二轮正确提取集团身份、10% 持股、24 个月连续持有及员工充足性未知。显式确认后执行 6 个节点（5 个业务节点及人工门槛），保存待复核结果和 6 个关联官方来源，再读取案件核对结果恢复成功。仅发送合成案例，未输出或提交密钥。
-- 知识数据库仍不可用，原文检索返回 `unavailable`。上述两轮真实模型验证不代表全面模型质量评测、原文检索验收或专业税务验证。
+<a id="验证"></a>
 
-测试命令：
+## Validation
+
+- Installed a separate repository `.venv`, removing dependence on an older worktree's interpreter; `pip check` passed.
+- 94 backend offline tests passed (including 20 new tests); 11 database integration tests were not run.
+- 6 browser tests passed, using the actual API, temporary database, and actual rule engine; **only the model extraction boundary and knowledge retrieval use controlled test responses**. The test server exists only in `tests/chat/serve_browser.py`; the normal application does not read test switches.
+- The frontend TypeScript/Vite build passed. Chinese/English home pages, mobile layouts, and research result screenshots were inspected.
+- The local port 8000 page, health check, and same-origin API proxy on port 5173 returned 200.
+- After the user supplied a key, the actual DeepSeek smoke test passed: a separate test workspace was created through the local API. The first turn extracted 11 candidate fields and asked about multinational enterprise group status. The second correctly extracted group status, 10% ownership, 24 months of continuous holding, and unknown employee adequacy. Explicit confirmation executed 6 nodes (5 business nodes and the human gate), saved pending-review results and 6 associated official sources, and successfully restored results on rereading the case. Only synthetic cases were sent; keys were neither output nor committed.
+- The knowledge database remained unavailable, and original-text retrieval returned `unavailable`. These two live model turns do not establish comprehensive model quality evaluation, original-text retrieval acceptance, or professional tax validation.
+
+Test commands:
 
 ```powershell
 .venv/Scripts/python.exe -m pytest -q -m "not integration"
@@ -62,10 +72,12 @@ $env:FSIE_TEST_PYTHON = (Resolve-Path '../../.venv/Scripts/python.exe').Path
 node node_modules/@playwright/test/cli.js test
 ```
 
-CI 安装 Python 后，浏览器测试自动启动独立 API 8001 / Vite 5174，不占用正常应用或触及用户会话。
+After Python installation in CI, browser tests automatically start separate API 8001 / Vite 5174 services, without occupying the normal application or touching user sessions.
 
-## 后续缺口
+<a id="后续缺口"></a>
 
-完整知识库联调及更广泛的真实模型案例回归；其余 5 个业务节点；问题驱动的混合检索及适用期间过滤；完整动态问题队列；统一业务数据迁移；报告审批/退回/归档；身份认证、组织权限和恢复测试；香港税务专家验证。以上均不能由一个可用 API key 替代。
+## Remaining gaps
 
-实现参考 [FastAPI 官方全栈模板](https://github.com/fastapi/full-stack-fastapi-template) 的 API 分层及同源前后端组织（MIT，未复制实现），与现有 React/Vite/FastAPI/SQLAlchemy 技术栈相符。
+Complete knowledge database integration and broader live model case regression; the other 5 business nodes; question-driven hybrid retrieval and applicability-period filtering; a complete dynamic question queue; unified business data migration; report approval/rejection/archiving; authentication, organization permissions, and recovery tests; Hong Kong tax expert validation. A working API key cannot replace any of these.
+
+Implementation references the API layering and same-origin frontend/backend organization of the [official FastAPI full-stack template](https://github.com/fastapi/full-stack-fastapi-template) (MIT; no implementation copied), consistent with the existing React/Vite/FastAPI/SQLAlchemy stack.

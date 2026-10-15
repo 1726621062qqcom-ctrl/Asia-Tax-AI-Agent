@@ -1,12 +1,14 @@
-# 恢复知识库并连接引用
+<a id="恢复知识库并连接引用"></a>
 
-用户已批准恢复现有数据库/原文、修复裁定日期切分、接通法条与案例检索、用既有案例回归。继续沿用 PostgreSQL 与已有来源清单，不重新建立无来源的知识集。
+# Restore the Knowledge Database and Connect Citations
 
-1. 使用 Supabase 托管 PostgreSQL 保存知识和会话。用户明确要求云端，覆盖此前的本机数据库方案。凭据仅保存在忽略 Git 的 `.env`，运行应用无需安装本机数据库。
-2. 从已允许的官方域名重新下载 10 个当前范围内来源（11 项清单中 1 项不在当前范围）。原始快照不可覆盖，保留哈希漂移状态；旧清单哈希不因下载成功而改写。
-3. 四个裁定按编号章节切分，保留日期、适用年度、事实背景与裁定结论的章节边界；仍是未专业验证的公开裁定，不发送到模型或混入合成评测集。
-4. 法条按规则定位召回；案例及资料提供确定性的关键词检索，支持中文研究关键词映射和案例编号。当前不宣称向量混合检索已完成。原文记录携带来源、定位、快照/文本哈希、抓取日期和漂移状态。
-5. 分析结果保存本次实际引用；资料侧栏允许搜索原文、查看法条/裁定片段及官方链接。缺失和漂移均明确展示。历史报告不随重建索引改写。
-6. 验证包括切分日期与章节保留、案例编号和关键词检索、真实数据库入库、既有 10 个合成案例回归、网页引用显示。备份恢复与生产认证、专家验证仍另行验收。
+The user approved restoring the existing database/original texts, fixing ruling-date segmentation, connecting statutory and case retrieval, and regression testing existing cases. Retain PostgreSQL and the source manifest rather than rebuilding an unsourced knowledge collection.
 
-参考：[pgvector 官方 GitHub](https://github.com/pgvector/pgvector)（PostgreSQL License，支持 PostgreSQL 13+；未复制代码）和 [Supabase 官方连接说明](https://supabase.com/docs/guides/database/connecting-to-postgres)。本轮采用编号和关键词检索，向量混合检索另行实施。
+1. Use Supabase-hosted PostgreSQL for knowledge and sessions. The user's explicit cloud requirement supersedes the earlier local database plan. Credentials remain only in the Git-ignored `.env`; running the application requires no local database installation.
+2. Download the 10 currently in-scope sources again from approved official domains (1 of the 11 manifest entries is out of scope). Do not overwrite original snapshots. Retain hash drift status and do not change old manifest hashes merely because downloading succeeds.
+3. Segment four rulings by numbered sections, preserving dates, applicable years, factual backgrounds, and ruling conclusion boundaries. They remain professionally unvalidated public rulings and are not sent to models or mixed into synthetic evaluation sets.
+4. Retrieve provisions by rule locations; provide deterministic keyword search for cases/materials, including Chinese research keyword mappings and case identifiers. Do not claim completion of vector hybrid retrieval. Original records carry sources, locations, snapshot/text hashes, capture dates, and drift statuses.
+5. Save the actual citations used by each analysis. The source sidebar supports original-text search, statutory/ruling passages, and official links. Show missing material and drift explicitly. Rebuilding indexes must not rewrite historical reports.
+6. Validate preservation of dates/sections, identifier/keyword retrieval, actual database loading, regression of the existing 10 synthetic cases, and page citations. Backup recovery, production authentication, and expert validation require separate acceptance.
+
+References: [official pgvector GitHub](https://github.com/pgvector/pgvector) (PostgreSQL License, PostgreSQL 13+ support; no code copied) and [official Supabase connection guide](https://supabase.com/docs/guides/database/connecting-to-postgres). This round uses identifier/keyword retrieval; vector hybrid retrieval is separate work.

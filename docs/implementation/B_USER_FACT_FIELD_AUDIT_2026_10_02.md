@@ -1,80 +1,88 @@
-# 用户侧字段核查表（GitHub 基线 + B 扩展）
+<a id="用户侧字段核查表github-基线--b-扩展"></a>
 
-核查日期：2026-10-02。原仓库 43 字段，B 聊天目录开放原有 42 个候选字段（排除 expert_decision_status），另有 11 个 B 字段，共 53 项；这不是要求用户逐项填完的表单。
+# User-Facing Field Audit (GitHub Baseline + B Extensions)
 
-原始字段来自 `Zhihong-Wu@7054c45`，与 `main@8974ee7` 的字段词典及规则一致。具体来源见 [追问设计](B_GUIDED_INTAKE_DESIGN_2026_10_02.md)。
+Audit date: 2026-10-02. The original repository has 43 fields. B exposes 42 candidate fields, excluding expert_decision_status, plus 11 B fields, for 53 total. This is not a form requiring every field.
 
-## 原有字段逐项对应
+Original fields are from `Zhihong-Wu@7054c45`, matching the dictionary/rules at `main@8974ee7`. See [follow-up design](B_GUIDED_INTAKE_DESIGN_2026_10_02.md) for sources.
 
-“用户侧”包含用户描述与其授权材料，不能由 C 的公开法规或参考案例补造。“判断陈述”只能保存为候选，用户确认事实不等于专业批准。“非入口必需”仍可能在具体节点阻断。
+<a id="原有字段逐项对应"></a>
 
-| 字段 | 含义 | 从谁获取/如何使用 | 原规则 required_facts | 候选场景识别是否必需 |
+## Original field mappings
+
+User-side information means user descriptions/authorized materials, not facts invented from C legislation/reference cases. Judgment statements remain candidates; user fact confirmation is not professional approval. Fields unnecessary for entry may still block specific nodes.
+
+| Field | Meaning | Source/use | Original required_facts | Required for candidate identification? |
 |---|---|---|---|---|
-| `entity_hk_business_status` | 收款实体是否在香港经营某行业、专业或业务 | 用户侧事实/材料；没有则保持缺项 | scope | 否 |
-| `mne_group_status` | 是否属于 FSIE 覆盖的跨国企业集团（MNE）实体 | 用户可提供陈述和材料；法律资格/充分性留最终判断，不直接向用户索取结论 | scope | 否 |
-| `regulated_financial_entity_status` | 是否属受规管金融实体的排除情形（判断链第4步） | 用户可提供陈述和材料；法律资格/充分性留最终判断，不直接向用户索取结论 | 未列入当前 6 条规则的必需字段 | 否 |
-| `pure_equity_holding_entity_status` | 是否纯股权持有实体，决定适用简化经济实质标准 | 用户可提供陈述和材料；法律资格/充分性留最终判断，不直接向用户索取结论 | economic_substance | 否 |
-| `entity_tax_residency` | 实体税务居民地 | 用户侧事实/材料；没有则保持缺项 | 未列入当前 6 条规则的必需字段 | 否 |
-| `income_type` | 收入类型；L0 纵切仅处理 dividend | 用户侧事实/材料；没有则保持缺项 | scope, income_characterisation | 是 |
-| `income_legal_character` | 是否构成本方案意义上的境外来源股息 | 用户可提供陈述和材料；法律资格/充分性留最终判断，不直接向用户索取结论 | income_characterisation | 否 |
-| `payer_entity` | 派息的被投资实体 | 用户侧事实/材料；没有则保持缺项 | income_characterisation | 否 |
-| `dividend_amount` | 股息金额（数值，币种见配对字段） | 用户侧事实/材料；没有则保持缺项 | 未列入当前 6 条规则的必需字段 | 否 |
-| `dividend_currency` | 股息币种 ISO 4217 | 用户侧事实/材料；没有则保持缺项 | 未列入当前 6 条规则的必需字段 | 否 |
-| `accrual_date` | 收入累算日期，用于选择生效规则版本 | 用户侧事实/材料；没有则保持缺项 | scope, income_characterisation | 否 |
-| `underlying_profit_period` | 股息对应的底层利润期间 | 用户侧事实/材料；没有则保持缺项 | income_characterisation | 否 |
-| `source_analysis` | 收入来源地分析 | 用户可提供陈述和材料；法律资格/充分性留最终判断，不直接向用户索取结论 | income_characterisation | 否 |
-| `receipt_location` | 股息是否在香港收取或视为在港收取 | 用户可提供陈述和材料；法律资格/充分性留最终判断，不直接向用户索取结论 | receipt | 否 |
-| `receipt_date` | 实际或视为收取日期 | 用户侧事实/材料；没有则保持缺项 | receipt | 否 |
-| `bank_or_account_path` | 收款账户、现金池与资金流转路径（统一替代旧名 receipt_account） | 用户侧事实/材料；没有则保持缺项 | receipt | 否 |
-| `set_off_or_clearing_arrangement` | 是否存在抵销、结算等视为收取安排 | 用户侧事实/材料；没有则保持缺项 | receipt | 否 |
-| `cash_pool_arrangement` | 是否涉及集团现金池 | 用户侧事实/材料；没有则保持缺项 | 未列入当前 6 条规则的必需字段 | 否 |
-| `payment_on_behalf_arrangement` | 是否存在代付安排 | 用户侧事实/材料；没有则保持缺项 | 未列入当前 6 条规则的必需字段 | 否 |
-| `direct_or_indirect_holding` | 直接或间接持股关系 | 用户侧事实/材料；没有则保持缺项 | participation_basic | 否 |
-| `investee_entity` | 被投资实体（与 payer_entity 相互核对） | 用户侧事实/材料；没有则保持缺项 | participation_basic | 否 |
-| `holding_percentage_pct` | 持股百分比（0-100），统一替代旧名 holding_percentage | 用户侧事实/材料；没有则保持缺项 | participation_basic | 否 |
-| `continuous_holding_period_months` | 收入累算前连续持股月数 | 用户侧事实/材料；没有则保持缺项 | participation_basic | 否 |
-| `acquisition_date` | 取得股权日期，用于核算连续持有期 | 用户侧事实/材料；没有则保持缺项 | 未列入当前 6 条规则的必需字段 | 否 |
-| `beneficial_owner_status` | 是否为受益所有人 | 用户可提供陈述和材料；法律资格/充分性留最终判断，不直接向用户索取结论 | 未列入当前 6 条规则的必需字段 | 否 |
-| `foreign_tax_on_dividend_or_underlying_profit` | 股息或其底层利润在境外是否被征合资格类似税项 | 用户可提供陈述和材料；法律资格/充分性留最终判断，不直接向用户索取结论 | participation_basic | 否 |
-| `foreign_nominal_tax_rate_pct` | 境外名义税率，与 15% 参考税率比较 | 用户陈述 + C 对应税种/期间的依据；不能与股息预提税率混用 | 未列入当前 6 条规则的必需字段 | 否 |
-| `foreign_tax_jurisdiction` | 境外征税地 | 用户侧事实/材料；没有则保持缺项 | 未列入当前 6 条规则的必需字段 | 否 |
-| `underlying_tax_deductible_status` | 底层利润税款在被投方所在地是否可税前扣除（反混合错配） | 用户侧事实/材料；没有则保持缺项 | 未列入当前 6 条规则的必需字段 | 否 |
-| `foreign_tax_credit_available` | 参股豁免不适用时是否可转境外税收抵免（switch-over） | 用户可提供陈述和材料；法律资格/充分性留最终判断，不直接向用户索取结论 | 未列入当前 6 条规则的必需字段 | 否 |
-| `entity_activity_profile` | 在港进行的核心创收活动描述 | 用户侧事实/材料；没有则保持缺项 | economic_substance | 否 |
-| `hk_adequate_employees` | 在港是否有足够合资格雇员（充分性属人工判断） | 用户可提供陈述和材料；法律资格/充分性留最终判断，不直接向用户索取结论 | economic_substance | 否 |
-| `hk_adequate_premises` | 在港是否有足够经营场所 | 用户可提供陈述和材料；法律资格/充分性留最终判断，不直接向用户索取结论 | economic_substance | 否 |
-| `hk_operating_expenditure_amount` | 在港发生的经营支出金额 | 用户侧事实/材料；没有则保持缺项 | economic_substance | 否 |
-| `hk_operating_expenditure_currency` | 经营支出币种 | 用户侧事实/材料；没有则保持缺项 | 未列入当前 6 条规则的必需字段 | 否 |
-| `strategic_decision_making_location` | 战略性决策作出地 | 用户侧事实/材料；没有则保持缺项 | economic_substance | 否 |
-| `outsourcing_and_supervision` | 活动外包及在港监督情况 | 用户侧事实/材料；没有则保持缺项 | economic_substance | 否 |
-| `hybrid_mismatch_arrangement` | 是否存在混合错配安排 | 用户可提供陈述和材料；法律资格/充分性留最终判断，不直接向用户索取结论 | 未列入当前 6 条规则的必需字段 | 否 |
-| `main_purpose_tax_benefit_flag` | 安排主要目的是否为获取税务利益（强制人工判断） | 用户可提供陈述和材料；法律资格/充分性留最终判断，不直接向用户索取结论 | participation_basic | 否 |
-| `restructuring_near_income_date` | 收入累算前后是否存在临近重组 | 用户侧事实/材料；没有则保持缺项 | 未列入当前 6 条规则的必需字段 | 否 |
-| `commercial_rationale` | 商业合理性说明 | 用户侧事实/材料；没有则保持缺项 | 未列入当前 6 条规则的必需字段 | 否 |
-| `evidence_inventory` | 案件证据清单及其状态（provided/missing/conflict/not_applicable） | 用户材料目录 + 系统实收记录；自述已提供不等于附件已验证 | human_gate | 否 |
-| `expert_decision_status` | 人工/专家复核状态，供强制人工门控使用 | 最终顾问/系统；聊天与事实编辑禁止写入 | human_gate | 否 |
+| `entity_hk_business_status` | Whether the recipient carries on a trade, profession, or business in Hong Kong | User facts/materials; remain missing if absent | scope | No |
+| `mne_group_status` | Whether the entity belongs to an MNE group covered by FSIE | User statements/materials; legal eligibility/adequacy remains for final judgment, not a conclusion requested from the user | scope | No |
+| `regulated_financial_entity_status` | Whether the regulated financial entity exclusion applies (decision step 4) | User statements/materials; legal eligibility/adequacy remains for final judgment, not a conclusion requested from the user | Not required by the current 6 rules | No |
+| `pure_equity_holding_entity_status` | Pure equity-holding status, determining simplified economic substance requirements | User statements/materials; legal eligibility/adequacy remains for final judgment, not a conclusion requested from the user | economic_substance | No |
+| `entity_tax_residency` | Entity tax residence | User facts/materials; remain missing if absent | Not required by the current 6 rules | No |
+| `income_type` | Income class; the L0 vertical slice handles dividend only | User facts/materials; remain missing if absent | scope, income_characterisation | Yes |
+| `income_legal_character` | Whether the income is foreign-sourced dividends within this framework | User statements/materials; legal eligibility/adequacy remains for final judgment, not a conclusion requested from the user | income_characterisation | No |
+| `payer_entity` | Investee paying the dividend | User facts/materials; remain missing if absent | income_characterisation | No |
+| `dividend_amount` | Numeric dividend amount; currency is in the paired field | User facts/materials; remain missing if absent | Not required by the current 6 rules | No |
+| `dividend_currency` | Dividend currency, ISO 4217 | User facts/materials; remain missing if absent | Not required by the current 6 rules | No |
+| `accrual_date` | Accrual date for selecting the effective rule version | User facts/materials; remain missing if absent | scope, income_characterisation | No |
+| `underlying_profit_period` | Underlying profit period for the dividend | User facts/materials; remain missing if absent | income_characterisation | No |
+| `source_analysis` | Income source analysis | User statements/materials; legal eligibility/adequacy remains for final judgment, not a conclusion requested from the user | income_characterisation | No |
+| `receipt_location` | Whether received or deemed received in Hong Kong | User statements/materials; legal eligibility/adequacy remains for final judgment, not a conclusion requested from the user | receipt | No |
+| `receipt_date` | Actual/deemed receipt date | User facts/materials; remain missing if absent | receipt | No |
+| `bank_or_account_path` | Receipt account, cash pooling, fund path; replaces receipt_account | User facts/materials; remain missing if absent | receipt | No |
+| `set_off_or_clearing_arrangement` | Set-off, clearing, or other deemed-receipt arrangements | User facts/materials; remain missing if absent | receipt | No |
+| `cash_pool_arrangement` | Group cash pooling | User facts/materials; remain missing if absent | Not required by the current 6 rules | No |
+| `payment_on_behalf_arrangement` | Payment-on-behalf arrangements | User facts/materials; remain missing if absent | Not required by the current 6 rules | No |
+| `direct_or_indirect_holding` | Direct/indirect ownership relationship | User facts/materials; remain missing if absent | participation_basic | No |
+| `investee_entity` | Investee entity, cross-checked against payer_entity | User facts/materials; remain missing if absent | participation_basic | No |
+| `holding_percentage_pct` | Ownership percentage (0–100); replaces holding_percentage | User facts/materials; remain missing if absent | participation_basic | No |
+| `continuous_holding_period_months` | Continuous ownership months before accrual | User facts/materials; remain missing if absent | participation_basic | No |
+| `acquisition_date` | Share acquisition date for continuous holding calculations | User facts/materials; remain missing if absent | Not required by the current 6 rules | No |
+| `beneficial_owner_status` | Beneficial owner status | User statements/materials; legal eligibility/adequacy remains for final judgment, not a conclusion requested from the user | Not required by the current 6 rules | No |
+| `foreign_tax_on_dividend_or_underlying_profit` | Whether dividend/underlying profits bear qualifying similar foreign tax | User statements/materials; legal eligibility/adequacy remains for final judgment, not a conclusion requested from the user | participation_basic | No |
+| `foreign_nominal_tax_rate_pct` | Foreign nominal rate compared with the 15% reference rate | User statements + C evidence for the tax/period; do not confuse with dividend withholding rates | Not required by the current 6 rules | No |
+| `foreign_tax_jurisdiction` | Foreign taxing jurisdiction | User facts/materials; remain missing if absent | Not required by the current 6 rules | No |
+| `underlying_tax_deductible_status` | Deductibility of underlying profit tax in the investee jurisdiction (anti-hybrid mismatch) | User facts/materials; remain missing if absent | Not required by the current 6 rules | No |
+| `foreign_tax_credit_available` | Foreign tax credit switchover availability when participation exemption does not apply | User statements/materials; legal eligibility/adequacy remains for final judgment, not a conclusion requested from the user | Not required by the current 6 rules | No |
+| `entity_activity_profile` | Core income-generating activities in Hong Kong | User facts/materials; remain missing if absent | economic_substance | No |
+| `hk_adequate_employees` | Adequate qualified Hong Kong employees; adequacy requires human judgment | User statements/materials; legal eligibility/adequacy remains for final judgment, not a conclusion requested from the user | economic_substance | No |
+| `hk_adequate_premises` | Adequate Hong Kong business premises | User statements/materials; legal eligibility/adequacy remains for final judgment, not a conclusion requested from the user | economic_substance | No |
+| `hk_operating_expenditure_amount` | Hong Kong operating expenditure amount | User facts/materials; remain missing if absent | economic_substance | No |
+| `hk_operating_expenditure_currency` | Operating expenditure currency | User facts/materials; remain missing if absent | Not required by the current 6 rules | No |
+| `strategic_decision_making_location` | Strategic decision location | User facts/materials; remain missing if absent | economic_substance | No |
+| `outsourcing_and_supervision` | Outsourcing and supervision in Hong Kong | User facts/materials; remain missing if absent | economic_substance | No |
+| `hybrid_mismatch_arrangement` | Hybrid mismatch arrangements | User statements/materials; legal eligibility/adequacy remains for final judgment, not a conclusion requested from the user | Not required by the current 6 rules | No |
+| `main_purpose_tax_benefit_flag` | Whether obtaining tax benefits is a main purpose; mandatory human judgment | User statements/materials; legal eligibility/adequacy remains for final judgment, not a conclusion requested from the user | participation_basic | No |
+| `restructuring_near_income_date` | Restructuring close to accrual | User facts/materials; remain missing if absent | Not required by the current 6 rules | No |
+| `commercial_rationale` | Commercial rationale | User facts/materials; remain missing if absent | Not required by the current 6 rules | No |
+| `evidence_inventory` | Evidence inventory/statuses: provided/missing/conflict/not_applicable | User inventory + actual system receipts; claimed provision does not validate attachments | human_gate | No |
+| `expert_decision_status` | Human/expert review status for the mandatory gate | Final advisor/system; chat and fact edits cannot write this | human_gate | No |
 
-## B 的补充输入与作用
+<a id="b-的补充输入与作用"></a>
 
-| 字段 | 含义 | 何时收集 |
+## B extension inputs and roles
+
+| Field | Meaning | Collection timing |
 |---|---|---|
-| `recipient_type` | 收款主体 | 候选场景识别必需 |
-| `analysis_jurisdiction` | 本次分析的地区 | 候选场景识别必需 |
-| `consultation_goal` | 本次咨询目标 | 候选场景识别必需 |
-| `payer_jurisdiction` | 派息方所在地区 | 后续跨境背景核对，不阻断候选场景识别 |
-| `income_event_status` | 收入已发生还是计划发生 | 按当前任务的必要事实收集 |
-| `group_structure_description` | 集团成员与经营地区描述 | 按当前任务的必要事实收集 |
-| `hk_staff_description` | 在港员工人数与职责描述 | 按当前任务的必要事实收集 |
-| `hk_premises_description` | 在港场所及用途描述 | 按当前任务的必要事实收集 |
-| `foreign_tax_description` | 境外缴税实际情况 | 按当前任务的必要事实收集 |
-| `dividend_form` | 股息支付形式 | 收取分支区分现金/实物；不作为所有场景的入口门槛 |
-| `transaction_flow_description` | 非现金资产及流转描述 | 收取分支区分现金/实物；不作为所有场景的入口门槛 |
+| `recipient_type` | Recipient type | Required for candidate scenario identification |
+| `analysis_jurisdiction` | Jurisdiction analyzed in this inquiry | Required for candidate scenario identification |
+| `consultation_goal` | Consultation objective | Required for candidate scenario identification |
+| `payer_jurisdiction` | Payer jurisdiction | Later cross-border background checks; not an identification blocker |
+| `income_event_status` | Occurred versus planned income | Collect as required by the current task |
+| `group_structure_description` | Group members and operating jurisdictions | Collect as required by the current task |
+| `hk_staff_description` | Hong Kong employee numbers and responsibilities | Collect as required by the current task |
+| `hk_premises_description` | Hong Kong premises and usage | Collect as required by the current task |
+| `foreign_tax_description` | Actual foreign taxation | Collect as required by the current task |
+| `dividend_form` | Dividend payment form | Receipt branch distinguishes cash/in-kind; not a universal entry gate |
+| `transaction_flow_description` | Noncash assets and transfer flow | Receipt branch distinguishes cash/in-kind; not a universal entry gate |
 
-## 本轮保留的边界
+<a id="本轮保留的边界"></a>
 
-- 原规则 required_facts 与求值器读取项有差异；追问策略另有明确的任务依赖，不能依据代码未报错宣称事实完整。
-- 4 张裁定研究卡中的非现金分配、现金池/再投资、企业税与预提税、未披露员工数量等，用于核查建模缺口，不能把裁定申请人的事实移植到用户案件。
-- 非现金路径、税项描述目前采用结构化字段内的文字描述；尚无多实体交易图、双税种明细表或自动适用裁定的能力。
-- 文件上传/材料解析不在 A 当前聊天入口的本轮实现内。本轮支持用户描述、候选事实与材料清单，不宣称已经读到客户凭证。
-- C 的法规、规则、来源版本、适用期间、展示/入模许可与检索覆盖属于检索接口输出；不向用户追问“应该使用哪个法条版本/哈希”。
-- 列表/未知值保持原类型；不自动生成真实公司名称、账户号、税率或交易日。
+## Retained boundaries
+
+- Original required_facts differ from actual evaluator reads. Follow-ups have explicit task dependencies; error-free code does not establish complete facts.
+- The 4 ruling cards highlight modeling gaps around noncash distributions, pooling/reinvestment, corporate/withholding taxes, and undisclosed staff counts. Do not transfer applicants’ facts into user cases.
+- Noncash paths/tax descriptions are text within structured fields. There is no multi-entity graph, two-tax ledger, or automatic ruling applicability.
+- File upload/parsing is outside this round’s A chat entry. User descriptions, candidates, and inventories do not establish that client evidence was read.
+- C returns legislation, rules, versions, periods, display/model permissions, and coverage. Do not ask users which statutory version/hash to use.
+- Retain list/unknown types; do not invent real company names, account numbers, rates, or transaction dates.

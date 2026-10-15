@@ -1,221 +1,267 @@
-# B 模块：Agent 业务规则 v0.3
+<a id="b-模块agent-业务规则-v03"></a>
 
-2026-10-02 实现更新：第 9～13 节的对话设计由 [动态追问与兜底实现规范](../implementation/B_GUIDED_INTAKE_DESIGN_2026_10_02.md) 细化落实。实际字段来源见 [用户侧字段核查表](../implementation/B_USER_FACT_FIELD_AUDIT_2026_10_02.md)。下文早期“尚未实现”描述保留为设计历史，本轮对话策略以新增第 14 节为准；47 条通用规则仍未全部接入 DSL 执行器。
+# Module B: Agent business rules v0.3
 
-| 项目 | 内容 |
+2026-10-02 Implementation update: The dialogue design of Sections 9 to 13 was refined and implemented by [Dynamic follow-up and fallback implementation specification](../implementation/B_GUIDED_INTAKE_DESIGN_2026_10_02.md). See [User-facing field audit](../implementation/B_USER_FACT_FIELD_AUDIT_2026_10_02.md) for the actual field source. The early "not yet implemented" description below is retained as design history, and the dialogue strategy for this round is subject to the new Section 14; not all 47 general rules are connected to the DSL executor.
+
+| Item | Content |
 |---|---|
-| 日期 | 2026-10-02 |
-| 状态 | 可评审规则设计 + 结构化配置草案；尚未接入业务运行时 |
-| 依据 | [业务流程 v0.3](AGENT_BUSINESS_WORKFLOW_V0_1.md)、一周工作计划、[产品方向](../product/STRATEGIC_PRODUCT_PLAN.md)和现有环境策略 |
-| 适用范围 | 首先落在香港境外股息 FSIE 的 L0 合成案例；公共流程规则可供后续规则包复用 |
-| 结构化版本 | [agent_business_rules.v0.1.json](agent_business_rules.v0.1.json)覆盖 BR-01～47；本次新增对话规则以第9～13节为设计依据，尚未编码进该配置 |
+| Date | 2026-10-02 |
+| Status | Reviewable rule design + structured configuration draft; not yet connected to the business runtime |
+| Basis | [Business process v0.3](AGENT_BUSINESS_WORKFLOW_V0_1.md), work week plan, [Product direction](../product/STRATEGIC_PRODUCT_PLAN.md) and existing environment policies |
+| Scope of application | Initially applies to L0 synthetic cases for Hong Kong foreign-sourced dividend FSIE; the common workflow rules can be reused by subsequent rule packages |
+| structured version | [agent_business_rules.v0.1.json](agent_business_rules.v0.1.json) covers BR-01~47; the new dialogue rules in this revision are designed based on sections 9~13, and have not yet been coded into this configuration. |
 
-## 1. 要解决的业务问题
+<a id="1-要解决的业务问题"></a>
 
-Agent 应当能判断：用户在问哪件事、当前支持多少、缺什么才会影响下一步、该调用哪个工具、何时等待、什么时候能出稿，以及顾问修改后该重算什么。
+## 1. Business problem to be solved
 
-产品长期目标包含真实跨境业务理解与有限方案比较；当前能演示的分析范围和部署功能开关分别控制实际行为。提到一个国家不等于该国家已经有规则包，提到优化目标不等于可以调用优化工具。流程规则本身不规定税率、持股门槛或免税资格；这些由独立、版本化的税务规则包提供。
+The agent should be able to determine: what the user is asking, how much is currently supported, what is missing that will affect the next step, which tool to call, when to wait, when a draft can be generated, and what should be recalculated after the advisor makes changes.
 
-**业务流程只有最后一个顾问复核环节。** 中间可由用户核对记录、补充资料；专业判断暂存为待最终复核事项。最终顾问可退回修改，修订稿仍回到同一个复核环节。用户核对不能自动把事实标记成专业已确认。
+The long-term product goals include understanding real cross-border transactions and comparing a limited set of options. The currently validated analysis scope and deployment feature switches each constrain actual behavior. Mentioning a country does not mean that the country already has a rule package, and mentioning optimization goals does not mean that optimization tools can be called. The process rules themselves do not specify tax rates, shareholding thresholds, or tax-exempt status; these are provided by independent, versioned tax rule packages.
 
-| 业务目标 | Agent 行为约束 | 主要规则 |
+**The business workflow has one final advisor review stage.** Users can check records and supplement information in the interim; professional judgments are temporarily reserved for final review. In the end, the advisor can return the draft for revision, and the revised draft will still go back to the same review stage. User verification cannot automatically mark facts as professionally confirmed.
+
+| business goals | Agent behavior constraints | Main rules |
 |---|---|---|
-| 尽早判断能做什么 | 先检查范围和能力，不先问完整张事实表 | BR-04～07 |
-| 少问且问到关键 | 按当前节点取必需事实，同值同版本不重复问 | BR-10～15、26～29 |
-| 有依据地分析 | 实际检索、覆盖核验、确定性计算、节点校验依次执行 | BR-16～21 |
-| 一个争点卡住时仍能推进 | 仅阻塞依赖项，继续独立节点 | BR-09、19、22 |
-| 输出可复核 | 每项主张有事实/规则/法源版本，缺口不得省略 | BR-25、32～37 |
-| 案件可持续处理 | 等待、恢复、修改和批准绑定具体版本 | BR-26～29、38～47 |
+| Decide early what can be done | Check scope and capabilities first, don’t ask the entire fact sheet first | BR-04～07 |
+| Ask less and ask the key questions | Ask for facts required by the current node; do not recheck the same value and version. | BR-10～15、26～29 |
+| Analyze with evidence | Actual retrieval, coverage verification, deterministic calculation, and node verification are executed in sequence. | BR-16～21 |
+| You can still advance when you are stuck on a dispute point | Block dependencies only, continue standalone nodes | BR-09、19、22 |
+| Output can be reviewed | Each claim has a fact/rule/source of law version, and gaps must not be omitted. | BR-25、32～37 |
+| Cases can be resumed and maintained | Bind waiting, resumption, revision, and approval to specific versions | BR-26～29、38～47 |
 
-## 2. 典型业务场景
+<a id="2-典型业务场景"></a>
 
-以下是产品行为示例，不是具体案件的税务答案。
+## 2. Typical business scenarios
 
-| 用户说法或事件 | Agent 应做什么 | 能输出什么 |
+The following are examples of product behavior and are not case-specific tax answers.
+
+| User statements or events | What the agent should do | What can be output |
 |---|---|---|
-| “我们有一笔境外收入，要交多少税？” | 先澄清收入类型、涉及实体/地区和交易期间；选择能力包后再问节点事实 | 当前范围、一个主要问题；暂不报税额 |
-| “香港公司收到境外股息，帮我分析。” | 建立股息争点；按规则包逐节点补事实、检索、运行和校验 | 带依据、假设和缺口的内部研究稿，等待最终复核 |
-| “还没分红，计划年底操作。” | 区分计划日期、预计值和实际事实；未来规则不确定时标注适用假设 | 条件式研究结果，不把计划当已发生 |
-| “合同写 100 万，到账记录是 80 万。” | 标记金额冲突，询问是否不同批次、扣款或币种等；未经澄清不选一方 | 冲突说明及资料需求；独立判断继续 |
-| “持股时间我不知道，先看已有资料。” | unknown 保留；登记用户明确选择的部分稿范围 | 可支持部分和缺口清单；依赖持股时间的结论暂停 |
-| “帮我比较内地、香港、新加坡哪条路线最省税。” | 拆分每个地区及目标；当前禁用优化，不进行排名；支持的香港争点继续 | 明确范围的局部分析、未覆盖项和后续资料需求 |
-| “我们有员工和办公室，是否满足经济实质？” | 提取可核对的事实，整理依据；专业充分性进入最终待判清单 | 事实与支持/限制材料，不自动认定条件满足 |
-| “经第三国转运，是否能少交关税？” | 识别为货物/关税主题；无包则说明不覆盖，不套用股息包 | 范围说明，最终统一复核 |
-| 用户上传同一份文件/离开页面 | 内容去重、保留当前问题和进度；离开不代表允许部分稿 | 可恢复的案件状态 |
-| 顾问最后修改金额或批准时资料已更新 | 修改生成新版本并重算；拒绝过时批准 | 新的校验稿，再进入最终复核 |
+| “We have a foreign income, how much tax do we have to pay?” | First clarify the revenue type, involved entities/regions and transaction period; select the capability package before asking for node facts | Current scope, one major issue; tax amount not yet reported |
+| "Hong Kong companies receive foreign-sourced dividends, help me analyze them." | Identify dividend issues; collect facts, retrieve evidence, execute rules, and validate each node | Internal research draft with basis, assumptions and gaps, awaiting final review |
+| "We haven't paid any dividends yet, but we plan to operate it at the end of the year." | Distinguish between plan dates, projected values and actual facts; note applicable assumptions when future rules are uncertain | Conditional research results, do not treat the plan as having happened |
+| "The contract says 1 million, and the receipt record is 800,000." | Mark amount conflicts and ask whether they are different batches, deductions or currencies, etc.; do not choose one side without clarification | Conflict explanation and information needed; independent decisions continue |
+| "I don't know the holding period. Let's look at the existing information first." | Preserve unknowns; record the partial-draft scope explicitly selected by the user | Supportable partial results and gap list; suspend conclusions that depend on the holding period |
+| "Help me compare which route is the most tax-saving among Mainland China, Hong Kong and Singapore." | Split each region and target; optimization is currently disabled and no ranking is performed; supported Hong Kong points continue | Clear scope of partial analysis, uncovered items, and follow-up data requirements |
+| "We have employees and offices, do we meet the economic substance?" | Extract verifiable facts and organize the basis; professional adequacy is entered into the final to-be-judged list | Facts and supporting/limiting material, do not automatically assume conditions are met |
+| “Can I pay less customs duties if it is transshipped through a third country?” | Identified as a goods/tariff subject; if there is no package, it means it is not covered and the dividend package is not applied. | Scope statement, final unified review |
+| User uploads the same file/leaves the page | Deduplicate content and retain current issues and progress; leaving does not mean partial drafts are allowed | Recoverable case status |
+| The advisor changes an amount at final review, or information changes during approval | Modify to generate a new version and recalculate; reject outdated approval | New review draft, then enter the final review |
 
-多实体交易至少分别保存所有权、合同关系、实际付款和货物流；各事实绑定实体/交易及日期。没有提供的实体或中间国家不能凭模型推理新增。相关能力未启用时只登记范围。
+Multi-entity transactions at least preserve ownership, contractual relationships, actual payments and goods flow respectively; each fact is bound to the entity/transaction and date. Entities or intermediate countries that are not provided cannot be added based on model reasoning. Only the scope is registered when the relevant capabilities are not enabled.
 
-## 3. 规则如何执行
+<a id="3-规则如何执行"></a>
 
-结构化配置采用 **分阶段、按优先级命中第一条规则**。每次只返回一个动作，动作完成后由编排器进入下一阶段或回调度器。不同节点可分别决策，但同一案件只展示一个主要问题或一组相关事实卡。
+## 3. How the rules are implemented
 
-- 每条外部输入、用户回复、最终复核动作均先走 admission；每次工具执行仍要重新检查该工具和数据权限。
-- 阶段内数字越小优先级越高，最后一条兜底仅在字段完整、类型及枚举合法时适用。
-- 缺字段、未知枚举、未知阶段、工具返回不符合契约均为配置/技术错误；不能当作 false 或自动命中“允许”。
-- `all` 表示全部条件满足，`any` 表示任一满足；`eq` 严格相等，`in` 表示枚举成员；空 `all` 为合法上下文下的兜底。不执行自然语言表达式或 eval。
-- 字段由服务端读取权限、版本、队列及工具结果后生成。模型只提出候选值与动作，不能自报 `access_allowed=true` 或 `report_validation=passed`。
-- 配置中的 `outcome` 是编排决策结果，包含中间动作状态；不等同于现有数据库枚举。持久化映射须另行实现。
+The structured configuration uses **first-match evaluation within each stage, in priority order**. Only one action is returned at a time. After the action is completed, the orchestrator enters the next stage or returns to the scheduler. Different nodes can make decisions separately, but the same case only displays one main issue or a set of related fact cards.
 
-每次决策最少记录：`decision_id / rule_id / config_version / case_id / issue_id / node_id / request_id / input_snapshot_id / action / reason / result / timestamp`。身份和组织来自认证上下文；日志引用证据 ID，避免复制无必要的案情正文。
+- Every external input, user reply, and final review action goes through admission first; the tool and data permissions still need to be rechecked every time the tool is executed.
+- The smaller the number in the stage, the higher the priority. The fallback applies only when the fields are complete and the type and enumeration are legal.
+- Missing fields, unknown enumerations, unknown stages, and tool returns that do not comply with the contract are configuration/technical errors; they cannot be treated as false or automatically hit "allow".
+- `all` means all conditions are met, `any` means any one is met; `eq` is strictly equal, `in` means enumeration members; an empty `all` is a fallback match in a valid context. Do not perform natural language expressions or eval.
+- Fields are generated by the server after reading permissions, versions, queues and tool results. The model only proposes candidate values and actions, and cannot self-report `access_allowed=true` or `report_validation=passed`.
+- `outcome` in the configuration is the result of the orchestration decision and contains intermediate action states; it is not equivalent to the existing database enumeration. Persistent mapping must be implemented separately.
 
-阶段流转：admission → scope → node → evidence → result → aggregate；用户事件从 user_event 恢复，技术故障进入 tool_error。aggregate 出稿后进入 report，通过才进入 review。版本变化走 change 后回调度器。BR-03 中的输入筛查是既有检查结果的记录；不得在允许入模之后才首次做筛查。
+Minimum record of each decision: `decision_id / rule_id / config_version / case_id / issue_id / node_id / request_id / input_snapshot_id / action / reason / result / timestamp`. Identity and organization come from the authentication context; logs reference evidence IDs to avoid unnecessary duplication of case text.
 
-以上为案件分析配置路径。新增对话入口在 admission 后选择一般资料答复或案件路径；一般资料答复不直接套用 BR-18 的运行税务规则动作。新增规则详见第9～13节，未实现入口分流前不能将现有 JSON 宣称为完整聊天 Agent 配置。
+Stage flow: admission → scope → node → evidence → result → aggregate. User events resume through `user_event`; technical failures enter `tool_error`. After aggregation authorizes a draft, proceed to `report`; enter `review` only after text validation passes. Version changes pass through `change` and return to the scheduler. BR-03 records an existing input-screening result; screening must happen before content is admitted to the model.
 
-## 4. 完整决策表
+The above is the case analysis configuration path. The new dialogue entry is to select the general information reply or case path after admission; the general information reply does not directly apply the BR-18 running tax rule action. For details on the new rules, see Sections 9 to 13. Existing JSON cannot be declared as a complete chat agent configuration before ingress diversion is implemented.
 
-“条件”中的概念字段定义见第 5 节及 JSON 的 `field_catalog`。每阶段按下表顺序匹配。工具名为拟建调用契约，不能理解成仓库已有实现。
+<a id="4-完整决策表"></a>
 
-### admission：输入与权限
+## 4. Complete decision table
 
-| 编号 | 触发条件 | Agent 动作 | 输出状态 |
+The concept fields in "conditions" are defined in Section 5 and JSON's `field_catalog`. Each stage is matched in the order listed below. The tool name is the proposed call contract, which cannot be understood to mean that the repository has already been implemented.
+
+<a id="admission输入与权限"></a>
+
+### admission: input and permissions
+
+| No. | Trigger condition | Agent action | Output status |
 |---|---|---|---|
-| BR-01 越权请求阻断 | `access_allowed` = `false` | `block_request`：保留原案件；不向调用者暴露无权限的案情。 | `blocked` |
-| BR-02 环境或输入不合格 | `data_allowed` = `false`；或 `input_valid` = `false` | `block_invalid_input`：阻断本次处理并记录受限诊断；不把原始敏感数据复制到审计日志。 | `blocked` |
-| BR-03 允许进入业务流程 | 本阶段前述规则均未命中（合法上下文） | `accept_input`：读取可信案件上下文；仅将获准内容传给后续模型或工具。 | `accepted` |
+| BR-01 Blocking of unauthorized requests | `access_allowed` = `false` | `block_request`: Keep the original case; do not expose unauthorized case details to the caller. | `blocked` |
+| BR-02 The environment or input is unqualified | `data_allowed` = `false`; or `input_valid` = `false` | `block_invalid_input`: Block this processing and record restricted diagnosis; do not copy the original sensitive data to the audit log. | `blocked` |
+| BR-03 Allow entry into business process | None of the aforementioned rules are hit at this stage (valid context) | `accept_input`: Read trusted case context; only pass approved content to subsequent models or tools. | `accepted` |
 
-### scope：业务范围与能力
+<a id="scope业务范围与能力"></a>
 
-| 编号 | 触发条件 | Agent 动作 | 输出状态 |
+### scope: business scope and capabilities
+
+| No. | Trigger condition | Agent action | Output status |
 |---|---|---|---|
-| BR-04 范围不明确 | `capability` = `"need_scope"` | `ask_scope`：只问足以选择规则包的范围信息；同版本待答问题复用。 | `waiting_user` |
-| BR-05 请求全部不支持 | `capability` = `"unsupported"` | `record_unsupported_scope`：登记全部未覆盖项；通过汇总与报告校验后形成范围说明，不输出税务结论。 | `scope_only` |
-| BR-06 请求部分支持 | `capability` = `"partial"` | `split_supported_issues`：支持争点继续，其他争点标 unsupported；禁止把局部结论描述成跨国完整结论。 | `partial_scope` |
-| BR-07 请求在已启用范围内 | 本阶段前述规则均未命中（合法上下文） | `build_issue_nodes`：依据能力包创建节点和依赖；交易计划与已发生事实分开建模。 | `scheduled` |
+| BR-04 unclear scope | `capability` = `"need_scope"` | `ask_scope`: Only ask for enough range information to select the rule package; reuse the same version of unanswered questions. | `waiting_user` |
+| BR-05 Request is entirely unsupported | `capability` = `"unsupported"` | `record_unsupported_scope`: Register all uncovered items; form a scope description after verification of summary and report, and do not output tax conclusions. | `scope_only` |
+| BR-06 Request is partly supported | `capability` = `"partial"` | `split_supported_issues`: Continue supported issues, and mark other issues as unsupported; it is forbidden to describe partial conclusions as transnational complete conclusions. | `partial_scope` |
+| BR-07 Request is within enabled scope | None of the aforementioned rules are hit at this stage (valid context) | `build_issue_nodes`: Create nodes and dependencies based on the capability package; the transaction plan and the facts that have occurred are modeled separately. | `scheduled` |
 
-### node：事实与节点前置条件
+<a id="node事实与节点前置条件"></a>
 
-| 编号 | 触发条件 | Agent 动作 | 输出状态 |
+### node: facts and node preconditions
+
+| No. | Trigger condition | Agent action | Output status |
 |---|---|---|---|
-| BR-08 依赖图错误 | `dependency_state` = `"invalid"` | `stop_invalid_graph`：记录循环或不存在的节点引用；修复前不能生成实质分析稿。 | `technical_error` |
-| BR-09 当前节点依赖未满足 | `dependency_state` = `"blocked"` | `record_dependency_block`：记录具体上游和条件，回调度器处理独立节点。 | `blocked_dependency` |
-| BR-10 同版本问题已在等待 | `question_pending` = `true` | `reuse_pending_question`：不重新提问；新输入出现时先核销或替换过期问题，再评价当前节点。 | `waiting_user` |
-| BR-11 关键事实冲突 | `fact_gate` = `"conflict"` | `ask_conflict`：展示互相矛盾的值及出处，请用户澄清；不以最新文档或模型置信度自动选边。 | `waiting_user` |
-| BR-12 缺少必需事实 | `fact_gate` = `"missing"` | `ask_required_fact`：只补当前节点决定性信息；金额、日期、主体等未知不得默认零、今天或否。 | `waiting_user` |
-| BR-13 候选提取值需要核对 | `fact_gate` = `"needs_ack"` | `ask_fact_ack`：提供原文和事实卡；用户核对绑定事实版本，不生成 advisor_confirmed。 | `waiting_user` |
-| BR-14 事实不满足运行策略 | `fact_gate` = `"unusable"` | `record_fact_policy_gap`：有值或用户已核对仍不代表可运算；不能通过提升事实状态绕过运行策略。 | `paused_gap` |
-| BR-15 足以开展当前节点预分析 | 本阶段前述规则均未命中（合法上下文） | `prepare_analysis_snapshot`：冻结允许使用的事实及出处；L0 显式研究假设另存快照并保留原候选状态。 | `ready_for_sources` |
+| BR-08 Dependency graph error | `dependency_state` = `"invalid"` | `stop_invalid_graph`: Record circular or non-existent node references; no substantive analysis draft can be generated until repaired. | `technical_error` |
+| BR-09 The current node dependencies are not satisfied | `dependency_state` = `"blocked"` | `record_dependency_block`: Record the specific upstream and conditions, and call back to the scheduler to process the independent node. | `blocked_dependency` |
+| BR-10 A question for the same version is already pending | `question_pending` = `true` | `reuse_pending_question`: Do not re-question; when new input appears, expired questions will be written off or replaced first, and then the current node will be evaluated. | `waiting_user` |
+| BR-11 Conflict of Key Facts | `fact_gate` = `"conflict"` | `ask_conflict`: Displays conflicting values and sources, asking the user for clarification; does not automatically select sides based on the latest document or model confidence. | `waiting_user` |
+| BR-12 Missing required facts | `fact_gate` = `"missing"` | `ask_required_fact`: Only the decisive information of the current node is supplemented; the amount, date, subject, etc. are unknown and cannot default to zero, today or no. | `waiting_user` |
+| BR-13 Candidate extraction values need to be checked | `fact_gate` = `"needs_ack"` | `ask_fact_ack`: Provide the original text and fact cards; the user checks the bound fact version, and advisor_confirmed is not generated. | `waiting_user` |
+| BR-14 Facts do not satisfy the operating policy | `fact_gate` = `"unusable"` | `record_fact_policy_gap`: Having a value or being checked by the user still does not mean it is operable; the running policy cannot be bypassed by improving the fact state. | `paused_gap` |
+| BR-15 Facts are sufficient for preliminary analysis of this node | None of the aforementioned rules are hit at this stage (valid context) | `prepare_analysis_snapshot`: Freeze allowed facts and provenance; For explicit L0 research assumptions, create a separate snapshot and preserve the original candidate state. | `ready_for_sources` |
 
-### evidence：检索与依据覆盖
+<a id="evidence检索与依据覆盖"></a>
 
-| 编号 | 触发条件 | Agent 动作 | 输出状态 |
+### evidence: retrieval and basis coverage
+
+| No. | Trigger condition | Agent action | Output status |
 |---|---|---|---|
-| BR-16 尚未检索或覆盖核验 | `coverage` = `"not_checked"` | `retrieve_and_check`：按争点、主体、法域、税种、交易期间和规则版本检索，并检查例外及相反材料。 | `coverage_pending` |
-| BR-17 依据存在缺口或冲突 | `coverage` 属于 `["gap", "stale", "conflict"]` | `record_source_gap`：保留具体缺失或冲突；历史交易可用其适用的历史版本，旧发布日期本身不等于过期。 | `paused_gap` |
-| BR-18 依据满足当前运行策略 | 本阶段前述规则均未命中（合法上下文） | `execute_rules`：使用版本化规则和确定性计算；模型不能自填税率或阈值。 | `execution_pending` |
+| BR-16 Retrieval or coverage has not yet been checked | `coverage` = `"not_checked"` | `retrieve_and_check`: Search by issue, subject, jurisdiction, tax type, transaction period and rule version, and check for exceptions and contrary materials. | `coverage_pending` |
+| BR-17 There are gaps or conflicts in the basis | `coverage` belongs to `["gap", "stale", "conflict"]` | `record_source_gap`: Preserve specific gaps or conflicts; historical transactions can be used in their applicable historical versions, and the old release date itself does not mean expiration. | `paused_gap` |
+| BR-18 Evidence satisfies the current execution policy | None of the aforementioned rules are hit at this stage (valid context) | `execute_rules`: Uses versioned rules and deterministic calculations; the model cannot self-populate tax rates or thresholds. | `execution_pending` |
 
-### result：节点分析结果
+<a id="result节点分析结果"></a>
 
-| 编号 | 触发条件 | Agent 动作 | 输出状态 |
+### result: node analysis result
+
+| No. | Trigger condition | Agent action | Output status |
 |---|---|---|---|
-| BR-19 涉及专业判断 | `node_result` = `"judgment"` | `collect_final_judgment`：整理支持/反对材料及待判问题；不在中途派顾问，不把该条件当已通过。 | `pending_final_judgment` |
-| BR-20 节点输出校验失败 | `node_result` = `"invalid"` | `record_invalid_result`：保存诊断并撤下该结论；独立节点继续，修复事件到达后重算。 | `paused_gap` |
-| BR-21 当前节点分析完成 | 本阶段前述规则均未命中（合法上下文） | `save_node_result`：保存结论、计算、引用与版本；返回调度器，不能直接生成全案报告。 | `completed` |
+| BR-19 Involving professional judgment | `node_result` = `"judgment"` | `collect_final_judgment`: Organize support/objection materials and pending issues; do not send advisors midway, and do not treat the condition as passed. | `pending_final_judgment` |
+| BR-20 node output verification failed | `node_result` = `"invalid"` | `record_invalid_result`: Save the diagnosis and withdraw the conclusion; the independent node continues and is recalculated after the repair event arrives. | `paused_gap` |
+| BR-21 Current node analysis completed | None of the aforementioned rules are hit at this stage (valid context) | `save_node_result`: Save conclusions, calculations, references and versions; return to the scheduler and cannot directly generate a full case report. | `completed` |
 
-### aggregate：继续处理、等待或出稿
+<a id="aggregate继续处理等待或出稿"></a>
 
-| 编号 | 触发条件 | Agent 动作 | 输出状态 |
+### aggregate: continue processing, waiting or publishing
+
+| No. | Trigger condition | Agent action | Output status |
 |---|---|---|---|
-| BR-22 仍有可推进节点 | `runnable_nodes` = `true` | `schedule_next`：按范围阻断、结论阻断、支持项，再按节点顺序和字段名调度；已等待节点不可空转。 | `analyzing` |
-| BR-23 等待用户且未授权部分稿 | `waiting_questions` = `true`；且 `partial_scope_covers_waits` = `false` | `save_and_wait`：用户离开或超时不自动出稿；保留进度和当前主要问题。 | `waiting_user_response` |
-| BR-24 存在无明确去向的节点 | `all_nodes_accounted` = `false` | `stop_unaccounted_nodes`：修复调度或补齐节点处置，不能在报告中漏掉这些争点。 | `technical_error` |
-| BR-25 可以形成完整稿或部分稿 | 本阶段前述规则均未命中（合法上下文） | `freeze_and_draft`：冻结全部结果、未知、冲突、缺口及未支持范围；生成正文后进入 report 阶段。 | `draft` |
+| BR-22 Nodes can still advance | `runnable_nodes` = `true` | `schedule_next`: Schedule by scope-blocking items, conclusion-blocking items, supporting items, then node order and field name; do not spin on waiting nodes. | `analyzing` |
+| BR-23 Awaiting user without permission for a partial draft | `waiting_questions` = `true`; and `partial_scope_covers_waits` = `false` | `save_and_wait`: The manuscript will not be published automatically when the user leaves or times out; the progress and current major issues will be retained. | `waiting_user_response` |
+| BR-24 There are nodes with no clear destination | `all_nodes_accounted` = `false` | `stop_unaccounted_nodes`: Repair scheduling or complete node processing. These issues cannot be missed in the report. | `technical_error` |
+| BR-25 A complete or partial draft can be prepared | None of the aforementioned rules are hit at this stage (valid context) | `freeze_and_draft`: Freeze all results, unknowns, conflicts, gaps and unsupported ranges; enter the report stage after generating the text. | `draft` |
 
-### user_event：用户回答与恢复
+<a id="user_event用户回答与恢复"></a>
 
-| 编号 | 触发条件 | Agent 动作 | 输出状态 |
+### user_event: user response and recovery
+
+| No. | Trigger condition | Agent action | Output status |
 |---|---|---|---|
-| BR-26 未回复或稍后提供 | `user_event` 属于 `["no_reply", "later"]` | `preserve_wait`：不改事实，不推定同意；调度器可以推进其他独立节点。 | `waiting_user_response` |
-| BR-27 用户不知道 | `user_event` = `"unknown"` | `record_unknown_offer_partial`：保存 unknown，再询问继续等待还是先出部分稿；不默认为条件不满足。 | `waiting_user` |
-| BR-28 明确选择部分稿 | `user_event` = `"partial"` | `record_partial_scope`：记录用户、时间、问题/事实版本及允许保留的缺口范围；相关节点暂停后重新调度。 | `reschedule` |
-| BR-29 补充、核对或纠正 | 本阶段前述规则均未命中（合法上下文） | `merge_versioned_answer`：输入检查后，按请求幂等键及预期版本写入；如语义含糊则澄清；影响判断时走 change 阶段。 | `reschedule` |
+| BR-26 No reply or provide later | `user_event` belongs to `["no_reply", "later"]` | `preserve_wait`: Does not change the facts, does not presume consent; the scheduler can advance other independent nodes. | `waiting_user_response` |
+| BR-27 User does not know | `user_event` = `"unknown"` | `record_unknown_offer_partial`: Save the unknown and ask whether to keep waiting or produce a partial draft; do not default the unknown to a failed condition. | `waiting_user` |
+| BR-28 Explicitly Select Partial Drafts | `user_event` = `"partial"` | `record_partial_scope`: Record the user, time, issue/fact version and the gap range allowed to be retained; the relevant nodes are rescheduled after being suspended. | `reschedule` |
+| BR-29 Supplement, check or correct | None of the aforementioned rules are hit at this stage (valid context) | `merge_versioned_answer`: After input check, write the idempotent key and expected version according to the request; clarify if the semantics are ambiguous; go to the change stage if it affects the judgment. | `reschedule` |
 
-### tool_error：工具异常
+<a id="tool_error工具异常"></a>
 
-| 编号 | 触发条件 | Agent 动作 | 输出状态 |
+### tool_error: tool exception
+
+| No. | Trigger condition | Agent action | Output status |
 |---|---|---|---|
-| BR-30 故障可安全重试 | `retryable` = `true`；且 `budget_remaining` = `true`；且 `safe_to_retry` = `true` | `bounded_retry`：统一预算计数并退避；写入结果不确定时先查执行记录。 | `retry_scheduled` |
-| BR-31 故障不能继续重试 | 本阶段前述规则均未命中（合法上下文） | `record_tool_failure`：保留工具错误和恢复条件；超时不解释成无适用法规，权限拒绝不更换身份重试。 | `technical_error` |
+| BR-30 Failure is safe to retry | `retryable` = `true`; and `budget_remaining` = `true`; and `safe_to_retry` = `true` | `bounded_retry`: Unify the budget count and back off; when the writing result is uncertain, check the execution record first. | `retry_scheduled` |
+| BR-31 Failure cannot be retried further | None of the aforementioned rules are hit at this stage (valid context) | `record_tool_failure`: Keep tool errors and recovery conditions; timeout will not be interpreted as no applicable regulations, permission denial will not change the identity and try again. | `technical_error` |
 
-### report：报告生成后校验
+<a id="report报告生成后校验"></a>
 
-| 编号 | 触发条件 | Agent 动作 | 输出状态 |
+### report: Verification after report generation
+
+| No. | Trigger condition | Agent action | Output status |
 |---|---|---|---|
-| BR-32 草稿输入版本失效 | `snapshot_current` = `false` | `invalidate_and_reschedule`：返回影响分析，重算需要更新的节点；不把旧文本送最终复核。 | `invalidated` |
-| BR-33 生成或改文后尚未校验 | `report_validation` = `"not_checked"` | `validate_report`：检查实际正文、数字、引用支持、未知/假设、范围、版本、敏感数据和研究标识。 | `validation_pending` |
-| BR-34 实际报告校验通过 | `report_validation` = `"passed"` | `submit_final_review`：绑定正文哈希和输入版本包；此处才进入唯一顾问复核环节。 | `pending_review` |
-| BR-35 校验失败且可修订 | `repair_available` = `true` | `repair_and_revalidate`：同一输入快照默认最多两轮自动修订；每次新正文必须重新校验，版本递增不重置预算。 | `revision_pending` |
-| BR-36 修订耗尽尚可尝试简化稿 | `simplified_attempted` = `false` | `simplify_and_revalidate`：仅保留可支持的范围说明/缺口；简化稿同样校验，每个生成周期最多一次。 | `simplified_pending` |
-| BR-37 简化稿仍校验失败 | 本阶段前述规则均未命中（合法上下文） | `stop_report_submission`：保存诊断，禁止把失败稿提交顾问绕过校验。 | `report_validation_failed` |
+| BR-32 The draft input version is invalid | `snapshot_current` = `false` | `invalidate_and_reschedule`: Return to the impact analysis and recalculate the nodes that need to be updated; do not send the old text to the final review. | `invalidated` |
+| BR-33 The text has not been verified after being generated or modified. | `report_validation` = `"not_checked"` | `validate_report`: Check actual text, figures, citation support, unknowns/hypotheses, scope, versions, sensitive data, and research marker. | `validation_pending` |
+| BR-34 actual report verification passed | `report_validation` = `"passed"` | `submit_final_review`: Bind the text hash and input version package; this is where the only advisor review step is entered. | `pending_review` |
+| BR-35 verification failed and can be revised | `repair_available` = `true` | `repair_and_revalidate`: By default, the same input snapshot can be automatically revised for up to two rounds; each new text must be re-verified, and the budget will not be reset for version increments. | `revision_pending` |
+| BR-36 Revisions exhausted; simplified draft can still be attempted | `simplified_attempted` = `false` | `simplify_and_revalidate`: Only the supported range descriptions/gaps are retained; the simplified draft is also verified, at most once in each generation cycle. | `simplified_pending` |
+| BR-37 Simplified draft still fails to verify | None of the aforementioned rules are hit at this stage (valid context) | `stop_report_submission`: Save the diagnosis and prohibit submitting failed drafts to the advisor to bypass verification. | `report_validation_failed` |
 
-### review：唯一最终顾问复核
+<a id="review唯一最终顾问复核"></a>
 
-| 编号 | 触发条件 | Agent 动作 | 输出状态 |
+### review: the only final advisor review
+
+| No. | Trigger condition | Agent action | Output status |
 |---|---|---|---|
-| BR-38 复核所据版本已变化 | `snapshot_current` = `false` | `reject_stale_review`：拒绝旧版本批准；保留复核意见但不能自动套用到新事实。 | `invalidated` |
-| BR-39 尚无顾问决定 | `review_action` = `"waiting"` | `wait_final_review`：没有顾问时继续待审；不因时间已到自动批准。 | `pending_review` |
-| BR-40 批准且交付范围允许 | `review_action` = `"approve"`；且 `release_allowed` = `true` | `approve_exact_version`：事务内重查版本/校验哈希和权限，保存批准；L0 仍仅限内部研究。 | `approved` |
-| BR-41 批准但交付条件不满足 | `review_action` = `"approve"` | `record_release_block`：记录决定尝试和阻断原因；不能通过顾问点击批准提高发布等级。 | `pending_review` |
-| BR-42 顾问修改事实或判断 | `review_action` = `"amend_facts"` | `apply_review_and_recompute`：保存专业决定的范围、理由与来源；重算受影响节点，重生成和校验，回到同一最终复核环节。 | `reschedule` |
-| BR-43 顾问修改报告文字 | `review_action` = `"amend_text"` | `revise_text_and_validate`：创建新正文版本并清除旧批准与校验；如实际改变事实/结论，必须改走重算分支。 | `validation_pending` |
-| BR-44 顾问要求补资料 | `review_action` = `"request_data"` | `ask_review_question`：建立具体用户问题并保留复核意见；补充后再生成和校验。 | `waiting_user_response` |
-| BR-45 顾问无法形成意见 | 本阶段前述规则均未命中（合法上下文） | `close_unapproved_review`：保留原因和未决事项，结束本轮复核；有新材料可重新开启。 | `unapproved` |
+| BR-38 The version used for review has changed. | `snapshot_current` = `false` | `reject_stale_review`: Reject approval of the old version; retain review opinions but cannot automatically apply to new facts. | `invalidated` |
+| BR-39 No advisory decision yet | `review_action` = `"waiting"` | `wait_final_review`: Continue to be reviewed when there is no advisor; it will not be automatically approved because the time has expired. | `pending_review` |
+| BR-40 approved and scope of delivery allows | `review_action` = `"approve"`; and `release_allowed` = `true` | `approve_exact_version`: Recheck version/verify hash and permission within the transaction, save approval; L0 is still limited to internal research. | `approved` |
+| BR-41 approved but delivery conditions not met | `review_action` = `"approve"` | `record_release_block`: Records decision attempts and blocking reasons; cannot increase release level through advisor click approval. | `pending_review` |
+| BR-42 advisor Modifies Facts or Judgment | `review_action` = `"amend_facts"` | `apply_review_and_recompute`: Save the scope, reasons and sources of professional decisions; recalculate affected nodes, regenerate and verify, and return to the same final review stage. | `reschedule` |
+| BR-43 advisor modifies report text | `review_action` = `"amend_text"` | `revise_text_and_validate`: Create a new text version and clear old approvals and verifications; if the facts/conclusions are actually changed, the recalculation branch must be changed. | `validation_pending` |
+| BR-44 advisor requests additional information | `review_action` = `"request_data"` | `ask_review_question`: Establish specific user questions and retain review comments; add and then generate and verify. | `waiting_user_response` |
+| BR-45 advisor unable to form an opinion | None of the aforementioned rules are hit at this stage (valid context) | `close_unapproved_review`: Keep the reasons and pending matters, end this round of review; it can be reopened if there is new material. | `unapproved` |
 
-### change：事实与依据变化
+<a id="change事实与依据变化"></a>
 
-| 编号 | 触发条件 | Agent 动作 | 输出状态 |
+### change: changes in facts and basis
+
+| No. | Trigger condition | Agent action | Output status |
 |---|---|---|---|
-| BR-46 变更影响既有分析 | `affected_results` = `true` | `invalidate_affected_results`：沿事实/规则/来源到结论的依赖使受影响结果、报告和批准失效；原记录保留。 | `reschedule` |
-| BR-47 重复材料或不影响结论的变更 | 本阶段前述规则均未命中（合法上下文） | `reuse_valid_results`：核对内容哈希和新增证据后复用有效结果；不重复核对相同事实版本。 | `resume` |
+| BR-46 Changes impact existing analysis | `affected_results` = `true` | `invalidate_affected_results`: Reliance along facts/rules/sources to conclusions invalidates affected results, reports and approvals; original records retained. | `reschedule` |
+| BR-47 Duplication of material or changes that do not affect the conclusion | None of the aforementioned rules are hit at this stage (valid context) | `reuse_valid_results`: Reuse valid results after checking content hashes and new evidence; do not check the same fact version repeatedly. | `resume` |
 
-## 5. 四个必须由程序落实的判断
+<a id="5-四个必须由程序落实的判断"></a>
 
-### 5.1 当前节点的事实是否足够
+## 5. Four decisions that must be enforced in code
 
-`fact_gate=ready` 必须同时满足：当前节点必需字段有值及来源；决定性冲突已解决；提取值已按要求核对且版本一致；选取税务规则版本的时间信息可用；单位、币种及实体/交易归属清楚；事实状态符合环境策略。支持性字段缺失不会自动阻塞不依赖它的结论。置信度分数不能代替这些条件。
+<a id="51-当前节点的事实是否足够"></a>
 
-核对优先级先看阻断等级，再看节点顺序和字段名；同一字段才按冲突、缺失、未核对依次处理。事实已核对但没有运行授权，应归入 unusable，不能重新问一遍就假装授权完成。
+### 5.1 Are the facts about the current node sufficient?
 
-当前运行策略不直接接受 `client_statement` 或 `ai_candidate`。L0 可由显式策略创建研究假设快照，记录原事实 ID/版本、假设值、理由、范围和研究标识；不能覆盖原事实。**未知、冲突不能为了跑通被自动改成假设。** 未来真实案件预分析需要独立权限契约，不能沿用 L0 通道。本版不引入中途顾问来解决这一限制。
+`fact_gate=ready` must meet the following requirements at the same time: the required fields of the current node have values and sources; the decisive conflict has been resolved; the extracted values have been verified as required and the versions are consistent; the time information for selecting the tax rule version is available; the unit, currency and entity/transaction ownership are clear; the fact state complies with the environment policy. The absence of a supporting field does not automatically block conclusions that do not rely on it. Confidence scores do not replace these conditions.
 
-### 5.2 是否有可用依据
+When checking the priority, first look at the blocking level, then the node order and field names; only the same field will be processed in order of conflict, missing, and unchecked. The fact has been checked but there is no authorization to run, it should be classified as unusable, and you cannot pretend that the authorization is completed by asking again.
 
-`coverage=covered` 不能仅由搜索分数或“搜到一条链接”判断。C 模块需要给出：所需条款及原文定位、版本、法域/主题/有效期间、来源验证状态、相关例外、缺失项及相反依据。B 模块再依据环境策略决定是否可运行。
+The current run policy does not accept `client_statement` or `ai_candidate` directly. Under an explicit L0 policy, a research-assumption snapshot may record the original fact ID/version, assumed value, rationale, scope, and research marker; it must not overwrite the original fact. **Unknowns and conflicts must not be converted automatically into assumptions merely to complete execution.** Pre-analysis of future real cases requires an independent authority contract and cannot continue to use the L0 channel. This version does not introduce midway advisors to address this limitation.
 
-历史交易须核对历史适用版本。尚未专业验证的来源或规则只在明确允许的 L0 研究策略下使用，并保留未验证标识。技术超时使用 tool_error，不伪装成 coverage=gap。案例只能辅助提出待核事项；不能因为相似就把案例结论直接用于本案。
+<a id="52-是否有可用依据"></a>
 
-### 5.3 是否允许部分出稿
+### 5.2 Is there any basis available?
 
-必须没有仍可推进的节点，所有节点都有去向；若仍有用户待答事项，须有覆盖这些具体问题/版本的明确部分稿选择。无回复、稍后提供、“不知道”都不能直接作为选择记录。
+`coverage=covered` cannot be judged solely by search scores or "a link found." Module C needs to provide: required terms and original text positioning, version, jurisdiction/subject/validity period, source verification status, relevant exceptions, missing items and contrary basis. Module B then decides whether it can run based on the environment policy.
 
-专业待判事项、未支持范围、技术失败与事实缺口分别显示。独立结论可保留；任何依赖未决事项的结论保持暂停。完整稿与部分稿都送相同的正文校验和最终复核流程。
+Historical transactions must be checked against applicable historical versions. Sources or rules that have not been professionally verified are only used under explicitly permitted L0 research policies and retain the Unverified designation. Technical timeouts use tool_error, not disguised as coverage=gap. Cases can only assist in proposing matters to be reviewed; case conclusions cannot be directly applied to this case just because they are similar.
 
-### 5.4 是否允许批准与交付
+<a id="53-是否允许部分出稿"></a>
 
-进入 review 的前提是正文校验通过且绑定哈希和输入版本。批准时在同一事务边界再次检查权限、案件当前版本和有效校验，防止“检查时有效、保存批准时已过期”。所有报告修改都产生新版本，原批准保留历史但不能继承。
+### 5.3 Whether partial publication is allowed
 
-当前仅能批准允许用途的内部研究稿；顾问批准不能顺带验证税务规则或升级发布等级。缺少顾问保持 pending_review，不自动放行。
+There must be no nodes that can still be advanced, and all nodes must have a destination; if there are still questions for users to answer, there must be a clear selection of partial drafts that cover those specific questions/versions. No reply, provide later, and “don’t know” cannot be recorded directly as choices.
 
-## 6. 工具调用约定
+Professional pending matters, unsupported scope, technical failures and factual gaps are displayed separately. Independent conclusions may remain; any conclusions relying on pending matters remain suspended. Both complete manuscripts and partial manuscripts will go through the same text proofreading and final review process.
 
-| 动作类别 | 工具 | 调用条件与返回要求 |
+<a id="54-是否允许批准与交付"></a>
+
+### 5.4 Whether approval and delivery are allowed
+
+The prerequisite for entering review is that the text verification passes and the hash and input version are bound. When approving, check the permissions, current version of the case, and valid verification again at the same transaction boundary to prevent "valid when checked, expired when saving approval". All report modifications generate a new version, and the original approval remains in history but cannot be inherited.
+
+Currently only internal research manuscripts can be approved for permitted purposes; advisor approval does not include validation of tax rules or upgrades to release levels. Missing advisors remain pending_review and are not automatically released.
+
+<a id="6-工具调用约定"></a>
+
+## 6. Tool calling convention
+
+| action category | Tools | Calling conditions and return requirements |
 |---|---|---|
-| 输入/识别 | `screen_input`、`classify_case_scope`、`check_capability` | 入模前完成数据检查；能力匹配返回支持争点/不支持争点/缺失范围字段 |
-| 提取/问答 | `extract_candidate_facts`、`next_question`、`record_user_fact_check` | 每个候选值有原文位置；问题绑定字段版本和恢复节点；核对结果不提升专业状态 |
-| 调度 | `decide_next_action` | 消费可信上下文，返回规则 ID、动作、对象及理由；相同上下文结果应一致 |
-| 法源 | `retrieve_legal_sources`、`check_coverage` | 每个返回项带定位、日期、法域及验证状态；依据缺口与工具错误分开 |
-| 分析 | `run_tax_rules`、`verify_node_result` | 仅消费获准快照；数字由确定性工具计算，专业待判项返回未决 |
-| 报告 | `draft_review_report`、`verify_report` | 锁定快照后生成；校验实际正文及哈希；修订须重验 |
-| 最终复核 | `review_report`（应用服务入口） | 仅最终顾问角色可提交决定；模型无批准权限；批准精确绑定版本 |
+| input/recognition | `screen_input`、`classify_case_scope`、`check_capability` | Complete data checks before admitting content to the model; capability matching returns supported contention points/unsupported contention points/missing range fields |
+| Extraction/Q&A | `extract_candidate_facts`、`next_question`、`record_user_fact_check` | Each candidate value has the original text position; the question is bound to the field version and recovery node; the verification result does not improve the professional status |
+| Scheduling | `decide_next_action` | Consume trusted context and return rule ID, action, object and reason; the results of the same context should be consistent |
+| source of law | `retrieve_legal_sources`、`check_coverage` | Each return item comes with location, date, jurisdiction and verification status; separated by gaps and tool errors |
+| analysis | `run_tax_rules`、`verify_node_result` | Consume only approved snapshots; use deterministic tools for calculations and retain pending professional judgments |
+| report | `draft_review_report`、`verify_report` | Generated after locking the snapshot; verify the actual text and hash; revisions must be re-verified |
+| final review | `review_report` (application service entrance) | Only Final advisor role can submit decisions; no approval rights for models; approve precise binding versions |
 
-每个工具输入包含案件/节点/快照引用；权限身份从服务端注入。输出采用明确的 `status + data + reason_code + provenance + version_refs`，不靠模型读错误文本猜是否成功。MCP 可承载工具调用，工具服务和编排器仍分别执行授权与前置条件校验。
+Each tool input contains case/node/snapshot references; permission identities are injected from the server side. The output uses clear `status + data + reason_code + provenance + version_refs`, and the model does not rely on reading error text to guess whether it is successful. MCP can host tool calls, and the tool service and orchestrator still perform authorization and precondition verification respectively.
 
-本版重试沿用现有环境策略，共享总预算；报告自动修订默认两轮、简化稿最多一次，均为设计默认值。**同一冻结输入下改写正文不能重置修订次数**。事实/法源发生有效变更才建立新的生成周期，同时保留案件累计成本与耗时记录。
+This version re-uses the existing environment policy and shares the total budget; the report is automatically revised by default for two rounds and simplified draft at most once, both of which are design defaults. **Rewriting the text under the same frozen input cannot reset the number of revisions**. A new generation cycle will only be established when there is an effective change in the facts/sources of law, and records of the cumulative costs and time-consuming of the case will be retained.
 
-## 7. 结构化配置示例
+<a id="7-结构化配置示例"></a>
 
-以下字段由服务端产生，含义是“这一节点的必需事实缺失”，而非模型自行判断整个案件不完整：
+## 7. Structured configuration example
+
+The following fields are generated by the server, meaning "the necessary facts for this node are missing", rather than the model judging by itself that the entire case is incomplete:
 
 ```json
 {
@@ -228,140 +274,156 @@ Agent 应当能判断：用户在问哪件事、当前支持多少、缺什么�
 }
 ```
 
-配置命中 `BR-12`，返回 `ask_required_fact`，将当前节点标记为 `waiting_user`。动作处理器建立带字段版本的问题，再回调度器继续独立节点。重复执行相同请求应返回已有问题；不得重复创建。
+If the configuration hits `BR-12`, `ask_required_fact` is returned and the current node is marked as `waiting_user`. The action handler creates a question bound to the field version, then returns to the scheduler to advance independent nodes. Repeated execution of the same request should return an existing issue; duplicate creation is not allowed.
 
-配置使用自定义的简单决策格式，并非 LangGraph、LangChain 或 MCP 原生格式。若采用 LangGraph，可在条件路由节点读取它，再把 action 映射到图节点/应用服务；数据库事务、幂等、恢复与工具实现仍须开发。业务规则和税务计算规则保持独立版本，避免修改追问方式时改变税务计算逻辑。
+The configuration uses a custom simple decision format that is not native to LangGraph, LangChain, or MCP. If LangGraph is used, it can be read in the conditional routing node, and then the action is mapped to the graph node/application service; database transactions, idempotence, recovery and tool implementation still need to be developed. Keep business rules and tax calculation rules in independent versions to avoid changing the tax calculation logic when modifying the inquiry method.
 
-## 8. 落地顺序与验收
+<a id="8-落地顺序与验收"></a>
 
-1. B 先实现上下文计算、阶段决策、原因码和动作处理器；A 对接待答/核对/部分稿选择 UI；C 提供能力目录与实际覆盖契约。
-2. 首条链完成范围识别 → 关键事实追问 → 显式研究快照 → 检索/规则 → 正文校验 → 唯一最终复核。
-3. 接入断点恢复、重复提交幂等、事实变更失效和精确版本批准。
-4. 用 JSON 内的示例扩充集成验收；相同输入重复执行、重启后恢复、并发改事实与批准，必须另做运行时验证。
+## 8. Implementation sequence and acceptance
 
-现有代码尚有接口差距：`queues.py` 把核对/冲突交顾问，需改为用户队列；`permissions.py` 的事实专业状态不能被普通用户核对绕过；`runner.py` 的整链聚合需要支持逐节点暂停及独立分支；CLI 直接消费提取值的路径需纳入可信快照。旧规则里的 human_gate 不能作为中途先决问题。
+1. B first implements context calculation, stage decision-making, reason codes and action processors; A integrates the questioning, verification, and partial-draft selection UI; C provides the capability catalog and actual coverage contract.
+2. The first chain completes scope identification → key fact questioning → explicit research snapshot → search/rules → text verification → unique final review.
+3. Implement resumption, idempotent resubmission, invalidation after fact changes, and approval of exact versions.
+4. Extend integration acceptance with examples in JSON; repeated execution of the same input, recovery after restart, and concurrent change of facts and approvals must be done separately at runtime.
 
-本次规则配置的条件选择可用独立解释器检查，但它不证明工具行为、真实业务流程或税务结论正确。所有规则属于业务设计草案；税务阈值仍需由规则包负责人验证。本稿不改变既有运行策略或生产代码。
+There are still interface gaps in the existing code: `queues.py` hands over verification/conflicts to the advisor and needs to be changed to a user queue; the factual professional status of `permissions.py` cannot be bypassed by ordinary user verification; the whole chain aggregation of `runner.py` needs to support node-by-node suspension and independent branches; the path for CLI to directly consume and extract values needs to be included in trusted snapshots. The old `human_gate` must not be used as a preliminary questioning step.
 
-2026-10-01 配置检查记录：独立临时解释器通过 JSON 中 49 个场景的预期分支检查；枚举 129 个合法阶段上下文组合，47 条规则均可命中且无未覆盖组合；6 个缺字段、非法类型、未知枚举/阶段等输入均拒绝执行。文档规则编号及相对链接检查通过。这些检查只验证配置条件与示例的一致性，不包含工具执行、数据库恢复、并发批准或税务正确性测试。
+The condition selections for this rule configuration can be checked with an independent interpreter, but it does not prove that the tool behavior, real business processes, or tax conclusions are correct. All rules are draft business designs; tax thresholds still need to be verified by the rules package owner. This article does not change existing execution policies or production code.
 
-## 9. 新增对话规则与一句话期望行为
+2026-10-01 Configuration check record: The independent temporary interpreter passed the expected branch check of 49 scenarios in JSON; 129 legal stage context combinations were enumerated, 47 rules were all hit and there were no uncovered combinations; 6 missing fields, illegal types, unknown enumerations/stages and other inputs were refused execution. The document rule number and relative link check passed. These checks only verify the consistency of configuration conditions with the examples and do not include tool execution, database recovery, concurrency approval, or tax correctness testing.
 
-本节编号 D-01～D-12 是业务设计条目，尚未加入原47条可读配置；实现时需补分类、动作和集成测试。优先级：输入/权限门禁优先；明确补充/纠正先更新绑定案件；普通问候不覆盖同消息中的业务诉求；其他诉求按任务分别处理。
+<a id="9-新增对话规则与一句话期望行为"></a>
 
-| 编号 | 情形 | 一句话期望行为 |
+## 9. Added new dialogue rules and one sentence expected behavior
+
+Numbers D-01 to D-12 in this section are business design items and have not yet been added to the original 47 readable configurations; classification, actions and integration tests need to be supplemented during implementation. Priority: Input/authority access control takes precedence; bind explicit additional information or corrections to the case before updating it; ordinary greetings do not cover business demands in the same message; other demands are handled separately according to tasks.
+
+| No. | Situation | Expected behavior in one sentence |
 |---|---|---|
-| D-01 | 普通聊天 | 简短回应，不调用税务检索、不清空已有案件和待答问题。 |
-| D-02 | 概念解释 | 在范围支持时检索获准依据并解释一般含义，不要求无关的案件背景。 |
-| D-03 | 查法规或案例 | 保留编号和原始检索条件，返回匹配资料及定位，不要求补齐整个案件。 |
-| D-04 | 背景不清 | 只问当前任务下一步必需的一项信息，不把整套事实字段一次性抛给用户。 |
-| D-05 | 补充信息 | 将新增内容绑定当前问题或案件，保留已有有效事实并恢复受影响步骤。 |
-| D-06 | 明确纠正 | 更新被纠正事实的版本并失效受影响结果；不能将旧值继续作为当前有效值。 |
-| D-07 | 前后矛盾 | 列出矛盾值及来源，请用户澄清；未解决则保留冲突，不自动选边。 |
-| D-08 | 不知道 | 保存未知，并根据当前任务说明影响；需要部分案件稿时取得明确选择。 |
-| D-09 | 没有匹配依据 | 说明本次未找到什么依据以及可行的补充方向，不据此认定法规不存在。 |
-| D-10 | 范围外 | 说明未覆盖内容与可处理部分，不用相邻地区或税种的规则替代。 |
-| D-11 | 资料仅可展示 | 从所有模型上下文排除受限内容，只提供获准展示引用，不伪造基于该原文生成的解释。 |
-| D-12 | 需要专业判断 | 整理待判事项及证据，保留未决状态，统一交最终顾问复核。 |
+| D-01 | Normal chat | Give a short response, do not call tax search, do not clear existing cases and unanswered questions. |
+| D-02 | Concept explanation | Retrieve the permitted basis and explain the general meaning when supported by the scope, without requiring extraneous case context. |
+| D-03 | Check regulations or cases | The number and original search conditions are retained, matching data and positioning are returned, and the entire case is not required to be completed. |
+| D-04 | The background is unclear | Only ask for one piece of information necessary for the next step in the current task, rather than throwing the entire set of fact fields to the user at once. |
+| D-05 | Supplementary information | Bind the new content to the current issue or case, retain existing valid facts and restore affected steps. |
+| D-06 | clear correction | Updates the version of the corrected fact and invalidates the affected results; the old value cannot continue to be the currently valid value. |
+| D-07 | inconsistent | List the conflicting values and sources and ask the user for clarification; if the conflict is not resolved, the conflict will be retained and sides will not be automatically selected. |
+| D-08 | Don't know | Save the unknown and describe the impact based on the current task; get clear choices when part of the case draft is needed. |
+| D-09 | No matching basis | Explain what basis and feasible supplementary directions were not found this time, and do not conclude that the regulations do not exist based on this. |
+| D-10 | Out of range | Explain the uncovered content and the processable parts, and do not use the rules of adjacent regions or tax types to replace them. |
+| D-11 | Information can only be displayed | Exclude restricted content from all model contexts, provide only approved display citations, and do not falsify interpretations based on the original text. |
+| D-12 | Requires professional judgment | Arrange pending matters and evidence, keep them in pending status, and submit them to the final advisor for review. |
 
-## 10. 不同场景的最小信息及追问示例
+<a id="10-不同场景的最小信息及追问示例"></a>
 
-以下是查询/路由所需最少信息，不是完整税务事实清单。具体案件节点继续使用其 required_facts；已有有效值不重复询问。
+## 10. Minimum information and questioning examples in different scenarios
 
-| 场景 | 最少需要什么 | 缺失时的主要问题示例 | 不应先问什么 |
+The following is the minimum information required for querying/routing and is not a complete list of tax facts. Specific case nodes continue to use their required_facts; existing valid values will not be asked again.
+
+| Scenario | What is the minimum required | Examples of major problems when missing | What not to ask first |
 |---|---|---|---|
-| 普通聊天 | 当前消息 | 不需要业务追问 | 主体、金额、持股等 |
-| 概念解释 | 概念；会改变解释的地区/范围 | “你想了解香港的相关规定吗？”（仅地区不清时） | 用户自身的全部案情 |
-| 精确资料查询 | 编号及可识别的来源/地区 | “这个编号是哪一地区或机构的？”（编号有歧义时） | 个人还是公司、收入金额 |
-| 具体股息咨询首次路由 | 主体类型、相关地区、所问目标 | “这笔股息由个人还是公司收取？”（尚未提供时） | 当前判断不依赖的支持性资料 |
-| 确定适用期间 | 影响当前判断的交易时间及计划/实际状态 | “这笔股息已经发生，还是准备发生？”；下一轮再问必要日期 | 用今天作为默认交易日期 |
-| 补充/纠正 | 当前案件、问题或可明确定位的事实 | “你修改的是哪一笔交易的金额？”（多笔时） | 重新询问所有已知信息 |
-| 税额/资格判断 | 当前规则节点列出的必需事实及获准依据 | 从未决项中选择最影响结论的一项 | 按固定表格机械追问全部字段 |
+| Normal chat | current message | No business inquiries required | Subject, amount, shareholding, etc. |
+| Concept explanation | Concept; area/scope that changes interpretation | "Do you want to know the relevant regulations of Hong Kong?" (only if the region is unclear) | All the circumstances of the user’s own case |
+| Accurate data query | Number and identifiable source/region | "Which region or institution does this number belong to?" (When there is ambiguity in the number) | Individual or company, amount of income |
+| Specific Dividend Inquiry First Route | Type of subject, relevant area, and target asked | "Is this dividend received by an individual or a company?" (if not yet provided) | Supporting information not relied upon for current judgment |
+| Determine the applicable period | Transaction time and planned/actual status that affect current judgment | "Has this dividend occurred or is it about to occur?"; ask the necessary date in the next round | Use today as default transaction date |
+| Supplement/Correction | Current case, issue, or identifiable fact | "Which transaction amount are you modifying?" (if there are multiple transactions) | Re-ask for all known information |
+| Tax Amount/Eligibility Determination | Required facts listed in the current rule node and the basis for approval | Choose the one that most affects the conclusion from the unresolved items | Mechanically query all fields according to the fixed form |
 
-多轮示例：
+Multiple rounds example:
 
-1. 用户：“香港公司收到境外股息，帮我分析。”→ 记录公司、香港和股息；不再问个人还是公司；若期间影响下一步，则询问发生/计划状态。
-2. 用户：“计划发生。”→ 保存计划事实；下一步只补确定适用版本所需时间，不把计划写成实际收款。
-3. 用户：“日期还不知道。”→ 保存 unknown，说明期间尚不确定；可以先提供一般资料说明，具体适用结论仍暂停。
-4. 用户：“先按现在已有信息出部分稿。”→ 记录允许保留的缺口及问题版本，再按原流程形成部分研究稿。
+1. User: "A Hong Kong company receives foreign-sourced dividends, help me analyze it." → Record the company, Hong Kong and dividends; no longer ask the individual or the company; if the period affects the next step, ask the occurrence/plan status.
+2. User: "Planned to happen." → Save the planning facts; the next step is only to add the time required to determine the applicable version, and does not write the plan into actual receipts.
+3. User: "The date is not known yet." → Save unknown, indicating that the period is not yet certain; general information can be provided first, and specific applicable conclusions are still suspended.
+4. User: "First produce a partial draft based on the existing information." → Record the gaps and problem versions that are allowed to be retained, and then form a partial research draft according to the original process.
 
-另一示例：“你好，刚才说错了，是公司收取，不是我个人。”应回应并处理主体纠正；如明确对应当前事实，则更新版本，不因同时有“你好”而遗漏纠正。若新证据与既有证据冲突且不能确认是纠正，则按 D-07 澄清。
+Another example: "Hello, I made a mistake just now. It was collected by the company, not me personally." The subject's correction should be responded to and processed; if it clearly corresponds to the current facts, the version will be updated, and corrections will not be missed due to the presence of "Hello" at the same time. If the new evidence conflicts with existing evidence and cannot be confirmed as a correction, follow D-07 for clarification.
 
-## 11. 检索接入和统一回答结构
+<a id="11-检索接入和统一回答结构"></a>
 
-检索通过 [KnowledgeProvider](KNOWLEDGE_PROVIDER_CONTRACT_V0_1.md)；当前预留 Mock 实现，后续替换 C 适配器。进入生成前逐条检查 model_use/display_use、版本和与当前问题的关联。
+## 11. Search access and unified answer structure
 
-有依据的回复固定包含：
+Retrieval is through [KnowledgeProvider](KNOWLEDGE_PROVIDER_CONTRACT_V0_1.md); a Mock implementation is currently planned, followed by the C adapter. Check model_use/display_use, version, and relevance to the current issue one by one before entering generation.
 
-- `answer_summary`：直接回答本轮问题，限定可支持的范围。
-- `applicable_conditions`：依据中的适用条件，以及当前已知/未知条件。
-- `claims`：主张 ID、文本、supporting_evidence_ids；引用只能从本次获准证据集中选择。
-- `limitations`：未覆盖范围、未知事实、技术未完成与专业待判事项。
-- `citations`：稳定证据 ID、版本、标题、原文定位、获准展示入口。
-- `review_status`：一般资料答复为 not_required；案件研究稿为 pending_review，最终获授权复核后才为 approved。资料答复一旦包含个案结论，必须重新归入案件路径。
+Well-founded replies always include:
 
-仅展示资料放入 `reference_only`，不能列为模型实际使用的 supporting_evidence_ids。没有可用于模型的依据时，用确定性模板说明资料限制，不让模型凭记忆补税务主张。Mock 下的每条资料和每个答复均保留 is_synthetic 标记及“模拟资料，仅用于流程测试”。
+- `answer_summary`: Directly answer this round of questions and limit the scope of support.
+- `applicable_conditions`: The applicable conditions in the basis, and the currently known/unknown conditions.
+- `claims`: Claim ID, text, supporting_evidence_ids; citations can only be selected from this approved evidence set.
+- `limitations`: Uncovered scope, unknown facts, unfinished technology and pending professional matters.
+- `citations`: Stable evidence ID, version, title, original text positioning, and permitted display entrance.
+- `review_status`: The general information reply is not_required; the case study draft is pending_review, and it will be approved after the final authorized review. Once the source inquiry response contains case conclusions, it must be reclassified to the case path.
 
-## 12. 提供给 A 的业务状态与提示
+Display-only material is placed in `reference_only` and cannot be listed as supporting_evidence_ids actually used by the model. When there is no basis for the model, use a deterministic template to illustrate the data limitations and prevent the model from making tax claims from memory. Each source item and each reply under Mock retains the is_synthetic tag and "Mock materials, for workflow testing only."
 
-A 负责展示实现；B 负责返回以下语义。状态与原因分开，不要求 A 从自然语言猜测。
+<a id="12-提供给-a-的业务状态与提示"></a>
 
-| status | reason_code | 提示示例 | B 的后续动作 |
+## 12. Business status and tips provided to A
+
+A implements the display; B is responsible for returning the following semantics. The state is separated from the cause and does not require A to guess from natural language.
+
+| status | reason_code | Tip example | B's follow-up action |
 |---|---|---|---|
-| completed | OK | “已整理本轮资料及适用条件。” | 保存回复及依据版本 |
-| waiting_user | NEED_BACKGROUND | “还需确认：这笔股息由个人还是公司收取？” | 保存问题 ID 和恢复位置 |
-| waiting_user | FACT_CONFLICT | “两处信息不一致，请确认本次应采用哪个事实，或补充说明。” | 保留双方来源 |
-| limited | NO_MATCH | “本次未找到匹配依据，暂不能据此给出结论。” | 返回查询范围及具体缺口 |
-| limited | EVIDENCE_INSUFFICIENT | “已有相关资料，但还不足以支持这项判断。” | 指出缺失条件/依据，暂停相关主张 |
-| limited | EVIDENCE_RESTRICTED | “找到可查看资料，但当前不允许将其原文用于模型分析。” | 返回获准 reference_only |
-| limited | OUT_OF_SCOPE | “这部分超出当前支持范围，以下是可以继续处理的部分。” | 列出范围；无支持部分则不生成实质分析 |
-| limited | PROFESSIONAL_JUDGMENT_REQUIRED | “该事项保留为待最终顾问判断。” | 汇入最终清单，独立节点继续 |
-| error | RETRIEVAL_FAILED | “资料检索暂时失败，已保留本轮进度。” | 有限安全重试，失败保留恢复位置 |
-| error | MODEL_FAILED | “回复生成暂时失败，已保留有效检索结果。” | 版本与权限仍有效时复用，重新生成 |
-| error | PROVIDER_CONTRACT_ERROR | “资料服务返回格式异常，本轮暂无法继续。” | 记录诊断，不解释为无匹配 |
-| error | CITATION_UNRESOLVED | “部分引用暂时无法核验，相关主张尚未输出。” | 修复或撤下主张再校验 |
+| completed | OK | "This round of information and applicable conditions have been compiled." | Save reply and basis version |
+| waiting_user | NEED_BACKGROUND | “Also to confirm: Is this dividend received by an individual or a company?” | Save issue ID and recovery location |
+| waiting_user | FACT_CONFLICT | "The two pieces of information are inconsistent. Please confirm which fact should be used this time, or provide additional explanations." | Keep sources from both sides |
+| limited | NO_MATCH | "No matching basis was found this time, and no conclusion can be drawn based on this." | Return the query scope and specific gaps |
+| limited | EVIDENCE_INSUFFICIENT | "There is relevant information, but it is not enough to support this judgment." | Point out the missing conditions/basis and suspend relevant claims |
+| limited | EVIDENCE_RESTRICTED | "Viewable material found, but its original text is not currently allowed for use in model analysis." | Returns allowed reference_only |
+| limited | OUT_OF_SCOPE | "This part is beyond the scope of current support, here are the parts that can continue to be worked on." | List scope; no substantive analysis is generated for unsupported sections |
+| limited | PROFESSIONAL_JUDGMENT_REQUIRED | “The matter is reserved pending final advisory judgment.” | Import the final list and continue with independent nodes |
+| error | RETRIEVAL_FAILED | "The data retrieval has temporarily failed, and the progress of this round has been retained." | Limited safety retry, retain recovery location on failure |
+| error | MODEL_FAILED | "Reply generation failed temporarily, valid search results have been retained." | Reuse and regenerate while the version and permissions are still valid |
+| error | PROVIDER_CONTRACT_ERROR | "The data service return format is abnormal and this round cannot continue." | Log diagnostics, do not interpret as no match |
+| error | CITATION_UNRESOLVED | "Some quotes cannot be verified temporarily, and the relevant claims have not yet been exported." | Repair or withdraw the claim and verify again |
 
-回复外层至少包含 conversation_id、turn_id、request_id、state_version、message_type、status、reason_code、content、question、citations、reference_only、review_status、is_synthetic。error 另含 retryable、retry_after_ms；未使用字段为空。message_type 为 chat / clarification / reference_result / research_answer / scope_notice / error。
+The outer layer of the reply contains at least conversation_id, turn_id, request_id, state_version, message_type, status, reason_code, content, question, citations, reference_only, review_status, is_synthetic. error also includes retryable, retry_after_ms; unused fields are empty. message_type is chat/clarification/reference_result/research_answer/scope_notice/error.
 
-正常追问、无匹配或专业待判不是技术故障；不得机械重试。技术失败未发生的字段不返回零值或猜测结果。
+Normal questioning, no matching or professional pending judgment are not technical failures; no mechanical retry is allowed. Fields not produced because of a technical failure must not be filled with zero or guessed results.
 
-## 13. 新增规则的检查标准
+<a id="13-新增规则的检查标准"></a>
 
-| 场景 | 必须满足 | 不允许发生 |
+## 13. Checking criteria for new rules
+
+| Scenario | must be satisfied | not allowed to happen |
 |---|---|---|
-| 问候 | 不调用税务检索，保留原任务 | 清空当前案件 |
-| 概念或编号查询 | 按最小条件检索 | 先要求填完整事实卡 |
-| 已说明公司主体 | 复用当前事实 | 重问个人还是公司 |
-| 用户说不知道 | unknown 保留 | 变成 false 或零 |
-| 用户明确纠正 | 产生新版本，更新受影响步骤 | 旧结论继续有效 |
-| 仅展示资料 | 模型各调用输入无受限原文 | 先让模型总结受限资料 |
-| 无匹配/超时/模型失败 | 三种原因独立可辨 | 都写“没有依据” |
-| 答复含引用 | 主张映射到可解析证据与版本 | 引用另一个版本或模型编造 ID |
-| 重复请求/中断恢复 | 相同请求不重复写入，原问题可恢复 | 重复提问、重复计算 |
-| Mock 数据 | 答复和资料有模拟标记 | 宣称真实税务结论或 C 已验收 |
+| Greetings | Do not call tax retrieval, keep the original task | Clear current cases |
+| Concept or number query | Search by minimum criteria | Please fill in the complete fact cards first |
+| Company entity has been stated | Reuse current facts | Again, individual or company? |
+| The user said he didn’t know | Preserve unknown | becomes false or zero |
+| User explicit correction | Generate a new version and update the affected steps | The old conclusion remains valid |
+| Show data only | Every model call excludes restricted original text. | Let the model summarize the restricted data first |
+| No match/timeout/model failed | Three causes are independently discernible | They all write "no basis" |
+| Reply with citation | Claims mapped to parsable evidence and versions | Reference another version or model to make up an ID |
+| Repeat request/interrupt recovery | The same request will not be written repeatedly, and the original problem can be recovered | Repeated questions and repeated calculations |
+| Mock data | Replies and information are mock-tagged | Declaration of true tax conclusion or C accepted |
 
-本节是待实现的验收标准；对应 Mock 响应样例见契约文档。真实检索性能与召回率须待 C 接入后测量。普通对话和新接口不得复用此前47条规则的测试结果来宣称已经验收。
+This section is the acceptance criteria to be implemented; see the contract document for the corresponding Mock response example. The real retrieval performance and recall rate must be measured after C is connected. Ordinary conversations and new interfaces must not reuse the test results of the previous 47 rules to declare acceptance.
 
-## 14. 对话策略实现（guided-intake-0.2）
+<a id="14-对话策略实现guided-intake-02"></a>
 
-集中实现：`packages/agent/dialogue.py`；编排：`packages/agent/workflow.py`；持久化与确认边界：`packages/chat/service.py`。对话 JSON 保存 pending、attempts、deferred、deferred_query、partial_consent；继续沿用案件 revision/request_id 防并发与重复写入。
+## 14. Dialogue strategy implementation (guided-intake-0.2)
 
-- D-01/D-03：独立闲聊与资料查询不受旧案件冲突打断。独立查询不继承当前案件日期、主体过滤。当前案件关联查询才使用相关事实。
-- D-04/D-05：先识别收款主体、收入类型、分析地区、咨询目标，再按目标收派息方地区等必要描述。一轮一项；精确枚举答复仅绑定 active 问题，其他自然语言由现有模型适配器解析。
-- D-06/D-07：字段级明确更正要求更正片段来自本条消息，并与字段及新值相符；不能通过一个“改”字授权所有字段覆盖。新旧不同但未明确更正进入 conflict，保留双方值和消息历史。更正表达暂不能可靠识别时保守请求澄清。
-- D-08：unknown 不等于 no；unavailable/unanswered 放入 deferred。最多两次同项追问后给继续/部分整理/暂停选择。没有用户新消息不会自动推进。部分整理许可绑定当前事实指纹；修改事实后撤销，分析接口对缺项且无许可返回 `partial_confirmation_required`。
-- D-09：无匹配返回查询内容、已确认期间及具体缺口；缺少实际/计划状态时不能把给定日期自动认定为实际交易日。无依据和服务故障分别处理。
-- D-10：个人、非股息或明确非香港个案说明能力范围；新案件使用 A 的新对话入口，避免覆盖现有案情。
-- D-11/D-12：保留逐条双权限、版本、哈希、引用检查。只询问员工/场所/税款等原始描述；充分性及资格最终复核。收取分支先区分现金/非现金，非现金不追问银行汇款。
-- 混合任务：冲突时保存待查 query；明确更正后检索故障仍保存事实并返回 `partial_failure / retrieval_failed` 与 `knowledge_unavailable`，重试仅恢复查询。纯查询失败维持原来的 503/SSE error，案件不发生部分写入。
-- 话题暂停/恢复：保留 pending；暂停或闲聊后的孤立“是/否/不知道”不自动写到旧字段。恢复后继续缺项队列。
+Centralized implementation: `packages/agent/dialogue.py`; orchestration: `packages/agent/workflow.py`; persistence and confirmation boundaries: `packages/chat/service.py`. Conversation JSON saves pending, attempts, deferred, deferred_query, partial_consent; continue to use case revision/request_id to prevent concurrency and repeated writing.
 
-当前实际 API 使用小写 reason_code，兼容 A 的完整 Case / done-only SSE，而不是要求 A 一次替换为第 12 节早期拟议响应外壳。新增字段和消费约定见实现规范第 6 节。
+- D-01/D-03: Independent chatting and information inquiry are not interrupted by conflicts with old cases. Independent queries do not inherit the current case date and subject filtering. Only related facts are used in current case related queries.
+- D-04/D-05: First identify the recipient, income type, analysis jurisdiction, and consultation goal; then ask for necessary descriptions such as the recipient jurisdiction for the target dividend. One item per round; exact enumerated responses are only bound to the active question, other natural language is parsed by the existing model adapter.
+- D-06/D-07: Field-level explicit correction requires that the corrected fragment comes from this message and is consistent with the field and new value; a single word such as "change" cannot authorize overwriting all fields. If old and new values differ without an explicit correction, record a conflict and retain both values and their message history. When a correction expression cannot be reliably identified for the time being, it is conservative to request clarification.
+- D-08: unknown is not equal to no; unavailable/unanswered is put into deferred. After a maximum of two questioning on the same item, you will be given the option to continue/partially sort out/pause. Do not advance automatically without a new user message. Permission for partial fact organization is bound to the current fact fingerprint; it is revoked when facts change. When gaps remain without permission, the analysis endpoint returns `partial_confirmation_required`.
+- D-09: A no-match response includes the query, confirmed period, and specific gap; in the absence of actual/planned status, the given date cannot be automatically recognized as the actual transaction day. Missing evidence and service failures are handled separately.
+- D-10: Personal, non-dividend or clearly non-Hong Kong cases indicate the scope of ability; new cases use the new conversation entry point of A to avoid overwriting existing case facts.
+- D-11/D-12: Preserve itemized dual permissions, versions, hashes, and reference checks. Ask only for factual descriptions of staff, premises, taxes, and similar matters; reserve adequacy and eligibility judgments for final review. The receiving branch first distinguishes cash/non-cash. For non-cash payments, bank remittance is not required.
+- Mixed task: Save the query to be checked when there is a conflict; after clear correction, the retrieval failure still saves the fact and returns `partial_failure / retrieval_failed` and `knowledge_unavailable`, and retries only restore the query. Pure query failure maintains the original 503/SSE error, and no partial write occurs.
+- Topic pause/resume: keep pending; isolated "yes/no/don't know" after pause or chat are not automatically written to the old field. The missing item queue continues after recovery.
 
-## 15. 2026-10-03 混合编排规则继承（首版实现）
+The current actual API uses lowercase reason_code, compatible with the full Case / done-only SSE of A , rather than requiring A to be replaced once with the Section 12 earlier proposed response shell. For new fields and consumption conventions, see Section 6 of the implementation specification.
 
-[统一编排方案第 12 节](../implementation/B_HYBRID_ORCHESTRATION_PLAN_2026_10_03.md#12-既有-47-条业务规则的继承矩阵)逐组映射 BR-01～47 的现有基础、执行位置和未完成范围；新增 HY-01～10 管理入口、待答问题、独立查询、任务依赖、全局预算、单次提交及权限。BR 编号和业务含义保持，未将本文新增设计写成已执行 DSL。
+<a id="15-2026-10-03-混合编排规则继承首版实现"></a>
 
-新增约束已接入 `hybrid.py/task_state.py/policy.py/budget.py/analysis_policy.py`：固定入口与自动路由共用策略；子图只返回状态变更提案；未知/缺口/确认/最终批准语义不因模式切换而变化。冲突仅阻塞依赖该事实的子任务，独立法规查询可继续。HY 规则及命中 reason 的业务追踪记录在 workflow.policy_version/rule_decisions；并非执行了完整 47 条 JSON DSL。
+## 15. 2026-10-03 Hybrid orchestration rule inheritance (first version implementation)
 
-受控后端与页面回归结果见 [验收矩阵执行记录](../implementation/B_HYBRID_ORCHESTRATION_ACCEPTANCE_2026_10_03.md#7-2026-10-03-工程执行记录)。真实模型/C/PG 层待验收。原 BR 中通用修订执行器、完整来源依赖失效及顾问团队编辑/分配仍未全部完成。
+[Unified Orchestration Plan Section 12](../implementation/B_HYBRID_ORCHESTRATION_PLAN_2026_10_03.md#12-既有-47-条业务规则的继承矩阵) maps the existing basis, execution location and unfinished scope of BR-01～47 group by group; adds HY-01～10 management entrance, unanswered questions, independent query, task dependency, global budget, single submission and permissions. The BR number and business meaning are maintained, and the new design in this article is not written as an implemented DSL.
+
+New constraints have been integrated into `hybrid.py/task_state.py/policy.py/budget.py/analysis_policy.py`: fixed entry and automatic routing share the same strategy; subgraphs only return status change proposals; unknown/gap/confirm/final approval semantics do not change due to mode switching. A conflict only blocks subtasks that depend on that fact, and independent regulatory queries can continue. The business tracking of HY rules and hit reasons is recorded in workflow.policy_version/rule_decisions; not all 47 JSON DSLs are executed.
+
+See [Acceptance matrix execution record](../implementation/B_HYBRID_ORCHESTRATION_ACCEPTANCE_2026_10_03.md#7-2026-10-03-工程执行记录) for controlled backend and page regression results. The real model/C/PG layer is pending acceptance. The general revision executor, complete source-dependency invalidation, and advisor team editing/assignment in the original BR are still not all complete.

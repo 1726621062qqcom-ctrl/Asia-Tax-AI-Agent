@@ -1,6 +1,6 @@
 # Hong Kong Dividend Consultations: Six Input-Method Experiments
 
-[中文报告](HK_FSIE_SIX_EXPERIMENT_REPORT.md)
+[Primary report](HK_FSIE_SIX_EXPERIMENT_REPORT.md)
 
 Run date: 14 October 2026 (China Standard Time). All cases are fictional and come from the [Chinese case templates](../../product/HK_FSIE_USER_CASE_TEMPLATES.md); see the [English case templates](../../product/HK_FSIE_USER_CASE_TEMPLATES.en.md) for a translation. This report records software and product behavior. **It is not a professional tax validation.**
 

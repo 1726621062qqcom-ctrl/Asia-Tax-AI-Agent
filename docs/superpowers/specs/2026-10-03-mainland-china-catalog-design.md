@@ -1,7 +1,9 @@
-# 中国内地跨境股息官方来源目录设计
+<a id="中国内地跨境股息官方来源目录设计"></a>
 
-用户确认先扩中国内地。按照 PRD 的 `source-catalog baseline`，第一批聚焦内地企业向香港公司分配股息。声明五个研究主题，每个主题至少一条国家税务总局官方来源；记录地区、语言、发布日期、适用日期、版本说明、覆盖缺口及未验证状态。基础安排与第五议定书单独登记，未收录的议定书明确列为缺口。
+# Mainland China Cross-Border Dividend Official Source Catalog Design
 
-沿用 `sources` 表和 SQLAlchemy，增量迁移新增主题标签、日期及说明字段。清单在 Git 中版本化；导入器校验字段和官方域名，按 `source_id` 幂等写入 Supabase。内地记录保持 `l0_in_scope=false`、`parse_status=registered`；香港 FSIE 检索仅使用其自身清单，不读取这些未分段的内地目录记录。命令行可按已声明主题查目录。
+The user confirmed mainland China as the next expansion. Following the PRD's `source-catalog baseline`, the initial focus is dividends paid by mainland companies to Hong Kong companies. Declare five research topics, each with at least one State Taxation Administration official source; record jurisdiction, language, publication/applicability dates, version notes, coverage gaps, and unverified status. Register the original arrangement and Fifth Protocol separately and explicitly list missing protocols as gaps.
 
-验收：声明主题均有官方入口；必填元数据完整；重复导入不增行；香港记录不变且检索不混用；迁移后云端可按 `CN` 查询。税务总局拒绝本机自动抓取时保留 `http_status` 空值，人工网页核对链接，不把它伪装成自动抓取成功。税务专家审校、全文分段、时效监测和正式回答内地个案属于下一阶段。
+Retain the `sources` table and SQLAlchemy. Add topic tags, dates, and notes through an incremental migration. Version the manifest in Git. The importer validates fields and official domains and writes idempotently to Supabase by `source_id`. Mainland records retain `l0_in_scope=false` and `parse_status=registered`. Hong Kong FSIE retrieval uses only its own manifest and does not read these unsegmented mainland catalog records. The CLI can search the catalog by declared topic.
+
+Acceptance: official entry points exist for all declared topics; required metadata is complete; repeated imports add no rows; Hong Kong records remain unchanged and retrieval does not mix catalogs; cloud queries by `CN` work after migration. When the State Taxation Administration rejects local automated capture, retain null `http_status` and check links manually in the browser rather than pretending capture succeeded. Tax expert review, full-text segmentation, freshness monitoring, and formal mainland case answers belong to the next phase.

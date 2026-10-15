@@ -1,39 +1,53 @@
-# 真实聊天研究链路
+<a id="真实聊天研究链路"></a>
 
-用户已批准“提问 → 动态追问 → 确认事实 → 规则分析与来源”，本次实现该切片，不扩张到完整税务判断、审批或其他地区。沿用简洁双语页面。
+# Live Chat Research Workflow
 
-## 方案
+The user approved “question → dynamic follow-up → fact confirmation → rule analysis and sources.” Implement this slice without expanding to complete tax determinations, approval, or other jurisdictions. Retain the simple bilingual page.
 
-扩展现有 FastAPI 模块，复用事实词典、模型适配器、候选规则求值器。相比直接代理模型聊天，这一方案保留事实确认和确定性判断；相比引入新 Agent 框架，没有多余运行时与状态体系。
+<a id="方案"></a>
 
-模型仅提取候选事实。编排器根据当前事实和缺口提出可回答的问题；未知可跳过但留在阻断项；冲突须显式编辑解决。用户显式确认冻结的事实版本后才能分析。新增任何信息立即使旧分析失效，不能将用户文字或模型输出解释为确认或批准。
+## Approach
 
-## 存储与接口
+Extend the existing FastAPI modules, reusing the fact dictionary, model adapter, and candidate rule evaluator. The approach retains fact confirmation and deterministic determinations, without adding another Agent framework, runtime, or state system.
 
-- 使用 SQLAlchemy 独立会话表，持久化消息、事实版本、执行结果和分析历史；以随机 HttpOnly 会话 cookie 隔离浏览器工作空间。
-- 本机现有 PostgreSQL 不可连接，开发默认 `data/chat.sqlite3`，可由 `FSIE_WEB_DATABASE_URL` 配置独立 PostgreSQL 存储。不静默降级已有业务数据库。该存储用于本地切片，不声称已完成现有 Fact/FactVersion 表迁移或生产账号体系。
-- `/api/session` 初始化工作空间；`/api/cases` 创建/恢复；案件内消息、事实编辑、确认、分析独立端点；版本号比较避免并发覆盖。模型调用不持有数据库事务，提交时比较版本。请求幂等键避免重复消息。
-- 浏览器不接收密钥或连接字符串。开发服务器同源代理到本地 API。写请求需要自定义头及同源检查；无开放 CORS。只绑定回环地址。
+The model extracts candidate facts only. The orchestrator asks answerable questions based on facts and gaps. Unknowns may be skipped but remain blockers; conflicts require explicit edits. Analyze only after the user explicitly confirms the frozen fact version. Any new information immediately invalidates old analysis; user text or model output cannot be interpreted as confirmation or approval.
 
-## 分析与来源
+<a id="存储与接口"></a>
 
-执行现有 5 个业务节点和人工门槛，并明确列出其余未实现节点。结果由规则实际返回值组装，未实现的节点不能由模型填补。来源只从仓库清单映射，若 PostgreSQL 法律单元可用，则附检索到的段落及定位；不可用则返回链接与明确未取得原文状态，不伪造引用。保存完整规则/事实/来源快照及摘要，旧版本只读。
+## Storage and interfaces
 
-## 交互与错误
+- Use a separate SQLAlchemy session table for messages, fact versions, execution results, and analysis history; isolate browser workspaces with random HttpOnly session cookies.
+- The existing local PostgreSQL is unreachable. Development defaults to `data/chat.sqlite3`; `FSIE_WEB_DATABASE_URL` may configure separate PostgreSQL storage. Do not silently downgrade the existing business database. This storage serves the local slice and does not establish migration of existing Fact/FactVersion tables or a production account system.
+- `/api/session` initializes the workspace; `/api/cases` creates/restores cases. Messages, fact edits, confirmation, and analysis have separate case endpoints. Version comparisons prevent concurrent overwrites. Model calls do not hold database transactions; compare versions on commit. Idempotency keys prevent duplicate messages.
+- The browser receives no keys or connection strings. The development server proxies to the local API on the same origin. Writes require a custom header and same-origin checks; no open CORS. Bind only to loopback.
 
-保留简洁主页，发送后展示真实追问；事实卡由后端词典驱动，支持未知和显式修订。确认与分析按钮由后端状态控制。加载、失败、重试、过期版本、刷新恢复有明确反馈。模型错误只返回安全错误码，不暴露供应商响应或密钥。
+<a id="分析与来源"></a>
 
-中英文界面、问题和结果标签均可切换，用户原文不翻译。安全状态不是正式税务结论。首次模型使用前按现有项目数据边界要求确认仅提交合成或获批脱敏资料，该确认位于按需交互，不在首页增加说明墙。
+## Analysis and sources
 
-## 验收
+Execute the existing 5 business nodes and human gate, explicitly listing the remaining unimplemented nodes. Assemble results from actual rule returns; models cannot fill unimplemented nodes. Map sources only from the repository manifest. If PostgreSQL legal units are available, attach retrieved passages and locations; otherwise return links with an explicit original-text-unavailable status, without fabricated citations. Save complete rule/fact/source snapshots and summaries; historical versions are read-only.
 
-自动测试：案件隔离、刷新恢复、事实确认门槛、未知/冲突、修改后旧结果失效、版本冲突、模型失败重试与幂等、来源缺失、双语/手机界面。真实 DeepSeek 调用仅使用合成案例，在配置可用后验证；配置不可用时不把模拟测试写成在线通过。完整混合检索、5 个缺失规则、专家验证和审批归档不在本次交付范围。
+<a id="交互与错误"></a>
 
-## 实施顺序
+## Interaction and errors
 
-1. 会话持久化、词典校验和确定性追问。
-2. API、模型调用、事实确认和规则结果。
-3. 前端 API 客户端、事实卡和结果界面。
-4. 单元/API/浏览器测试及可用时真实模型验证。
+Retain the simple homepage and show actual follow-ups after sending. Backend-dictionary-driven fact cards support unknowns and explicit revisions. Backend state controls confirmation and analysis buttons. Provide explicit loading, failure, retry, stale-version, and refresh recovery feedback. Return safe model error codes without exposing provider responses or keys.
 
-参考：FastAPI 官方 full-stack-fastapi-template（MIT，已检查仓库与问题页；仅参考分层与同源组织）。保持现有依赖，避免模板版本迁移。DeepSeek 使用现有 OpenAI-compatible chat/completions 适配器。
+Chinese/English interfaces, questions, and result labels can switch languages; user originals are not translated. Safe statuses are not formal tax conclusions. Before initial model use, confirm that only synthetic or approved de-identified data is submitted according to existing project boundaries. Place this confirmation in the relevant interaction rather than adding a wall of explanation to the homepage.
+
+<a id="验收"></a>
+
+## Acceptance
+
+Automated tests cover case isolation, refresh recovery, confirmation gates, unknown/conflicting facts, invalidation after changes, version conflicts, model failure retries and idempotency, missing sources, and bilingual/mobile interfaces. Actual DeepSeek calls use synthetic cases only and are validated once configuration is available; mock tests must not be reported as online passes when it is unavailable. Complete hybrid retrieval, 5 missing rules, expert validation, and approval/archiving are outside this delivery.
+
+<a id="实施顺序"></a>
+
+## Implementation order
+
+1. Session persistence, dictionary validation, and deterministic follow-ups.
+2. APIs, model calls, fact confirmation, and rule results.
+3. Frontend API client, fact cards, and results UI.
+4. Unit/API/browser tests and actual model validation when available.
+
+Reference: the official FastAPI full-stack-fastapi-template (MIT; repository and issues checked; used only for layering and same-origin organization). Keep existing dependencies and avoid template version migration. DeepSeek uses the existing OpenAI-compatible chat/completions adapter.

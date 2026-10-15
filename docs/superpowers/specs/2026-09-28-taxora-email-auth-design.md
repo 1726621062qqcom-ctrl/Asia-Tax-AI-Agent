@@ -1,13 +1,15 @@
-# Taxora 邮箱登录设计与实施顺序
+<a id="taxora-邮箱登录设计与实施顺序"></a>
 
-用户确认暖白墨绿视觉、T 形 Logo、Taxora 税衡名称，并要求实现邮箱登录注册。范围包括注册、邮箱验证、登录、找回及更新密码、退出与个人云端案件隔离。
+# Taxora Email Sign-In Design and Implementation Order
 
-登录页采用左右分区，手机仅显示表单；工作台沿用聊天布局，侧边栏调整为浅绿并增加账号与退出入口。保留语言切换和减少动效设置，动画不增加网络等待。
+The user confirmed the warm-white/dark-green appearance, T-shaped logo, and Taxora name, and requested email sign-in/registration. Scope includes registration, email verification, sign-in, password recovery/update, sign-out, and isolation of personal cloud cases.
 
-实现顺序：认证后端 → 账号身份绑定现有案件 → 登录与恢复表单 → 工作台挂载与退出清理 → 隔离及浏览器回归 → 邮件配置后的真实验证。
+The sign-in page uses two columns, showing only the form on mobile. The workspace retains the chat layout; the sidebar becomes light green with account/sign-out entry points. Retain language switching and reduced-motion preferences; animation must not add network waiting time.
 
-Supabase 负责认证和密码管理。后端调用固定配置的 Auth API，令牌放 HttpOnly Cookie；经过远端验证的已确认邮箱用户 UUID 是唯一案件身份。无配置时关闭案件访问，不保留匿名回退。旧 cookie 案件不自动迁移，组织角色及专业批准不在本次范围。
+Implementation order: authentication backend → bind account identity to existing cases → sign-in/recovery forms → workspace mounting/sign-out cleanup → isolation/browser regression → actual verification after email configuration.
 
-错误按认证失败、邮箱未验证、限流和服务不可用分类，不向页面传递供应商原始异常。邮箱发送成功页面不披露账号是否存在。恢复回调清除 URL 令牌，校验 access 与 refresh token 的用户一致后建立 Cookie。回归检查必须覆盖跨账号读写拒绝、会话恢复、注册校验、恢复页及语言与手机布局。
+Supabase handles authentication and passwords. The backend calls the fixed, configured Auth API; tokens use HttpOnly cookies. The remotely validated UUID of a confirmed-email user is the sole case identity. Missing configuration disables case access with no anonymous fallback. Old cookie cases do not migrate automatically; organization roles and professional approval are out of scope.
 
-界面和接口可先完成；真实邮件取决于项目 URL、公开 API key、回调和 SMTP 配置，不把替身测试称为云端注册验收。
+Classify errors as authentication failure, unverified email, rate limiting, or unavailable service without passing raw provider exceptions to the page. Email-sent pages do not disclose account existence. Recovery callbacks remove URL tokens, check that access and refresh tokens identify the same user, and establish cookies. Regression must cover rejected cross-account reads/writes, session recovery, registration validation, recovery pages, language, and mobile layouts.
+
+UI and APIs may be completed first; actual email depends on the project URL, public API key, callbacks, and SMTP. Substitute tests are not cloud registration acceptance.

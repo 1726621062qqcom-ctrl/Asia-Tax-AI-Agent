@@ -1,217 +1,241 @@
-# 香港境外股息咨询：用户案例与分步输入模板
+<a id="香港境外股息咨询用户案例与分步输入模板"></a>
 
-[English version](HK_FSIE_USER_CASE_TEMPLATES.en.md)
+# Hong Kong Foreign Dividend Consultations: User Cases and Guided-Input Templates
 
-本文件供 Taxora 产品演示、用户访谈及前端实现使用。下列公司、金额、日期和交易均为**虚构资料**，不是税务结论，也不是可以直接套用的申报意见。每个案例有两种输入形式：长问题可以直接复制到聊天框；其下的分步表单展示**同一组事实**如何逐层填写，供界面实现和验收使用。独立的案例模板选择入口尚未上线。
+[Companion English document](HK_FSIE_USER_CASE_TEMPLATES.en.md)
 
-## 一、三个案例：长问题与对应的分步表单
+This document supports Taxora product demonstrations, user interviews, and frontend planning. All companies, amounts, dates, and transactions below are **fictional**. They are not tax conclusions or filing advice. Each case has two input formats: a long question that can be pasted into chat, followed by a guided form showing how to enter **the same stated facts**. A separate case-template picker has not yet been released.
 
-### 案例一：新加坡子公司分红，资料比较齐全
+<a id="一三个案例长问题与对应的分步表单"></a>
 
-> 我们是一家在香港经营业务的公司，属于一个跨国企业集团。公司在香港有租用的办公室和三名全职员工，主要负责集团的区域采购、合同管理及财务协调。我们直接持有一家新加坡子公司 35% 的股份，从 2022 年 3 月起一直持有，中间没有转让或改变持股比例。
+## 1. Three cases: long question and matching guided form
+
+<a id="案例一新加坡子公司分红资料比较齐全"></a>
+
+### Case 1: Dividend from a Singapore subsidiary, with fairly complete records
+
+> We are a company carrying on business in Hong Kong and are part of a multinational enterprise group. We lease an office in Hong Kong and have three full-time employees there. They mainly handle regional procurement, contracts, and financial coordination for the group. We directly own 35% of a Singapore subsidiary. We acquired the shares in March 2022 and have not transferred any shares or changed our ownership percentage since then.
 >
-> 新加坡子公司在 2025 年 8 月向我们派发了约 180 万新加坡元股息，款项直接进入我们香港公司的香港银行账户。我们有董事会分红决议、持股记录、银行入账记录和新加坡公司的财务报表。财务同事说新加坡公司的相关利润已经在当地处理过税务，但我手上暂时没有完整的缴税证明。
+> In August 2025, the Singapore subsidiary paid us a dividend of approximately SGD 1.8 million, directly into our Hong Kong company's bank account in Hong Kong. We have the board resolution approving the dividend, shareholding records, a bank credit record, and the Singapore company's financial statements. Our finance colleague says the related profits have already been dealt with for tax in Singapore, but I do not yet have complete proof of the tax paid.
 >
-> 请帮我分析这笔股息在香港需要核对哪些 FSIE 条件，目前哪些事实已经足够、哪些还缺证明。请把你使用的法规或税务局资料列出来，并告诉我接下来最该向新加坡子公司索取什么文件。暂时不要把缺失的资料当作已经满足。
+> Please help me identify which Hong Kong FSIE conditions need to be checked for this dividend, what facts are sufficiently documented, and what evidence is still missing. Please identify the legislation or Inland Revenue Department materials you rely on and tell me which documents I should request from the Singapore subsidiary first. Do not treat missing evidence as if it had already been supplied.
 
-**预期检验点：** 能区分“财务同事的说法”和已取得的税务证明；能说明需要核对的条件与资料，引用对应来源，而不是仅凭持股比例给结论。
+**What this tests:** The response distinguishes a colleague's account from tax evidence, identifies conditions and missing records, cites sources, and avoids concluding solely from the ownership percentage.
 
-#### 同一案例的分步表单
+<a id="同一案例的分步表单"></a>
 
-**第 1 步 · 咨询目标**
+#### Guided form for the same case
 
-- 交易阶段：已经收到股息。
-- 我想解决的问题：核对香港 FSIE 相关条件，找出缺失证明及下一步要索取的文件。
+**Step 1 · Consultation goal**
 
-**第 2 步 · 香港收款公司**
+- Transaction stage: Dividend already received.
+- Goal: Check relevant Hong Kong FSIE conditions, missing evidence, and documents to request next.
 
-- 收款方：一家在香港经营业务的集团公司，可先用“香港公司 A”代称。
-- 在香港经营业务：是；描述为区域采购、合同管理和财务协调。
-- 属于跨国企业集团：用户陈述为“是”；集团架构证明仍需核对。
-- 是纯股权持有实体吗：从所述其他业务看，**不要自动勾选**；请用户确认实际业务范围。
+**Step 2 · Hong Kong recipient**
 
-**第 3 步 · 派息公司与股息**
+- Recipient: A group company carrying on business in Hong Kong; use “HK Company A” as an alias.
+- Hong Kong business activities: Regional procurement, contract management, and financial coordination.
+- MNE group: The user says yes; supporting group records still need review.
+- Pure equity holding entity: Do **not** select this automatically. Ask the user to confirm the full range of the company's activities.
 
-- 直接派息方：新加坡子公司。
-- 收入类型：股息；来源地性质仍需依据事实核对。
-- 金额与币种：约 **1,800,000 SGD**；精确数额以派息单和入账记录核对。
-- 宣布／累算日期：**未提供确切日期**，不能把“2025 年 8 月派发”直接当作累算日期。
+**Step 3 · Payer and dividend**
 
-**第 4 步 · 收款路径**
+- Direct payer: Singapore subsidiary.
+- Income type: Dividend; legal source characterization still requires checking.
+- Amount and currency: Approximately **SGD 1,800,000**; verify the precise amount against the dividend advice and bank record.
+- Declaration/accrual date: **Exact date not supplied**. “Paid in August 2025” is not itself an accrual date.
 
-- 路径：新加坡子公司 → 香港公司 A 的香港银行账户。
-- 收款期间：2025 年 8 月；具体入账日待银行记录确认。
-- 是否有现金池、抵销或其他路径：未提及，选择“待确认”，不默认“无”。
+**Step 4 · Receipt path**
 
-**第 5 步 · 持股关系**
+- Stated path: Singapore subsidiary → HK Company A's bank account in Hong Kong.
+- Receipt period: August 2025; verify the actual credit date.
+- Cash pooling, set-off, or another route: Not mentioned; mark **to confirm**, rather than “no”.
 
-- 持股方式与比例：香港公司 A **直接持有 35%** 新加坡子公司股份。
-- 起始时间：2022 年 3 月；确切取得日未提供。
-- 期间变化：用户称中间没有转让或比例变化；以股东名册核对。
+**Step 5 · Ownership**
 
-**第 6 步 · 境外税务与香港活动**
+- Relationship and percentage: HK Company A **directly owns 35%** of the Singapore subsidiary.
+- Acquisition: March 2022; exact day not supplied.
+- Changes during holding period: The user says none; check against the share register.
 
-- 境外税务：财务同事称相关利润已在新加坡处理税务；税种、纳税主体、期间和金额均**待核对**，不能勾选“已证明缴税”。
-- 香港活动：三名全职员工、租用办公室，从事前述业务；员工和场所是否满足具体要求不由此自动判定。
+**Step 6 · Foreign tax and Hong Kong activities**
 
-**第 7 步 · 特殊安排与资料**
+- Foreign tax: A finance colleague says related profits were dealt with for tax in Singapore. The tax type, taxpayer, period, and amount are **unverified**. Do not mark foreign tax as proven.
+- Hong Kong activities: Three full-time employees and a leased office supporting the stated business. Their legal adequacy cannot be decided from these facts alone.
 
-- 已有：董事会分红决议、持股记录、银行入账记录、新加坡公司财务报表。
-- 待补：境外税务证明及税额、适用期间的核对；是否有临近重组等特殊安排亦待用户回答。
+**Step 7 · Arrangements and documents**
 
-**第 8 步 · 核对提交**
+- Available: Dividend resolution, shareholding records, bank credit record, and Singapore financial statements.
+- To obtain or check: Foreign tax evidence, amounts and periods, and whether any relevant restructuring or special arrangement occurred.
 
-- 摘要应显示：已陈述的直接持股和香港入账，以及“境外税务证明待核对”“准确日期待核对”。用户确认事实后，系统才能按这些事实继续分析。
+**Step 8 · Review and submit**
 
-### 案例二：中国内地项目分红，持股时间短、香港活动有限
+- The summary should show the stated direct holding and Hong Kong receipt alongside “foreign tax evidence unverified” and “exact dates unverified”. Analysis should use only the facts the user confirms.
 
-> 我们的香港公司是集团里的投资控股公司，属于跨国企业集团。它持有一家中国内地项目公司的 8% 股份，股份是 2025 年 5 月取得的。内地公司在 2026 年 1 月宣布分红，我们在 2026 年 2 月收到约人民币 500 万元，款项汇入香港公司的香港银行账户。我们有投资协议、分红通知和银行流水，也有一份与这次分红相关的内地税务文件，但还没有核对文件记载的是哪一层公司的哪一种税。
+<a id="案例二中国内地项目分红持股时间短香港活动有限"></a>
+
+### Case 2: Dividend from a Mainland China project, short holding period, limited Hong Kong operations
+
+> Our Hong Kong company is the group's investment holding company and belongs to a multinational enterprise group. It holds 8% of a project company in Mainland China; the shares were acquired in May 2025. The Mainland company declared a dividend in January 2026. We received approximately CNY 5 million in February 2026 into the Hong Kong company's bank account in Hong Kong. We have an investment agreement, dividend notice, and bank statements. We also have a Mainland tax document relating to this dividend, but have not checked which company, tax, or level of profits the document concerns.
 >
-> 香港公司目前没有独立租用办公室，也没有专职投资团队；部分管理工作由集团其他公司员工协助。不过，香港公司的董事参与过投资审批和后续决策，我们可以提供部分会议记录。我想知道，持股比例和持有时间会怎样影响分析？香港公司的实际活动又需要核对什么？现有税务文件能证明什么、不能证明什么？
+> The Hong Kong company does not lease its own office or employ a dedicated investment team. Some management work is assisted by employees of other group companies. However, the Hong Kong company's directors participated in approving the investment and making subsequent decisions, and we can provide some meeting records. I want to understand how the ownership percentage and holding period affect the analysis, what needs to be checked about the company's Hong Kong activities, and what the tax document does and does not establish.
 >
-> 请针对**这笔内地公司支付给香港公司的股息**回答，逐项说明已知事实、尚未证实的条件和需要补充的材料。如果目前不能得出结论，请明确停在哪一步，不要直接给我一个“免税”或“应税”的判断。
+> Please answer specifically about **this dividend paid by the Mainland company to the Hong Kong company**. Set out the known facts, unverified conditions, and documents needed. If the current information does not support a conclusion, tell me where the analysis stops. Please do not simply say “exempt” or “taxable”.
 
-**预期检验点：** 能分别核对持股、境外税务文件、香港实体类别和实际活动；不会把“没有独立办公室”自动等同于整个条件失败，也不会把文件存在等同于其内容已核实。
+**What this tests:** The response separately assesses ownership facts, the contents of the tax document, entity classification, and Hong Kong activities. It must not equate “no separate office” with automatic failure, or possession of a document with proof of its contents.
 
-#### 同一案例的分步表单
+<a id="同一案例的分步表单-1"></a>
 
-**第 1 步 · 咨询目标**
+#### Guided form for the same case
 
-- 交易阶段：已经收到股息。
-- 我想解决的问题：核对持股和香港活动会怎样影响本笔股息的分析，弄清现有内地税务文件能证明什么。
+**Step 1 · Consultation goal**
 
-**第 2 步 · 香港收款公司**
+- Transaction stage: Dividend already received.
+- Goal: Understand the ownership and Hong Kong-activity questions and what the Mainland tax document proves.
 
-- 收款方：集团香港投资控股公司，可先用“香港公司 B”代称。
-- 属于跨国企业集团：用户陈述为“是”；证明材料待核对。
-- 是否在香港经营业务、是否属于“纯股权持有实体”：**分别待确认**。名称叫“投资控股公司”并不能自动决定这些字段。
+**Step 2 · Hong Kong recipient**
 
-**第 3 步 · 派息公司与股息**
+- Recipient: The group's Hong Kong investment holding company; use “HK Company B” as an alias.
+- MNE group: The user says yes; group evidence still needs review.
+- Carries on business in Hong Kong / pure equity holding status: **Two separate matters to confirm.** A company name does not determine either fact.
 
-- 直接派息方：中国内地项目公司。
-- 收入类型：股息；金额与币种：约 **5,000,000 CNY**。
-- 宣布分红：2026 年 1 月，具体日期待补；收入累算日期不能凭月份直接填入。
+**Step 3 · Payer and dividend**
 
-**第 4 步 · 收款路径**
+- Direct payer: Mainland China project company.
+- Income type: Dividend; amount and currency: Approximately **CNY 5,000,000**.
+- Dividend declared: January 2026; exact day is missing. Do not infer an accrual date from the month alone.
 
-- 路径：内地项目公司 → 香港公司 B 的香港银行账户。
-- 入账：2026 年 2 月，具体入账日以银行流水核对。
-- 其他中间账户、抵销或资金用途：未说明，保留为待确认。
+**Step 4 · Receipt path**
 
-**第 5 步 · 持股关系**
+- Stated path: Mainland project company → HK Company B's bank account in Hong Kong.
+- Credit period: February 2026; verify the exact date against the bank statement.
+- Intermediate accounts, set-off, or use of funds: Not described; leave to confirm.
 
-- 持股比例：**8%**；香港公司是否直接登记为股东，用户尚未明说，不能只凭“持有”二字填“直接”。
-- 取得时间：2025 年 5 月，具体日期待补；连续持有期间以完整日期和记录核算，不凭两个自然月份猜测。
+**Step 5 · Ownership**
 
-**第 6 步 · 境外税务与香港活动**
+- Percentage: **8%**. The user has not expressly said whether HK Company B is the registered direct shareholder; do not infer “direct” solely from “holds”.
+- Acquisition: May 2025; exact date missing. Calculate any continuous holding period only from verified dates and records.
 
-- 境外税务：有一份相关内地税务文件，但税种、纳税主体、税款对应的利润或股息尚未核对；状态为“文件已取得，内容待核对”。
-- 香港活动：没有独立租用办公室和专职投资团队；部分工作由集团其他公司员工协助，香港董事参与投资审批与后续决策。活动是否达到要求，保留为专业待判事项。
+**Step 6 · Foreign tax and Hong Kong activities**
 
-**第 7 步 · 特殊安排与资料**
+- Foreign tax: A relevant Mainland tax document exists, but the tax type, taxpayer, and relationship to the dividend or underlying profits have not been checked. Record “document obtained; contents unverified”.
+- Hong Kong activities: No separately leased office or dedicated investment team; employees of other group companies assist, while HK Company B's directors participate in investment decisions. Adequacy remains a matter for review.
 
-- 已有：投资协议、分红通知、银行流水、待核对的内地税务文件；部分会议记录可提供。
-- 待补：准确持股与分红日期、股东登记资料、内地税务文件的具体内容、集团协助工作的安排；有无重组尚未说明。
+**Step 7 · Arrangements and documents**
 
-**第 8 步 · 核对提交**
+- Available: Investment agreement, dividend notice, bank statements, Mainland tax document requiring review, and some meeting records that can be supplied.
+- Missing or unverified: Exact ownership and dividend dates, shareholder register, the tax document's contents, group support arrangements, and whether restructuring occurred.
 
-- 摘要应保留“8%”“2025 年 5 月取得”“2026 年 2 月入账”这些陈述，同时突出**具体日期、持股方式、税务文件内容与实体类别未确认**，不自动给免税或应税结论。
+**Step 8 · Review and submit**
 
-### 案例三：日本投资项目，经过中间公司且尚未实际分红
+- Retain the user's statements “8%”, “acquired May 2025”, and “received February 2026”, while prominently marking **the exact dates, holding route, tax document contents, and entity classification as unverified**. Do not produce an automatic exempt/taxable conclusion.
 
-> 我们正在规划一个日本投资项目，希望在分红之前弄清香港税务上的资料要求。集团的香港公司持有一家新加坡控股公司 100% 的股份，新加坡控股公司再持有一家日本经营公司 22% 的股份。日本公司预计在 2027 年分红，但金额和日期尚未确定。项目组讨论过两步安排：日本公司先向新加坡控股公司分红，之后新加坡控股公司再另行决定是否向香港公司分红。我们还没有作出第二次分红决议。
+<a id="案例三日本投资项目经过中间公司且尚未实际分红"></a>
+
+### Case 3: Planned Japanese investment with an intermediate company and no dividend yet received
+
+> We are planning an investment in Japan and want to understand the Hong Kong tax documentation before any dividend is paid. Our group's Hong Kong company owns 100% of a Singapore holding company, which owns 22% of a Japanese operating company. The Japanese company expects to pay a dividend in 2027, but neither the amount nor the date has been decided. The project team has discussed two steps: the Japanese company would first pay a dividend to the Singapore holding company; the Singapore holding company would later decide separately whether to pay a dividend to the Hong Kong company. No resolution for the second dividend has been made.
 >
-> 资金路径也没有定案：香港公司将来可能把收到的款项留在境外账户，也可能汇入香港银行账户，用于支付香港团队的项目费用。集团在 2026 年调整过部分持股安排，我可以提供调整前后的股权图、收购文件和商业理由说明，但目前没有最终版文件。香港公司有员工和办公室，不过日本项目的日常经营由日本团队负责。
+> The fund flow has not been decided either. The Hong Kong company might leave any future receipts in an offshore account or bring them into a Hong Kong bank account and use them to pay project expenses of its Hong Kong team. The group changed parts of its ownership structure in 2026. I can provide before-and-after group charts, acquisition documents, and a memorandum explaining the commercial rationale, but final versions are not yet available. The Hong Kong company has employees and an office, while the Japanese team operates the Japanese project day to day.
 >
-> 请先帮我区分：日本公司付给新加坡公司，以及新加坡公司可能付给香港公司，是否应当作为两笔不同交易分别分析？哪些事情现在只能做事前准备，必须等分红决议、实际收款和资金流确定后才能判断？请列出我们现在应该建立的文件清单，并标明哪些问题需要税务专业人士复核。不要把计划中的分红写成已经发生。
+> Please first distinguish the Japanese company's possible payment to the Singapore company from the Singapore company's possible payment to the Hong Kong company. Which questions can be prepared for now, and which require actual dividend resolutions, receipts, and fund flows? List the documents we should assemble and flag matters requiring professional tax review. Do not describe a planned dividend as if it had happened.
 
-**预期检验点：** 能拆开两笔股息，识别香港公司的直接派息方是新加坡控股公司；不会把日本公司的第一笔分红直接当成香港公司的收入，也不会编造未来日期、金额或收款地点。
+**What this tests:** The response treats the two dividends separately, recognizes the Singapore holding company as the proposed direct payer to the Hong Kong company, and invents no future dates, amounts, or receipt locations.
 
-#### 同一案例的分步表单
+<a id="同一案例的分步表单-2"></a>
 
-**第 1 步 · 咨询目标**
+#### Guided form for the same case
 
-- 交易阶段：**计划中；香港公司尚未收到股息**。
-- 我想解决的问题：事前整理两笔潜在交易、需要准备的文件与专业复核事项。
+**Step 1 · Consultation goal**
 
-**第 2 步 · 香港收款公司**
+- Transaction stage: **Planned; the Hong Kong company has not received a dividend.**
+- Goal: Plan the evidence collection and review questions for two possible transactions.
 
-- 拟收款方：“香港公司 C”；集团结构显示有新加坡和日本实体，但香港公司的跨国企业集团身份仍应由用户确认。
-- 香港活动：用户称有员工和办公室，人数、活动内容和相应记录未提供；日本项目由日本团队经营。
-- 是否为纯股权持有实体：未说明，留作待确认。
+**Step 2 · Hong Kong recipient**
 
-**第 3 步 · 派息公司与股息**
+- Proposed recipient: “HK Company C”. Its group includes Singapore and Japanese companies, but the user should still confirm the relevant MNE-group facts.
+- Hong Kong activities: Employees and an office are stated; staffing levels, actual work, and records are missing. The Japanese team runs the Japanese project.
+- Pure equity holding status: Not stated; leave unconfirmed.
 
-- **交易 A（背景交易）：** 日本经营公司 → 新加坡控股公司；预计 2027 年发生。它不是香港公司 C 直接收到的股息。
-- **交易 B（本香港咨询的拟议交易）：** 新加坡控股公司 → 香港公司 C；尚未作出派息决议，金额、币种和日期全部留空。
-- 表单须允许查看交易 A 的背景，但不能把 A 的预计金额或时间自动复制到 B。
+**Step 3 · Payer and dividend**
 
-**第 4 步 · 收款路径**
+- **Transaction A, background:** Japanese operating company → Singapore holding company; expected in 2027. This is not a dividend directly received by HK Company C.
+- **Transaction B, the proposed Hong Kong case:** Singapore holding company → HK Company C. No dividend resolution has been made. Leave amount, currency, and date blank.
+- The form may show Transaction A as background, but must not copy a projected amount or date from A into B.
 
-- 香港公司 C 的实际收款：**尚未发生**；地点和日期均不填“已收到”。
-- 仅有备选方案：可能保留在境外账户，也可能汇入香港银行账户并支付香港团队的项目费用；需要逐步记录实际发生的路径。
+**Step 4 · Receipt path**
 
-**第 5 步 · 持股关系**
+- Actual receipt by HK Company C: **None yet**. Do not enter a location or date as an accomplished receipt.
+- Alternative plans only: Funds might remain in an offshore account or enter a Hong Kong bank account and pay Hong Kong team expenses. Record the path only when it actually occurs.
 
-- 香港公司 C → 新加坡控股公司：用户称 **100%**；具体取得日期未提供。
-- 新加坡控股公司 → 日本经营公司：用户称 **22%**；这是背景持股关系，不可直接写成香港公司 C 对日本经营公司的直接持股比例。
-- 2026 年曾调整部分持股安排；调整对象、前后比例和生效日期待股权图及收购文件核对。
+**Step 5 · Ownership**
 
-**第 6 步 · 境外税务与香港活动**
+- HK Company C → Singapore holding company: The user states **100%**; acquisition date is missing.
+- Singapore holding company → Japanese operating company: The user states **22%**. This is a background relationship, not a 22% direct holding by HK Company C in the Japanese company.
+- Some holdings were changed in 2026; identify the entities, old and new percentages, and effective dates from the documents.
 
-- 日本和新加坡层面的税务处理：均未提供，不预填“已征税”。
-- 香港公司的员工、场所和决策活动：有初步描述，但没有足够细节支持“充分／不足”的勾选。
+**Step 6 · Foreign tax and Hong Kong activities**
 
-**第 7 步 · 特殊安排与资料**
+- Tax treatment in Japan and Singapore: Not provided; do not preselect “taxed”.
+- Hong Kong staff, premises, and decision-making: Only a preliminary description is available, insufficient for an automatic adequacy judgment.
 
-- 可提供：调整前后股权图、收购文件、商业理由说明；目前均未取得最终版。
-- 未来需取得：两层各自的派息决议、实际付款和收款记录、相关税务文件、香港活动及决策记录。
+**Step 7 · Arrangements and documents**
 
-**第 8 步 · 核对提交**
+- Potentially available: Before-and-after group charts, acquisition documents, and commercial rationale; final versions are not yet available.
+- Needed later: Each dividend's resolution, actual payment and receipt records, relevant tax documents, and Hong Kong activity and decision-making records.
 
-- 输出“计划交易资料清单和条件说明”。**不得显示为已收到股息、不得运行依赖真实收款日期的确定性结论**；两笔交易分别留痕，待实际事件发生后更新事实版本。
+**Step 8 · Review and submit**
 
-## 二、长问题与分步表单的区别
+- Produce a **planned-transaction evidence checklist and conditional explanation**. Do not mark a dividend as received or give a deterministic conclusion that depends on an actual receipt date. Keep the two transactions separate and update the fact version when events occur.
 
-| 维度 | 一次性输入长问题 | 一层层填写的表单 |
+<a id="二长问题与分步表单的区别"></a>
+
+## 2. What changes between a long question and a guided form?
+
+| Aspect | Long question in one message | Guided form, one stage at a time |
 | --- | --- | --- |
-| 用户体验 | 适合已经掌握全貌、习惯讲述背景的人 | 适合不知道要提供哪些信息的人；一次只处理一个主题 |
-| 信息获取 | 速度快，但模型可能漏提、误读或把“听说”当成事实 | 字段清楚，能单独标记未知、待核对和冲突；填写时间较长 |
-| 复杂情况 | 可自由描述多层股权、两笔交易与特殊安排 | 基础步骤覆盖单笔股息；多笔交易须拆开，复杂关系需要附加说明 |
-| 保存方式 | 聊天原文先保存；抽取的候选事实必须由用户核对 | 用户直接填写字段；保存后仍要在摘要页确认 |
-| 合适的输出 | 先给研究性回答、关键追问和来源 | 确认事实后按规则节点分析，列出已知条件、缺口和依据 |
+| Best for | Users who already know the background and prefer to explain it naturally | Users who need help discovering which facts matter |
+| Information capture | Fast, but extraction may miss details or mistake hearsay for evidence | Each fact can be marked known, unknown, pending review, or conflicting; takes longer |
+| Complex transactions | Freely describes layered ownership and multiple payments | Basic path covers one dividend; additional transactions must be separated and complex relationships explained |
+| Confirmation | Original chat is stored; extracted candidate facts still require user confirmation | Entered fields also require a review summary before confirmation |
+| Appropriate output | Initial research response, follow-up questions, and sources | Analysis by rule node after fact confirmation, with conditions, gaps, and sources |
 
-两种入口最终应落到同一个案件事实版本。**聊天里的描述、表单里的默认示例、模型抽取结果都不等于已确认事实。** 用户修改任何关键事实后，旧分析要标记为过期。
+Both inputs should eventually reach the same versioned case-facts record. **A chat statement, example value, or model-extracted candidate is not automatically a confirmed fact.** Changing a material fact must make the previous analysis stale.
 
-## 三、香港股息分步表单草案
+<a id="三香港股息分步表单草案"></a>
 
-界面可采用与当前「结构分析」相近的大面积工作区：左侧显示步骤与完成情况，右侧只展示当前步骤的问题，底部提供“上一步”“保存草稿”“继续”。每个字段可选“暂不清楚”；重要字段附一句“为什么要问”。日期以 `dd/mm/yyyy` 显示，保存时转换为系统使用的 ISO 日期。金额与币种并排填写。以下是面向用户的提问顺序，不要求用户看到内部字段名。
+## 3. Shared Hong Kong dividend guided-form design
 
-| 步骤 | 用户要回答的主要问题 | 对应已有事实字段或处理方式 |
+The proposed workspace can use the large canvas already familiar from Structure Analysis: steps and progress on the left, only the current step's questions on the right, and Back, Save draft, and Continue at the bottom. “Not sure yet” should be available for each appropriate field; important questions should explain why they are asked. Display dates as `dd/mm/yyyy`, converting to ISO for storage. Put amount and currency side by side. Internal field names need not appear to users.
+
+| Step | Main user questions | Existing fact field or handling |
 | --- | --- | --- |
-| 1. 咨询目标与交易阶段 | 这笔分红已经发生，还是正在规划？想了解适用条件、核对已发生交易，还是整理缺失资料？ | 交易阶段和目标作为入口上下文；计划交易不得保存为已收款事实 |
-| 2. 香港收款公司 | 谁将收到股息？是否在香港经营业务？是否属于跨国企业集团？属于纯股权持有公司，还是还经营其他业务？ | `entity_hk_business_status`、`mne_group_status`、`pure_equity_holding_entity_status`；公司名称可用匿名代号 |
-| 3. 派息公司与股息 | 谁直接向香港公司派息？派息公司在哪个地区？这是股息还是其他收入？金额、币种、宣布／累算日期分别是什么？ | `payer_entity`、`income_type`、`income_legal_character`、`dividend_amount`、`dividend_currency`、`accrual_date`；派息方地区单独记录为背景，不从名称猜测来源地 |
-| 4. 收款路径 | 钱已收到哪里、何时收到？是否先进入境外账户、经现金池、抵销或用于香港债务？请按时间顺序填写每一步。 | `receipt_location`、`receipt_date`、`bank_or_account_path`；未发生的资金路径仅记录为计划 |
-| 5. 持股关系 | 香港公司直接还是间接持有派息公司？比例是多少？从何时开始、是否中途改变？间接持股可添加中间公司。 | `direct_or_indirect_holding`、`holding_percentage_pct`、`continuous_holding_period_months`、`acquisition_date`；多层关系另记路径，不能把下层公司的股息合并为香港公司的股息 |
-| 6. 境外税务与香港活动 | 已知股息或底层利润在何地、由谁缴过什么税？有什么证明？香港公司实际做什么、由谁决策、有多少人员和什么场所？ | `foreign_tax_on_dividend_or_underlying_profit`、`foreign_tax_jurisdiction`、`entity_activity_profile`、`hk_adequate_employees`、`hk_adequate_premises`；“是否足够”不由人数或场所一项自动判定 |
-| 7. 特殊安排与资料 | 是否在分红前后重组？商业目的是什么？有哪些董事会记录、股权文件、分红通知、银行流水和税务证明？ | `restructuring_near_income_date`、`commercial_rationale`、`evidence_inventory`；专业判断仍需复核 |
-| 8. 核对并提交 | 按交易时间线展示“用户已确认／待核对／不知道／相互矛盾”；允许返回修改。 | 保存事实版本、确认事实、运行现有分析；冲突不应自动转成“否” |
+| 1. Goal and stage | Has the dividend happened? Is the user checking conditions, reviewing an actual payment, or preparing missing documents? | Goal and transaction stage are intake context; a plan must not be recorded as an actual receipt |
+| 2. Hong Kong recipient | Who will receive the dividend? Does it carry on business in Hong Kong? Is it in an MNE group? Is it purely an equity holding company? | `entity_hk_business_status`, `mne_group_status`, `pure_equity_holding_entity_status`; aliases can replace real company names |
+| 3. Payer and dividend | Who pays the Hong Kong company directly, and where is that payer? Is the income a dividend? What are the amount, currency, declaration date, and accrual date? | `payer_entity`, `income_type`, `income_legal_character`, `dividend_amount`, `dividend_currency`, `accrual_date`; payer jurisdiction is context, not proof of income source |
+| 4. Receipt path | Where and when was the money actually received? Did it pass through an offshore account, cash pool, set-off, or Hong Kong debt payment? | `receipt_location`, `receipt_date`, `bank_or_account_path`; planned routes remain plans |
+| 5. Ownership | Is the Hong Kong company's interest direct or indirect? What percentage, from when, and did it change? | `direct_or_indirect_holding`, `holding_percentage_pct`, `continuous_holding_period_months`, `acquisition_date`; record intermediate companies separately |
+| 6. Foreign tax and Hong Kong activities | What tax was actually paid abroad, by whom, and on what income? What does the Hong Kong company do, where are decisions made, and who works there? | `foreign_tax_on_dividend_or_underlying_profit`, `foreign_tax_jurisdiction`, `entity_activity_profile`, `hk_adequate_employees`, `hk_adequate_premises`; adequacy is not inferred from headcount alone |
+| 7. Special arrangements and records | Was there restructuring near the dividend? What was its business rationale? Which resolutions, ownership records, bank statements, and tax documents are available? | `restructuring_near_income_date`, `commercial_rationale`, `evidence_inventory`; professional judgment remains required |
+| 8. Review | Show the timeline and facts marked confirmed, pending, unknown, or conflicting; allow edits. | Save a fact version, confirm facts, and run the existing analysis; a conflict must not silently become “no” |
 
-## 四、提交后的输出应如何呈现
+<a id="四提交后的输出应如何呈现"></a>
 
-当前产品已经有聊天研究回答、案例事实编辑及确认后的 FSIE 分析。面向用户的统一呈现可以按以下顺序组织；**这是一份展示方案，并不表示每一项已在页面中按此格式实现**：
+## 4. How should the result appear?
 
-1. **案件摘要：** 收款公司、直接派息公司、交易阶段、金额币种与收款时间线；每项标明“已确认／待核对”。
-2. **当前可分析范围：** 哪些 FSIE 节点有足够事实继续核对；如为计划交易，只给事前准备和条件说明。
-3. **逐项分析：** 每项显示目前状态、为什么、对应的法规或税务局资料及适用期间；条件未知时明确写“资料不足”。
-4. **优先补充的三类事项：** 按对下一步判断的影响排序，并附建议取得的文件。
-5. **复核与限制：** 列出必须交专业人士判断的事项，不把研究稿或规则节点状态写成最终税务意见。
+The current product has chat research answers, case-fact editing, and FSIE analysis after fact confirmation. The following is a **proposed unified presentation**, not a claim that each section is already implemented in the interface:
 
-**验收样例：** 将三个长问题分别粘贴到新对话，再用分步表单输入相同已知事实。两种入口生成的已确认事实应一致；未知事项、交易阶段和两笔交易边界不得丢失。若表单尚未上线，只能验证长问题的聊天链路，不能宣称“双入口一致性”通过。
+1. **Case summary:** Recipient, direct payer, transaction stage, amount and currency, and receipt timeline, with confirmation status per item.
+2. **Scope currently assessable:** Which FSIE questions have sufficient facts; planned transactions receive preparation and conditional explanations only.
+3. **Issue-by-issue analysis:** Current status, reason, relevant legislation or IRD material, and applicable period. Missing facts are labeled insufficient information.
+4. **Next three priorities:** Missing facts and suggested documents, ordered by their effect on the next step.
+5. **Review and limits:** Matters requiring professional judgment. A research draft or rule-node status is not presented as final tax advice.
 
-## 参考与实施边界
+**Acceptance comparison:** Paste each long question into a fresh conversation, then enter the same stated facts through the guided form. Confirmed facts should agree across modes; unknowns, transaction stage, and the distinction between the two payments in Case 3 must be preserved. Until the new template picker exists, only the current chat and generic fact-editor paths can be exercised; a new guided-template UI cannot be claimed as tested.
 
-- 法律与官方例子参考：[香港税务局 FSIE 专页](https://www.ird.gov.hk/chs/tax/bus_fsie.htm)、[FSIE 常见问题](https://www.ird.gov.hk/chs/faq/fsie.htm)、[官方示例](https://www.ird.gov.hk/eng/tax/fsie_example.htm)。填写字段以仓库中的 `hk_fsie_fact_fields.v0.json` 为准；法规适用性仍需按具体期间核对。
-- 产品设计参考：[OpenTax](https://github.com/xavierliwei/opentax)（MIT）强调输入、结果和依据可追溯。本文件只借鉴这一原则，未复制代码或资产，也不新增表单库依赖。
-- 本文件不修改数据库、税务规则或现有 UI。逐步表单若实施，应复用已有案件事实保存与确认接口，另行完成交互、字段校验、双语和真实链路验收。
+<a id="参考与实施边界"></a>
+
+## References and implementation boundary
+
+- Official materials: [IRD FSIE overview](https://www.ird.gov.hk/eng/tax/bus_fsie.htm), [FSIE FAQ](https://www.ird.gov.hk/eng/faq/fsie.htm), and [IRD illustrative examples](https://www.ird.gov.hk/eng/tax/fsie_example.htm). Match implementation fields to the repository's `hk_fsie_fact_fields.v0.json`; check law applicability for the relevant period.
+- Design reference: [OpenTax](https://github.com/xavierliwei/opentax) (MIT) emphasizes traceability among inputs, outcomes, and authorities. No code or assets were copied, and no new form library was added.
+- This document does not change the database, tax rules, or existing UI. Implementing guided templates should reuse case-fact save and confirmation interfaces and receive separate interaction, validation, bilingual, and real-chain acceptance testing.

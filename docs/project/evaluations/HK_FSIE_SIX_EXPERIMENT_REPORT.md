@@ -1,54 +1,66 @@
-# 香港股息双输入方式：六次实验记录
+<a id="香港股息双输入方式六次实验记录"></a>
 
-[English report](HK_FSIE_SIX_EXPERIMENT_REPORT.en.md)
+# Hong Kong Dividend Consultations: Six Input-Method Experiments
 
-实验日期：2026-10-14（中国标准时间）。案例均为虚构资料，输入取自[中文案例模板](../../product/HK_FSIE_USER_CASE_TEMPLATES.md)；英文对照见[英文案例模板](../../product/HK_FSIE_USER_CASE_TEMPLATES.en.md)。本报告记录程序与产品行为，**不构成税务专业验收**。
+[Companion English report](HK_FSIE_SIX_EXPERIMENT_REPORT.en.md)
 
-## 我们怎样判断回答好坏
+Run date: 14 October 2026 (China Standard Time). All cases are fictional and come from the [Chinese case templates](../../product/HK_FSIE_USER_CASE_TEMPLATES.md); see the [English case templates](../../product/HK_FSIE_USER_CASE_TEMPLATES.en.md) for a translation. This report records software and product behavior. **It is not a professional tax validation.**
 
-逐次查看五项，而不是只问“有没有回复”或让模型给自己的回答打分：
+<a id="我们怎样判断回答好坏"></a>
 
-1. **可用性：** 请求完成且返回可阅读的结果；失败、超时和重试单独记录。
-2. **事实保真：** 保留用户真正提供的金额、主体和交易阶段；没有确切日就不能补成某月 1 日，传闻不能写成已核实证明。
-3. **交易边界：** 明确谁向香港公司直接派息；计划与已发生分开，多笔股息不得合并，不能把下层公司的持股比例错记到香港公司的直接派息关系。
-4. **依据可追溯：** 引用 ID 必须属于本轮实际检索到的资料；资料的适用期间、范围和未覆盖内容仍要核对。**引用存在不等于该引用支持所有推理。**
-5. **对用户有用：** 直接回应所问，按重要性提出缺失事实、文件和下一步；大量原文堆砌但不解释本案，最多算部分完成。
+## How we judge an answer
 
-任一关键事实编造、交易主体混淆或无依据的确定性税务结论，均使该次**不能通过工程验收**。即使五项工程检查都通过，还需香港税务专家逐条核对法规解释、适用版本、证据与结论，才能谈专业正确性。[香港税务局 FSIE 专页](https://www.ird.gov.hk/chs/tax/bus_fsie.htm)和[官方示例](https://www.ird.gov.hk/eng/tax/fsie_example.htm)是专业复核时的官方材料入口。
+Each run is assessed against five criteria. A response is not good merely because it exists or because a model rates itself highly:
 
-## 运行方式与范围
+1. **Availability:** The request completes and returns a readable result. Failures, timeouts, and retries are recorded separately.
+2. **Fact fidelity:** Stated amounts, parties, and transaction stage are preserved. A month without a day must not become the first day of that month; hearsay must not become verified evidence.
+3. **Transaction boundaries:** Identify who pays the Hong Kong company directly. Keep planned and completed events apart, do not merge separate dividends, and do not attach a lower-tier company's ownership percentage to the proposed direct payer relationship.
+4. **Traceable support:** Citation IDs must belong to material actually retrieved for the current run. Period, scope, and missing coverage still need checking. **A citation's existence does not show that it supports every inference.**
+5. **User usefulness:** Address the actual question and prioritize missing facts, documents, and next steps. A long list of legal excerpts without case-specific explanation is at best partial.
 
-- 模型：本地配置的 `deepseek-flash`；知识来源：项目已配置的云端香港官方资料。六次均使用**虚构案情**与临时隔离的 SQLite 会话，未写入用户个人聊天。
-- 三次长问题：直接走现有 `ChatService` 的真实模型、检索和回复链路。三次表单：把同一案例已陈述的事实按字段保存，调用事实确认和现有分析；资料有缺口时明确选择“先看部分整理”，再运行。**这不是新的表单选择页面或浏览器点击测试**。
-- 原始记录：[本机 JSON](../../../reports/fsie-user-six-experiments.json)（`reports/` 被 Git 忽略；换电脑需按下方命令重新生成）。可复跑脚本：[evaluate_fsie_user_cases.py](../../../scripts/evaluate_fsie_user_cases.py)。
-- 完成只表示这一轮链路返回。模型回答不是独立税务标准答案；未由专家标注的三个合成案例也不能用于声称“总体准确率”或“召回率”。
+An invented material fact, confused transaction party, or unsupported definitive tax conclusion prevents an **engineering pass**. Even a run passing all five engineering checks would still require a Hong Kong tax expert to review legal interpretation, effective versions, evidence, and conclusions before claiming professional correctness. The [IRD FSIE overview](https://www.ird.gov.hk/eng/tax/bus_fsie.htm) and [official illustrative examples](https://www.ird.gov.hk/eng/tax/fsie_example.htm) are official starting points for that review.
 
-## 六次实际结果
+<a id="运行方式与范围"></a>
 
-| 编号 | 案例与输入 | 实际结果 | 评价 |
+## Method and limits
+
+- Model: the locally configured `deepseek-flash`; knowledge: the project's configured cloud collection of Hong Kong official materials. All six runs used **fictional facts** and isolated temporary SQLite case sessions. No personal user conversation was written.
+- Three long-question runs used the existing `ChatService` with the real model, retrieval, and response path. Three form runs saved the same stated facts field by field and used the existing confirmation and analysis path. Where facts were missing, the run explicitly requested a partial research draft before analysis. **These were not clicks through a new template picker or browser UI tests.**
+- [Local raw JSON](../../../reports/fsie-user-six-experiments.json) is ignored by Git under `reports/`; regenerate it on another machine using the [evaluation script](../../../scripts/evaluate_fsie_user_cases.py).
+- Completion only means a response returned in this run. These three synthetic cases have no expert-approved tax gold labels and cannot establish overall accuracy or retrieval recall.
+
+<a id="六次实际结果"></a>
+
+## Actual outcomes of the six planned runs
+
+| No. | Case and input | Observed outcome | Assessment |
 | --- | --- | --- | --- |
-| 1 | 新加坡股息，长问题 | 19.90 秒返回，检索 7 个片段，答复出现 7 个对应引用。抽取持股 35%、已发生及香港账户路径；但把“2022 年 3 月”写成 `2022-03-01`，把“2025 年 8 月”写成 `2025-08-01`，用户并未提供具体日。回复主要是法规摘录，缺少针对本案的直接解释和索件优先顺序。 | **失败：编造日期**；依据可追溯，回答实用性仅部分达到。 |
-| 2 | 新加坡股息，分步事实 | 4.77 秒完成保存、确认、明确授权部分整理及分析。首次分析正确阻止于 `partial_confirmation_required`；授权后检索 21 个法条片段，6 个节点，终态 `research_only_output`，证据门槛 `insufficient`，专业状态 `unverified`。准确的累算和收款日期仍是缺口。 | **工程链路部分通过**：保留未知和来源；尚无专业结论，也不是完整自然语言答复。 |
-| 3 | 内地股息，长问题 | 11.10 秒返回 `model_failed`，没有最终答复或保存事实；定向复测 11.62 秒后再次返回同一错误。当前记录无法进一步区分模型服务、响应解析或链路内部原因。 | **失败：连续两次无回答**。 |
-| 4 | 内地股息，分步事实 | 2.85 秒完成保存、确认及部分分析。首次运行被缺口门槛阻止；明确授权后返回 21 个法条片段和 6 个节点，`research_only_output` / `insufficient` / `unverified`。保留 8% 持股及“内地税务文件已取得但内容未核对”；持股方式、准确日期和香港经营状态仍为缺口。 | **工程链路部分通过**：缺口没有被自动补成有利事实。 |
-| 5 | 日本项目，长问题 | 13.67 秒返回，检索 7 个片段，答复实际展示 3 个可回溯引用。模型保留“计划中”，但把日本公司由新加坡公司持有的 **22%** 提成香港公司的 `holding_percentage_pct=22` 和“间接持股”，遗漏香港公司对其拟议直接派息方新加坡公司的 **100%**；还把两个备选资金路径写入通用账户路径字段。回复主要是资料摘录，没有清楚拆开两笔股息。 | **失败：交易关系混淆**；计划状态正确，引用可追溯。 |
-| 6 | 日本项目，分步事实 | 2.46 秒完成保存、确认及明确授权的部分分析。香港公司拟接受的是新加坡控股公司未来可能派发的股息，持股录为对新加坡公司 100%；日本→新加坡的 22% 作为背景单独描述。金额、日期和实际收款路径未编造。结果仍是 `research_only_output` / `insufficient` / `unverified`，21 个法条片段、6 个节点。 | **工程链路部分通过**：交易边界与计划状态保留；不应对未发生股息作确定性税务结论。 |
+| 1 | Singapore dividend, long question | Returned in 19.90 seconds with 7 retrieved passages and 7 matching displayed citations. Extracted 35% ownership, an occurred event, and the Hong Kong bank route. However, it turned “March 2022” into `2022-03-01` and “August 2025” into `2025-08-01`, although the user gave no days. The reply mainly listed legal excerpts and did not prioritize the requested documents. | **Fail: invented dates.** Citations are traceable; usefulness is only partial. |
+| 2 | Singapore dividend, guided facts | Saved and confirmed facts, explicitly authorized a partial draft, and analyzed them in 4.77 seconds. The first analysis attempt correctly returned `partial_confirmation_required`; after authorization, the run retrieved 21 statute passages and produced 6 nodes. Terminal state: `research_only_output`; evidence gate: `insufficient`; professional status: `unverified`. Exact accrual and receipt dates remain gaps. | **Partial engineering pass:** unknowns and sources preserved; no professional conclusion or complete natural-language answer. |
+| 3 | Mainland China dividend, long question | Returned `model_failed` after 11.10 seconds, with no final answer or saved facts. A targeted retest returned the same error after 11.62 seconds. The current record does not distinguish a model-service failure from response parsing or another internal stage. | **Fail: no answer on two attempts.** |
+| 4 | Mainland China dividend, guided facts | Saved and confirmed facts and completed partial analysis in 2.85 seconds. The first run was correctly blocked by missing-fact requirements; after explicit authorization, it returned 21 statute passages and 6 nodes with `research_only_output` / `insufficient` / `unverified`. It retained the 8% interest and “Mainland tax document obtained but not reviewed”; the holding route, exact dates, and Hong Kong business status remain gaps. | **Partial engineering pass:** missing facts were not silently treated as favorable. |
+| 5 | Japanese project, long question | Returned in 13.67 seconds, retrieved 7 passages, and displayed 3 traceable citations. The model preserved “planned” but mapped the Singapore company's **22%** in the Japanese company to the Hong Kong company's `holding_percentage_pct=22` and “indirect” holding, omitting the Hong Kong company's **100%** in its proposed direct payer, the Singapore company. It also placed alternative future fund routes in the generic account-path fact. The reply mostly listed source excerpts and did not clearly separate the two dividends. | **Fail: confused transaction relationship.** Planned status was retained and citations were traceable. |
+| 6 | Japanese project, guided facts | Saved and confirmed facts and completed an explicitly authorized partial analysis in 2.46 seconds. The proposed direct payer to the Hong Kong company is recorded as the Singapore holding company, with the Hong Kong company's 100% interest. Japan → Singapore and the 22% lower-tier interest remain separate background facts. No amount, date, or actual receipt path was invented. The result remains `research_only_output` / `insufficient` / `unverified`, with 21 statute passages and 6 nodes. | **Partial engineering pass:** transaction boundaries and planned status preserved; no definitive opinion on an event that has not occurred. |
 
-三次表单分析均有 5 项人工复核任务，包括金融实体排除、境外税务转换、反混合安排、主要目的与申报事项。三次的 `missing_locators` 均为空，说明**本轮调用的法条定位成功**，不表示法规资料或专业判断已经完备。表单事实由测试程序依照文档人工映射，尚未验收用户在浏览器中逐步填写的交互。
+Each form analysis included five professional review tasks: financial-entity exclusion, foreign-tax switch-over, anti-hybrid arrangements, main purpose, and filing. `missing_locators` was empty for all three form runs, meaning **the statute locations requested in this run were found**. That does not establish complete source coverage or professionally correct application. The form facts were manually mapped by the evaluation script from the case document; browser form entry has not been accepted.
 
-## 对比结论与优先修复点
+<a id="对比结论与优先修复点"></a>
 
-- **输入方式差异已经产生实质后果。** 长问题在案例一补造日期、案例三混淆 22% 与 100%，案例二完全无回复；分步输入保留了这些缺口与关系。因此当前不能把“大段输入”和“表单输入”宣称为等价。
-- **最高优先级：守住事实边界。** 月份不能归一成每月 1 日；多层持股必须绑定具体的“持有人→被持有人”，分红也必须绑定“派息方→收款方”。计划资金路径不得写成实际已发生路径。
-- **第二优先级：处理失败与回答质量。** 对 `model_failed` 增加可诊断但不泄密的阶段记录和面向用户的重试提示；检索有结果时先回答本案的核心问题，再展示少量关键出处及缺口，避免只罗列法条。
-- **第三优先级：验收新表单 UI。** 当前六次是服务链路对照；正式的三张案例卡、字段交互、双语、保存恢复和浏览器操作尚未实施或测试。
+## Comparison and priorities
 
-## 复跑
+- **Input mode changed the outcome materially.** The long-question route invented dates in Case 1, failed in Case 2, and confused 22% with 100% in Case 3. The guided-fact route preserved those distinctions. The two modes cannot currently be presented as equivalent.
+- **First priority: protect facts.** Month-only inputs must not be normalized to the first day. Multi-tier holdings need explicit holder → investee relations, and dividends need payer → recipient relations. A proposed fund route must not become an actual route.
+- **Second priority: diagnose failures and improve responses.** Add stage-level diagnostics for `model_failed` without recording secrets, plus a user-facing retry path. When retrieval succeeds, answer the case question first, then show selected authorities and gaps instead of dumping legal text.
+- **Third priority: accept the guided-template UI.** These six runs compare service paths; the three case cards, progressive field interactions, bilingual copy, save/resume, and browser behavior remain unimplemented or untested.
 
-在项目根目录、配置好现有模型与云端知识库后运行：
+<a id="复跑"></a>
+
+## Reproduction
+
+With the existing model and cloud knowledge configured, run from the repository root:
 
 ```powershell
 .venv/Scripts/python.exe scripts/evaluate_fsie_user_cases.py --output reports/fsie-user-six-experiments.json
 ```
 
-该命令会产生模型 API 用量。模型输出可能波动，应把本报告视为**这次运行的记录**，不是永远固定的结果。复测案例二的原始失败和后续失败均保留在本机 JSON 中；脚本使用已配置的模型密钥发起请求，但不会将密钥写入输出，也不会读取真实客户资料或写入共享云端案件表。
+This command incurs model API usage. Model behavior can vary, so this report describes **this run**, not an immutable benchmark. The original and repeat failures for Case 2 remain in the local JSON. The script uses the configured model key for requests but does not write it to its output, read real client data, or write cases to the shared cloud case table.

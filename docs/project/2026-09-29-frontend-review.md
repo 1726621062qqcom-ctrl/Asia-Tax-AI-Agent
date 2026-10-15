@@ -1,46 +1,58 @@
-# Taxora 前端下一步检查
+<a id="taxora-前端下一步检查"></a>
 
-## 2026-09-29 完成更新
+# Taxora Frontend: Next Checks
 
-本轮六项已实现：失效链接恢复、验证邮件重发、Markdown 排版与复制、按阅读位置滚动及回到底部、重命名/时间分组/归档与恢复、真实模型流式输出与停止生成。以下原检查表保留为当时问题记录，不代表这些项目仍未完成。
+<a id="2026-09-29-完成更新"></a>
 
-历史归档采用现有 JSON 文档字段，不需要迁移云端表结构。归档不删除内容，在“已归档”中恢复。重命名与归档遵守账号隔离、版本冲突检查及幂等操作。
+## Completion update, 2026-09-29
 
-点击停止会终止流式 HTTP 请求并关闭上游模型连接；部分回复与候选事实不落库，原问题恢复到输入框（已有新草稿时不覆盖）。如果停止前完整回复已经提交，重新读取并保留服务器结果。正式规则分析仍在完整确认后执行，不伪装成模型逐字输出。取消时已开始的检索线程可能运行至结束，但不会继续提交取消的结果；数据库提交已开始的极短竞态窗口以云端结果为准。
+Six items are implemented: expired-link recovery, verification email resend, Markdown/copying, reading-aware scrolling/return to bottom, rename/time grouping/archive/restore, and actual model streaming/stopping. The original checklist below is retained as a historical issue record, not a statement that these items remain unfinished.
 
-验证：126 项离线 Python 测试通过，11 项云端集成测试未运行；19 项浏览器测试通过；真实 DeepSeek 合成问候收到 17 个增量并完成结构校验。浏览器测试使用独立数据与可控制的模型替身，不读取真实对话。Gmail SMTP 和邮件模板由用户配置并报告实际收信正常。
+History archiving uses existing JSON document fields without cloud table migration. Archiving preserves content and supports restoration from Archived. Rename/archive respect account isolation, version conflicts, and idempotency.
 
-检查方式：阅读现有前端、接口和测试代码。浏览器连接失败，本轮未进行真实页面操作或手机实测；以下明确区分代码缺口和待验证项。未修改现有前端行为。
+Stop terminates the streaming HTTP request and closes the upstream model connection. Partial replies/candidate facts are not persisted; the original question is restored unless a new draft exists. If a full reply committed before stopping, reload and retain the server result. Formal rule analysis still follows complete confirmation and is not presented as model token output. A retrieval thread already started may finish after cancellation but cannot commit canceled results. In the brief race after database commit begins, cloud results are authoritative.
 
-## 已有基础
+Validation: 126 offline Python tests passed; 11 cloud integration tests were not run; 19 browser tests passed; an actual synthetic DeepSeek greeting produced 17 increments and passed structural validation. Browser tests use independent data and controlled model doubles without reading real conversations. The user configured Gmail SMTP/templates and reported successful actual delivery.
 
-邮箱注册、登录、找回密码、验证回调、退出登录；中英文切换；聊天立即显示已发送问题和思考动画；发送失败重试；历史对话与搜索；法规来源及版本折叠展示；案例事实编辑及分析；移动端抽屉、焦点约束和减少动画设置。
+Review method: read frontend, API, and test code. Browser connection failed, so this review did not operate actual pages or mobile devices. The list distinguishes code gaps from unverified items. No existing frontend behavior was changed.
 
-这些有实现和既有自动化测试，并不代表真实邮件、移动设备和跨设备云端流程已经全部验收。
+<a id="已有基础"></a>
 
-## 建议顺序
+## Existing foundation
 
-| 顺序 | 要做什么 | 当前证据及验收方式 | 谁一起做 |
+Email registration, sign-in, password recovery, verification callbacks, sign-out; Chinese/English switching; immediate sent-message display/thinking animation; retries; history/search; collapsible legal sources/versions; case fact editing/analysis; mobile drawers, focus constraints, and reduced motion.
+
+These have implementations and existing automated tests, not complete acceptance of actual email, mobile devices, or cross-device cloud workflows.
+
+<a id="建议顺序"></a>
+
+## Suggested order
+
+| Order | Work | Current evidence and acceptance | Collaborators |
 | --- | --- | --- | --- |
-| 1 | 修好失效验证链接后的登录恢复 | auth.tsx 在回调抛错后不再请求 session，configured 保持 false，AuthPage 禁用提交。应保留链接错误提示，同时允许正常登录/重新申请；补对应回归测试。 | A 为主 |
-| 2 | 补重新发送验证邮件 | AuthPage 只有“请先验证”提示，无重发操作；api/auth.py 无 resend 端点。补入口、频率限制和通用反馈，避免泄露账号是否存在。 | A + 后端 |
-| 3 | 补聊天基本操作 | Conversation 只用 p 展示回答，无复制与 Markdown 排版。先加复制、列表/表格/标题显示，禁止不安全 HTML，再考虑重新生成。 | A；重新生成需后端 |
-| 4 | 补等待与中断体验 | api.ts 等待完整 JSON，统一 65 秒超时；无流式输出和主动停止接口。先显示真实处理状态，后续接流式及取消协议，明确中断后保存什么；不能只把动画停掉。 | A + B |
-| 5 | 补对话管理 | Sidebar 只有标题搜索、选择、新建，无重命名、归档/删除和时间分组；useWorkspace 的草稿只在内存。先做标题与分组，再接安全的删除/归档及账号隔离的草稿恢复。 | A + 后端 |
-| 6 | 改长回答阅读 | Conversation 每次消息数量或 busy 改变会强制 scrollIntoView，不判断用户是否正在看旧消息。增加“回到底部”，仅在用户接近底部时自动跟随；不要抢走阅读位置。 | A |
-| 7 | 收拢税务结果 | 已有条文来源、事实和待复核清单，不必重建。优先展示“当前判断、还缺什么、下一步”，再展开原文及版本；不能把待复核显示为已确认结论。来源 Passages 的“尚未验证”是固定文案，未来需接真实审核状态。 | A + B/C |
-| 8 | 补账号与数据说明 | 当前只有邮箱和退出入口，无账户设置或独立隐私说明。说明保存哪些数据、如何删除、模型如何使用输入；修改密码和删除数据要有实际后端能力。 | A + 后端 |
-| 9 | 做手机和异常验收 | 已有移动布局与测试，仍需真实软键盘、窄屏表格、长引用、断网、过期会话、多标签退出、跨设备历史恢复验收。不要把已有响应式功能当作缺失功能重做。 | A |
+| 1 | Restore sign-in after expired verification links | auth.tsx stops requesting session after callback errors, leaving configured false and AuthPage disabled. Retain link errors while allowing sign-in/new requests; add regression. | A leads |
+| 2 | Add verification email resend | AuthPage only says to verify, with no resend; api/auth.py has no resend endpoint. Add entry point, rate limits, and generic feedback without disclosing account existence. | A + backend |
+| 3 | Add basic chat operations | Conversation uses p only, without copying/Markdown. Add copy, lists/tables/headings, prohibit unsafe HTML, then consider regeneration. | A; regeneration needs backend |
+| 4 | Improve waiting/interruption | api.ts waits for complete JSON with a common 65-second timeout, no streaming/active-stop API. Show actual processing state first, then streaming/cancellation with explicit persistence semantics; stopping animation alone is insufficient. | A + B |
+| 5 | Add conversation management | Sidebar supports title search/select/create only; no rename, archive/delete, or time groups. useWorkspace drafts are memory-only. Add titles/groups, then safe delete/archive and account-isolated draft recovery. | A + backend |
+| 6 | Improve long-answer reading | Conversation forces scrollIntoView on message-count/busy changes without checking old-message reading. Add return-to-bottom; auto-follow only near the bottom. | A |
+| 7 | Organize tax results | Existing sources, facts, and review lists need no rebuild. Show current assessment, missing items, and next steps first, with expandable originals/versions. Pending review is not confirmation. Passages' unverified label is fixed text and later needs actual review status. | A + B/C |
+| 8 | Add account/data explanations | Only email/sign-out exist, without account settings or a separate privacy explanation. Explain storage, deletion, and model input use. Password changes/data deletion need real backend support. | A + backend |
+| 9 | Accept mobile/exception behavior | Existing responsive layouts/tests still need actual soft keyboards, narrow tables, long quotes, offline/expired sessions, multi-tab sign-out, and cross-device history recovery. Do not rebuild existing responsive features as missing. | A |
 
-## 最先完成的一小批
+<a id="最先完成的一小批"></a>
 
-1. 修复验证链接失效后的恢复路径，联调重新发送验证邮件。
-2. 回答复制、基本排版和不打断阅读的滚动行为。
-3. 对话重命名及时间分组；定义删除/归档接口后再实现。
-4. 对以上流程做中英文、手机、网络失败验收。
+## First small batch
 
-流式回答与真正停止生成作为下一批，由 A 和 B 共同完成。资料上传、导出报告、专家审核界面应在数据处理与业务接口明确后再做，不添加无法工作的按钮。
+1. Fix expired-link recovery and integrate resend.
+2. Add copying, basic formatting, and noninterrupting scrolling.
+3. Add rename/time groups; define delete/archive APIs before implementation.
+4. Validate these flows in Chinese/English, mobile, and network failures.
 
-## 本轮邮件状态
+Streaming and actual stop are the next batch for A and B. Upload, report export, and expert review UI should follow defined data/business APIs; do not add nonfunctional buttons.
 
-注册验证和密码重置的中英双语品牌 HTML 已保存至 infrastructure/supabase/email-templates。未发布到 Supabase，默认发件人未改变。需控制台连接恢复后保存并实际收信检查。
+<a id="本轮邮件状态"></a>
+
+## Email status in this round
+
+Chinese/English branded registration verification and password reset HTML is saved in infrastructure/supabase/email-templates. It is not published to Supabase, and the default sender is unchanged. Save after dashboard connection recovery and verify actual delivery.

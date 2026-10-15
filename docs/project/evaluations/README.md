@@ -2,7 +2,7 @@
 
 ## Latest: Hong Kong FSIE dual-input experiments (2026-10-14)
 
-- [Six-experiment report (Chinese)](HK_FSIE_SIX_EXPERIMENT_REPORT.md) · [English report](HK_FSIE_SIX_EXPERIMENT_REPORT.en.md): tests detailed questions and step-by-step fact input for each of three synthetic cases, recording actual outputs, failures, and evaluation criteria.
+- [Six-experiment report (primary document)](HK_FSIE_SIX_EXPERIMENT_REPORT.md) · [English report](HK_FSIE_SIX_EXPERIMENT_REPORT.en.md): tests detailed questions and step-by-step fact input for each of three synthetic cases, recording actual outputs, failures, and evaluation criteria.
 - [Case templates and step-by-step forms](../../product/HK_FSIE_USER_CASE_TEMPLATES.md) · [English templates](../../product/HK_FSIE_USER_CASE_TEMPLATES.en.md): experiment inputs and examples of product interactions.
 - Rerun entry point: [evaluate_fsie_user_cases.py](../../../scripts/evaluate_fsie_user_cases.py). Raw local JSON remains in the Git-ignored `reports/` directory; the reports and script are available for team review and reruns.
 

@@ -1,26 +1,32 @@
-# 真实链路首轮冒烟与下一轮判定
+<a id="真实链路首轮冒烟与下一轮判定"></a>
 
-日期：2026-10-12。代码基线：`main` 的 `f7e9e69`。本轮仅使用仓库内合成题和已配置的模型、云端知识库；原始运行结果在本机 Git 忽略的 `reports/retrieval-main-2026-10-12.json`、`reports/chat-main-grounding-2026-10-12.json` 和 `reports/chat-hybrid-legacy-2026-10-12.json`。不包含真实客户资料或密钥。
+# Initial Live Workflow Smoke Tests and Next-Round Assessment
 
-## 已实测
+Date: 2026-10-12. Code baseline: `main` at `f7e9e69`. This round used only synthetic repository questions and the configured model/cloud knowledge database. Raw local results are Git-ignored: `reports/retrieval-main-2026-10-12.json`, `reports/chat-main-grounding-2026-10-12.json`, and `reports/chat-hybrid-legacy-2026-10-12.json`. No real client data or keys are included.
 
-| 环节 | 结果 | 结论边界 |
+<a id="已实测"></a>
+
+## Actual tests
+
+| Stage | Result | Limits of the conclusion |
 |---|---|---|
-| 直接云端检索 | 既有 20 道定位题 20/20 命中预期；中位 1.031 秒，最长 12.072 秒，7 题超过 3 秒 | 题目是开发回归集，不能据此宣称独立召回率或对旧策略的净提升 |
-| 真实模型 + 当前默认聊天配置 | 8 道合成题中 6 道返回消息、2 道 `knowledge_unavailable`；应有来源的 7 道均未形成可追溯回答 | T05、T07 失败；T06 走任务澄清；T08–T11 返回但来源为空；不存在的 Case 999999 正确拒绝编造 |
-| 临时开启 hybrid、保留 legacy 资料适配器 | 4 道精选题中 T05、T07、T08 失败，T16 返回无匹配 | 切换编排模式本身未解决资料可用性；这不是 C 资料服务联合验收 |
-| 固定 Li 发布物安装 | 再次报 `release_hash_mismatch`，目标目录未安装 | 保持哈希校验；结构计算和真实 C HTTP + Li 的本机全链路未运行 |
+| Direct cloud retrieval | Existing 20 location questions: 20/20 expected matches; median 1.031 seconds, maximum 12.072 seconds, 7 questions over 3 seconds | Development regression questions do not establish independent recall or net improvement over the old strategy |
+| Actual model + current default chat configuration | 6 of 8 synthetic questions returned messages; 2 returned `knowledge_unavailable`; none of the 7 questions requiring sources produced traceable answers | T05/T07 failed; T06 requested task clarification; T08–T11 returned empty sources; nonexistent Case 999999 was correctly not fabricated |
+| Temporarily enable hybrid, retain legacy source adapter | Of 4 selected questions, T05/T07/T08 failed and T16 returned no match | Changing orchestration alone did not resolve source availability; this is not combined acceptance of C's source service |
+| Pinned Li release installation | Again returned `release_hash_mismatch`; target directory was not installed | Hash checks retained; structure calculations and the full local actual C HTTP + Li workflow were not run |
 
-进一步按安装器同一算法拆分校验：下载的 SQLite 为 243703808 字节，SHA-256 与固定值一致；固定提交 `771e452...` 的 103 个 Python/CSV/JSON 文件集合算得 `d4c5495302fc9c755eb750d70fc181dc99f58e6905a79709e93845ea7b5d37e9`，而 `main` 固定值为 `b1f2c38a996481f1d1099aae43f5cb2ed68e7e2abdb1a32863289306811dd921`。因此当前不匹配的是**代码/资料集合**，不是 SQLite。尚未确认是固定哈希记录错误，还是当时验收使用了不同的源文件快照；不能直接改哈希放行。
+Further checks using the installer's algorithm: the downloaded SQLite is 243703808 bytes and matches the pinned SHA-256. The 103 Python/CSV/JSON files at commit `771e452...` produce `d4c5495302fc9c755eb750d70fc181dc99f58e6905a79709e93845ea7b5d37e9`, while `main` pins `b1f2c38a996481f1d1099aae43f5cb2ed68e7e2abdb1a32863289306811dd921`. The mismatch therefore concerns the **code/source file set**, not SQLite. Whether the recorded hash is incorrect or acceptance used a different source snapshot is not yet established; do not simply change the hash to permit installation.
 
-当前 `.env` 已填写模型和云端数据库配置，但未设置 `FSIE_AGENT_ORCHESTRATION`、`FSIE_AGENT_PROVIDER`、`FSIE_AGENT_C_URL`。因此实际聊天走默认 legacy 资料适配器；直接检索脚本调用的是 A 的检索函数。两者不是同一条检索路径。抽查适配器发现有请求返回 `UNAVAILABLE`；有片段的请求也可能是 `evidence_restricted`，因为 legacy 资料标记为只可展示、不可入模。不能用“直接检索 20/20”替代“聊天回答已命中依据”。本轮评测脚本使用临时 SQLite 会话，未经过 HTTP 登录、Supabase 账号或浏览器。
+The current `.env` has model/cloud database settings but no `FSIE_AGENT_ORCHESTRATION`, `FSIE_AGENT_PROVIDER`, or `FSIE_AGENT_C_URL`. Actual chat therefore uses the default legacy adapter, while the direct retrieval script calls A's retrieval function. These are different paths. Adapter spot checks found `UNAVAILABLE` responses; requests with passages may still return `evidence_restricted` because legacy materials are display-only and cannot enter models. “Direct retrieval 20/20” cannot establish that chat answers found evidence. Evaluation scripts used temporary SQLite sessions, without HTTP sign-in, Supabase accounts, or a browser.
 
-## 下一轮用两条线判断
+<a id="下一轮用两条线判断"></a>
 
-**同题比较旧策略与当前策略。**固定同一提交、知识库快照、模型、提示词、问题顺序与超时，分别跑旧 A 检索/回答路径和启用 C 的合并路径。保留现有 20 题作回归，再增加未参与开发调参、由税务负责人标注的独立题，覆盖明确编号、自然语言、相似但不适用的条文、案例、跨地区及无依据问题。分别报告可用率、期望来源 Recall@5、误召回、回答是否解决问题、p50/p95 耗时和模型调用量；历史 8/20 只能作背景，不能直接与本次 20/20 相减。
+## Two assessment tracks for the next round
 
-**逐项追溯输出。**每条关键税务主张记录 `claim → evidence_id → unit_id/locator → source_version_id/hash → 原文片段`；结构计算再接 `rule_id → 参数与有效期 → 条文/口径 → 输入事实来源`。自动检查引用是否存在、版本/哈希是否一致、引文是否真在原文中、法域与日期是否匹配；税务负责人另判定该依据是否支持结论及是否遗漏关键条件。没有来源的税务主张不得计为通过，正确地说明资料不足则单独计分。
+**Compare old and current strategies on identical questions.** Pin the commit, knowledge snapshot, model, prompts, question order, and timeouts. Run the old A retrieval/answer path and the combined path with C enabled. Retain the existing 20 regression questions and add independent tax-lead-labeled questions not used for development/tuning, covering explicit identifiers, natural language, similar but inapplicable provisions, cases, cross-jurisdiction questions, and unsupported questions. Report availability, expected-source Recall@5, false retrievals, whether answers resolve questions, p50/p95 duration, and model calls separately. Historical 8/20 is background and cannot simply be subtracted from this round's 20/20.
 
-C 分支 `LiZiheng` 的 [`tax_graph/verify/grounding.py`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/LiZiheng/tax_graph/verify/grounding.py) 已检查规则、参数、引文、有效期及事实来源，适合复用作结构计算后半段的追溯；它尚未并入 `main`，也未直接检查聊天文本的每一项主张。需先把聊天 `claim/evidence_id` 与规则执行记录接起来，才是端到端追溯。
+**Trace outputs item by item.** For every critical tax claim record `claim → evidence_id → unit_id/locator → source_version_id/hash → original passage`; for structure calculations also trace `rule_id → parameters and validity periods → provisions/interpretations → input fact sources`. Automatically check citation existence, version/hash consistency, quotations in originals, and jurisdiction/date matching. The tax lead separately judges whether evidence supports conclusions and whether critical conditions were omitted. Unsourced tax claims cannot pass; correct statements of insufficient evidence are scored separately.
 
-下一步先核对固定提交和已验收的 103 文件快照，解决发布物校验，再启动真实 C 资料服务并明确启用 `combined` 配置；随后用同一批题运行两条路径。首轮放行底线建议是：关键主张无虚构引用，所有展示的引文可按版本回读且哈希一致，真实账号与数据库的案件隔离通过；税务解释正确性必须由专家单列判定，不由程序自证。
+C branch `LiZiheng`'s [`tax_graph/verify/grounding.py`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/LiZiheng/tax_graph/verify/grounding.py) checks rules, parameters, quotations, validity periods, and fact sources. It can be reused for downstream structure-calculation traceability, but is not merged into `main` and does not directly check every chat-text claim. Connect chat `claim/evidence_id` to rule execution records before claiming end-to-end traceability.
+
+Next, check the pinned commit against the accepted 103-file snapshot and resolve release validation; start the actual C source service and explicitly enable `combined`; then run both paths on identical questions. Suggested minimum release criteria: no fabricated citations in critical claims; every displayed quote is retrievable by version with matching hashes; case isolation passes with actual accounts and databases. Experts must assess tax interpretation correctness separately; the program cannot certify it itself.

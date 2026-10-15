@@ -1,11 +1,13 @@
-# AsiaTax 标志落地
+<a id="asiatax-标志落地"></a>
 
-用户于 2026-09-28 确认采用概念图中的 T 形 Logo。本次范围为原创矢量资产及现有前端品牌入口，登录注册与整体界面改版另行实施。
+# AsiaTax Brand Implementation
 
-标志以宽顶横梁、中央竖笔和两侧短横条构成，强调 Tax，不使用 A 字母或天平。主色为墨绿 `#173F35`，反白色为暖白 `#F7F6F0`，辅助色为 `#A7BAAA`。字标为 Asia 常规字重、Tax 加粗。
+On 2026-09-28, the user approved the T-shaped logo from the concept image. This round covers original vector assets and existing frontend branding entry points; sign-in/registration and a full interface redesign are separate work.
 
-侧边栏和启动页使用可复用 Brand 组件，欢迎页使用独立图形；浏览器图标采用墨绿底反白标志。独立 SVG 提供深色、反白版本，移动收藏图标提供 PNG。标志不承诺固定节税结果。
+The mark consists of a wide top bar, central vertical stroke, and short side bars, emphasizing Tax without an A or scales. The primary color is dark green `#173F35`, the reversed color is warm white `#F7F6F0`, and the accent is `#A7BAAA`. The wordmark uses regular weight for Asia and bold for Tax.
 
-带字标组件使用单一 AsiaTax 可访问名称，内部图形隐藏于读屏；纯装饰图形不产生额外朗读。尺寸变化不影响几何比例，不增加动效或依赖。
+The sidebar and startup page use a reusable Brand component; the welcome page uses a standalone symbol. The favicon is a reversed mark on dark green. Standalone SVGs provide dark/reversed versions, with a PNG mobile bookmark icon. The mark makes no promise of fixed tax savings.
 
-实现参考现有 Lucide 的 SVG 接入习惯，图形原创，无复制第三方标志。验证生产构建、现有浏览器测试，并查看实际页面和小尺寸标志。
+Components with wordmarks use one accessible AsiaTax name, hiding internal graphics from screen readers; decorative graphics add no spoken content. Resizing preserves geometric proportions. Add no animation or dependencies.
+
+Follow existing Lucide SVG integration conventions. The artwork is original and copies no third-party marks. Validate the production build and existing browser tests, and inspect actual pages and the mark at small sizes.

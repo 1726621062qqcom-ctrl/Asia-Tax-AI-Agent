@@ -1,48 +1,58 @@
-# L0 内部研究原型 — 验收记录
+<a id="l0-内部研究原型--验收记录"></a>
 
-| 项目 | 内容 |
+# L0 Internal Research Prototype — Acceptance Record
+
+| Item | Details |
 |---|---|
-| 验收对象 | 东亚税务 AI 平台 · 香港 FSIE 境外股息 L0 研究原型 |
-| 验收日期 | 2026-09-05 |
-| 验收依据 | [PRD 第 11.1 节（无专家研究原型验收）](../product/PRD.md)、[2026 项目计划第 9 节](PROJECT_PLAN_2026.md) |
-| 分支 | feat/fsie-data-extraction-validation-plan |
-| 总体结论 | **工程验收通过**。本记录不构成税务意见，不代表专业验证完成，不授权任何客户用途 |
+| Acceptance target | East Asian Tax AI Platform · Hong Kong FSIE foreign-sourced dividend L0 research prototype |
+| Acceptance date | 2026-09-05 |
+| Acceptance basis | [PRD section 11.1 (research prototype acceptance without expert validation)](../product/PRD.md), [2026 project plan section 9](PROJECT_PLAN_2026.md) |
+| Branch | feat/fsie-data-extraction-validation-plan |
+| Overall conclusion | **Engineering acceptance passed**. This record is not tax advice, does not establish completion of professional validation, and does not authorize any client use |
 
-## 1. 验收矩阵（逐条对照 PRD 11.1）
+<a id="1-验收矩阵逐条对照-prd-111"></a>
 
-| 验收条件 | 结论 | 证据 |
+## 1. Acceptance matrix (against PRD 11.1)
+
+| Acceptance criterion | Result | Evidence |
 |---|---|---|
-| source manifest 必填元数据完整率 100%，原件、版本、哈希、有效期间和链接均可验证 | ✅ | 7 个来源全部带 URL/哈希/生效期/验证状态；2026-09-04 管线复核：Cap.112 XML 与 2022 修订条例哈希与清单一致；4 个 IRD 页面检出漂移并留痕新快照 |
-| 候选规则与资料段落具有明确映射 | ✅ | 6 条规则均映射 source_ids；阈值带条文定位（s.15M(2)、s.15N(7)）；Cap.112 已切分为 45 个子段级法律单元，引用可落到条文原文 |
-| 未验证规则和报告始终显示研究模式状态 | ✅ | 契约校验器强制所有规则/来源保持 `unverified`（改为 verified 即拒绝加载，有测试证明）；报告水印硬编码于渲染器，无任何开关参数（有测试证明） |
-| 自然语言、事实卡、规则、RAG 和报告链路可以端到端运行 | ✅ | 中文自然语言案例 → 模型提取候选事实（仅词典词汇）→ 确定性判断链 → 执行记录落库 → 带水印与条文引用的报告；6 个自然语言案例 + 1 个注入攻击案例实测通过 |
-| 系统无法通过提示词或普通用户操作移除专业验证门槛 | ✅ | 三重守卫：校验器拒绝 verified 规则/来源；模型只能提候选事实且受 43 字段词典约束；终态枚举不含任何税务结论态，human_gate 不可被事实伪造绕过（live 注入测试） |
-| 仅使用虚构或完成脱敏审批的案例 | ✅ | 10 个结构化案例 + 7 个自然语言案例全部 `synthetic=true`；D-002 决策：L0 只允许合成数据进入模型 |
-| 至少 10 个版本化候选案例在冻结的研究评测集上端到端运行 | ✅ | 10/10 案例 `make run-eval` 全部 PASS（终态与阻断项逐案匹配黄金期望） |
-| 评测集中出现无法解析到 source manifest 的法规/条文/链接即阻断 | ✅ | 校验器强制规则的 source_ids 必须解析到清单；条文引用经 legal_units 落库校验（s.15M(2) 等可查询命中） |
+| Source manifest required metadata is 100% complete; originals, versions, hashes, validity periods, and links are verifiable | ✅ | All 7 sources include URLs/hashes/effective periods/validation statuses. The 2026-09-04 pipeline recheck confirmed that Cap.112 XML and the 2022 Amendment Ordinance hashes match the manifest; drift was detected on 4 IRD pages and new snapshots were recorded |
+| Candidate rules map explicitly to source passages | ✅ | All 6 rules map to source_ids; thresholds include statutory locations (s.15M(2), s.15N(7)); Cap.112 is segmented into 45 subparagraph-level legal units, allowing citations to resolve to original statutory text |
+| Unverified rules and reports always show research-mode status | ✅ | The contract validator requires all rules/sources to remain `unverified` (changing them to verified rejects loading, as demonstrated by tests). The report watermark is hardcoded in the renderer with no switch parameter, as demonstrated by tests |
+| Natural language, fact cards, rules, RAG, and reports work end to end | ✅ | Chinese natural-language case → model extraction of candidate facts (dictionary vocabulary only) → deterministic decision chain → persisted execution records → report with watermark and statutory citations; 6 natural-language cases + 1 injection attack case passed actual testing |
+| Prompts or ordinary user operations cannot remove the professional validation gate | ✅ | Three guards: the validator rejects verified rules/sources; the model can propose only candidate facts constrained by the 43-field dictionary; terminal enums contain no tax-conclusion state, and human_gate cannot be bypassed by fabricated facts (live injection test) |
+| Only fictional cases or cases with approved de-identification are used | ✅ | All 10 structured cases + 7 natural-language cases have `synthetic=true`; decision D-002 allows only synthetic data to enter the model at L0 |
+| At least 10 versioned candidate cases run end to end on the frozen research evaluation set | ✅ | All 10/10 cases PASS with `make run-eval` (terminal states and blockers match the gold expectations case by case) |
+| Any statute/provision/link in the evaluation set that cannot resolve to the source manifest blocks release | ✅ | The validator requires each rule's source_ids to resolve to the manifest; statutory citations are checked through persisted legal_units (queries find s.15M(2), among others) |
 
-## 2. 工程证据汇总
+<a id="2-工程证据汇总"></a>
 
-| 维度 | 数字 |
+## 2. Engineering evidence summary
+
+| Dimension | Count/details |
 |---|---|
-| 离线测试 | 71 通过（契约漂移、求值器边界、渲染守卫、切分器、安全守卫、配置种子） |
-| Live 集成测试 | 9 通过（评测运行、报告重建、自然语言黄金终态、知识管线、注入抵抗） |
-| 黄金评测案例 | 10（覆盖：范围外、切片外、境外收取、双阈值不达标、范围冲突、实质升级、人工复核、上报、研究输出） |
-| 自然语言案例 | 6 黄金映射 + 1 注入攻击夹具 |
-| 知识单元 | 669（Cap.112 子段级 45、2022 条例 62 页、4 个 IRD 页面 562 块） |
-| 模型 | Token Plan · qwen3.8-flash（最廉价档），仅接收合成数据（D-002） |
-| 数据库 | 14 张表 + 3 个迁移（0001 基线 / 0002 知识层 / 0003 系统配置），迁移三连验证通过 |
+| Offline tests | 71 passed (contract drift, evaluator boundaries, renderer guards, segmenter, security guards, configuration seeds) |
+| Live integration tests | 9 passed (evaluation runs, report reconstruction, natural-language gold terminal states, knowledge pipeline, injection resistance) |
+| Gold evaluation cases | 10 (covering out of scope, outside the slice, receipt outside Hong Kong, failure of both thresholds, scope conflicts, substance escalation, human review, escalation, and research output) |
+| Natural-language cases | 6 gold mappings + 1 injection attack fixture |
+| Knowledge units | 669 (Cap.112: 45 subparagraph-level units; 2022 Ordinance: 62 pages; 4 IRD pages: 562 blocks) |
+| Model | Token Plan · qwen3.8-flash (lowest-cost tier), receiving synthetic data only (D-002) |
+| Database | 14 tables + 3 migrations (0001 baseline / 0002 knowledge layer / 0003 system configuration); three-step migration validation passed |
 
-## 3. 明确保留事项（不在本验收范围内）
+<a id="3-明确保留事项不在本验收范围内"></a>
 
-1. **专业验证未完成**：无香港税务专家参与；全部 6 条规则、全部案例期望均为候选工程判断，**不是税务金标**；
-2. **不产生税务结论**：系统终态只有三种安全状态，任何"免税/应税"表述都不在本系统输出范围内；
-3. **4 个 IRD 页面内容漂移**：相对 2026-09-01 清单哈希已变化，新快照已留痕；法规内容复核按维护规程处理；
-4. **L1 门槛未启动**：专家验证冲刺、权限/审计/备份恢复测试、试点数据合规方案均未开始；
-5. **覆盖边界**：仅香港境外股息切片；境外利息、处置收益、知识产权收入及中国内地/日本/韩国深度内容不在 L0。
+## 3. Explicit reservations (outside this acceptance scope)
 
-## 4. 结论与放行边界
+1. **Professional validation is incomplete**: no Hong Kong tax experts participated. All 6 rules and all case expectations are candidate engineering judgments, **not tax gold standards**.
+2. **No tax conclusions are produced**: system terminal states comprise only three safe statuses. Any “exempt/taxable” statement is outside this system's output scope.
+3. **Content drift on 4 IRD pages**: hashes changed relative to the 2026-09-01 manifest and new snapshots were recorded. Regulatory content review follows the maintenance procedure.
+4. **L1 gates have not started**: the expert validation sprint, permissions/audit/backup recovery tests, and pilot data compliance plan have not begun.
+5. **Coverage boundary**: only the Hong Kong foreign-sourced dividend slice; foreign-sourced interest, disposal gains, intellectual property income, and in-depth mainland China/Japan/South Korea content are outside L0.
 
-L0 内部研究原型**工程验收通过**，可用于受控内部研究与工程演示。
+<a id="4-结论与放行边界"></a>
 
-以下行为被本记录明确禁止：把本系统输出用于真实客户案件；把候选规则表述为已验证；把 L0 描述为 L1/L2 或任何形式的客户发布。进入 L1 的唯一路径是 PRD 3.4 的门槛：香港税务专家书面验证 + 安全与运营门槛全部通过。
+## 4. Conclusion and release boundary
+
+The L0 internal research prototype **passed engineering acceptance** and may be used for controlled internal research and engineering demonstrations.
+
+This record explicitly prohibits using system outputs for real client cases, describing candidate rules as verified, or describing L0 as L1/L2 or any form of client release. The only route to L1 is through the PRD 3.4 gates: written validation by Hong Kong tax experts + completion of all security and operational gates.

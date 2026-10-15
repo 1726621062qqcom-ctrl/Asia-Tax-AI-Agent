@@ -1,81 +1,95 @@
-# Case 74 / 75 事实提取复核草稿
+<a id="case-74--75-事实提取复核草稿"></a>
 
-状态：待用户/同学复核，尚未成为冻结评测答案。检查依据：分支 agent/fsie-ruling-sources 的
-281c2f8618f2ba9ddf0dccb98631f950f1b44f67（43 个事实字段及 intake/extraction.py）。
-本轮只检查数据表达和事实标注；没有修改字段、执行模型或得到准确率。
+# Case 74 / 75 Fact Extraction Review Draft
 
-## 你现在需要打开什么
+Status: awaiting user/team review; not a frozen evaluation answer. Baseline: branch agent/fsie-ruling-sources,
+281c2f8618f2ba9ddf0dccb98631f950f1b44f67 (43 fact fields and intake/extraction.py).
+This round checked data representation and fact annotation only; it changed no fields, ran no model, and established no accuracy score.
 
-1. 本文与 [PR #3](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/pull/3)。
-2. [Case 74 官方原文](https://www.ird.gov.hk/eng/ppr/advance74.htm)。
-3. [Case 75 官方原文](https://www.ird.gov.hk/eng/ppr/advance75.htm)。
+<a id="你现在需要打开什么"></a>
 
-左右并排即可。先阅读两篇原文第 2 节 Background 与第 3 节 The arrangement，
-逐行确认下表；第 4 节裁定不属于模型事实输入。第 5、7 节只核对来源期间与日期。
-不用下载网页、启动终端、数据库或填写模型密钥。
-正文均为此前抓取并人工核对的版本；如当前网页不同，请标出变化，不能直接沿用答案。
+## What to open
 
-## Case 74：逐项复核
+1. This document and [PR #3](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/pull/3).
+2. [Official Case 74](https://www.ird.gov.hk/eng/ppr/advance74.htm).
+3. [Official Case 75](https://www.ird.gov.hk/eng/ppr/advance75.htm).
 
-| 编号 | 待确认事实/预期处理 | 原文位置 | 核对重点 |
+Use a side-by-side view. Read section 2 Background and section 3 The arrangement in each original,
+then check every row below. Section 4's ruling is not model fact input. Check sections 5 and 7 only for source periods/dates.
+No download, terminal, database, or model key is required.
+The text reflects the previously captured, manually checked versions. Flag current-page differences rather than reusing answers unchanged.
+
+<a id="case-74逐项复核"></a>
+
+## Case 74: itemized review
+
+| ID | Fact/expected treatment to confirm | Original location | Check |
 |---|---|---|---|
-| 74-1 | Applicant 在香港注册，主营投资控股 | 2(a) | 注册地不自动等于所有法律身份结论 |
-| 74-2 | Applicant 持有 Company F 的 60% 股份 | 2(b) | 实体与持股方向不能反转 |
-| 74-3 | 持股从 1992 年开始，月日未披露 | 2(b) | 不补成 1992-01-01；不凭当前日期计算精确持股月数 |
-| 74-4 | Jurisdiction F 的企业所得税率为 25% | 2(c) | 标明税种和管辖区；不是预提税率 |
-| 74-5 | Jurisdiction F 对非居民企业股息的预提税率为 10% | 2(c) | 与 25% 分开记录 |
-| 74-6 | Company F 计划将缴纳企业所得税后的部分利润作为股息派给 Applicant；Applicant 将承担 10% 预提税 | 3(a) | 计划事件不应误记为已付税/已收款 |
-| 74-7 | 股息具体金额、币种、完整派息日期未披露 | 2–3 | 保持未知，不从裁定日期推导 |
-| 74-8 | 裁定日期 2023-11-07；适用课税年度 2023/24–2027/28 | 5、7 | 只作来源元数据，不当作交易日期 |
+| 74-1 | Applicant is incorporated in Hong Kong and primarily conducts investment holding | 2(a) | Incorporation does not automatically establish every legal status |
+| 74-2 | Applicant owns 60% of Company F | 2(b) | Do not reverse entities or ownership direction |
+| 74-3 | Ownership began in 1992; month/day undisclosed | 2(b) | Do not invent 1992-01-01 or calculate exact holding months from today's date |
+| 74-4 | Jurisdiction F corporate income tax rate is 25% | 2(c) | Identify the tax and jurisdiction; this is not withholding tax |
+| 74-5 | Jurisdiction F dividend withholding rate for nonresident companies is 10% | 2(c) | Record separately from 25% |
+| 74-6 | Company F plans to distribute part of its post-corporate-tax profits to Applicant; Applicant will bear 10% withholding tax | 3(a) | Planned events are not taxes already paid or income already received |
+| 74-7 | Specific amount, currency, and complete dividend date are undisclosed | 2–3 | Retain unknowns; do not infer from the ruling date |
+| 74-8 | Ruling date 2023-11-07; years of assessment 2023/24–2027/28 | 5, 7 | Source metadata only, not transaction dates |
 
-不要从第 4 节的官方结果向事实输入填入“满足参与豁免”“合资格类似税”等答案。
+Do not copy section 4 conclusions such as “participation exemption satisfied” or “qualifying similar tax” into fact inputs.
 
-## Case 75：逐项复核
+<a id="case-75逐项复核"></a>
 
-| 编号 | 待确认事实/预期处理 | 原文位置 | 核对重点 |
+## Case 75: itemized review
+
+| ID | Fact/expected treatment to confirm | Original location | Check |
 |---|---|---|---|
-| 75-1 | Company P 是 Applicant 的直接母公司；S1 是 Applicant 全资子公司 | 2(a)–(b) | P、Applicant、S1 必须是不同实体 |
-| 75-2 | 重组前 S1 持有 S2 的 100% 股份 | 2(b) | 这是重组前状态，不默认是重组后状态 |
-| 75-3 | S2 在 Jurisdiction A 注册，相关时点已迁册至 B 并在那里经营 | 2(c) | 初始注册地与迁册后所在地分别保留 |
-| 75-4 | S2 在香港没有机构、业务或资产 | 2(c) | 不把这个描述套到其他实体 |
-| 75-5 | S1 将所持 S2 股份按公允价值作为实物股息分派给 Applicant | 3(a) | 派息人 S1，接收人 Applicant，标的为 S2 股份 |
-| 75-6 | 同日 Applicant 将这些股份作为实物股息分派给其唯一股东 P | 3(b) | 第二笔交易方向 Applicant → P；标的仍为 S2 股份 |
-| 75-7 | 发生于 2024 年某日，具体月日未披露 | 3(a) | 不补成裁定日期；保留同日关系 |
-| 75-8 | 股息是股份分派；金额、公允价值具体数值及银行账户未披露 | 2–3 | 不编造现金汇款；未提及账户不等于证明完全没有账户 |
-| 75-9 | 裁定日期 2024-09-30；适用课税年度 2024/25 | 5、7 | 不等于业务发生日期 |
+| 75-1 | Company P is Applicant's direct parent; S1 is Applicant's wholly owned subsidiary | 2(a)–(b) | P, Applicant, and S1 are separate entities |
+| 75-2 | S1 owned 100% of S2 before restructuring | 2(b) | Pre-restructuring status is not automatically post-restructuring status |
+| 75-3 | S2 was incorporated in Jurisdiction A and had redomiciled to B and operated there at the relevant time | 2(c) | Retain initial incorporation and post-redomiciliation location separately |
+| 75-4 | S2 has no establishment, business, or assets in Hong Kong | 2(c) | Do not apply this description to other entities |
+| 75-5 | S1 distributes its S2 shares at fair value to Applicant as a dividend in kind | 3(a) | Payer S1, recipient Applicant, underlying asset S2 shares |
+| 75-6 | Applicant distributes those shares on the same day to sole shareholder P as a dividend in kind | 3(b) | Second transaction Applicant → P; still S2 shares |
+| 75-7 | Occurs on an unspecified day in 2024 | 3(a) | Do not substitute the ruling date; retain the same-day relationship |
+| 75-8 | Dividend is a share distribution; amount, specific fair value, and bank account are undisclosed | 2–3 | Do not invent a cash remittance; an unmentioned account is not proof that no account exists |
+| 75-9 | Ruling date 2024-09-30; year of assessment 2024/25 | 5, 7 | Not the business event date |
 
-“不被视为在香港收取”属于第 4 节裁定，不作为第 2–3 节事实提取的直接答案。
+“Not regarded as received in Hong Kong” is a section 4 ruling, not a direct answer for extraction from sections 2–3.
 
-## 已检查的字段与接口缺口
+<a id="已检查的字段与接口缺口"></a>
 
-| 内容 | 当前能力 | 建议，尚未实现 |
+## Checked field/interface gaps
+
+| Topic | Current capability | Recommendation, not implemented |
 |---|---|---|
-| 持股比例与被投资实体 | 有 holding_percentage_pct、investee_entity | 保留字段，标注实体归属与证据 |
-| 两种税率 | 有 foreign_nominal_tax_rate_pct 和 foreign_tax_jurisdiction；没有独立预提税率 | 明确企业税率语义，增加预提税率及主体关联；不重复发明同义税率字段 |
-| 年份精度 | acquisition_date、receipt_date 为日期字段 | 支持 year-only 精度，不补造月日 |
-| 实物股息 | income_type 只有 dividend 等收入类别 | 增加分派形式，与收入类别分开 |
-| 两步股份分派 | payer_entity 和 bank_or_account_path 无法结构化表示多步非现金转移 | 设计有序事件，每步记录派出方、接收方、股份标的与时间关系 |
-| 原文依据 | ExtractionResult 只返回 facts 等元信息，无逐事实证据 | 增加段落定位/证据跨度；比较值和归属，不能只比较数字 |
-| 数值未知 | validate_candidates 会跳过 null，不能接受数值字段的字符串 unknown | 统一“未披露”表示并测试；不能照搬候选案例里的 unknown 到当前 intake 接口 |
+| Ownership percentage/investee | holding_percentage_pct, investee_entity | Retain fields; annotate entity ownership and evidence |
+| Two tax rates | foreign_nominal_tax_rate_pct, foreign_tax_jurisdiction; no separate withholding rate | Clarify corporate-rate semantics; add withholding rate and subject associations without duplicate synonyms |
+| Year precision | acquisition_date and receipt_date are date fields | Support year-only precision without invented month/day |
+| Dividends in kind | income_type includes income classes such as dividend | Add distribution form separately from income class |
+| Two-step share distribution | payer_entity and bank_or_account_path cannot structure multistep noncash transfers | Ordered events recording payer, recipient, underlying shares, and timing relationships |
+| Original evidence | ExtractionResult returns facts/metadata, without evidence per fact | Add passage locations/evidence spans; compare values and ownership, not just numbers |
+| Unknown numbers | validate_candidates skips null and rejects string unknown in numeric fields | Standardize undisclosed values and test them; do not copy candidate-case unknown directly into current intake |
 
-核对范围：packages/contracts/fact_dictionary/hk_fsie_fact_fields.v0.json 与
-packages/intake/extraction.py。以上缺口来自代码阅读，尚未通过模型运行验证。
+Checked packages/contracts/fact_dictionary/hk_fsie_fact_fields.v0.json and
+packages/intake/extraction.py. Findings come from code reading, not model runs.
 
-## 怎么反馈
+<a id="怎么反馈"></a>
 
-直接在聊天里或 PR #3 的评论框反馈，例如：
+## Feedback
 
-> Case 74：74-1 至 74-8 均确认。
-> Case 75：75-5 有问题，原文第 3(a) 的意思应为……；其他项确认。
-> 无法确认：……
+Respond directly in chat or in PR #3 comments, for example:
 
-每项可标“确认 / 修改 / 不确定”。不需要判断免税与否，也不需要自行修改代码。
-同学如参与，应先独立从原文标注，再与此表对照；不能把讨论后的同一份表算成双人独立标注。
+> Case 74: items 74-1 through 74-8 confirmed.
+> Case 75: issue with 75-5; original section 3(a) means …; other items confirmed.
+> Unable to confirm: …
 
-## 复核后如何验证模型
+Mark each item confirmed / revise / uncertain. No exemption judgment or code change is required.
+Other reviewers should annotate independently from originals before comparing this table. One shared table after discussion is not two independent annotations.
 
-由工程侧落实字段与证据结构，准备约 12 个合成变体，冻结预期答案后运行模型。
-变体应覆盖税率替换/互换、关键事实缺失、实体重命名、叙述顺序变化和交易方向变化。
-记录模型与提示词版本，逐项报告值、主体、时间精度和证据的正确性及编造数量。
-公开原案保持 synthetic=false，当前模型仅接收合成数据的政策不变。
-本复核不是同意将公开原案发送到模型；原案裁定结果也不是合成变体的税务金标。
+<a id="复核后如何验证模型"></a>
+
+## Model validation after review
+
+Engineering implements fields/evidence structures, prepares approximately 12 synthetic variants, freezes expected answers, and runs the model.
+Cover substituted/swapped rates, missing critical facts, renamed entities, changed narrative order, and reversed transaction directions.
+Record model/prompt versions and report correctness of values, subjects, time precision, evidence, and fabrication counts separately.
+Public originals remain synthetic=false; the synthetic-only model policy is unchanged.
+This review does not authorize sending public originals to models; original ruling conclusions are not tax gold standards for synthetic variants.

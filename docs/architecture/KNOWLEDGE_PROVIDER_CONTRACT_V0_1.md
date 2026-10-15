@@ -1,194 +1,220 @@
-# KnowledgeProvider 接口契约与模拟检索行为设计 v0.1
+<a id="knowledgeprovider-接口契约与模拟检索行为设计-v01"></a>
 
-| 项目 | 内容 |
+# KnowledgeProvider Contract and Mock Retrieval Design v0.1
+
+| Item | Details |
 |---|---|
-| 日期 | 2026-10-02 |
-| 状态 | B 模块设计契约；尚未实现 Provider、HTTP/MCP 服务或真实数据库连接 |
-| 当前条件 | A 页面已可接入；C 数据库尚未成型 |
-| 本次交付 | 统一接口、字段语义、权限/错误映射、固定 Mock 响应样例和验收场景 |
-| 关联 | [业务流程 v0.3](AGENT_BUSINESS_WORKFLOW_V0_1.md) · [业务规则 v0.2](AGENT_BUSINESS_RULES_V0_1.md) |
-| 样例 | [knowledge_provider_mock_fixtures.v0.1.json](knowledge_provider_mock_fixtures.v0.1.json) |
+| Date | 2026-10-02 |
+| Status | B design contract; Provider, HTTP/MCP services, and real database connection not yet implemented |
+| Current conditions | A page ready for integration; C database unfinished |
+| Delivery | Common interface/semantics, permissions/errors, fixed fixtures, acceptance scenarios |
+| Related | [Workflow v0.3](AGENT_BUSINESS_WORKFLOW_V0_1.md) · [Rules v0.2](AGENT_BUSINESS_RULES_V0_1.md) |
+| Examples | [knowledge_provider_mock_fixtures.v0.1.json](knowledge_provider_mock_fixtures.v0.1.json) |
 
-## 1. 接入边界
+<a id="1-接入边界"></a>
+
+## 1. Integration boundary
 
 ```text
-A 已有页面
-  → B 的 Agent 与业务流程
-    → KnowledgeProvider（统一契约）
-      → MockKnowledgeProvider（当前开发测试）
-      → CKnowledgeProvider（后续 API / MCP / 只读数据库适配）
+Existing A pages
+  → B agent and business workflow
+    → KnowledgeProvider (unified contract)
+      → MockKnowledgeProvider (current development/testing)
+      → CKnowledgeProvider (subsequent API / MCP / read-only database adapter)
 ```
 
-B 定义何时检索、查询内容、返回检查、资料权限过滤、回答结构和异常行为。C 负责资料、数据库、检索及数据权限元信息。A 负责页面及引用展示。B 的对话、案件、待答问题和回复版本独立保存。
+B determines when/what to retrieve, response checks, permissions, answer structure, and failures. C owns sources, database, retrieval, and rights metadata. A owns pages/citations. B separately persists conversations, cases, questions, and reply versions.
 
-提供方由服务端配置选定。正常业务参数不含 fixture_id，用户和模型不得切换提供方或选择 Mock 场景。真实服务失败不自动退回 Mock。开发测试请求的 scenario_id 由测试驱动单独设置，不进入线上查询协议。
+Server configuration selects providers. Business requests have no fixture_id; users/models cannot select providers/fixtures. Real failures never automatically fall back to Mock. Test drivers set scenario_id outside the online query protocol.
 
-概念接口如下，非现有可导入代码：
+Conceptual interface, not importable code:
 
 ```text
 search_evidence(request, trusted_context) -> SearchResult
 get_evidence(reference, purpose, trusted_context) -> EvidenceResult
 ```
 
-trusted_context 由认证服务/固定开发身份生成，含权限范围、服务端处理环境和访问策略；模型不能提供授权身份。purpose 仅为 model 或 display；get_evidence 仍须校验当前权限，不能因先前 search 成功就放行。
+Authentication/fixed development identity supplies trusted_context containing access scope, processing environment, and policy. Models cannot supply authorized identity. purpose is model or display. get_evidence rechecks current permissions; previous successful search is insufficient.
 
-## 2. 查询输入 SearchRequest
+<a id="2-查询输入-searchrequest"></a>
 
-| 字段 | 类型与要求 | 语义 |
+## 2. SearchRequest
+
+| Field | Type/requirement | Semantics |
 |---|---|---|
-| schema_version | string，必填，0.1.0 | 契约版本；不兼容版本拒绝 |
-| request_id、trace_id | string，必填 | 调用身份和跨组件追踪；一次逻辑查询重试保持关联 |
-| query | 非空 string | 本轮问题或当前争点，精确编号必须原样保留 |
-| intent | enum | concept / reference_lookup / case_analysis |
-| jurisdiction、topic、income_type | string 或 null | 已知则筛选；未知显式为空，不能静默默认地区 |
-| entity_type | company / individual / unknown / not_needed | 具体案件按必要性使用，查编号无需问主体 |
-| applicable_date | ISO 日期或 null | 事实或用户查询指定的适用日期，不用运行当天替代 |
-| date_status | actual / planned / unknown / not_needed | unknown/not_needed 对应空日期；actual/planned 要有明确日期 |
-| reference_number | string 或 null | 精确条款/裁定等编号，完整保留格式 |
-| fact_filters | 数组，必填，可空 | 仅必要事实：field、value、status、fact_version；未知不变成否定 |
-| language | string | 期望结果语种；原文语种另由证据返回 |
-| limit | 正整数 | 本轮最大返回数，实施时由服务端上限限制 |
-| deadline_ms | 正整数 | 本次调用剩余超时预算；不可无限等待 |
+| schema_version | Required string, 0.1.0 | Reject incompatible contracts |
+| request_id, trace_id | Required strings | Call identity/tracing; preserve logical retry associations |
+| query | Nonempty string | Current question/issue; retain exact identifiers |
+| intent | Enum | concept / reference_lookup / case_analysis |
+| jurisdiction, topic, income_type | string/null | Filter known values; explicit null for unknown, no silent jurisdiction defaults |
+| entity_type | company / individual / unknown / not_needed | Case-dependent; identifier queries need no entity question |
+| applicable_date | ISO date/null | User/case applicability date, never today's date by default |
+| date_status | actual / planned / unknown / not_needed | unknown/not_needed require null; actual/planned require explicit dates |
+| reference_number | string/null | Preserve complete provision/ruling identifier format |
+| fact_filters | Required array, possibly empty | Necessary field/value/status/fact_version only; unknown never negative |
+| language | string | Desired result language; evidence separately declares original language |
+| limit | Positive integer | Result limit, constrained by server maximum |
+| deadline_ms | Positive integer | Remaining call budget; no unlimited wait |
 
-只有最少查询信息满足时才调用；不完整上下文先由 B 提问，而不是把问题发给 C 猜。查询不包含完整会话、数据库密码或无关的客户事实。缓存键还须纳入可信访问范围和处理环境。
+B asks for missing minimum query information instead of asking C to guess. Do not send full conversations, passwords, or irrelevant client facts. Cache keys include trusted access scope/environment.
 
-## 3. 返回 SearchResult
+<a id="3-返回-searchresult"></a>
 
-| 字段 | 类型 | 要求 |
+## 3. SearchResult
+
+| Field | Type | Requirement |
 |---|---|---|
-| schema_version、request_id、trace_id | string | 必须与契约和请求对应 |
-| retrieval_id | string | 唯一检索记录标识 |
-| provider | mock / c | 由可信适配器写入，不由模型写入 |
-| is_synthetic | boolean | Mock 固定 true，真实 C 响应仍按实际数据来源标记 |
-| corpus_version | string 或 null | 索引/语料快照版本；无法提供时不能声称版本已核验 |
-| status | ok / partial / no_match / error | 查询状态，不直接等于依据充分或法律适用 |
-| evidence | Evidence 数组 | error/no_match 为空；返回部分结果时 status=partial |
-| coverage | object | status 为 unchecked / partial / sufficient_for_task / not_assessed；附 scope、missing_requirements 和 truncated |
-| error | object 或 null | error 时必填 code、message、retryable；message 不含凭证或原始敏感数据 |
-| timings_ms | object | db、retrieval、rerank、total 为非负数或 null；Mock 固定 null，不能作为性能基线 |
+| schema_version, request_id, trace_id | string | Match contract/request |
+| retrieval_id | string | Unique retrieval record |
+| provider | mock / c | Trusted adapter, not model-generated |
+| is_synthetic | boolean | Mock true; actual C reflects actual provenance |
+| corpus_version | string/null | Index/corpus snapshot; absent means unverified version |
+| status | ok / partial / no_match / error | Query status, not legal applicability/evidence sufficiency |
+| evidence | Evidence array | Empty on error/no_match; partial results require partial |
+| coverage | object | unchecked / partial / sufficient_for_task / not_assessed, with scope/missing_requirements/truncated |
+| error | object/null | On error: code/message/retryable; no credentials/raw sensitive data |
+| timings_ms | object | db/retrieval/rerank/total nonnegative or null; Mock null, not performance evidence |
 
-约束：ok 表示调用正常并有结果；不代表全案条件已满足。sufficient_for_task 必须有对应检查依据及明确任务范围；B 独立检查拟生成主张，不直接信任一个覆盖标签。分页/截断不能标成完整覆盖。调用成功但所有命中材料不能入模，仍返回 ok/partial 和真实权限；B 输出 EVIDENCE_RESTRICTED，不把它变成 no_match。
+ok means successful call with results, not complete case conditions. sufficient_for_task requires check evidence and a defined task; B checks intended claims independently. Truncation/pagination is not full coverage. If all hits disallow model use, preserve actual ok/partial/permissions; B emits EVIDENCE_RESTRICTED, not no_match.
 
 ### Evidence
 
-每项至少包括：
+Every item includes:
 
-- **身份**：evidence_id、source_id、source_version_id、unit_id、content_hash（原文单元 SHA-256）、is_synthetic。
-- **来源**：title、publisher、source_type（law / guidance / case / synthetic_test）、language、url（可空）、locator。
-- **适用性**：jurisdiction、topic、publication_date、effective_from、effective_to、verification_status（verified / unverified / unknown）。未知日期为空，不用发布日期代替生效日。
-- **权限**：model_use、display_use，均为 allowed / denied / unknown；policy_version、restriction_reason。权限未声明视为 unknown，不默认允许。
-- **内容投影**：model_text（string 或 null）、display_ref（object 或 null）。只有 model_use=allowed 才允许 model_text 非空；只有 display_use=allowed 才提供可解析的 display_ref。
+- **Identity:** evidence_id, source_id, source_version_id, unit_id, content_hash (original unit SHA-256), is_synthetic.
+- **Provenance:** title, publisher, source_type (law / guidance / case / synthetic_test), language, nullable url, locator.
+- **Applicability:** jurisdiction, topic, publication_date, effective_from, effective_to, verification_status (verified / unverified / unknown). Unknown dates are null; publication is not effective date.
+- **Permissions:** independent model_use/display_use (allowed / denied / unknown), policy_version, restriction_reason. Undeclared means unknown, never allowed by default.
+- **Projection:** nullable model_text/display_ref. Nonempty model_text requires model_use=allowed; resolvable display_ref requires display_use=allowed.
 
-本版模型只消费明确获准的 model_text 及经服务端批准的必要元数据投影，禁止把完整 Evidence JSON 直接作为模型上下文。其他字段即使在服务器可见，也不自动获得入模许可。若某项标题等元数据不能展示，适配器必须删除/脱敏或不返回该项，不能机械满足字段要求而泄露内容。
+Models consume only explicitly approved model_text and necessary server-approved metadata projections, never entire Evidence JSON. Server visibility does not authorize model use. Remove/redact undisplayable titles/metadata or omit the item rather than leak it to satisfy a required field.
 
-display_ref 由 evidence_id、source_version_id、unit_id 组成，通过 get_evidence(..., purpose=display) 取得原文。此引用是定位信息，不是访问凭证，不能绕过权限。对模型只允许而前端不可展示的资料，不回显原文；缺少允许的出处时标注引用展示缺口，必要时撤下对应主张。
+display_ref contains evidence_id/source_version_id/unit_id, resolved by get_evidence(..., purpose=display). It is a locator, not a credential. Model-only materials cannot be echoed to users. Missing permitted source display becomes a citation gap and may require withdrawing claims.
 
-content_hash 对应来源原文，而不是截短摘要。若 model_text 为节选，应保留具体 locator；如 C 提供摘要，则明确摘要类型及来源，不将摘要伪装成原文。Mock 样例使用与单元相同的 model_text 简化演示。
+content_hash covers the original unit, not a truncated summary. Extracts retain exact locators; C summaries identify their type/source rather than impersonating originals. Mock uses identical unit/model text for simplicity.
 
-## 4. 按引用取原文
+<a id="4-按引用取原文"></a>
 
-get_evidence 的输入包含 request_id、trace_id、schema_version，以及完整 reference（evidence_id、source_version_id、unit_id），另由服务端指定 purpose。
+## 4. Retrieve originals by reference
 
-输出包含：status（ok / not_found / restricted / version_unavailable / error）、reference、content_hash、text、is_synthetic、error。只有 ok 才允许 text 非空，并须与指定引用及内容哈希对应。
+get_evidence takes request_id, trace_id, schema_version, complete reference (evidence_id/source_version_id/unit_id), and server-selected purpose.
 
-不允许把旧版本引用自动解析成最新版本；找不到旧版本则返回 version_unavailable。权限改变后返回 restricted。A 可通过 B 的代理或双方约定的 C 展示服务读取，具体传输路由待与 A/C 确认；无需 B 实现页面组件。
+Returns status (ok / not_found / restricted / version_unavailable / error), reference, content_hash, text, is_synthetic, error. Only ok permits nonempty text, matching the exact reference/hash.
 
-## 5. 检索结果到 Agent 行为的映射
+Never resolve old references to latest versions automatically. Missing old versions return version_unavailable; changed permissions return restricted. A reads through B's proxy or an agreed C display service; transport awaits A/C agreement. B need not implement UI components.
 
-| 结果 | B 检查 | 下一步 |
+<a id="5-检索结果到-agent-行为的映射"></a>
+
+## 5. Retrieval-to-Agent mapping
+
+| Result | B checks | Next action |
 |---|---|---|
-| ok + 获准材料 | 版本、适用范围和本次主张支持情况 | 足够则组织回答；不足则 EVIDENCE_INSUFFICIENT |
-| partial | 缺失项、截断范围及是否可支持局部主张 | 仅输出可支持部分，明确限制；需要补充时单问题追问 |
-| no_match | 区分确实无匹配与传输失败 | NO_MATCH，说明本次查询缺口，不猜税务结论 |
-| 命中但全部不可入模 | 模型权限与展示权限分别检查 | EVIDENCE_RESTRICTED；可展示项列 reference_only |
-| 权限缺失/unknown | 默认不入模 | 记录权限缺口；不得请求模型帮忙判断授权 |
-| error | 明确错误码、是否临时、剩余预算 | RETRIEVAL_FAILED；仅临时故障可有限重试 |
-| 返回字段非法/版本不兼容 | 契约检查 | PROVIDER_CONTRACT_ERROR；不把原文透传给模型 |
-| 引用无法解析 | 指定版本与原文校验 | CITATION_UNRESOLVED；修复或撤下对应主张 |
+| ok + permitted | Version/scope/claim support | Compose if sufficient, otherwise EVIDENCE_INSUFFICIENT |
+| partial | Gaps/truncation/supportable claims | Supported portions only, explicit limits, one question if needed |
+| no_match | Distinguish no hits from transport failure | NO_MATCH and query gaps; no guessed conclusions |
+| All hits model-restricted | Separate model/display rights | EVIDENCE_RESTRICTED; permitted displays in reference_only |
+| Missing/unknown rights | Deny model use | Record rights gap; models cannot determine authorization |
+| error | Cause/transience/budget | RETRIEVAL_FAILED; retry temporary failures only, bounded |
+| Invalid fields/incompatible version | Contract | PROVIDER_CONTRACT_ERROR; no original passthrough |
+| Unresolved citations | Exact version/original | CITATION_UNRESOLVED; repair/withdraw claims |
 
-模型失败发生于 B 生成阶段，不伪造成 Provider 的 no_match/error。用 MODEL_FAILED 返回 A；检索快照、权限及事实版本仍有效时复用，以免重复查询。故障重试预算由 B 与底层客户端共享，禁止层层独立重试放大请求。
+Generation failures belong to B, not fabricated Provider no_match/error. Return MODEL_FAILED; reuse retrieval only while snapshots/permissions/facts remain valid. Share retries across B/client layers; independent nested retries must not multiply requests.
 
-## 6. MockKnowledgeProvider 行为
+<a id="6-mockknowledgeprovider-行为"></a>
 
-Mock 是未来实现规范；本次仅提供可加载的 JSON 样例，没有可调用 Provider 类。测试驱动选择场景，业务请求不暴露测试控制参数。每个场景使用固定结果和版本，可重复执行，不调用网络或生成虚构“真实法条”。
+## 6. MockKnowledgeProvider behavior
 
-| 场景 ID | 结果 | 检查目的 |
+Mock is a future implementation specification. This delivery has loadable JSON fixtures, not a callable Provider class. Test drivers choose scenarios outside business parameters. Fixed results/versions are repeatable, without networking or invented “real legislation.”
+
+| Scenario | Result | Check |
 |---|---|---|
-| MOCK-01 | ok，允许入模与展示 | 回复包含重点、条件、可解析引用；所有内容标模拟 |
-| MOCK-02 | no_match | 不生成无依据结论，不无意义重试 |
-| MOCK-03 | ok，仅允许展示 | reference_only 有资料，模型各调用输入没有受限正文 |
-| MOCK-04 | error，临时超时 | 有限重试；耗尽后返回检索失败 |
-| MOCK-05 | partial，缺少必要材料 | 只保留已支持范围，不能标整体完成 |
-| MOCK-06 | ok，权限 unknown | 默认不入模、不展示未知许可正文 |
-| MOCK-07 | ok，资料日期不覆盖测试目标日期 | B 识别版本适用缺口，不引用为本案确定依据 |
-| MOCK-08 | error，不可重试的权限拒绝 | 不重试、不换身份、不降级成 Mock 成功 |
+| MOCK-01 | ok, model/display allowed | Direct points/conditions/resolvable citations; all marked synthetic |
+| MOCK-02 | no_match | No unsupported conclusions or pointless retries |
+| MOCK-03 | ok, display only | reference_only available; restricted body absent from every model input |
+| MOCK-04 | error, temporary timeout | Bounded retry then retrieval failure |
+| MOCK-05 | partial, missing required sources | Supported scope only, no overall completion |
+| MOCK-06 | ok, unknown rights | No model/display of unknown-permission originals |
+| MOCK-07 | ok, date does not cover target | Applicability gap, not definitive case evidence |
+| MOCK-08 | error, nonretryable denial | No retry, identity switching, or fake Mock success |
 
-样例中 display_store 模拟 C 的原文存储，仅由测试版 get_evidence 使用；它不是 search 返回的一部分，禁止将整个 fixture 文件作为模型上下文。原文读取仍按 Evidence 权限检查。
+Fixture display_store simulates C originals for test get_evidence only, outside search responses. Never send entire fixtures to models. Original retrieval rechecks rights.
 
-客户端额外应做三类故障注入：删掉必填字段→契约错误；改变引用版本→version_unavailable；让生成模型失败→MODEL_FAILED 并验证是否复用获准检索结果。这些是待实现的运行测试，不是本次已执行的模型/服务测试。
+Additional injections: remove required fields → contract error; change reference version → version_unavailable; fail generation → MODEL_FAILED and check reuse. These are proposed runtime tests, not model/service tests performed here.
 
-## 7. 切换到 CKnowledgeProvider
+<a id="7-切换到-cknowledgeprovider"></a>
 
-1. C 提供真实接口/只读视图说明、数据样例、权限语义和来源版本策略；凭证通过服务配置，不放文档或模型消息。
-2. B 建立字段映射，补充缺省处理。缺少权限默认 unknown，缺少时间默认 null；不能假造已验证状态。
-3. 共用契约测试，运行正常、无匹配、部分结果、受限资料、故障和旧引用读取。
-4. 对比真实原文及引用，记录查询性能、检索质量和语料版本；Mock 检查不能替代真实验收。
-5. 通过服务端配置启用 C；必要时仅在测试环境切回 Mock，所有模拟标记保留。
+## 7. Switching to CKnowledgeProvider
 
-语义相同的字段可直接适配；资料使用范围、版本保留能力或支持范围不同，则需修改契约/业务能力声明并回归，不能承诺任何 C 数据结构都可零修改接入。
+1. C supplies interface/read-only-view documentation, examples, permissions, source version policy; credentials use service configuration, never documents/model messages.
+2. B maps fields/defaults: unknown rights, null missing dates, no fabricated verification.
+3. Share contract tests for normal/no-match/partial/restricted/failure/old references.
+4. Compare actual originals/citations and measure performance/quality/corpus versions; Mock does not establish actual acceptance.
+5. Enable C through server configuration. Switch back to Mock only in test environments when needed, retaining markers.
 
-## 8. 完成标准与当前状态
+Equivalent semantics can adapt directly. Different rights, version retention, or coverage require contract/capability changes and regression; arbitrary C structures are not guaranteed zero-change integration.
 
-设计完成标准：调用边界明确；输入输出及错误可解释；资料有独立的模型/展示许可；Mock 覆盖关键分支；B/C 和 B/A 责任清晰。以上已在本稿定义。
+<a id="8-完成标准与当前状态"></a>
 
-尚待实施：Provider 类、传输接口、可信权限过滤器、上下文构造、原文读取服务、真实模型与页面联调、状态持久化及 C 真实连接。本次样例结构检查只能验证设计一致性，不证明运行时权限隔离、税务正确性或性能。
+## 8. Completion criteria/status
 
-2026-10-02 检查记录：8 个 Mock 样例的请求/响应标识、状态组合、日期语义、模拟标记、权限与内容投影、引用定位及内容哈希检查通过；相关文档相对链接、代码围栏和 Git 空白检查通过。未执行 Provider、模型、C 数据库或前端集成测试。
+Design completion requires explicit boundaries, interpretable I/O/errors, separate model/display permissions, critical Mock branches, clear B/C/A responsibility; defined here.
 
-## 9. 与 A 的 `Zhihong-Wu` 分支对接（代码核查）
+Pending: Provider classes, transport, trusted filters, context construction, original service, actual model/page integration, persistence, real C connection. Fixture checks establish design consistency only, not runtime isolation, tax correctness, or performance.
 
-2026-10-02 读取 GitHub 分支提交 `7054c45323abf7d63d9725f03f81dab892c98110`。以下是该提交的实际代码接口，不推定 C 后续数据库已经交付。A 分支已有 React 页面、FastAPI 聊天接口、会话持久化及一版词法/编号检索；这里的检索现状是该分支的实现，不等同于 C 的最终交付。
+2026-10-02 checks passed identifiers, status combinations, dates, synthetic flags, rights/projections, references/hashes for 8 fixtures, plus links/fences/Git whitespace. No Provider/model/C database/frontend integration tests ran.
 
-### 9.1 现有前端如何调用后端
+<a id="9-与-a-的-zhihong-wu-分支对接代码核查"></a>
 
-- [`apps/web/src/api.ts`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/apps/web/src/api.ts)：聊天 `POST /api/cases/{id}/messages`，提交 `text, data_approved, revision, request_id`，请求 `text/event-stream`；只识别 `delta`、`error`、`done`，其中 `done.case` 是完整案件对象。另有 `GET /api/knowledge/search?q=...`、会话/案件、事实修改、确认及分析接口。
-- [`apps/web/src/hooks/useWorkspace.ts`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/apps/web/src/hooks/useWorkspace.ts)：页面提交时生成请求 ID、传案件 revision；失败重试复用同一请求操作；刷新读取案件。B 的处理须保留请求幂等、revision 冲突和相同案件 ID 的恢复语义。
-- [`apps/web/src/workspace.ts`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/apps/web/src/workspace.ts)：前端 `Case` 包含 messages、facts、questions、analyses、confirmed_revision；`Message.kind` 有 chat、research、analysis、intake 等实际使用值；`KnowledgeResult` 为 `status, passages, method, query`。首阶段须保持这些旧字段可用。
-- [`apps/web/src/components/Conversation.tsx`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/apps/web/src/components/Conversation.tsx)：`research` 消息显示 `message.text` 及 `message.research.passages`；`analysis` 消息用 analysis_id 在 `Case.analyses` 查结果。现有 Passages 可展开原文及来源；尚未提供每项回答主张到单条证据的交互链接。
+## 9. A `Zhihong-Wu` integration (code audit)
 
-### 9.2 B 应接在哪一层
+Read commit `7054c45323abf7d63d9725f03f81dab892c98110` on 2026-10-02. These are actual interfaces at that commit, not assumed future C delivery. A has React, FastAPI chat, persistence, lexical/identifier retrieval; this is A's implementation, not final C capabilities.
 
-| 位置 | 该分支现状 | B 的接入动作 |
+<a id="91-现有前端如何调用后端"></a>
+
+### 9.1 Frontend calls
+
+- [`apps/web/src/api.ts`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/apps/web/src/api.ts): `POST /api/cases/{id}/messages` with `text, data_approved, revision, request_id`, requesting `text/event-stream`; consumes delta/error/done, with complete done.case. Also `GET /api/knowledge/search?q=...`, sessions/cases, facts/confirmation/analysis.
+- [`apps/web/src/hooks/useWorkspace.ts`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/apps/web/src/hooks/useWorkspace.ts): generates request IDs/revisions, reuses operations on retry, reloads on refresh. Preserve idempotency/conflicts/same-case recovery.
+- [`apps/web/src/workspace.ts`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/apps/web/src/workspace.ts): Case has messages/facts/questions/analyses/confirmed_revision; Message.kind includes chat/research/analysis/intake; KnowledgeResult has status/passages/method/query. Preserve old fields initially.
+- [`apps/web/src/components/Conversation.tsx`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/apps/web/src/components/Conversation.tsx): research shows message.text/research.passages; analysis resolves analysis_id in Case.analyses. Expandable passages/sources exist; claim-to-evidence interaction does not.
+
+<a id="92-b-应接在哪一层"></a>
+
+### 9.2 B integration layer
+
+| Location | Current behavior | B action |
 |---|---|---|
-| [`apps/api/chat.py`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/apps/api/chat.py) | FastAPI 路由调用 ChatService；消息支持普通 JSON 和 SSE；`get_service()` 构造会话服务 | 保持 A 现有路径和请求体，注入/调用 B 的编排服务；统一普通与 SSE 的业务判断，避免两条路径结果不同 |
-| [`packages/chat/service.py`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/packages/chat/service.py) | `plan_turn` 返回 chat/research/intake；`ChatService.commit_turn` 在 research 时调用 `researcher(query)`，保存事实和消息 | 在此引入 B 的对话入口、必要追问、权限/范围/版本检查和统一回复；保留存储、版本及幂等保护 |
-| [`packages/chat/streaming.py`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/packages/chat/streaming.py) | 先产生模型 `reply` 的 delta，随后调用检索并提交 `done.case` | 与普通路径共用 B 的决策及检索处理；实质税务主张校验后再输出。可先只发送进度或直接 done，A 的现有流消费者仍可处理 |
-| [`packages/chat/knowledge.py`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/packages/chat/knowledge.py) | 从 Source/LegalUnit 读取并返回 `available / no_matching_units / unavailable`、passages；原文未传外部模型 | 该模块是现有知识实现或迁移过渡。B 新增 KnowledgeProvider 适配层，把 Mock/C 返回转成统一证据契约，再映射到旧 KnowledgeResult 展示格式 |
-| [`packages/chat/store.py`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/packages/chat/store.py) | `chat_cases` 保存完整文档，revision 乐观锁及 receipts 幂等 | B 的状态、问题及依据版本先写入同一案件记录或受控附表，勿另建互不相认的会话 ID |
+| [`apps/api/chat.py`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/apps/api/chat.py) | ChatService routes, JSON/SSE, get_service construction | Preserve paths/body, inject B; common decisions |
+| [`packages/chat/service.py`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/packages/chat/service.py) | plan_turn chat/research/intake; commit_turn researcher(query), facts/messages | Add routing/questions/rights/scope/versions/replies; retain storage/idempotency |
+| [`packages/chat/streaming.py`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/packages/chat/streaming.py) | Model reply deltas before retrieval/commit | Share B logic; validate substantive claims before output. Progress-only/direct done remains compatible |
+| [`packages/chat/knowledge.py`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/packages/chat/knowledge.py) | Source/LegalUnit reads; available / no_matching_units / unavailable and passages; no external-model originals | Add common Provider/Evidence adapters for Mock/C, map to legacy display |
+| [`packages/chat/store.py`](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/7054c45323abf7d63d9725f03f81dab892c98110/packages/chat/store.py) | chat_cases documents, optimistic revisions/receipts | Store states/questions/source versions in the same case or controlled related tables, not unrelated session IDs |
 
-仅把 C/Mock 赋值给 `ChatService.researcher` 还不够：现有调用仅传 `query`，缺少争点、适用日期、事实版本、资料使用环境及访问范围。B 须扩展服务层调用上下文或建立专门的 provider adapter，并让普通 JSON 与 SSE 路径使用同一逻辑。前端和模型均不接触 C 的数据库连接。
+Assigning C/Mock to researcher alone is insufficient: query-only calls lack issue, dates, fact version, environment, access scope. Extend service context/adapters identically for JSON/SSE. Frontend/models never access C connections.
 
-### 9.3 最小兼容响应与功能差距
+<a id="93-最小兼容响应与功能差距"></a>
 
-首阶段沿用 A 的结构：
+### 9.3 Minimal compatible response/gaps
+
+Retain A's structure initially:
 
 ```json
 {
   "type": "done",
   "case": {
-    "id": "沿用现有案件 ID",
+    "id": "existing-case-id",
     "revision": 2,
-    "state": "沿用已协商的状态",
+    "state": "existing-agreed-state",
     "messages": [
       {
-        "id": "后端生成的消息 ID",
+        "id": "backend-generated-message-id",
         "role": "assistant",
         "kind": "research",
-        "text": "回答重点：……\n\n适用条件：……\n\n对应引用：[1]（模拟示例）",
+        "text": "Key points: ...\n\nApplicable conditions: ...\n\nReferences: [1] (mock example)",
         "research": {
           "status": "available",
           "method": "mock_provider_adapter",
-          "query": "本轮查询",
+          "query": "query-for-this-turn",
           "passages": []
         }
       }
@@ -202,32 +228,37 @@ Mock 是未来实现规范；本次仅提供可加载的 JSON 样例，没有可
 }
 ```
 
-上例只说明字段位置，不能直接用作完整案件响应；正式响应须保留 A 当前所需的 title、时间等字段及真实旧消息。`passages` 只装 **display_use=allowed** 的授权展示投影；模型输入另由获准 `model_text` 构造。不得把整个检索 JSON 送入模型。`Message.text` 可先按“回答重点、适用条件、对应引用”组织 Markdown；如果需要点击正文中的 [1] 直达具体证据，B 定义 `claim → evidence_id` 映射，A 再实现 UI。仅有页面下方可展开资料不等于主张级引用已实现。
+This illustrates field placement, not a complete Case. Retain required titles/timestamps and actual history. passages contains **display_use=allowed** projections only; model context separately uses approved model_text, never entire retrieval JSON. Message.text may organize points/conditions/citations as Markdown. Clickable claim [1] → evidence requires a B mapping plus A UI; expandable materials alone are not claim-level citation.
 
-当前 `research` 分支保存的 `reply` 是“将查阅什么”的检索前短句，真正返回的是资料片段；B 需要在检索之后根据获准且适用的资料形成已校验的答复。仅有 display_only 原文时提供资料查看与使用限制，不能让模型先总结这段原文再形成答案。没有资料、检索失败和模型失败分别映射为前端已有/新增安全错误码。
+Existing research reply is a preretrieval preamble. B must compose validated answers after retrieval from permitted/applicable sources. Display-only originals permit viewing/limitations, not model summarization. No evidence, retrieval failure, and model failure use distinct safe errors.
 
-现有 `FactEditor` 的“确认事实并分析”仍可承接案件分析入口；它表示用户核对事实，不代表顾问最终批准。B 的唯一最终顾问复核仍需后续服务状态与界面支持，本轮不能把 `review_required` 自动提升为 approved。
+FactEditor's confirm/analyze remains a case entry, meaning user fact verification, not final approval. B's sole final review still needs states/UI; review_required cannot automatically become approved.
 
-### 9.4 联调顺序
+<a id="94-联调顺序"></a>
 
-1. 在 A 分支或合并后的共同分支先保持 `/api` 路径、消息提交体、SSE 事件及完整 Case 结构；B 以适配器接入 Mock，不让 A 为 Mock 改页面。
-2. 先验证 `POST /messages` 的普通聊天、具体事实补充、research 命中、无匹配、仅展示、模型/检索失败；用 `GET /cases/{id}` 核对恢复和引用快照。
-3. 验证 `GET /knowledge/search` 仍供资料面板使用；它的 `passages` 与聊天引用要从同一证据适配结果产生，防止两套定位。
-4. 再切 C 的真实提供方并重跑同一组测试。确认授权原文、版本、日期和查询性能后，才算完成 C 接入。
+### 9.4 Integration order
 
-此节是对指定 GitHub 提交的只读代码核查和接入建议。当前本地工作分支未包含 A 分支代码；尚未实施或运行这套接线。
+1. Preserve A paths, bodies, SSE, complete Case on its/common branch; adapt Mock without redesigning pages.
+2. Check ordinary chat, facts, hits, no-match, display-only, failures through POST /messages; GET /cases/{id} checks recovery/citation snapshots.
+3. Keep GET /knowledge/search for the panel, generating panel/chat passages from one evidence adapter.
+4. Switch to actual C and repeat. Permissions, originals, versions, dates, and performance must pass before C integration is complete.
 
+Read-only audit/recommendations for the specified commit; the local branch did not contain A code and this wiring was not implemented/run at that point.
 
-## 10. 首版代码落地（2026-10-02）
+<a id="10-首版代码落地2026-10-02"></a>
 
-本 worktree 已实现 `packages/agent/contracts.py`、`providers.py`、`knowledge.py`。Mock fixtures 已有运行实现；C HTTP 路径为拟定协议，尚未完成 C 的真实接口验收。
-机器可读模型位于 `docs/contracts/knowledge_provider_v0_1/`。可选增加 kind/locators 供现有 A 搜索与规则分析；Evidence 增加 drift/heading/retrieved_at/coverage_cutoff/snapshot_sha256 以保留原页面来源信息。
-具体安装、配置、权限限制、HTTP 请求与测试命令见 `docs/implementation/B_AGENT_LOCAL_RUN_AND_HANDOFF.md`。
+## 10. Initial implementation (2026-10-02)
 
-## 2026-10-02 对话接入补充
+This worktree implements `packages/agent/contracts.py`, `providers.py`, `knowledge.py`, including runtime fixtures. C HTTP is proposed, not actually accepted.
+Machine-readable models: `docs/contracts/knowledge_provider_v0_1/`. Optional kind/locators support A search/rules; Evidence adds drift/heading/retrieved_at/coverage_cutoff/snapshot_sha256 to retain original page provenance.
+Installation/configuration/rights/HTTP/tests: `docs/implementation/B_AGENT_LOCAL_RUN_AND_HANDOFF.md`.
 
-B 增加动态追问、候选场景识别与原始描述字段，但本版本 C 请求字段/过滤白名单不扩张。用户案件事实从用户描述或其授权材料获取，C 的法规和参考案例不能补造用户事实。B 按本轮任务决定是否携带案件过滤：独立资料查询不带旧案日期；案件关联查询中实际/计划与日期同时明确才传适用日期，否则 date_status=unknown。
+<a id="2026-10-02-对话接入补充"></a>
 
-纯检索故障仍为 knowledge_unavailable；带事实修订的混合消息可在保存修订后返回 workflow.status=partial_failure、reason_code=retrieval_failed、error_code=knowledge_unavailable 与 retryable。完整 Case 内保存 deferred_query，用户明确重试后只恢复查询，不重复事实写入。底层 error 仅透出 code/retryable，不返回原始异常/连接参数。无匹配包含 query 与期间/事实缺口，不等于法规不存在。
+## 2026-10-02 conversation integration supplement
 
-A 的可选 question/identification/dialogue 字段详见 [实现规范第 6 节](../implementation/B_GUIDED_INTAKE_DESIGN_2026_10_02.md#6-本轮落地接口与兼容方式)。
+B adds dynamic questions, candidate identification, and raw descriptions without expanding this C request/filter allowlist. User facts come from user descriptions/authorized materials, not public laws/cases. Independent inquiries omit old case dates. Case queries send applicable dates only with explicit actual/planned status; otherwise date_status=unknown.
+
+Pure retrieval failure remains knowledge_unavailable. Mixed corrections may save facts then return workflow.status=partial_failure, reason_code=retrieval_failed, error_code=knowledge_unavailable, retryable. Case saves deferred_query; explicit retry restores only the query, not duplicate fact writes. Expose only error code/retryable, never raw exceptions/connections. No-match includes query/period/fact gaps, not a claim that legislation does not exist.
+
+A's optional question/identification/dialogue fields: [implementation section 6](../implementation/B_GUIDED_INTAKE_DESIGN_2026_10_02.md#6-本轮落地接口与兼容方式).

@@ -1,321 +1,375 @@
-# PRD、技术路线图与项目计划审查报告
+<a id="prd技术路线图与项目计划审查报告"></a>
 
-| 项目 | 结果 |
+# Review of the PRD, Technical Roadmap, and Project Plan
+
+| Item | Result |
 |---|---|
-| 审查文件 | `docs/product/PRD.md`、`docs/architecture/TECHNICAL_ROADMAP.md`、`docs/project/PROJECT_PLAN_2026.md` |
-| 审查日期 | 2026-08-15 |
-| 报告版本 | v0.2 |
-| 审查对象版本 | 审查时为 v0.1；批准修改并正式发布后为 v0.2 |
-| 本次操作 | 用户已批准全部 8 项建议；三份源文件已修改并完成回归检查 |
-| 机械检查 | 修改后未发现断链、占位符、重复标题、版本冲突或里程碑日期冲突 |
-| 问题数量 | 高优先级 5 项；中优先级 3 项 |
-| 总体判断 | 8 项规划问题均已处理；当前文件可作为 v0.2 实施基线，但 L1 仍受专家、安全和资源门槛约束 |
+| Reviewed files | `docs/product/PRD.md`, `docs/architecture/TECHNICAL_ROADMAP.md`, `docs/project/PROJECT_PLAN_2026.md` |
+| Review date | 2026-08-15 |
+| Report version | v0.2 |
+| Reviewed versions | v0.1 during review; v0.2 after approved changes and formal publication |
+| Actions | The user approved all 8 recommendations; the three source files were revised and regression checks completed |
+| Mechanical checks | No broken links, placeholders, duplicate headings, version conflicts, or milestone date conflicts after revision |
+| Issue count | 5 high-priority; 3 medium-priority |
+| Overall assessment | All 8 planning issues are addressed; the files can serve as the v0.2 implementation baseline, while L1 remains subject to expert, security, and resource gates |
 
-## 审查范围
+<a id="审查范围"></a>
 
-本次审查重点检查三份文档之间的范围、目标用户、发布时间、资源、技术架构、验收条件、香港资料完整性、安全前置决策和后续维护是否一致。
+## Review scope
 
-这是一份产品和工程规划审查，不是税务、法律或安全专业鉴证。涉及香港 FSIE 规则和资料完整性的部分仍需要香港税务专家确认。
+This review checks consistency across the three documents in scope, target users, release dates, resources, technical architecture, acceptance criteria, Hong Kong source completeness, prerequisite security decisions, and ongoing maintenance.
 
-## 总体判断
+It is a product and engineering planning review, not professional tax, legal, or security assurance. Hong Kong FSIE rules and source completeness still require confirmation by Hong Kong tax experts.
 
-项目的大方向是合理的：香港 FSIE 是深度 MVP；中国内地、日本和韩国先做标准研究资料包；AI、规则引擎、RAG 和税务专家之间的责任边界比较清楚；没有专家时保持研究状态；事实、规则、来源和报告都要求版本化和审计。
+<a id="总体判断"></a>
 
-审查发现的核心问题集中在 12 月交付边界、资源与范围绑定、发布对象、可计算验收、香港资料总清单以及关键决策时限。用户已批准全部建议，三份文件现已统一采用 L0/L1/L2 发布等级、保守资源基线和明确的验收及降级规则。
+## Overall assessment
 
-这些修改解决的是规划可执行性，不代表香港 FSIE 的专业规则已经通过税务专家鉴证。未满足专家和安全门槛时，12 月交付仍须停留在 L0 内部研究原型。
+The overall direction is reasonable: Hong Kong FSIE is the in-depth MVP; mainland China, Japan, and South Korea initially receive standard research source packages. Responsibilities among AI, the rule engine, RAG, and tax experts are reasonably clear. The product remains in research status without experts, and facts, rules, sources, and reports require versioning and audit.
 
-## 发现的问题
+The principal issues concern December delivery boundaries, tying scope to resources, release audiences, computable acceptance, a Hong Kong source manifest, and decision deadlines. The user approved every recommendation. The three documents now consistently use L0/L1/L2 release levels, a conservative resource baseline, and explicit acceptance/fallback rules.
 
-### 问题 1：四地区范围没有与实际资源绑定
+These changes improve planning feasibility; they do not establish professional validation of Hong Kong FSIE rules. Without expert and security gates, December delivery must remain an L0 internal research prototype.
 
-**优先级：高**
+<a id="发现的问题"></a>
 
-**问题是什么：** 文档同时承诺香港深度 MVP、三个地区的标准企业税务包、统一平台、安全、审计和发布工作，但项目计划只写了“最低建议配置”，没有确认真实可用的人力。
+## Findings
 
-**证据位置：**
+<a id="问题-1四地区范围没有与实际资源绑定"></a>
 
-- `PRD.md` 第 12 节把中国内地、日本和韩国标准税务包列入 2026 Release 1；
-- `PROJECT_PLAN_2026.md` 第 6 节建议两名全职工程师、一名知识运营和兼职支持；
-- 即使只有一名工程师，计划仍要求优先保证四地区资料、香港纵向链路和审计，没有实质减少地区内容范围。
+### Issue 1: four-jurisdiction scope is not tied to actual resources
 
-**为什么重要：** 如果真实资源低于建议配置，最可能出现的不是某一项完整延期，而是四地区内容、香港 MVP 和安全工作全部只完成一半。到 12 月时，团队可能只能临时降低“可用”的标准。
+**Priority: high**
 
-**建议方向：** 采用保守资源基线，并明确额外人员到位后才能解锁的扩展范围。
+**Problem:** the documents simultaneously promise an in-depth Hong Kong MVP, standard corporate tax packages for three jurisdictions, a unified platform, security, audit, and release work. The plan lists only a “minimum recommended staffing” without confirming actual available capacity.
 
-### 问题 2：“研究模式发布”到底给谁用，没有说清楚
+**Evidence:**
 
-**优先级：高**
+- `PRD.md` section 12 includes standard tax packages for mainland China, Japan, and South Korea in 2026 Release 1.
+- `PROJECT_PLAN_2026.md` section 6 recommends two full-time engineers, one knowledge operations contributor, and part-time support.
+- Even with one engineer, the plan still prioritizes four-jurisdiction sources, the Hong Kong vertical workflow, and audit without materially reducing regional content scope.
 
-**问题是什么：** PRD 规定没有香港专家时不能向真实客户提供税务结论；项目计划却允许香港“以研究模式发布”。目前没有说明研究版是只供内部团队使用，还是顾问也能访问。
+**Why it matters:** below-recommended capacity may leave all four-jurisdiction content, the Hong Kong MVP, and security half-complete rather than delaying one complete deliverable. The team may improvise a lower definition of “usable” in December.
 
-**证据位置：**
+**Recommendation:** adopt a conservative resource baseline and specify stretch scope unlocked only when extra staff are confirmed.
 
-- `PRD.md` 第 3.3 节规定专家验证是封闭顾问试点的强制门槛；
-- `PROJECT_PLAN_2026.md` 第 1 节允许在专家未到位时以研究模式发布；
-- 第 4 节又把封闭顾问试点安排在发布候选阶段。
+<a id="问题-2研究模式发布到底给谁用没有说清楚"></a>
 
-**为什么重要：** 即使报告有研究水印，真实用户仍可能把内容用于客户案件。“发布完成”也会被不同人理解成不同成熟度。
+### Issue 2: the audience for a “research-mode release” is unclear
 
-**建议方向：** 明确区分内部研究原型、封闭顾问试点和正式客户能力。
+**Priority: high**
 
-### 问题 3：很多验收条件无法重复计算
+**Problem:** the PRD prohibits real-client tax conclusions without Hong Kong experts, while the plan permits a Hong Kong research-mode release without saying whether it is internal-only or accessible to advisors.
 
-**优先级：高**
+**Evidence:**
 
-**问题是什么：** 文档写了“关键事实识别完整率 90%”“不产生虚构法规”“四地区存在可用税务包”，但没有定义测试集、分母、计算公式或通过标准。
+- `PRD.md` section 3.3 makes expert validation mandatory for a closed advisor pilot.
+- `PROJECT_PLAN_2026.md` section 1 permits research-mode release without experts.
+- Section 4 schedules a closed advisor pilot during the release candidate phase.
 
-**证据位置：**
+**Why it matters:** real users may apply watermarked research reports to client cases. Different participants may interpret “release complete” as different maturity levels.
 
-- `PRD.md` 第 11 节；
-- `PROJECT_PLAN_2026.md` 第 9 节；
-- 技术路线图提到召回、引用定位和案例评测，但没有具体阈值。
+**Recommendation:** distinguish internal research prototypes, closed advisor pilots, and production client capabilities.
 
-**为什么重要：** 同一个系统可能被不同人员分别判断为通过或不通过，也无法证明新版本是否比旧版本更好。
+<a id="问题-3很多验收条件无法重复计算"></a>
 
-**建议方向：** 建立一张“需求—测试集—计算方法—阈值—发布门槛”矩阵。
+### Issue 3: many acceptance criteria are not reproducibly computable
 
-### 问题 4：香港资料是否完整，没有一份可以验收的清单
+**Priority: high**
 
-**优先级：高；需要香港税务专家参与确认**
+**Problem:** criteria such as “90% critical fact identification completeness,” “no fabricated legislation,” and “usable tax packages for four jurisdictions” lack test sets, denominators, formulas, or passing standards.
 
-**问题是什么：** 文档列出了 FSIE 专页、FAQ、官方示例和法律原文，但没有定义必须收录哪些法律、修订条例、FAQ、DIPN、事先裁定和其他资料，也没有固定法律适用截止日。
+**Evidence:**
 
-**证据位置：**
+- `PRD.md` section 11.
+- `PROJECT_PLAN_2026.md` section 9.
+- The roadmap mentions recall, citation locations, and case evaluation without specific thresholds.
 
-- `PRD.md` 第 5.2、8、11.1 节；
-- `TECHNICAL_ROADMAP.md` 第 4.4 节。
+**Why it matters:** different reviewers may pass or fail the same system, with no evidence that a new version improves on an old one.
 
-香港税务局的 FSIE 官方页面本身包含收入范围、覆盖纳税人、在港收取、不同例外、双重课税宽免、纳税义务和事先裁定等多个节点，因此只证明“已收录文件可追溯”并不能证明没有漏收关键文件：[香港税务局 FSIE 专页](https://www.ird.gov.hk/eng/tax/bus_fsie.htm)。
+**Recommendation:** create a requirements–test set–formula–threshold–release gate matrix.
 
-**为什么重要：** RAG 可能正确引用数据库里已有的资料，却因为资料库本身不完整而遗漏重要条件。
+<a id="问题-4香港资料是否完整没有一份可以验收的清单"></a>
 
-**建议方向：** 建立版本化的香港 FSIE 资料总清单。工程团队检查文件、链接、版本和索引是否完整；香港税务专家确认专业材料是否足够。
+### Issue 4: no assessable checklist establishes Hong Kong source completeness
 
-### 问题 5：会影响架构的决定安排得太晚
+**Priority: high; Hong Kong tax expert confirmation required**
 
-**优先级：高**
+**Problem:** the documents mention FSIE pages, FAQs, official examples, and legislation, but do not define required laws, amendments, FAQs, DIPNs, advance rulings, and other materials or pin a legal applicability cutoff.
 
-**问题是什么：** 数据存放地区、模型供应商及数据保留条款、租户隔离方式、身份认证、案例脱敏和报告语言都还没有决定，也没有最迟决定日期。
+**Evidence:**
 
-**证据位置：** `TECHNICAL_ROADMAP.md` 第 5、6、11 节和 `PROJECT_PLAN_2026.md` 第 4 节。
+- `PRD.md` sections 5.2, 8, and 11.1.
+- `TECHNICAL_ROADMAP.md` section 4.4.
 
-**为什么重要：** 这些选择会影响数据表、权限、部署环境、模型调用和安全测试。等到试点前再决定，前面的实现可能需要返工。
+The [IRD FSIE page](https://www.ird.gov.hk/eng/tax/bus_fsie.htm) covers income scope, covered taxpayers, receipt in Hong Kong, exceptions, double-taxation relief, obligations, and advance rulings. Traceability of collected documents alone cannot establish that no critical materials were omitted.
 
-**建议方向：** 给每个待决事项设置最迟日期、临时默认方案和被阻断的工作。
+**Why it matters:** RAG may accurately cite existing database materials while omitting important conditions because the library itself is incomplete.
 
-### 问题 6：里程碑有日期，但缺少可问责负责人和明确降级方案
+**Recommendation:** create a versioned Hong Kong FSIE source manifest. Engineering checks files, links, versions, and indexes; Hong Kong experts confirm professional sufficiency.
 
-**优先级：中**
+<a id="问题-5会影响架构的决定安排得太晚"></a>
 
-**问题是什么：** M1～M6 有时间和交付结果，但没有为每项交付指定唯一负责人，也没有说明某个里程碑失败时具体删掉什么。
+### Issue 5: architectural decisions are scheduled too late
 
-**为什么重要：** 项目可能每周都在更新进度，却无法提前发现谁被依赖、哪一项卡住了关键路径。范围削减也会变成临时争论。
+**Priority: high**
 
-**建议方向：** 为主要交付增加负责人、依赖、检查结果和预先批准的降级动作。
+**Problem:** storage region, provider/retention terms, tenant isolation, authentication, case de-identification, and report language remain undecided without deadlines.
 
-### 问题 7：等到 11 月才验证顾问工作流，时间太晚
+**Evidence:** `TECHNICAL_ROADMAP.md` sections 5, 6, and 11, and `PROJECT_PLAN_2026.md` section 4.
 
-**优先级：中**
+**Why it matters:** these choices affect tables, permissions, deployment, model calls, and security testing. Decisions just before the pilot may require rework.
 
-**问题是什么：** 香港税务顾问是首发用户，但文档在 11 月以前没有安排访谈、原型走查或报告结构验证。
+**Recommendation:** assign every open decision a deadline, interim default, and blocked workstream.
 
-**为什么重要：** 如果功能冻结后才发现提问顺序、事实卡或报告结构不好用，几乎没有时间返工。
+<a id="问题-6里程碑有日期但缺少可问责负责人和明确降级方案"></a>
 
-**建议方向：** 9 月使用虚构案例完成 3～5 次工作流走查。只验证交互和报告可用性，不把参与者反馈当成税务专业结论。
+### Issue 6: milestones lack accountable owners and explicit fallbacks
 
-### 问题 8：四地区资料上线后的维护责任不够具体
+**Priority: medium**
 
-**优先级：中**
+**Problem:** M1–M6 specify dates and outputs but not one accountable owner per deliverable or what exactly to remove on failure.
 
-**问题是什么：** 文档要求自动采集、差异检测和审核发布，但没有规定多久检查一次、发现重大变化后多久处理、谁负责哪个地区、逾期时系统如何显示。
+**Why it matters:** weekly progress updates may obscure dependencies and critical-path blockers. Scope reduction becomes an improvised dispute.
 
-**为什么重要：** 系统可能准确显示一个旧版本，却没有能力及时发现它已经过时。
+**Recommendation:** add owners, dependencies, checkpoint results, and preapproved fallback actions for major deliverables.
 
-**建议方向：** 为重大、重要和普通资料变更建立不同响应时间，并为每个地区指定资料负责人和备份人。
+<a id="问题-7等到-11-月才验证顾问工作流时间太晚"></a>
 
-## 跨文档需要统一的地方
+### Issue 7: advisor workflow validation waits until November
 
-| 主题 | PRD 的表达 | 路线图或项目计划的表达 | 需要解决的问题 |
+**Priority: medium**
+
+**Problem:** Hong Kong advisors are the initial users, but no interviews, prototype walkthroughs, or report structure validation are scheduled before November.
+
+**Why it matters:** discovering poor question order, fact cards, or report structure after feature freeze leaves little time for rework.
+
+**Recommendation:** complete 3–5 September walkthroughs with fictional cases, testing interactions/report usability without treating feedback as professional tax conclusions.
+
+<a id="问题-8四地区资料上线后的维护责任不够具体"></a>
+
+### Issue 8: ongoing four-jurisdiction maintenance responsibilities lack detail
+
+**Priority: medium**
+
+**Problem:** automated capture, difference detection, and reviewed publication are required, but checking frequency, response times for major changes, regional owners, and overdue status are unspecified.
+
+**Why it matters:** the system may accurately display an old version without detecting promptly that it is stale.
+
+**Recommendation:** establish separate response times for major, important, and ordinary changes and designate source/backup owners for every jurisdiction.
+
+<a id="跨文档需要统一的地方"></a>
+
+## Cross-document alignment needed
+
+| Topic | PRD wording | Roadmap/plan wording | Issue |
 |---|---|---|---|
-| 发布对象 | 专家验证前不能服务真实客户 | 可以研究模式发布 | 研究版允许谁使用 |
-| 资源与范围 | 香港 MVP 加三个标准税务包 | 资源只是建议配置 | 截止日期缺乏容量依据 |
-| 验收 | 香港有方向性门槛 | 使用“可用”“完成”“通过验收” | 无法重复判断是否通过 |
-| 安全架构 | 要求租户隔离和案件权限 | 租户、认证和部署仍待定 | 安全测试对象没有锁定 |
+| Release audience | No real-client service before expert validation | Research-mode release permitted | Who may use the research release? |
+| Resources and scope | Hong Kong MVP + three standard packages | Staffing is only recommended | Deadlines lack a capacity basis |
+| Acceptance | Directional Hong Kong gates | “Usable,” “complete,” “accepted” | Passing cannot be judged reproducibly |
+| Security architecture | Tenant isolation and case permissions required | Tenancy, authentication, deployment undecided | Security test target is not fixed |
 
-## 已确认的优点
+<a id="已确认的优点"></a>
 
-- RAG 资料库、规则执行库和案例评测库已经明确分开；
-- 没有香港专家时保持研究状态，真实顾问试点必须通过专家门槛；
-- 事实、规则、来源和报告都要求保存版本及审计记录；
-- 模块化单体、PostgreSQL、混合检索和模型适配层符合 MVP 阶段需要；
-- 四地区范围、10 月功能冻结和 12 月缓冲在三份文档中基本一致；
-- `pgvector` 和 PostgreSQL 的组合与其官方项目能力一致，当前没有发现该选型本身阻碍 MVP：[pgvector](https://github.com/pgvector/pgvector)。
+## Confirmed strengths
 
-## 具体修改建议
+- RAG sources, rule execution, and case evaluation libraries are explicitly separate.
+- Research status is retained without Hong Kong experts; real advisor pilots require expert gates.
+- Facts, rules, sources, and reports require versions and audit records.
+- Modular monolith, PostgreSQL, hybrid retrieval, and model adapters suit the MVP stage.
+- The four-jurisdiction scope, October freeze, and December buffer broadly agree across the three documents.
+- `pgvector` with PostgreSQL matches the official project's capabilities, with no identified obstacle to the MVP from this choice itself: [pgvector](https://github.com/pgvector/pgvector).
 
-### 建议修改 1：采用保守资源基线
+<a id="具体修改建议"></a>
 
-**会修改：** PRD 第 5.1、12 节；技术路线图第 3.1、8 节；项目计划第 1、2.2、6 节。
+## Specific revisions
 
-**建议内容：**
+<a id="建议修改-1采用保守资源基线"></a>
 
-> 2026 计划默认按“1 名项目/产品负责人 + 1 名主要工程执行者（可使用 AI 辅助）”排期。只有在 8 月 31 日前确认第二名全职工程师和知识运营负责人后，才启用完整四地区标准税务包目标。
+### Revision 1: adopt a conservative resource baseline
+
+**Affected sections:** PRD 5.1 and 12; roadmap 3.1 and 8; plan 1, 2.2, and 6.
+
+**Proposed text:**
+
+> Default 2026 scheduling assumes 1 project/product owner + 1 primary engineer, with AI assistance permitted. The full standard tax package objective across four jurisdictions is enabled only if a second full-time engineer and knowledge operations owner are confirmed by August 31.
 >
-> 保守基线下，香港保留端到端研究 MVP；中国内地、日本和韩国在 2026 年交付官方来源目录、统一元数据、主题分类、覆盖缺口和验证状态。八类主题全部形成标准研究包作为额外资源到位后的扩展目标。
+> The conservative baseline retains the Hong Kong end-to-end research MVP. Mainland China, Japan, and South Korea deliver official catalogs, common metadata, topic classifications, coverage gaps, and validation statuses in 2026. Completing standard research packages across eight topic categories is a stretch objective unlocked by additional resources.
 
-**修改后检查：** 三份文档对三个地区的完成等级使用相同表述；资源没有确认时，不再同时承诺八类主题全部完成。
+**Post-change check:** all three documents use the same completion levels; without confirmed resources, completing all eight topics is no longer simultaneously promised.
 
-**当前状态：** 已实施并通过回归检查。
+**Status:** implemented; regression checks passed.
 
-### 建议修改 2：增加三级发布定义
+<a id="建议修改-2增加三级发布定义"></a>
 
-**会修改：** 三份文档中所有涉及“研究发布”“封闭试点”和“正式客户”的部分。
+### Revision 2: define three release levels
 
-**建议内容：**
+**Affected sections:** all references to research releases, closed pilots, and formal clients in the three documents.
 
-| 发布等级 | 允许用户 | 允许数据 | 允许输出 | 必要门槛 |
+**Proposed content:**
+
+| Release level | Permitted users | Permitted data | Permitted outputs | Required gates |
 |---|---|---|---|---|
-| 内部研究原型 | 项目团队 | 虚构案例或完成脱敏审批的数据 | 带研究标识的工程演示 | 研究状态不可绕过、来源可追溯 |
-| 封闭顾问试点 | 经授权的香港税务顾问 | 通过数据处理审批的试点案件 | 只供顾问复核的内部稿 | 香港专家验证和安全门槛全部通过 |
-| 正式客户能力 | 正式授权客户和顾问 | 合同及合规允许的数据 | 正式产品能力 | 不属于 2026 年默认承诺 |
+| Internal research prototype | Project team | Fictional or approved de-identified cases | Engineering demonstrations marked as research | Research status cannot be bypassed; sources traceable |
+| Closed advisor pilot | Authorized Hong Kong advisors | Approved pilot cases | Internal drafts solely for advisor review | All Hong Kong expert and security gates passed |
+| Production client capabilities | Formally authorized clients/advisors | Contractually/compliantly permitted data | Formal product capabilities | Outside the default 2026 commitment |
 
-如果专家门槛没有通过，12 月只验收内部研究原型，不得称为客户发布。
+Without expert gates, December accepts only the internal research prototype, which must not be called a client release.
 
-**修改后检查：** 每个“发布”“试点”“客户”表述都能对应上述一种等级。
+**Post-change check:** every release/pilot/client reference maps to one level above.
 
-**当前状态：** 已实施并通过回归检查。
+**Status:** implemented; regression checks passed.
 
-### 建议修改 3：把验收条件改成可计算指标
+<a id="建议修改-3把验收条件改成可计算指标"></a>
 
-**会修改：** PRD 第 11 节、技术路线图第 7 节、项目计划第 9 节。
+### Revision 3: make acceptance criteria computable
 
-**建议内容：**
+**Affected sections:** PRD 11, roadmap 7, plan 9.
 
-- 每项指标记录测试集版本、分母、公式、阈值、证据和批准人；
-- “关键事实识别完整率”定义为：系统正确提取或明确追问的专家标注关键事实数 ÷ 专家标注关键事实总数；
-- 评测集中出现一个无法对应资料总清单的法规、条文或链接，就阻断发布；
-- 香港内部研究原型至少运行 10 个候选案例；封闭试点使用 30～50 个经专家确认覆盖范围的案例；
-- 三个地区的每个已声明主题至少有一个第一方官方入口，元数据必填项完整率为 100%，发布快照断链为 0，覆盖缺口和验证状态不得为空。
+**Proposed content:**
 
-**修改后检查：** 每项 12 月验收条件都能找到测试数据、计算方式和通过标准。
+- Record test set versions, denominators, formulas, thresholds, evidence, and approvers for every metric.
+- Critical fact identification completeness is correctly extracted or explicitly queried expert-labeled critical facts ÷ all expert-labeled critical facts.
+- One statute, provision, or link in the evaluation set that cannot map to the source manifest blocks release.
+- The Hong Kong internal research prototype runs at least 10 candidate cases; the closed pilot uses 30–50 cases with expert-confirmed coverage.
+- Every declared topic in the three jurisdictions has at least one first-party official entry point; required metadata is 100% complete; release snapshot broken links are 0; coverage gaps and validation statuses are nonempty.
 
-**当前状态：** 已实施并通过回归检查。
+**Post-change check:** every December acceptance criterion has test data, a calculation, and a passing standard.
 
-### 建议修改 4：建立香港 FSIE 资料总清单
+**Status:** implemented; regression checks passed.
 
-**会修改：** PRD 第 8、11.1 节；技术路线图第 4.4 节。
+<a id="建议修改-4建立香港-fsie-资料总清单"></a>
 
-**建议内容：** 每条资料记录标题、发布机构、资料类型、原始链接、语言、发布日期、生效和失效日期、抓取时间、哈希、权威等级、关联规则节点、支持或限制关系、替代版本、解析状态和专家验证状态。
+### Revision 4: establish a Hong Kong FSIE source manifest
 
-每次报告保存“法律资料覆盖截止日”。截止日后新增或生效的材料触发影响检查；未完成审核前，相关规则标记为“可能过期”，停止给出确定性专业结论。
+**Affected sections:** PRD 8 and 11.1; roadmap 4.4.
 
-工程团队只确认文件、版本、链接、解析和索引完整；香港税务专家确认材料在专业上是否足够。
+**Proposed content:** each source records title, publisher, type, original URL, language, publication/effective/expiry dates, capture time, hash, authority, associated nodes, supporting/limiting relationships, replacement versions, parsing status, and expert validation status.
 
-**修改后检查：** 文档可以明确回答收了哪些资料、适用到哪一天、有哪些缺口以及谁负责确认。
+Every report stores a legal coverage cutoff. Later published/effective materials trigger impact checks; until reviewed, related rules are potentially stale and stop producing definitive professional conclusions.
 
-**当前状态：** 已实施并通过回归检查；专业完整性仍需要专家确认。
+Engineering confirms files, versions, links, parsing, and indexes only; Hong Kong tax experts confirm professional sufficiency.
 
-### 建议修改 5：为基础决策设置截止日期
+**Post-change check:** the documents explain what is collected, the applicability cutoff, gaps, and responsible reviewers.
 
-**会修改：** 技术路线图第 11 节和项目计划 M1～M3。
+**Status:** implemented; regression checks passed. Experts must still confirm professional completeness.
 
-| 需要决定的事项 | 最迟日期 | 没决定时怎么办 | 会阻断什么 |
+<a id="建议修改-5为基础决策设置截止日期"></a>
+
+### Revision 5: set deadlines for foundational decisions
+
+**Affected sections:** roadmap 11 and plan M1–M3.
+
+| Decision | Latest date | Interim action | Blocked work |
 |---|---|---|---|
-| 案例来源和脱敏流程 | 8 月 20 日 | 只使用虚构案例 | 真实或匿名案例导入 |
-| 模型供应商和数据保留条款 | 8 月 31 日 | 只使用合成数据 | 试点数据进入模型 |
-| 租户隔离方式 | 8 月 31 日 | 研究版按单组织运行，但保留组织字段 | 权限和数据库接口冻结 |
-| 身份认证方式 | 9 月 20 日 | 研究版使用受控本地账号 | 顾问试点权限验收 |
-| 部署地区、密钥和备份 | 10 月 18 日 | 不部署真实试点数据 | 顾问试点环境和安全测试 |
-| 报告语言和模板 | 9 月 20 日 | 中文正文，保留英文法源名称 | 报告功能冻结 |
+| Case sources/de-identification | August 20 | Fictional cases only | Real or anonymous case import |
+| Model provider/retention terms | August 31 | Synthetic data only | Pilot data entering models |
+| Tenant isolation | August 31 | Single-organization research environment with organization fields | Permission/database interface freeze |
+| Authentication | September 20 | Controlled local research accounts | Advisor pilot permissions acceptance |
+| Deployment region, keys, backups | October 18 | No real pilot data deployment | Advisor pilot environment/security tests |
+| Report language/templates | September 20 | Chinese body with English legal source names | Report feature freeze |
 
-**修改后检查：** 每个待决事项都有截止日期、临时方案、负责人和被阻断工作。
+**Post-change check:** every open decision has a deadline, interim plan, owner, and blocked work.
 
-**当前状态：** 已实施并通过回归检查。
+**Status:** implemented; regression checks passed.
 
-### 建议修改 6：增加负责人和范围降级表
+<a id="建议修改-6增加负责人和范围降级表"></a>
 
-**会修改：** 技术路线图第 8 节和项目计划第 3～5、8 节。
+### Revision 6: add owners and scope fallback tables
 
-建议为税务包结构、香港原型、三地区资料、专家审核包以及安全发布各指定一个最终负责人，并记录前置依赖和失败后的降级动作。一个人可以承担多个角色，但每项交付不能没有负责人。
+**Affected sections:** roadmap 8 and plan 3–5 and 8.
 
-里程碑结果统一为：通过、未通过、按已批准降级方案通过。某个检查点失败时立即执行预先定义的降级，不再等待连续两周后临时决定。
+Assign one ultimately accountable owner to tax package structure, the Hong Kong prototype, three-jurisdiction sources, the expert package, and security/release. Record prerequisites and fallbacks. One person may hold multiple roles, but no deliverable may lack an owner.
 
-**修改后检查：** 每项关键交付都有一个负责人、明确依赖和预定降级方案。
+Standardize milestone results as pass, fail, or pass with approved degradation. Apply predefined fallback immediately on checkpoint failure rather than waiting two weeks to decide.
 
-**当前状态：** 已实施并通过回归检查。
+**Post-change check:** each critical deliverable has one owner, explicit dependencies, and a planned fallback.
 
-### 建议修改 7：9 月增加 3～5 次工作流走查
+**Status:** implemented; regression checks passed.
 
-**会修改：** PRD 第 11 节和项目计划 M2。
+<a id="建议修改-79-月增加-35-次工作流走查"></a>
 
-使用虚构案例，让潜在顾问或熟悉专业服务复核流程的代理用户检查案件创建、追问节奏、事实确认、缺口提示、引用展示和报告结构。走查只验证是否好用，不验证税务结论，也不能成为税务金标。
+### Revision 7: add 3–5 September walkthroughs
 
-每次记录无法理解的字段、重复或无效问题、完成任务所需时间、报告查找困难和关键修改建议。
+**Affected sections:** PRD 11 and plan M2.
 
-**修改后检查：** M2 前存在 3～5 份走查记录，且没有被标成专家案例。
+Use fictional cases with potential advisors or proxy users familiar with professional-service review to check case creation, pacing, confirmation, gap notices, citations, and report structure. Walkthroughs test usability, not tax conclusions, and cannot become tax gold standards.
 
-**当前状态：** 已实施并通过回归检查。
+Record confusing fields, repeated/invalid questions, completion time, report lookup difficulties, and major suggestions.
 
-### 建议修改 8：建立四地区资料维护标准
+**Post-change check:** 3–5 walkthrough records exist before M2 and are not labeled expert cases.
 
-**会修改：** PRD 第 8、13 节；技术路线图第 4.6 节；项目计划第 8 节。
+**Status:** implemented; regression checks passed.
 
-| 变化等级 | 处理要求 | 系统状态 |
+<a id="建议修改-8建立四地区资料维护标准"></a>
+
+### Revision 8: establish four-jurisdiction maintenance standards
+
+**Affected sections:** PRD 8 and 13; roadmap 4.6; plan 8.
+
+| Change level | Handling | System status |
 |---|---|---|
-| 重大变化：法律生效、核心规则废止或官方更正 | 发现后立即冻结受影响规则，两个工作日内完成影响分级 | 标记可能过期，禁止确定性专业输出 |
-| 重要变化：FAQ、DIPN、申报义务或官方示例更新 | 每周检查，五个工作日内完成初审 | 审核前显示警告 |
-| 普通变化：页面调整、链接迁移或元数据修正 | 每月批量处理 | 保持可检索并记录变化 |
+| Major: laws taking effect, core-rule repeal, official corrections | Immediately freeze affected rules; classify impact within two working days | Potentially stale; definitive professional outputs prohibited |
+| Important: FAQ, DIPN, filing, official example updates | Check weekly; initial review within five working days | Warning until reviewed |
+| Ordinary: page changes, moved links, metadata corrections | Monthly batches | Searchable; changes recorded |
 
-每个地区指定资料负责人和备份人。机器翻译不能作为专业批准依据；维护逾期时不得继续显示“最新”。
+Each jurisdiction has a source owner and backup owner. Machine translation cannot establish professional approval; overdue content must not remain labeled “up to date.”
 
-**修改后检查：** 每个地区都能回答谁维护、多久检查、多久处理以及逾期如何显示。
+**Post-change check:** each jurisdiction can identify who maintains content, checking/response frequency, and overdue presentation.
 
-**当前状态：** 已实施并通过回归检查。
+**Status:** implemented; regression checks passed.
 
-## 用户决定与实施结果
+<a id="用户决定与实施结果"></a>
 
-用户于 2026-08-15 确认接受全部 8 项修改建议。
+## User decision and implementation results
 
-| 建议修改 | 内容 | 影响文件 | 你的决定 |
+On 2026-08-15, the user accepted all 8 recommendations.
+
+| Revision | Content | Affected files | Decision |
 |---|---|---|---|
-| 1 | 采用保守资源基线 | 三份文档 | 已接受并实施 |
-| 2 | 增加三级发布定义 | 三份文档 | 已接受并实施 |
-| 3 | 建立可计算验收标准 | 三份文档 | 已接受并实施 |
-| 4 | 建立香港 FSIE 资料总清单 | PRD、技术路线图 | 已接受并实施 |
-| 5 | 设置基础决策截止日期 | 技术路线图、项目计划 | 已接受并实施 |
-| 6 | 增加负责人和降级方案 | 技术路线图、项目计划 | 已接受并实施 |
-| 7 | 提前进行工作流走查 | PRD、项目计划 | 已接受并实施 |
-| 8 | 建立四地区资料维护标准 | 三份文档 | 已接受并实施 |
+| 1 | Conservative resource baseline | All three | Accepted and implemented |
+| 2 | Three release levels | All three | Accepted and implemented |
+| 3 | Computable acceptance | All three | Accepted and implemented |
+| 4 | Hong Kong FSIE source manifest | PRD, roadmap | Accepted and implemented |
+| 5 | Foundational decision deadlines | Roadmap, plan | Accepted and implemented |
+| 6 | Owners and fallbacks | Roadmap, plan | Accepted and implemented |
+| 7 | Earlier workflow walkthroughs | PRD, plan | Accepted and implemented |
+| 8 | Four-jurisdiction maintenance standards | All three | Accepted and implemented |
 
-## 回归检查结果
+<a id="回归检查结果"></a>
 
-- 确定性扫描结果为 0 项发现：没有断链、占位符、重复标题、版本冲突或里程碑日期冲突；
-- 三份文件在本地审查阶段保持 v0.1；用户确认正式发布到 Git 后统一更新为 v0.2；
-- 三份文件已统一 L0/L1/L2、保守资源基线、`source-catalog baseline` 和条件式扩展范围；
-- 香港 L0 与 L1 的案例数量、事实识别公式、法规引用阻断条件及三个地区资料包验收阈值已经对齐；
-- 关键决策截止日、负责人、依赖、默认方案和降级动作已写入路线图及项目计划；
-- 资料维护响应时间、负责人和过期状态已写入三份文件；
-- 未发现原有含糊表述残留，例如“以研究模式发布”或未定义的“四地区可用税务包”。
+## Regression results
 
-## 审查限制
+- Deterministic scans found 0 broken links, placeholders, duplicate headings, version conflicts, or milestone date conflicts.
+- All three files remained v0.1 during local review; after user confirmation of formal Git publication, all became v0.2.
+- L0/L1/L2, conservative resources, `source-catalog baseline`, and conditional stretch scope are consistent.
+- Hong Kong L0/L1 case counts, fact identification formulas, citation blockers, and three-jurisdiction package thresholds align.
+- Decision deadlines, owners, dependencies, defaults, and fallbacks are recorded in the roadmap/plan.
+- Maintenance response times, owners, and stale status are recorded across all three.
+- No residual ambiguous wording such as “research-mode release” or undefined “usable four-jurisdiction tax packages” was found.
 
-- 没有检查实现代码、数据库、预算、人员合同、客户访谈记录或原始香港 summary；
-- 没有地区税务专家参与，专业规则和资料完整性没有被视为已验证；
-- 外部核验只确认关键官方和技术入口，没有完成全量法规、供应商合同或数据保护尽调；
-- 本次审查前，三份源文件已经存在未提交修改。本次只修改用户批准的规划内容，没有清理其他改动，也没有暂存、提交、上传或更新版本号。
+<a id="审查限制"></a>
 
-## 内部追踪
+## Review limitations
 
-以下编号只用于 Agent 在批准、修改和回归检查时防止串项，用户不需要使用。
+- Implementation code, databases, budgets, staffing contracts, client interviews, and the original Hong Kong summary were not checked.
+- No jurisdiction tax experts participated; professional rules/source completeness were not treated as validated.
+- External checks confirmed key official/technical entry points only, not complete legislation, provider contracts, or data protection due diligence.
+- The three source files already had uncommitted edits before review. This review changed only user-approved planning content; it did not clean unrelated edits, stage, commit, upload, or update versions.
 
-| 正文项目 | 内部问题编号 | 内部修改编号 | 最终状态 |
+<a id="内部追踪"></a>
+
+## Internal tracking
+
+These identifiers prevent mismatches during approval, revision, and regression; users need not use them.
+
+| Item | Internal issue | Internal change | Final status |
 |---|---|---|---|
-| 问题 1 / 建议修改 1 | REV-001 | CHG-001 | 已处理 / 已应用 |
-| 问题 2 / 建议修改 2 | REV-002 | CHG-002 | 已处理 / 已应用 |
-| 问题 3 / 建议修改 3 | REV-003 | CHG-003 | 已处理 / 已应用 |
-| 问题 4 / 建议修改 4 | REV-004 | CHG-004 | 已处理 / 已应用 |
-| 问题 5 / 建议修改 5 | REV-005 | CHG-005 | 已处理 / 已应用 |
-| 问题 6 / 建议修改 6 | REV-006 | CHG-006 | 已处理 / 已应用 |
-| 问题 7 / 建议修改 7 | REV-007 | CHG-007 | 已处理 / 已应用 |
-| 问题 8 / 建议修改 8 | REV-008 | CHG-008 | 已处理 / 已应用 |
+| Issue 1 / revision 1 | REV-001 | CHG-001 | Resolved / applied |
+| Issue 2 / revision 2 | REV-002 | CHG-002 | Resolved / applied |
+| Issue 3 / revision 3 | REV-003 | CHG-003 | Resolved / applied |
+| Issue 4 / revision 4 | REV-004 | CHG-004 | Resolved / applied |
+| Issue 5 / revision 5 | REV-005 | CHG-005 | Resolved / applied |
+| Issue 6 / revision 6 | REV-006 | CHG-006 | Resolved / applied |
+| Issue 7 / revision 7 | REV-007 | CHG-007 | Resolved / applied |
+| Issue 8 / revision 8 | REV-008 | CHG-008 | Resolved / applied |

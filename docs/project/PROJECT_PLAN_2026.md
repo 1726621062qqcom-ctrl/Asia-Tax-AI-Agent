@@ -1,214 +1,254 @@
-# 东亚税务 AI 平台 — 2026 项目计划
+<a id="东亚税务-ai-平台--2026-项目计划"></a>
 
-| 项目 | 内容 |
+# East Asian Tax AI Platform — 2026 Project Plan
+
+| Item | Details |
 |---|---|
-| 计划版本 | v0.2 |
-| 日期 | 2026-08-15 |
-| 目标发布日期 | 2026-12-18 |
-| 发布范围 | 香港 L0 深度研究 MVP；中国内地、日本、韩国 source-catalog baseline |
-| 深度 MVP | 香港境外股息 FSIE |
-| 关联文档 | [PRD](../product/PRD.md) · [技术路线图](../architecture/TECHNICAL_ROADMAP.md) |
+| Plan version | v0.2 |
+| Date | 2026-08-15 |
+| Target release date | 2026-12-18 |
+| Release scope | Hong Kong L0 in-depth research MVP; mainland China, Japan, and South Korea source-catalog baseline |
+| In-depth MVP | Hong Kong foreign-sourced dividend FSIE |
+| Related documents | [PRD](../product/PRD.md) · [Technical roadmap](../architecture/TECHNICAL_ROADMAP.md) |
 
-## 1. 年度交付目标
+<a id="1-年度交付目标"></a>
 
-2026 年交付东亚 Release 1，而不是单一香港工具。四个地区共用同一平台、资料规范、版本机制、RAG 引证和专业验证状态。默认按保守资源基线验收；额外资源到位后再启用标准研究包扩展目标。
+## 1. Annual delivery objectives
 
-- 香港：完成境外股息 FSIE 的 L0 内部研究原型；如专家验证和工程安全门槛及时完成，则升级进入 L1 封闭顾问试点；
-- 中国内地、日本、韩国：完成 `source-catalog baseline`，提供可追溯的官方来源目录、统一元数据、主题分类、有效期、覆盖缺口和验证状态；
-- 中国内地、日本、韩国的八类主题全部达到 `standard research package`，仅在 2026 年 8 月 31 日前确认第二名全职工程师和知识运营负责人后启用；
-- 平台：支持四地区统一搜索、资料版本、内容层级、权限和审计；
-- 2026 年不增加其他亚太地区。
+Deliver East Asia Release 1 in 2026, rather than a Hong Kong-only tool. All four jurisdictions share the platform, source standards, versioning, RAG citations, and professional validation statuses. Acceptance defaults to a conservative resource baseline; standard research package stretch objectives are enabled only when additional resources become available.
 
-### 1.1 发布等级
+- Hong Kong: complete the L0 internal research prototype for foreign-sourced dividend FSIE; progress to an L1 closed advisor pilot if expert validation and engineering security gates finish in time.
+- Mainland China, Japan, and South Korea: complete `source-catalog baseline`, providing traceable official source catalogs, shared metadata, topic classifications, validity periods, coverage gaps, and validation statuses.
+- Extending all eight topic categories in mainland China, Japan, and South Korea to `standard research package` is enabled only if a second full-time engineer and a knowledge operations owner are confirmed by 2026-08-31.
+- Platform: support unified search, source versions, content levels, permissions, and audit across four jurisdictions.
+- Add no other Asia-Pacific jurisdictions in 2026.
 
-| 等级 | 含义 | 2026 年默认承诺 |
+<a id="11-发布等级"></a>
+
+### 1.1 Release levels
+
+| Level | Meaning | Default 2026 commitment |
 |---|---|---|
-| L0 内部研究原型 | 项目团队使用虚构或完成脱敏审批的数据，仅生成带研究标识的工程演示 | 是 |
-| L1 封闭顾问试点 | 经授权的香港税务顾问使用已审批试点案件，只生成供顾问复核的内部稿 | 条件式：香港专家和安全门槛全部通过后启用 |
-| L2 正式客户能力 | 面向正式客户的产品能力 | 否 |
+| L0 internal research prototype | Project team uses fictional cases or data with approved de-identification; outputs only engineering demonstrations marked as research | Yes |
+| L1 closed advisor pilot | Authorized Hong Kong tax advisors use approved pilot cases; outputs only internal drafts for advisor review | Conditional: enabled after all Hong Kong expert and security gates pass |
+| L2 production client capabilities | Product capabilities for formal clients | No |
 
-若 L1 门槛未通过，M6 只验收 L0，不得把 L0 描述为客户发布。
+If L1 gates do not pass, M6 accepts L0 only; L0 must not be described as a client release.
 
-## 2. 各地区完成标准
+<a id="2-各地区完成标准"></a>
 
-### 2.1 香港
+## 2. Completion standards by jurisdiction
 
-- 自然语言访谈和事实卡；
-- 境外股息候选及已验证规则状态；
-- RAG 和逐项官方引用；
-- 内部复核稿、人工判断和审计；
-- L0 至少 10 个版本化候选案例；L1 使用 30–50 个经香港税务专家确认覆盖矩阵的金标案例；
-- 专家未到位时保持研究水印，不进入真实客户试点。
+<a id="21-香港"></a>
 
-### 2.2 中国内地、日本、韩国
+### 2.1 Hong Kong
 
-保守资源基线下，每个地区至少交付：
+- Natural-language interviews and fact cards.
+- Candidate and validated rule statuses for foreign-sourced dividends.
+- RAG and itemized official citations.
+- Internal review drafts, human judgment, and audit.
+- At least 10 versioned candidate cases for L0; 30–50 gold cases with an expert-confirmed coverage matrix for L1.
+- Retain research watermarks and do not enter real client pilots without experts.
 
-- 第一方官方来源目录；
-- 统一元数据、有效期、抓取时间和版本；
-- 税务主题分类；
-- 内容覆盖、缺口和专业验证状态；
-- 每个已声明主题至少 1 个第一方官方入口；
-- 元数据必填项完整率 100%，发布快照断链为 0。
+<a id="22-中国内地日本韩国"></a>
 
-额外资源按期确认后，启用 `standard research package` 扩展目标，覆盖：
+### 2.2 Mainland China, Japan, and South Korea
 
-- 企业所得税；
-- VAT、消费税或当地对应流转税；
-- 股息、利息和特许权使用费等跨境预提税；
-- 税务居民和常设机构；
-- 转让定价；
-- 主要反避税规则；
-- 税收协定入口；
-- 主要申报周期；
-- 官方资料、有效期、抓取时间和版本。
+Under the conservative baseline, each jurisdiction delivers at least:
 
-上述内容仍为研究包，不要求达到香港自然语言深度 Agent 的完整能力。界面和验收记录必须显示每个地区当前属于 `source-catalog baseline` 还是 `standard research package`。
+- A first-party official source catalog.
+- Shared metadata, validity periods, capture times, and versions.
+- Tax topic classifications.
+- Content coverage, gaps, and professional validation statuses.
+- At least 1 first-party official entry point for every declared topic.
+- 100% completeness of required metadata and 0 broken links in the release snapshot.
 
-## 3. 并行工作流
+If additional resources are confirmed on time, enable the `standard research package` stretch objective, covering:
 
-| 交付 | Accountable owner | 前置依赖 | 12 月交付 | 失败时降级 |
+- Corporate income tax.
+- VAT, consumption tax, or the corresponding local turnover tax.
+- Cross-border withholding taxes on dividends, interest, and royalties.
+- Tax residence and permanent establishments.
+- Transfer pricing.
+- Major anti-avoidance rules.
+- Tax treaty entry points.
+- Major filing cycles.
+- Official materials, validity periods, capture times, and versions.
+
+These remain research packages and need not match the complete capabilities of Hong Kong's in-depth natural-language Agent. The interface and acceptance records must show whether each jurisdiction currently has a `source-catalog baseline` or a `standard research package`.
+
+<a id="3-并行工作流"></a>
+
+## 3. Parallel workstreams
+
+| Deliverable | Accountable owner | Prerequisites | December delivery | Fallback on failure |
 |---|---|---|---|---|
-| 税务包 schema 与资料管线 | 技术负责人 | 租户策略、source schema | 四地区共用数据和检索基础 | 保留批量导入和版本，延后管理界面 |
-| 香港纵向原型 | 香港 MVP owner | 候选案例、香港 source manifest | L0 深度研究 MVP；条件满足时 L1 | 保留单一境外股息路径，延后非核心交互 |
-| 三地区资料包 | 知识运营 owner | 税务包 schema、语言处理 | source-catalog baseline | 不启用 standard research package 扩展目标 |
-| 专家审核包 | 产品/专业验证 owner | 判断树、问题清单、候选案例 | 明确验证状态和缺口 | 保持 L0，取消 L1 |
-| 安全与发布 | 技术/安全 owner | 最终部署、认证、备份 | L0 发布检查；条件满足时 L1 | 不进入 L1 |
+| Tax package schema and source pipeline | Technical lead | Tenant strategy, source schema | Common data and retrieval foundation for four jurisdictions | Retain batch import and versioning; defer administration UI |
+| Hong Kong vertical prototype | Hong Kong MVP owner | Candidate cases, Hong Kong source manifest | L0 in-depth research MVP; L1 if conditions are met | Retain a single foreign-sourced dividend path; defer noncore interactions |
+| Three-jurisdiction source packages | Knowledge operations owner | Tax package schema, language processing | source-catalog baseline | Do not enable standard research package stretch objectives |
+| Expert review package | Product/professional validation owner | Decision tree, question list, candidate cases | Explicit validation statuses and gaps | Retain L0; cancel L1 |
+| Security and release | Technical/security owner | Final deployment, authentication, backups | L0 release checks; L1 if conditions are met | Do not enter L1 |
 
-一个人可以承担多个角色，但每项交付必须有且只有一个 Accountable owner。具体姓名在首次周计划中记录。
+One person may hold multiple roles, but every deliverable must have exactly one Accountable owner. Record names in the first weekly plan.
 
-## 4. 倒排计划
+<a id="4-倒排计划"></a>
 
-### 8 月 16 日–8 月 31 日：统一基础
+## 4. Backward schedule
 
-- 冻结四地区范围和税务主题清单；
-- 定义司法管辖区税务包格式；
-- 建立 PostgreSQL、资料获取、解析和版本框架；
-- 开始香港资料和候选规则；
-- 建立中国内地、日本、韩国官方来源目录；
-- 开始寻找兼职香港税务专家。
-- 在 8 月 20 日前确定案例来源和脱敏流程；未确定时只使用虚构案例；
-- 在 8 月 31 日前确定模型数据保留条款和租户隔离策略；未确定时禁止试点数据进入模型，L0 按单组织运行并保留组织字段；
-- 在 8 月 31 日前确认第二名工程师和知识运营负责人是否到位，并据此锁定三地区交付等级。
+<a id="8-月-16-日8-月-31-日统一基础"></a>
 
-里程碑 M1：四地区资料可以使用同一数据结构进入系统；三地区交付等级完成锁定。结果记录为 `pass`、`fail` 或 `pass-with-approved-degradation`。
+### August 16–August 31: common foundation
 
-### 9 月 1 日–9 月 20 日：香港纵向原型
+- Freeze the four-jurisdiction scope and tax topic list.
+- Define the jurisdiction tax package format.
+- Establish PostgreSQL, source acquisition, parsing, and versioning frameworks.
+- Begin Hong Kong materials and candidate rules.
+- Establish official source catalogs for mainland China, Japan, and South Korea.
+- Begin searching for a part-time Hong Kong tax expert.
+- Decide case sources and de-identification procedures by August 20; use fictional cases only until decided.
+- Decide model data retention terms and tenant isolation strategy by August 31; until then, prohibit pilot data from entering models, run L0 as a single organization, and retain organization fields.
+- Confirm whether a second engineer and knowledge operations owner are available by August 31, and lock delivery levels for the three jurisdictions accordingly.
 
-- 跑通自然语言、事实卡、候选规则、RAG 和研究报告；
-- 完成香港首批 10 个候选案例；
-- 完成其他三个地区的资料目录、元数据和首批解析；
-- 建立覆盖率和验证状态看板。
-- 使用虚构案例完成 3–5 次结构化工作流走查，只验证交互、事实确认、引用展示和报告结构，不验证税务结论；
-- 在 9 月 20 日前确定身份认证方式以及报告语言和模板；未确定时 L0 使用受控本地账号和“中文正文 + 英文法源名称”。
+Milestone M1: all four jurisdictions' materials can enter the system using the same data structure; delivery levels for the three jurisdictions are locked. Record `pass`, `fail`, or `pass-with-approved-degradation`.
 
-里程碑 M2：至少 10 个香港候选案例端到端运行；完成 3–5 份非专业工作流走查记录；三个地区可以检索首批官方资料。结果记录为 `pass`、`fail` 或 `pass-with-approved-degradation`。
+<a id="9-月-1-日9-月-20-日香港纵向原型"></a>
 
-### 9 月 21 日–10 月 18 日：并行扩展
+### September 1–September 20: Hong Kong vertical prototype
 
-- 完成香港 MVP 核心功能并冻结新增范围；
-- 完成中国内地、日本和韩国 source-catalog baseline；资源按期确认时继续扩展 standard research package；
-- 完成四地区混合检索、引用、有效期和来源层级；
-- 准备香港专家审核包；
-- 开始安全、权限和审计测试；
-- 在 10 月 18 日前确定部署地区、密钥和备份方案；未确定时不部署真实试点数据。
+- Connect natural language, fact cards, candidate rules, RAG, and research reports end to end.
+- Complete the first 10 Hong Kong candidate cases.
+- Complete source catalogs, metadata, and initial parsing for the other three jurisdictions.
+- Establish a coverage and validation-status dashboard.
+- Complete 3–5 structured workflow walkthroughs using fictional cases, testing interactions, fact confirmation, citations, and report structure only, not tax conclusions.
+- Decide authentication and report language/templates by September 20; until then, L0 uses controlled local accounts and Chinese body text + English legal source names.
 
-里程碑 M3：香港功能冻结；四地区基础内容可以在统一平台展示；L1 部署前提完成决策或明确保持 L0。结果记录为 `pass`、`fail` 或 `pass-with-approved-degradation`。
+Milestone M2: at least 10 Hong Kong candidate cases run end to end; 3–5 nonprofessional workflow walkthrough records are complete; initial official materials for three jurisdictions are searchable. Record `pass`, `fail`, or `pass-with-approved-degradation`.
 
-### 10 月 19 日–11 月 8 日：验证与补缺
+<a id="9-月-21-日10-月-18-日并行扩展"></a>
 
-- 香港专家验证冲刺，或确认继续保持 L0 内部研究原型；
-- 若准备进入 L1，将香港案例扩充至 30–50 个并交由香港税务专家确认覆盖矩阵；
-- 完成中国内地、日本、韩国覆盖缺口检查；
-- 修复检索、引用和规则一致性问题；
-- 完成恢复演练和关键安全测试。
+### September 21–October 18: parallel expansion
 
-里程碑 M4：确认香港为 L0 或 L1；四地区内容缺口有明确记录和责任人。结果记录为 `pass`、`fail` 或 `pass-with-approved-degradation`。
+- Complete Hong Kong MVP core functionality and freeze new scope.
+- Complete mainland China, Japan, and South Korea source-catalog baselines; continue to standard research packages if resources were confirmed on time.
+- Complete hybrid retrieval, citations, validity periods, and source levels for four jurisdictions.
+- Prepare the Hong Kong expert review package.
+- Begin security, permissions, and audit tests.
+- Decide deployment region, keys, and backups by October 18; do not deploy real pilot data until decided.
 
-### 11 月 9 日–12 月 6 日：发布候选版
+Milestone M3: Hong Kong features are frozen; baseline content for four jurisdictions is shown on the unified platform; L1 deployment prerequisites are decided or continued L0 status is explicit. Record `pass`, `fail`, or `pass-with-approved-degradation`.
 
-- 集成四地区税务包；
-- 完成统一搜索、覆盖和验证状态界面；
-- 允许的情况下进行香港封闭顾问试点；
-- 完成用户文档、知识维护流程和演示案例；
-- 只接受阻断问题和已批准的必要修复。
+<a id="10-月-19-日11-月-8-日验证与补缺"></a>
 
-里程碑 M5：东亚 Release Candidate 按第 9 节可计算指标通过验收检查，并明确候选版属于 L0 或 L1。
+### October 19–November 8: validation and gap closure
 
-### 12 月 7 日–12 月 18 日：稳定与验收
+- Run the Hong Kong expert validation sprint or confirm continued L0 internal research status.
+- If preparing for L1, expand Hong Kong cases to 30–50 and obtain expert confirmation of their coverage matrix.
+- Complete coverage gap checks for mainland China, Japan, and South Korea.
+- Fix retrieval, citation, and rule consistency issues.
+- Complete recovery drills and critical security tests.
 
-- 停止新增地区、税种和主要功能；
-- 完成回归、安全、备份恢复和发布检查；
-- 固定资料、规则、模型和报告版本；
-- 完成演示、验收记录和 2027 扩展清单。
+Milestone M4: confirm Hong Kong as L0 or L1; content gaps across four jurisdictions have explicit records and owners. Record `pass`, `fail`, or `pass-with-approved-degradation`.
 
-里程碑 M6：东亚 Release 1 发布。默认验收 L0；只有全部条件满足时才验收 L1。
+<a id="11-月-9-日12-月-6-日发布候选版"></a>
 
-### 12 月 19 日–12 月 31 日：缓冲
+### November 9–December 6: release candidate
 
-只处理生产阻断问题、严重资料错误和安全问题，不增加功能或地区。
+- Integrate all four jurisdiction tax packages.
+- Complete the unified search, coverage, and validation-status interface.
+- Conduct a closed Hong Kong advisor pilot if permitted.
+- Complete user documentation, knowledge maintenance procedures, and demonstration cases.
+- Accept only blocking issues and approved necessary fixes.
 
-## 5. 关键路径
+Milestone M5: the East Asia Release Candidate passes acceptance checks using the computable metrics in section 9, with an explicit L0 or L1 classification.
 
-1. 税务包统一格式必须在 8 月底确定，否则三个地区无法并行；
-2. 香港纵向原型必须在 9 月 20 日前跑通，否则平台接口尚未得到验证；
-3. 香港专家验证决定能否从 L0 进入 L1，但不阻止 L0 内部研究原型；
-4. 中国内地、日本、韩国的官方资料入口和语言处理决定基础覆盖速度；
-5. 10 月 18 日后必须冻结范围，否则 12 月集成和验收时间会被侵占。
+<a id="12-月-7-日12-月-18-日稳定与验收"></a>
 
-## 6. 资源假设
+### December 7–December 18: stabilization and acceptance
 
-保守计划基线：
+- Stop adding jurisdictions, tax categories, and major features.
+- Complete regression, security, backup recovery, and release checks.
+- Pin source, rule, model, and report versions.
+- Complete demonstrations, acceptance records, and the 2027 expansion list.
 
-- 1 名产品/项目负责人；
-- 1 名主要工程执行者，可使用 AI 辅助；
-- 产品负责人同时承担知识运营协调；
-- 安全、QA 和香港税务专家按门槛外部引入。
+Milestone M6: release East Asia Release 1. Accept L0 by default; accept L1 only if all conditions are met.
 
-保守基线优先保证香港纵向链路、四地区 source-catalog baseline、研究状态、来源版本和审计。中国内地、日本和韩国八类主题全部达到 standard research package 不在默认承诺内。
+<a id="12-月-19-日12-月-31-日缓冲"></a>
 
-扩展计划基线只有在 2026 年 8 月 31 日前确认第二名全职工程师和一名资料与知识运营负责人后启用。兼职安全或 QA、香港税务专家及中国内地、日本和韩国的专业审核资源仍按发布门槛分阶段引入。
+### December 19–December 31: buffer
 
-每周资料监控、差异审核、语言复核和维护逾期处理必须计入知识运营容量，不得视为上线后的免费工作。
+Handle only production blockers, serious source errors, and security issues; add no features or jurisdictions.
 
-## 7. 项目治理
+<a id="5-关键路径"></a>
 
-- 每周一：确认本周交付和阻断事项；
-- 每周三：检查四地区内容覆盖、工程进度和专家依赖；
-- 每周五：演示可运行成果并更新风险；
-- 每两周：执行完整回归并审查范围变化；
-- 每个里程碑记录 `pass`、`fail` 或 `pass-with-approved-degradation`；
-- 某个检查点失败时立即执行第 3 节预定降级，不等待连续两周后临时决定；
-- 任何新增地区或税种必须说明替换掉的现有任务，不允许无成本加入；
-- 10 月 18 日后由项目负责人执行功能冻结。
+## 5. Critical path
 
-知识维护按以下服务水平执行：重大法律或核心规则变化立即冻结受影响节点，2 个工作日内完成影响分级；重要 FAQ、DIPN、申报义务或官方示例每周检查，5 个工作日内初审；普通页面和元数据变化每月处理。每个地区指定 source owner 和 backup owner，逾期时不得继续显示“最新”。
+1. Define the common tax package format by the end of August, or parallel work on the three jurisdictions cannot proceed.
+2. Run the Hong Kong vertical prototype end to end by September 20, or platform interfaces remain unvalidated.
+3. Hong Kong expert validation determines progression from L0 to L1 but does not block the L0 internal research prototype.
+4. Official source entry points and language processing determine the speed of baseline coverage for mainland China, Japan, and South Korea.
+5. Freeze scope after October 18 to protect December integration and acceptance time.
 
-## 8. 风险与应对
+<a id="6-资源假设"></a>
 
-| 风险 | 触发信号 | 应对 |
+## 6. Resource assumptions
+
+Conservative planning baseline:
+
+- 1 product/project owner.
+- 1 primary engineering contributor, with AI assistance permitted.
+- The product owner also coordinates knowledge operations.
+- Security, QA, and Hong Kong tax experts are brought in externally according to gates.
+
+Prioritize the Hong Kong vertical workflow, four-jurisdiction source-catalog baselines, research status, source versions, and audit. Completing all eight topic categories as standard research packages for mainland China, Japan, and South Korea is not a default commitment.
+
+Enable the expanded baseline only if a second full-time engineer and a source/knowledge operations owner are confirmed by 2026-08-31. Part-time security/QA, Hong Kong tax experts, and professional reviewers for mainland China, Japan, and South Korea are still introduced in stages according to release gates.
+
+Weekly source monitoring, difference review, language review, and overdue maintenance handling must count toward knowledge operations capacity; they are not free work after launch.
+
+<a id="7-项目治理"></a>
+
+## 7. Project governance
+
+- Monday: confirm weekly deliverables and blockers.
+- Wednesday: check four-jurisdiction coverage, engineering progress, and expert dependencies.
+- Friday: demonstrate working results and update risks.
+- Every two weeks: run complete regression and review scope changes.
+- Record each milestone as `pass`, `fail`, or `pass-with-approved-degradation`.
+- On a failed checkpoint, immediately apply the fallback in section 3 rather than waiting two weeks to improvise a decision.
+- Any new jurisdiction or tax category must specify which existing task it replaces; additions cannot be treated as cost-free.
+- The project owner enforces feature freeze after October 18.
+
+Knowledge maintenance service levels: immediately freeze affected nodes after major legal/core-rule changes and classify impact within 2 working days; check important FAQ, DIPN, filing, or official example updates weekly and review initially within 5 working days; process ordinary page and metadata changes monthly. Every jurisdiction has a source owner and backup owner; overdue content must not remain labeled “up to date.”
+
+<a id="8-风险与应对"></a>
+
+## 8. Risks and responses
+
+| Risk | Trigger | Response |
 |---|---|---|
-| 香港专家仍未到位 | 10 月中旬无审核排期 | 保持 L0，取消 L1 封闭顾问试点 |
-| 三地区内容进度落后 | 里程碑无法达到当前承诺等级 | 保留 source-catalog baseline，不启用 standard research package |
-| 日本或韩国语言处理质量不足 | 检索无法稳定返回原文和准确定位 | 保留原文、译文分层，禁止仅凭机器翻译下结论 |
-| 范围继续扩大 | 提出第五个地区或新税种 | 移入 2027 清单，不进入当前迭代 |
-| 工程资源不足 | 任一里程碑检查失败 | 立即执行预定降级，不削弱来源、版本和验证状态 |
-| 法规变化 | 官方资料哈希或有效期改变 | 标记受影响内容并重新审核，不静默覆盖 |
+| Hong Kong experts remain unavailable | No review scheduled by mid-October | Retain L0; cancel the L1 closed advisor pilot |
+| Three-jurisdiction content falls behind | A milestone cannot meet the committed level | Retain source-catalog baseline; do not enable standard research packages |
+| Inadequate Japanese/Korean language processing | Retrieval cannot reliably return originals and accurate locations | Keep originals and translations in separate layers; prohibit conclusions based solely on machine translation |
+| Continued scope expansion | A fifth jurisdiction or new tax category is proposed | Move it to the 2027 list, outside the current iteration |
+| Insufficient engineering capacity | Any milestone checkpoint fails | Apply the planned fallback immediately, preserving source, version, and validation requirements |
+| Regulatory changes | Official source hashes or validity periods change | Flag and review affected content; do not overwrite silently |
 
-## 9. 12 月验收矩阵
+<a id="9-12-月验收矩阵"></a>
 
-每项指标必须保存测试集版本、分母、计算公式、阈值、零容忍失败项、证据位置和批准人。
+## 9. December acceptance matrix
 
-| 范围 | 验收条件 | 通过标准 |
+Each metric stores its test set version, denominator, formula, threshold, zero-tolerance failures, evidence location, and approver.
+
+| Scope | Criterion | Passing standard |
 |---|---|---|
-| 香港 L0 | 候选案例端到端运行 | 至少 10 个版本化候选案例通过冻结研究评测集 |
-| 香港 L0/L1 | 法规、条文和链接真实性 | 评测集中出现 1 个无法解析到 source manifest 的项目即阻断发布 |
-| 香港 L1 | 关键事实识别完整率 | 系统正确提取或明确追问的专家标注关键事实数 ÷ 专家标注关键事实总数 ≥ 90% |
-| 香港 L1 | 专业案例 | 30–50 个由香港税务专家确认覆盖矩阵的金标案例完成回归 |
-| 香港 L1 | 安全与专业门槛 | 专家验证、权限、审计、备份恢复、模型数据处理和试点数据流程全部通过 |
-| 三地区 source-catalog baseline | 官方来源入口 | 每个已声明主题至少 1 个第一方官方入口 |
-| 三地区 source-catalog baseline | 元数据与链接 | 必填项完整率 100%，发布快照断链为 0 |
-| 三地区 source-catalog baseline | 覆盖透明度 | 覆盖缺口和专业验证状态不得为空 |
-| Standard research package（如启用） | 地区 × 税务主题覆盖 | 逐主题保存必需来源类型、适用日期、语言、抽检结果和允许缺口 |
+| Hong Kong L0 | Candidate cases run end to end | At least 10 versioned candidate cases pass the frozen research evaluation set |
+| Hong Kong L0/L1 | Authentic statutes, provisions, and links | One item in the evaluation set that cannot resolve to the source manifest blocks release |
+| Hong Kong L1 | Critical fact identification completeness | Correctly extracted or explicitly queried expert-labeled critical facts ÷ all expert-labeled critical facts ≥ 90% |
+| Hong Kong L1 | Professional cases | 30–50 gold cases with a Hong Kong expert-confirmed coverage matrix complete regression |
+| Hong Kong L1 | Security and professional gates | Expert validation, permissions, audit, backup recovery, model data processing, and pilot data workflows all pass |
+| Three-jurisdiction source-catalog baseline | Official source entry points | At least 1 first-party official entry point per declared topic |
+| Three-jurisdiction source-catalog baseline | Metadata and links | 100% required-field completeness; 0 broken links in the release snapshot |
+| Three-jurisdiction source-catalog baseline | Coverage transparency | Coverage gaps and professional validation statuses are nonempty |
+| Standard research package (if enabled) | Jurisdiction × tax topic coverage | Record required source types, applicability dates, languages, spot-check results, and permitted gaps per topic |
 
-共同验收：每项资料显示官方来源、版本和有效期；未验证内容不会显示为正式税务意见；项目文档、验收证据和 2027 扩展清单完成。
+Common acceptance: every source shows its official provenance, version, and validity period; unverified content is not presented as formal tax advice; project documentation, acceptance evidence, and the 2027 expansion list are complete.

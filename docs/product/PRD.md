@@ -1,375 +1,461 @@
-# 东亚税务 AI 平台（香港 FSIE MVP）— 产品需求文档
+<a id="东亚税务-ai-平台香港-fsie-mvp-产品需求文档"></a>
 
-| 项目 | 内容 |
+# East Asian Tax AI Platform (Hong Kong FSIE MVP) — Product Requirements Document
+
+| Item | Details |
 |---|---|
-| 文档版本 | v0.2 |
-| 日期 | 2026-08-15 |
-| 状态 | 已确认 2026 年东亚 Release 1 研究基线，待实施 |
-| MVP 地区 | 中国香港 |
-| 2026 Release 1 | 中国内地、中国香港、日本、韩国 |
-| 首发用户 | 香港税务顾问 |
-| 首发场景 | 跨国企业实体取得境外股息的 FSIE 初步分析 |
+| Document version | v0.2 |
+| Date | 2026-08-15 |
+| Status | 2026 East Asia Release 1 research baseline confirmed; implementation pending |
+| MVP jurisdiction | Hong Kong, China |
+| 2026 Release 1 | Mainland China, Hong Kong, Japan, South Korea |
+| Initial users | Hong Kong tax advisors |
+| Initial scenario | Preliminary FSIE analysis of foreign-sourced dividends received by a multinational enterprise entity |
 
-## 1. 产品摘要
+<a id="1-产品摘要"></a>
 
-本产品是面向香港税务顾问的境外股息分析工作台。顾问用自然语言描述案件，Agent 通过交互式访谈补齐关键事实，形成由顾问确认的事实卡，执行版本化税务规则，检索并绑定香港官方依据，最终生成可追溯、可复核的内部分析稿。
+## 1. Product summary
 
-产品不取代税务顾问，也不自动出具可直接交付客户的正式税务意见。AI 负责理解和表达，规则引擎负责可重复判断，税务顾问负责专业结论。
+The product is a foreign-sourced dividend analysis workspace for Hong Kong tax advisors. Advisors describe cases in natural language. The Agent fills critical factual gaps through an interactive interview, creates advisor-confirmed fact cards, executes versioned tax rules, retrieves and attaches official Hong Kong evidence, and generates a traceable internal analysis draft for review.
 
-## 2. 背景与问题
+The product does not replace tax advisors or automatically issue formal tax advice ready for client delivery. AI handles understanding and expression, the rule engine handles reproducible determinations, and tax advisors take responsibility for professional conclusions.
 
-境外股息 FSIE 分析需要同时处理实体身份、收入性质、资金路径、持股条件、经济实质、境外纳税、反混合及主要目的等事实。传统工作方式存在以下问题：
+<a id="2-背景与问题"></a>
 
-- 案件信息分散在邮件、访谈、文件和顾问笔记中；
-- 关键问题容易漏问或重复询问；
-- 法律依据、事实和结论之间缺少清晰映射；
-- 法规更新后难以识别受影响的历史分析；
-- 不同顾问的分析过程和报告结构不一致；
-- 大模型直接回答时可能遗漏条件、误引资料或产生不可复现结论。
+## 2. Background and problems
 
-MVP 通过“自然语言访谈 + 事实卡 + 规则引擎 + RAG 引证 + 人工复核”建立受控闭环。
+FSIE analysis of foreign-sourced dividends involves entity status, income character, fund flows, shareholding conditions, economic substance, foreign taxation, anti-hybrid rules, and main purpose. Traditional workflows have the following problems:
 
-## 3. 产品目标
+- Case information is scattered across emails, interviews, documents, and advisor notes.
+- Important questions may be omitted or repeated.
+- Legal evidence, facts, and conclusions lack clear mappings.
+- Regulatory updates make it difficult to identify affected historical analyses.
+- Advisors follow inconsistent analysis processes and report structures.
+- Direct large-model answers may omit conditions, miscite sources, or produce irreproducible conclusions.
 
-### 3.1 MVP 目标
+The MVP establishes a controlled workflow through natural-language interviews + fact cards + a rule engine + RAG citations + human review.
 
-- 让税务顾问用自然语言启动案件，而不是填写长表格；
-- 动态识别关键缺失事实、矛盾和证据缺口；
-- 稳定执行境外股息 FSIE 核心判断链；
-- 让每项实质性结论可以追溯到事实、规则和官方来源；
-- 在信息不足或需要专业判断时安全停止并升级人工处理；
-- 生成结构统一、便于复核的中文内部分析稿；
-- 通过专家案例证明系统行为可测试、可回归。
+<a id="3-产品目标"></a>
 
-### 3.2 非目标
+## 3. Product objectives
 
-- 不自动提交报税表或向香港税务局发送资料；
-- 不自动签发正式税务意见；
-- 不覆盖境外利息、知识产权收入或处置收益；
-- 不提供香港以外地区的完整税务结论；
-- 不进行完整公司架构优化或“最低税负”推荐；
-- 不允许无人工批准的最终结论。
+<a id="31-mvp-目标"></a>
 
-### 3.3 当前约束与无专家研究模式
+### 3.1 MVP objectives
 
-当前团队尚无香港税务专家。该约束不阻止技术研究和原型开发，但会改变产品的可用边界：专家验证完成前，系统只能作为研究原型，不能用于向真实客户提供税务结论。
+- Let tax advisors start cases in natural language instead of completing long forms.
+- Dynamically identify critical missing facts, contradictions, and evidence gaps.
+- Reliably execute the core FSIE decision chain for foreign-sourced dividends.
+- Make every substantive conclusion traceable to facts, rules, and official sources.
+- Stop safely and escalate to humans when information is insufficient or professional judgment is needed.
+- Generate consistently structured Chinese internal analysis drafts that are easy to review.
+- Demonstrate testable, reproducible behavior through expert cases.
 
-专家到位前允许完成：
+<a id="32-非目标"></a>
 
-- 香港官方资料采集、解析、版本和引用；
-- 自然语言访谈、候选事实提取和事实卡；
-- 规则框架、候选决策表及工程测试；
-- 报告结构、审计、安全和评测基础设施；
-- 使用虚构或严格匿名化案例进行内部演示。
+### 3.2 Non-goals
 
-专家到位前禁止：
+- Automatically filing tax returns or sending information to the Hong Kong Inland Revenue Department.
+- Automatically issuing formal tax advice.
+- Covering foreign-sourced interest, intellectual property income, or disposal gains.
+- Providing complete tax conclusions for jurisdictions outside Hong Kong.
+- Performing complete corporate structure optimization or recommending the lowest tax burden.
+- Allowing final conclusions without human approval.
 
-- 将候选规则标记为专业已验证；
-- 将模型或工程团队拟定的案例答案视为税务金标；
-- 面向真实客户输出免税、应税或架构优化结论；
-- 宣称系统已经能够提供可靠的香港税务意见。
+<a id="33-当前约束与无专家研究模式"></a>
 
-所有候选规则、案例结论和研究报告必须显示“待香港税务专家验证”。香港税务专家完成核心规则、人工判断边界和专家案例审核，是进入封闭顾问试点的强制门槛，而不是前期工程启动条件。
+### 3.3 Current constraints and research mode without experts
 
-### 3.4 发布等级与使用边界
+The team currently has no Hong Kong tax expert. This does not prevent technical research and prototype development, but changes the product's permitted use: until expert validation is complete, it may be used only as a research prototype and must not provide tax conclusions to real clients.
 
-| 发布等级 | 允许用户 | 允许数据 | 允许输出 | 强制门槛 |
+Work permitted before experts are available:
+
+- Capture, parsing, versioning, and citation of official Hong Kong materials.
+- Natural-language interviews, candidate fact extraction, and fact cards.
+- Rule frameworks, candidate decision tables, and engineering tests.
+- Report structure, audit, security, and evaluation infrastructure.
+- Internal demonstrations using fictional or strictly anonymized cases.
+
+Prohibited before experts are available:
+
+- Marking candidate rules as professionally validated.
+- Treating case answers proposed by the model or engineering team as tax gold standards.
+- Providing real clients with exemption, taxability, or structure optimization conclusions.
+- Claiming that the system already provides reliable Hong Kong tax advice.
+
+All candidate rules, case conclusions, and research reports must display “Pending validation by Hong Kong tax experts.” Expert review of core rules, boundaries requiring human judgment, and expert cases is a mandatory gate for a closed advisor pilot, rather than a prerequisite for starting engineering work.
+
+<a id="34-发布等级与使用边界"></a>
+
+### 3.4 Release levels and usage boundaries
+
+| Release level | Permitted users | Permitted data | Permitted output | Mandatory gates |
 |---|---|---|---|---|
-| L0 内部研究原型 | 项目团队 | 虚构案例或完成脱敏审批的数据 | 带研究标识的工程演示，不得用于客户税务判断 | 研究状态不可绕过，所有来源可追溯 |
-| L1 封闭顾问试点 | 经授权的香港税务顾问 | 通过数据处理审批的试点案件 | 只供顾问复核的内部稿 | 香港专家验证以及权限、恢复和安全门槛全部通过 |
-| L2 正式客户能力 | 正式授权客户及顾问 | 合同和合规允许的数据 | 按批准范围提供的正式产品能力 | 不属于 2026 Release 1 默认承诺 |
+| L0 internal research prototype | Project team | Fictional cases or data with approved de-identification | Engineering demonstrations marked as research; not for client tax judgments | Research status cannot be bypassed; all sources are traceable |
+| L1 closed advisor pilot | Authorized Hong Kong tax advisors | Pilot cases with approved data processing | Internal drafts solely for advisor review | Hong Kong expert validation and all permissions, recovery, and security gates passed |
+| L2 production client capabilities | Formally authorized clients and advisors | Data permitted by contracts and compliance requirements | Formal product capabilities within the approved scope | Outside the default commitment for 2026 Release 1 |
 
-2026 年 12 月默认验收 L0。只有香港专家和工程安全门槛均通过后，香港部分才可升级验收 L1。未通过时不得把 L0 描述为客户发布或可用于真实客户结论。
+The default December 2026 acceptance target is L0. Hong Kong capabilities may progress to L1 acceptance only after both expert and engineering security gates pass. Otherwise, L0 must not be described as a client release or as suitable for real client conclusions.
 
-## 4. 用户与使用场景
+<a id="4-用户与使用场景"></a>
 
-### 4.1 主要用户
+## 4. Users and scenarios
 
-- 香港税务顾问：创建案件、回答访谈、确认事实、修改分析；
-- 复核人：处理判断性问题并批准内部复核稿；
-- 知识管理员：维护资料、规则映射和版本；
-- 系统管理员：维护用户和部署，默认无案件内容访问权。
+<a id="41-主要用户"></a>
 
-### 4.2 核心用户故事
+### 4.1 Primary users
 
-> 作为香港税务顾问，我希望用自然语言描述一笔境外股息，系统只追问会影响税务结论的问题，随后给出包含事实、风险、判断路径、官方依据和证据缺口的内部复核稿，以便我高效完成专业复核。
+- Hong Kong tax advisors: create cases, answer interviews, confirm facts, and revise analyses.
+- Reviewers: resolve judgment questions and approve internal review drafts.
+- Knowledge administrators: maintain sources, rule mappings, and versions.
+- System administrators: maintain users and deployment, without default access to case content.
 
-## 5. 产品范围与判断链
+<a id="42-核心用户故事"></a>
 
-### 5.1 2026 年项目范围
+### 4.2 Core user story
 
-2026 年 12 月的产品范围限定为东亚四个司法管辖区：
+> As a Hong Kong tax advisor, I want to describe a foreign-sourced dividend in natural language, have the system ask only questions affecting the tax conclusion, and receive an internal review draft containing facts, risks, the decision path, official evidence, and evidence gaps, so that I can complete professional review efficiently.
 
-- 中国内地；
-- 中国香港；
-- 日本；
-- 韩国。
+<a id="5-产品范围与判断链"></a>
 
-香港是第一个深度 MVP，首个场景仍为跨国企业实体取得境外股息的 FSIE 分析。中国内地、日本和韩国不在 2026 年内复制香港的全部交互和规则深度。2026 年保守基线为每个地区建立可检索、可维护、带官方来源和验证状态的 `source-catalog baseline`（官方来源目录研究包）；在第二名全职工程师和知识运营负责人于 2026 年 8 月 31 日前确认到位后，才将八类主题全部达到 `standard research package`（标准研究包）作为 2026 扩展目标。
+## 5. Product scope and decision chain
 
-四个地区共享同一平台、资料规范、规则格式、引证机制和评测框架。产品界面和验收记录必须显示每个地区当前属于官方来源目录研究包还是标准研究包。2026 年不纳入新加坡、东南亚、南亚、澳大利亚、新西兰及其他亚太地区；这些地区在东亚 Release 1 验收后再安排。
+<a id="51-2026-年项目范围"></a>
 
-### 5.2 香港 MVP 判断链
+### 5.1 2026 project scope
 
-MVP 依次分析：
+The December 2026 product scope is limited to four East Asian jurisdictions:
 
-1. 收款实体是否属于本产品所覆盖的跨国企业实体；
-2. 收入是否属于境外来源股息；
-3. 股息是否构成在香港收取；
-4. 是否适用受规管金融实体等排除情形；
-5. 是否可能满足经济实质要求；
-6. 是否满足参与豁免的确定性基本条件；
-7. 是否涉及境外纳税条件和转换规则；
-8. 是否涉及反混合错配规则；
-9. 是否存在主要目的等必须人工判断的事项；
-10. 是否需要提示外国税收抵免、申报、证据保存或事先裁定。
+- Mainland China.
+- Hong Kong, China.
+- Japan.
+- South Korea.
 
-官方基础资料包括香港税务局的 [FSIE 专页](https://www.ird.gov.hk/eng/tax/bus_fsie.htm)、[FSIE FAQ](https://www.ird.gov.hk/eng/faq/fsie.htm)及[官方示例](https://www.ird.gov.hk/eng/tax/fsie_example.htm)，并以适用的法律原文和有效版本为最高优先级。
+Hong Kong is the first MVP with in-depth coverage. Its initial scenario remains FSIE analysis of foreign-sourced dividends received by multinational enterprise entities. Mainland China, Japan, and South Korea will not reproduce the full Hong Kong interaction and rule depth in 2026. The conservative 2026 baseline provides each jurisdiction with a searchable, maintainable `source-catalog baseline`, including official sources and validation statuses. Extending all eight topic categories to a `standard research package` becomes a 2026 stretch objective only if a second full-time engineer and a knowledge operations owner are confirmed by 2026-08-31.
 
-## 6. 核心用户流程
+All four jurisdictions share the platform, source specifications, rule format, citation mechanism, and evaluation framework. The interface and acceptance records must show whether each jurisdiction currently has a source-catalog baseline or a standard research package. Singapore, Southeast Asia, South Asia, Australia, New Zealand, and other Asia-Pacific jurisdictions are excluded from 2026 and will be planned after East Asia Release 1 acceptance.
+
+<a id="52-香港-mvp-判断链"></a>
+
+### 5.2 Hong Kong MVP decision chain
+
+The MVP analyzes, in sequence:
+
+1. Whether the recipient is a multinational enterprise entity within this product's scope.
+2. Whether the income is foreign-sourced dividend income.
+3. Whether the dividend is received in Hong Kong.
+4. Whether exclusions such as those for regulated financial entities apply.
+5. Whether economic substance requirements may be satisfied.
+6. Whether the deterministic basic conditions for participation exemption are met.
+7. Whether foreign taxation conditions and switchover rules are involved.
+8. Whether anti-hybrid mismatch rules are involved.
+9. Whether main purpose or other matters require human judgment.
+10. Whether foreign tax credits, filing, evidence retention, or advance rulings need to be flagged.
+
+Official baseline materials include the IRD's [FSIE page](https://www.ird.gov.hk/eng/tax/bus_fsie.htm), [FSIE FAQ](https://www.ird.gov.hk/eng/faq/fsie.htm), and [official examples](https://www.ird.gov.hk/eng/tax/fsie_example.htm). Applicable original legislation and effective versions take highest priority.
+
+<a id="6-核心用户流程"></a>
+
+## 6. Core user workflow
 
 ```text
-创建案件
-→ 顾问自然语言描述
-→ AI提取候选事实及矛盾
-→ Agent逐个追问关键问题
-→ 顾问确认事实卡
-→ 锁定分析版本
-→ 规则引擎执行FSIE判断
-→ RAG检索每个节点的官方依据
-→ 标记人工判断和证据缺口
-→ 生成内部复核稿
-→ 顾问修改、退回或批准
-→ 归档事实、规则、来源和报告版本
+Create a case
+→ Advisor describes it in natural language
+→ AI extracts candidate facts and contradictions
+→ Agent asks critical questions one at a time
+→ Advisor confirms fact cards
+→ Lock the analysis version
+→ Rule engine executes FSIE determinations
+→ RAG retrieves official evidence for each node
+→ Mark human judgment requirements and evidence gaps
+→ Generate an internal review draft
+→ Advisor revises, returns, or approves it
+→ Archive fact, rule, source, and report versions
 ```
 
-### 6.1 访谈原则
+<a id="61-访谈原则"></a>
 
-- 每次只提出一个主要问题；
-- 优先询问范围阻断问题，其次是结论、反滥用、证据和表达问题；
-- 允许“不知道”“稍后提供”“需要向客户确认”“不适用”和“按假设分析”；
-- 未知不得自动转换为否定；
-- Agent 应说明重要问题为什么需要回答；
-- 顾问可以随时查看和修改事实卡。
+### 6.1 Interview principles
 
-## 7. 功能需求
+- Ask only one main question at a time.
+- Prioritize scope blockers, then conclusion, anti-abuse, evidence, and presentation questions.
+- Allow “unknown,” “provide later,” “confirm with the client,” “not applicable,” and “analyze under an assumption.”
+- Never automatically convert unknown into a negative finding.
+- Explain why important questions need answers.
+- Let advisors inspect and edit fact cards at any time.
 
-### FR-01 自然语言案件创建
+<a id="7-功能需求"></a>
 
-- 接收中文或英文自然语言案情；
-- 识别实体、收入、时间、金额、持股、资金路径和境外纳税等候选事实；
-- 明确区分原始陈述和系统推断。
+## 7. Functional requirements
 
-### FR-02 动态访谈
+<a id="fr-01-自然语言案件创建"></a>
 
-- 根据事实缺口和当前规则节点选择下一个问题；
-- 检测重复、矛盾和超出范围的陈述；
-- 支持暂停案件并记录待客户确认事项。
+### FR-01 Natural-language case creation
 
-### FR-03 事实卡
+- Accept case descriptions in Chinese or English.
+- Identify candidate facts about entities, income, timing, amounts, shareholdings, fund flows, and foreign taxation.
+- Clearly distinguish original statements from system inferences.
 
-每项事实至少保存：字段、值、来源、确认状态、置信度、证据、修改人、修改时间及受影响规则节点。
+<a id="fr-02-动态访谈"></a>
 
-事实域包括：
+### FR-02 Dynamic interviews
 
-- 收款实体、集团和特殊身份；
-- 股息金额、日期、性质和底层利润期间；
-- 收款账户、现金池、抵销、代付和资金使用路径；
-- 直接及间接持股比例和连续持有期间；
-- 境外纳税和股息可扣除性；
-- 香港人员、活动、场所、支出、决策和外包监督；
-- 架构设立、重组、商业目的和混合错配；
-- 公司文件、银行记录和纳税证明等证据。
+- Select the next question from factual gaps and the current rule node.
+- Detect repetition, contradictions, and out-of-scope statements.
+- Support pausing a case and recording items awaiting client confirmation.
 
-### FR-04 规则执行
+<a id="fr-03-事实卡"></a>
 
-- 确定性规则必须可复现并记录输入、结果和规则版本；
-- 判断性事项必须标记为人工复核；
-- 每条规则必须保存专业验证状态、验证人和验证时间；
-- 未验证规则只能在研究模式运行，输出必须带明显水印；
-- 关键事实改变后，只重跑受影响节点；
-- 旧报告保留原规则版本。
+### FR-03 Fact cards
 
-### FR-05 法律资料检索与引证
+Each fact stores at least its field, value, source, confirmation status, confidence, evidence, editor, modification time, and affected rule nodes.
 
-- 根据已确认事实和当前规则节点检索，而非只依赖原始 Prompt 关键词；
-- 结合关键词和向量检索；
-- 按权威等级、司法管辖区和有效期间过滤；
-- 每项实质性结论保存准确来源和段落定位；
-- 无可靠依据时不得凭模型记忆补充。
+Fact domains include:
 
-### FR-06 内部复核稿
+- Recipient entity, group, and special status.
+- Dividend amount, date, character, and underlying profit period.
+- Receipt accounts, cash pooling, set-off, payments on behalf, and fund usage paths.
+- Direct/indirect ownership percentages and continuous holding periods.
+- Foreign taxation and dividend deductibility.
+- Hong Kong personnel, activities, premises, expenditure, decisions, and outsourcing oversight.
+- Structure establishment, restructuring, commercial purpose, and hybrid mismatches.
+- Evidence such as company documents, bank records, and tax certificates.
 
-默认生成中文报告，并保留法律和指引的英文名称及原文定位。报告包含：
+<a id="fr-04-规则执行"></a>
 
-- 执行摘要和初步风险等级；
-- 已确认事实、系统假设及缺失信息；
-- 逐项判断路径；
-- 支持和限制当前结论的依据；
-- 官方引证和使用版本；
-- 所需证据清单；
-- 人工复核事项；
-- 初步结论和结论状态。
+### FR-04 Rule execution
 
-### FR-07 人工复核与版本
+- Deterministic rules must be reproducible and record inputs, results, and rule versions.
+- Judgment matters must be marked for human review.
+- Every rule stores its professional validation status, validator, and validation time.
+- Unverified rules run only in research mode, with clearly watermarked outputs.
+- Critical fact changes rerun only affected nodes.
+- Old reports retain their original rule versions.
 
-- 顾问可以修改事实、分析文字、风险等级和判断理由；
-- 关键事实改变后原报告自动失效；
-- 保存顾问批准、推翻或修改系统建议的理由；
-- 报告批准后归档对应事实、规则和资料版本。
+<a id="fr-05-法律资料检索与引证"></a>
 
-### FR-08 知识与规则管理
+### FR-05 Legal source retrieval and citation
 
-- 管理官方资料的来源、权威等级、有效期、哈希和抓取时间；
-- 显示资料差异并要求审核后发布；
-- 规则修改必须经过测试和税务专家批准；
-- 客户内部资料与公共权威资料分库存储并明确标识。
+- Retrieve using confirmed facts and the current rule node, not just keywords from the original prompt.
+- Combine keyword and vector retrieval.
+- Filter by authority level, jurisdiction, and validity period.
+- Store exact sources and passage locations for every substantive conclusion.
+- Do not fill gaps from model memory when reliable evidence is absent.
 
-## 8. 知识治理
+<a id="fr-06-内部复核稿"></a>
 
-系统必须分离三类资产：
+### FR-06 Internal review drafts
 
-1. 权威法律资料库：用于检索和引证；
-2. 版本化税务规则库：用于确定性判断；
-3. 专家案例评测库：用于测试 Agent、规则和检索质量。
+Generate Chinese reports by default, preserving English titles and original-text locations for legislation and guidance. Reports contain:
 
-官方材料由系统采集和监控；工程团队可以先建立候选规则映射，但只有香港税务专家可以确认资料效力、专业解释和规则验证状态。用户团队主要提供匿名案例、实务经验和内部报告模板，而不是持续手工搜集公开文件。
+- Executive summary and preliminary risk level.
+- Confirmed facts, system assumptions, and missing information.
+- Step-by-step decision path.
+- Evidence supporting and limiting the current conclusion.
+- Official citations and the versions used.
+- Required evidence checklist.
+- Human review items.
+- Preliminary conclusion and conclusion status.
 
-资料标注分为：
+<a id="fr-07-人工复核与版本"></a>
 
-- 文档元数据：来源、类型、权威等级、有效期、语言、哈希；
-- 专业规则映射：适用节点、支持或限制关系、例外和人工判断要求；
-- 专家案例标签：正确追问、预期路径、可接受结论和引用。
+### FR-07 Human review and versioning
 
-### 8.1 香港 FSIE 资料总清单
+- Advisors can revise facts, analysis text, risk levels, and reasoning.
+- Critical fact changes automatically invalidate the original report.
+- Store reasons for approving, overturning, or modifying system recommendations.
+- Archive corresponding fact, rule, and source versions when a report is approved.
 
-香港 FSIE 包必须维护版本化 source manifest。每条记录至少保存：`source_id`、标题、发布机构、资料类型、原始链接、司法管辖区、语言、发布日期、生效日期、失效日期、抓取时间、内容哈希、权威等级、关联规则节点、支持或限制关系、替代版本、解析状态、专业验证状态和验证记录。
+<a id="fr-08-知识与规则管理"></a>
 
-每次评测和报告必须保存 `legal_coverage_cutoff`（法律资料覆盖截止日）。截止日之后发布或生效的材料默认触发影响检查；审核完成前，受影响规则节点标记为 `potentially_stale`，不得给出确定性专业结论。
+### FR-08 Knowledge and rule management
 
-工程完整性只表示 manifest 必填字段、原件、哈希、解析、索引和链接通过检查。专业完整性表示香港税务专家已确认相关规则节点所需的法律、修订条例、FAQ、示例、DIPN、公开事先裁定及其他必需资料不存在已知关键缺口。工程完整性不得替代专业完整性。
+- Manage official source provenance, authority level, validity period, hashes, and capture dates.
+- Display source differences and require review before publication.
+- Rule changes require testing and tax expert approval.
+- Store internal client materials separately from public authoritative materials and identify them clearly.
 
-### 8.2 知识维护服务水平
+<a id="8-知识治理"></a>
 
-| 变化等级 | 示例 | 发现与处理要求 | 系统状态 |
+## 8. Knowledge governance
+
+The system must separate three asset classes:
+
+1. Authoritative legal source library: retrieval and citation.
+2. Versioned tax rule library: deterministic determinations.
+3. Expert case evaluation library: testing Agent, rule, and retrieval quality.
+
+The system captures and monitors official materials. Engineering may first create candidate rule mappings, but only Hong Kong tax experts may confirm legal authority, professional interpretations, and rule validation status. The user team primarily supplies anonymous cases, practical experience, and internal report templates rather than continually searching for public documents by hand.
+
+Source annotation has three layers:
+
+- Document metadata: source, type, authority level, validity period, language, and hash.
+- Professional rule mappings: applicable nodes, supporting/limiting relationships, exceptions, and human judgment requirements.
+- Expert case labels: correct follow-ups, expected paths, acceptable conclusions, and citations.
+
+<a id="81-香港-fsie-资料总清单"></a>
+
+### 8.1 Hong Kong FSIE source manifest
+
+The Hong Kong FSIE package must maintain a versioned source manifest. Each record stores at least `source_id`, title, publisher, source type, original URL, jurisdiction, language, publication date, effective date, expiry date, capture time, content hash, authority level, associated rule nodes, supporting/limiting relationships, replacement versions, parsing status, professional validation status, and validation records.
+
+Every evaluation and report stores `legal_coverage_cutoff`. Materials published or taking effect after the cutoff trigger an impact check by default. Until review is complete, affected nodes are `potentially_stale` and must not produce definitive professional conclusions.
+
+Engineering completeness means required manifest fields, originals, hashes, parsing, indexing, and links pass checks. Professional completeness means Hong Kong tax experts confirm that legislation, amendments, FAQs, examples, DIPNs, public advance rulings, and other materials required by relevant nodes have no known critical gaps. Engineering completeness cannot substitute for professional completeness.
+
+<a id="82-知识维护服务水平"></a>
+
+### 8.2 Knowledge maintenance service levels
+
+| Change level | Examples | Detection and handling | System status |
 |---|---|---|---|
-| 重大变化 | 法律生效、核心规则废止或官方更正 | 发现后立即冻结受影响规则，2 个工作日内完成影响分级 | `potentially_stale`，禁止确定性专业输出 |
-| 重要变化 | FAQ、DIPN、申报义务或官方示例更新 | 每周检查官方入口，5 个工作日内完成初审 | 审核前显示警告 |
-| 普通变化 | 页面调整、链接迁移或元数据修正 | 每月批量处理 | 保持可检索并记录变化 |
+| Major | Legislation taking effect, repeal of core rules, or official corrections | Immediately freeze affected rules on detection; classify impact within 2 working days | `potentially_stale`; definitive professional outputs prohibited |
+| Important | Updates to FAQs, DIPNs, filing obligations, or official examples | Check official entry points weekly; initial review within 5 working days | Warning until reviewed |
+| Ordinary | Page changes, link migration, or metadata corrections | Process monthly in batches | Remain searchable and record changes |
 
-每个地区必须指定 source owner 和 backup owner。机器翻译不得作为专业批准依据；维护逾期时系统必须显示逾期状态，不得继续显示“最新”。
+Every jurisdiction must designate a source owner and backup owner. Machine translation cannot establish professional approval. Overdue maintenance must be visible, and overdue content must not continue to be labeled “up to date.”
 
-## 9. 状态与异常处理
+<a id="9-状态与异常处理"></a>
 
-案件状态包括：草稿、访谈中、等待客户资料、等待事实确认、分析中、需要人工判断、待复核、已批准、已失效和已归档。
+## 9. States and exception handling
 
-安全停止条件包括：
+Case states include draft, interviewing, waiting for client information, waiting for fact confirmation, analyzing, requiring human judgment, pending review, approved, invalidated, and archived.
 
-- 阻断性事实缺失；
-- 事实相互矛盾；
-- 官方依据缺失或可能过期；
-- 规则与新资料疑似冲突；
-- 用户问题超出 MVP 范围；
-- 经济实质、主要目的等需要专业判断；
-- 上传材料含有试图改变系统行为的指令。
+Safe stopping conditions include:
 
-停止时系统应说明当前已知内容、缺失内容、可能影响和下一步所需资料，不得强行输出免税或应税结论。
+- Missing blocking facts.
+- Contradictory facts.
+- Missing or potentially stale official evidence.
+- Suspected conflicts between rules and new materials.
+- Questions outside MVP scope.
+- Matters such as economic substance or main purpose requiring professional judgment.
+- Uploaded materials containing instructions attempting to alter system behavior.
 
-## 10. 非功能需求
+When stopping, explain what is known, what is missing, potential impacts, and the next required materials. Do not force an exempt/taxable conclusion.
 
-### 10.1 安全与隐私
+<a id="10-非功能需求"></a>
 
-- 角色及案件级访问控制；
-- 租户数据隔离；
-- 传输和静态数据加密；
-- 敏感日志脱敏；
-- 可配置的数据保留和删除；
-- 用户资料默认不用于训练通用模型；
-- 下载、导出、批准和规则变更进入审计日志；
-- 备份和恢复流程必须测试。
+## 10. Nonfunctional requirements
 
-### 10.2 可审计性
+<a id="101-安全与隐私"></a>
 
-系统必须能够回答谁在何时提供或修改了事实、为什么提出某个问题、哪个规则版本产生结果、引用了哪项资料，以及谁批准了最终内部稿。
+### 10.1 Security and privacy
 
-### 10.3 可维护性
+- Role- and case-level access control.
+- Tenant data isolation.
+- Encryption in transit and at rest.
+- Redaction of sensitive logs.
+- Configurable retention and deletion.
+- User data is not used to train general-purpose models by default.
+- Audit downloads, exports, approvals, and rule changes.
+- Test backup and recovery procedures.
 
-- 司法管辖区知识包彼此隔离；
-- 模型供应商通过适配层接入；
-- 规则和参数与应用代码保持逻辑分离；
-- 法规、规则、提示词和模型更新后可运行回归测试。
+<a id="102-可审计性"></a>
 
-## 11. 成功指标与验收
+### 10.2 Auditability
 
-### 11.1 无专家研究原型验收
+The system must explain who supplied or changed a fact and when, why a question was asked, which rule version produced a result, which source was cited, and who approved the final internal draft.
 
-- 香港 source manifest 的必填元数据完整率达到 100%，原件、版本、哈希、有效期间和链接均可验证；
-- 候选规则与资料段落具有明确映射；
-- 未验证规则和报告始终显示研究模式状态；
-- 自然语言、事实卡、规则、RAG 和报告链路可以端到端运行；
-- 系统无法通过提示词或普通用户操作移除专业验证门槛；
-- 仅使用虚构或完成脱敏审批的案例。
-- 至少 10 个版本化候选案例在冻结的研究评测集上端到端运行；
-- 评测集中若出现 1 个无法解析到 source manifest 的法规、条文或链接，阻断 L0 发布。
+<a id="103-可维护性"></a>
 
-达到这些指标只代表工程原型可用，不代表税务结论正确。
+### 10.3 Maintainability
 
-### 11.2 封闭试点准入门槛
+- Isolate jurisdiction knowledge packages.
+- Connect model providers through an adapter layer.
+- Keep rules and parameters logically separate from application code.
+- Run regression tests after updates to legislation, rules, prompts, or models.
 
-封闭试点前：
+<a id="11-成功指标与验收"></a>
 
-- 关键事实识别完整率达到 90% 以上。计算方式为：系统正确提取或明确追问的专家标注关键事实数 ÷ 专家标注关键事实总数；
-- 阻断性事实不得静默漏问；
-- 确定性规则无已知错误且边界值测试通过；
-- 同一事实和规则版本产生相同结构化结果；
-- 每项实质性结论具有可验证官方引用；
-- 高风险和主观判断案例正确升级人工处理；
-- 冻结的发布评测集中不出现无法解析到 source manifest 的法规、条文或链接，任何一次命中均阻断发布；
-- 30–50 个专家案例完成端到端回归测试；
-- 顾问能够修改事实、判断和报告并保留审计历史。
+## 11. Success metrics and acceptance
 
-以上规则、案例答案和人工判断边界必须由具备香港企业税经验的专业人士审核。未完成专业验证时，即使工程指标全部通过，也不得进入真实顾问或客户试点。
+<a id="111-无专家研究原型验收"></a>
 
-每项指标必须保存测试集版本、分母、计算公式、阈值、零容忍失败项、证据位置和批准人。试点期间补充衡量：完成案件所需时间、追问数量、顾问修改比例、错误类型、引用接受率及顾问满意度。
+### 11.1 Research prototype acceptance without experts
 
-### 11.3 功能冻结前的工作流走查
+- Hong Kong source manifest required metadata completeness reaches 100%; originals, versions, hashes, validity periods, and links are verifiable.
+- Candidate rules map explicitly to source passages.
+- Unverified rules and reports always show research-mode status.
+- Natural language, fact cards, rules, RAG, and reporting run end to end.
+- Prompts or ordinary user operations cannot remove professional validation gates.
+- Only fictional cases or data with approved de-identification are used.
+- At least 10 versioned candidate cases run end to end on a frozen research evaluation set.
+- One statute, provision, or link in the evaluation set that cannot resolve to the source manifest blocks L0 release.
 
-2026 年 9 月 20 日前，使用虚构案例完成 3–5 次结构化工作流走查。参与者优先为有香港企业税工作经验的潜在用户；若暂时无法获得，则使用熟悉专业服务复核流程的代理用户，并记录参与者背景。
+Meeting these metrics establishes only that the engineering prototype works, not that tax conclusions are correct.
 
-走查只验证案件创建、追问节奏、事实确认、缺口提示、引用呈现、报告结构和人工升级是否可理解，不验证税务结论。每次记录任务完成情况、无法理解的字段、无效或重复追问、报告查找时间、关键修改和开放问题。走查记录不得标记为专家案例或税务金标。
+<a id="112-封闭试点准入门槛"></a>
 
-### 11.4 中国内地、日本和韩国研究包验收
+### 11.2 Closed pilot entry gates
 
-`source-catalog baseline` 下，每个已声明主题至少有 1 个第一方官方入口；元数据必填项完整率为 100%；发布快照断链为 0；覆盖缺口和专业验证状态不得为空。
+Before a closed pilot:
 
-若启用 `standard research package`，必须按“地区 × 税务主题”记录必需来源类型、适用日期、语言、抽检结果和允许缺口，不得用文档数量替代覆盖程度。
+- Critical fact identification completeness reaches at least 90%, calculated as correctly extracted or explicitly queried expert-labeled critical facts ÷ all expert-labeled critical facts.
+- Blocking facts cannot be silently omitted from questioning.
+- Deterministic rules have no known errors and pass boundary tests.
+- The same facts and rule version produce the same structured results.
+- Every substantive conclusion has verifiable official citations.
+- High-risk and subjective-judgment cases correctly escalate to humans.
+- The frozen release evaluation set contains no statute, provision, or link that cannot resolve to the source manifest; any occurrence blocks release.
+- 30–50 expert cases complete end-to-end regression testing.
+- Advisors can revise facts, judgments, and reports while preserving audit history.
 
-## 12. 功能优先级
+These rules, case answers, and human judgment boundaries must be reviewed by professionals experienced in Hong Kong corporate tax. Without professional validation, passing every engineering metric still does not permit a real advisor or client pilot.
+
+Each metric stores the test set version, denominator, formula, threshold, zero-tolerance failures, evidence location, and approver. During the pilot, also measure case completion time, follow-up count, advisor revision rate, error types, citation acceptance rate, and advisor satisfaction.
+
+<a id="113-功能冻结前的工作流走查"></a>
+
+### 11.3 Workflow walkthroughs before feature freeze
+
+Complete 3–5 structured walkthroughs using fictional cases by 2026-09-20. Prefer potential users with Hong Kong corporate tax experience; if unavailable, use proxy users familiar with professional-service review workflows and record their backgrounds.
+
+Walkthroughs assess only whether case creation, follow-up pacing, fact confirmation, gap notices, citations, report structure, and human escalation are understandable. They do not validate tax conclusions. Each records task completion, confusing fields, invalid/repeated follow-ups, report lookup time, key revisions, and open questions. Walkthrough records must not be labeled expert cases or tax gold standards.
+
+<a id="114-中国内地日本和韩国研究包验收"></a>
+
+### 11.4 Mainland China, Japan, and South Korea research package acceptance
+
+Under `source-catalog baseline`, every declared topic has at least 1 first-party official entry point, required metadata completeness is 100%, broken links in the release snapshot are 0, and coverage gaps and professional validation statuses are nonempty.
+
+If `standard research package` is enabled, record required source types, applicability dates, languages, spot-check results, and permitted gaps for each jurisdiction × tax topic. Document counts cannot substitute for coverage.
+
+<a id="12-功能优先级"></a>
+
+## 12. Feature priorities
 
 ### P0 — MVP
 
-完成通用地区税务包框架，以及香港自然语言输入、动态访谈、事实卡、候选 FSIE 规则、官方资料检索、引用账本、研究版内部复核稿、人工判断标记、专业验证状态、版本和审计。香港税务专家验证作为封闭试点前的独立发布门槛。
+Complete the common jurisdiction tax package framework and Hong Kong natural-language input, dynamic interviews, fact cards, candidate FSIE rules, official source retrieval, citation ledger, research-mode internal review drafts, human judgment markers, professional validation status, versioning, and audit. Hong Kong tax expert validation is a separate release gate before a closed pilot.
 
-### P1 — 2026 东亚 Release 1
+<a id="p1--2026-东亚-release-1"></a>
 
-为中国内地、日本和韩国建立 `source-catalog baseline`，覆盖官方来源目录、统一元数据、主题分类、有效期间、覆盖缺口和专业验证状态。企业所得税、流转税、跨境预提税、税务居民与常设机构、转让定价、主要反避税规则、税收协定入口和申报周期全部达到 `standard research package`，仅在额外资源按期确认后作为扩展目标。所有未经当地专家验证的内容必须保持研究状态。
+### P1 — 2026 East Asia Release 1
 
-### P2 — Release 1 后增强
+Build a `source-catalog baseline` for mainland China, Japan, and South Korea, covering official catalogs, common metadata, topic classification, validity periods, coverage gaps, and professional validation statuses. Extending corporate income tax, turnover taxes, cross-border withholding taxes, tax residence/permanent establishments, transfer pricing, major anti-avoidance rules, treaty entry points, and filing cycles to a `standard research package` is a stretch objective only when additional resources are confirmed on time. Content without local expert validation remains in research status.
 
-文件上传和事实提取、组织架构图解析、中英文报告、多顾问批注、法规变更监控、Word/PDF 导出、内部模板配置，以及香港境外利息、处置收益、知识产权收入等扩展。
+<a id="p2--release-1-后增强"></a>
 
-## 13. 依赖与主要风险
+### P2 — Enhancements after Release 1
 
-- 前期工程不要求香港税务专家持续驻场，但封闭试点前必须完成专业验证冲刺；
-- 专家尚未确定会延迟试点时间，但不阻止资料、RAG、访谈和工程框架开发；
-- 为降低专家成本，团队应先准备规则映射、疑问清单和候选案例组成“专家审核包”；
-- 官方资料更新需要变更检测和发布流程；
-- 四地区资料监控、差异审核和语言复核必须计入知识运营容量；
-- 判断性问题过度自动化需要强制人工节点控制；
-- 模型幻觉通过结构化输出、引用验证和安全停止控制；
-- 数据泄露风险通过隔离、加密、权限、日志和供应商审查控制；
-- 2026 年范围严格限定为中国内地、香港、日本和韩国，通过 P0/P1/P2 门槛控制扩张。
+File upload and fact extraction, organization chart parsing, Chinese/English reports, multi-advisor comments, regulatory change monitoring, Word/PDF export, internal template configuration, and extensions to Hong Kong foreign-sourced interest, disposal gains, and intellectual property income.
 
-## 14. 产品演进
+<a id="13-依赖与主要风险"></a>
 
-第一层完成香港境外股息深度 MVP；第二层在同一平台完成中国内地、日本和韩国官方来源目录研究包，并在资源允许时扩展为标准研究包，形成东亚 Release 1；第三层在 2027 年根据资源和专家网络补齐未完成的标准研究包并扩展其他亚太地区。跨地区比较必须显示各地区内容深度和专业验证状态，不得将基础资料包描述为完整税务意见能力。
+## 13. Dependencies and principal risks
+
+- Early engineering does not require continuous on-site Hong Kong tax expert involvement, but an expert validation sprint must finish before a closed pilot.
+- Unconfirmed experts delay the pilot, not source, RAG, interview, or engineering framework development.
+- To reduce expert costs, prepare rule mappings, open questions, and candidate cases as an expert review package first.
+- Official source updates require change detection and release processes.
+- Monitoring, difference review, and language review across four jurisdictions count toward knowledge operations capacity.
+- Mandatory human nodes control excessive automation of judgment matters.
+- Structured outputs, citation validation, and safe stopping control model hallucinations.
+- Isolation, encryption, permissions, logs, and provider review control data leakage risks.
+- The 2026 scope is strictly mainland China, Hong Kong, Japan, and South Korea, with expansion controlled through P0/P1/P2 gates.
+
+<a id="14-产品演进"></a>
+
+## 14. Product evolution
+
+First, complete the in-depth Hong Kong foreign-sourced dividend MVP. Second, complete mainland China, Japan, and South Korea official source catalog research packages on the same platform and expand to standard research packages when resources permit, forming East Asia Release 1. Third, in 2027, complete outstanding standard research packages and expand to other Asia-Pacific jurisdictions according to resources and the expert network. Cross-jurisdiction comparisons must show content depth and professional validation status; basic source packages must not be described as complete tax advisory capabilities.

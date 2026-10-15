@@ -1,52 +1,62 @@
-# 香港 FSIE 数据提取与校验实施计划
+<a id="香港-fsie-数据提取与校验实施计划"></a>
 
-| 项目 | 内容 |
+# Hong Kong FSIE Data Extraction and Validation Implementation Plan
+
+| Item | Details |
 |---|---|
-| 版本 | v0.1 |
-| 日期 | 2026-08-21 |
-| 适用范围 | 香港 FSIE 境外股息 L0 研究原型 |
-| 当前状态 | 计划已定义；规则仍为 `unverified` |
-| 目标 | 让每个事实、规则、数字和报告结论都能回溯到原始资料、验证记录和版本 |
+| Version | v0.1 |
+| Date | 2026-08-21 |
+| Scope | Hong Kong FSIE foreign-sourced dividend L0 research prototype |
+| Status | Plan defined; rules remain `unverified` |
+| Objective | Trace every fact, rule, number, and report conclusion to originals, validation records, and versions |
 
-## 1. 目标与非目标
+<a id="1-目标与非目标"></a>
 
-### 1.1 目标
+## 1. Objectives and non-goals
 
-建立一条可重复、可暂停、可审计的链路：
+<a id="11-目标"></a>
+
+### 1.1 Objectives
+
+Establish a repeatable, pausable, auditable workflow:
 
 ```text
-官方原件
-→ 来源快照
-→ 文本/版面解析
-→ 法律单元切分
-→ AI 候选提取
-→ 自动一致性校验
-→ 专业人员确认
-→ 版本化规则与事实
-→ 案件逐节点判断
-→ 引用可追溯的研究报告
+Official originals
+→ Source snapshots
+→ Text/layout parsing
+→ Legal unit segmentation
+→ AI candidate extraction
+→ Automated consistency checks
+→ Professional confirmation
+→ Versioned rules and facts
+→ Node-by-node case assessment
+→ Research reports with traceable citations
 ```
 
-每一个下游结果必须能够回答：
+Every downstream result must identify:
 
-- 来自哪个原始文件、哪个版本和哪个页面/条款；
-- 由哪个提取器、模型和提示版本产生；
-- 哪些自动校验通过或失败；
-- 谁在何时确认、修改或否决；
-- 适用于哪个司法管辖区、收入类型、案件日期和规则版本。
+- Original file/version/page or provision.
+- Extractor, model, and prompt version.
+- Passed/failed automated checks.
+- Who confirmed, changed, or rejected it and when.
+- Jurisdiction, income type, case date, and rule version.
 
-### 1.2 非目标
+<a id="12-非目标"></a>
 
-- 第一阶段不自动提供正式税务意见；
-- 不以 LLM 记忆补全缺失法源或税率；
-- 不把 FAQ、示例或二手材料自动升级为法律规则；
-- 不将客户数据用于当前 L0 评测；
-- 不在法源、规则或关键事实未确认时给出免税/应税结论；
-- 不在本计划中实现中港日韩完整税务覆盖。
+### 1.2 Non-goals
 
-## 2. 可信度分层与状态机
+- No automatic formal tax advice in the first phase.
+- No LLM-memory completion of missing legal sources/rates.
+- No automatic elevation of FAQs, examples, or secondary materials to legal rules.
+- No client data in current L0 evaluation.
+- No exempt/taxable conclusions without confirmed legal sources, rules, and critical facts.
+- No complete mainland China/Hong Kong/Japan/South Korea tax coverage in this plan.
 
-所有资产都必须带状态，且只能按规定方向流转：
+<a id="2-可信度分层与状态机"></a>
+
+## 2. Trust layers and state machines
+
+Every asset has a status and follows prescribed transitions:
 
 ```text
 discovered
@@ -59,307 +69,369 @@ discovered
   → active
 ```
 
-任何阶段都可以进入：
+Any stage may enter:
 
-- `rejected`：内容错误、来源不适用或无法解释；
-- `stale`：法律覆盖截止日后发生变化；
-- `blocked`：存在未解决冲突、缺少原件、解析失败或安全问题。
+- `rejected`: incorrect, inapplicable, or unexplained content.
+- `stale`: changes after the legal coverage cutoff.
+- `blocked`: unresolved conflict, missing originals, parsing failure, or security issues.
 
-`candidate`、`machine_checked` 和 `human_review` 不能参与专业计算；`active` 仅允许在规则、法源和必要证据均通过审核后产生。规则撤回后必须保留历史版本，不得覆盖旧报告使用的版本。
+`candidate`, `machine_checked`, and `human_review` do not participate in professional calculations. `active` requires reviewed rules, sources, and necessary evidence. Withdrawn rules retain historical versions; never overwrite versions used by old reports.
 
-## 3. 数据资产与契约
+<a id="3-数据资产与契约"></a>
 
-### 3.1 来源记录 `SourceRecord`
+## 3. Data assets and contracts
 
-现有初始文件：[source_manifest.json](../../knowledge/hong_kong/fsie/source_manifest.json)。每条来源至少保存：
+<a id="31-来源记录-sourcerecord"></a>
 
-- `source_id`、标题、发布机构、原始 URL、司法管辖区、语言；
-- 来源类型：法律原文、修订材料、官方指引、FAQ、官方示例、事先裁定；
-- 发布、生效、失效和抓取时间；
-- 原件哈希、文件格式、内容大小和来源快照位置；
-- 权威等级、关联规则节点、替代版本和覆盖缺口；
-- `parse_status`、`professional_validation_status`、验证人和验证时间。
+### 3.1 Source records `SourceRecord`
 
-来源层与规则层分离。来源被抓取不等于规则已验证；工程完整性不等于专业完整性。
+Initial file: [source_manifest.json](../../knowledge/hong_kong/fsie/source_manifest.json). Each source stores at least:
 
-### 3.2 来源快照 `SourceSnapshot`
+- `source_id`, title, publisher, original URL, jurisdiction, language.
+- Type: legislation, amendment, official guidance, FAQ, example, advance ruling.
+- Publication, effective, expiry, and capture times.
+- Original hash, format, size, snapshot location.
+- Authority level, associated nodes, replacement versions, coverage gaps.
+- `parse_status`, `professional_validation_status`, validator, validation time.
 
-原件保存为不可变快照，推荐使用对象存储或内容寻址目录：
+Sources and rules are separate. Capturing a source does not validate a rule; engineering completeness is not professional completeness.
+
+<a id="32-来源快照-sourcesnapshot"></a>
+
+### 3.2 Source snapshots `SourceSnapshot`
+
+Store immutable originals in object storage or content-addressed directories:
 
 ```text
 raw/{source_id}/{retrieved_at}/{sha256}.{extension}
 ```
 
-同一 URL 内容变化时生成新快照，不覆盖旧文件。快照必须记录抓取工具版本、HTTP 状态、内容类型、重定向链、校验哈希和失败原因。受限制的原始文件不得提交 Git；仓库只保存获准的元数据、哈希和解析结果。
+Changed URL content creates new snapshots without overwriting old files. Record capture tool version, HTTP status, content type, redirects, verification hash, and failure reasons. Restricted originals must not enter Git; commit only approved metadata, hashes, and parsed results.
 
-### 3.3 法律单元 `LegalUnit`
+<a id="33-法律单元-legalunit"></a>
 
-法律单元是提取与引用的最小可定位对象，至少包括：
+### 3.3 Legal units `LegalUnit`
 
-- `unit_id`、`source_id`、版本哈希、页码/章节/条款/段落定位；
-- 原文、语言、解析方式、前后文窗口和文本哈希；
-- 是否为表格、脚注、定义、例外或修订标记；
-- OCR 质量、字符异常和人工校对状态。
+Smallest locatable extraction/citation objects, containing at least:
 
-引用不得只保存一个无上下文的向量片段；报告需要能够打开原件并高亮完整法律单元。
+- `unit_id`, `source_id`, version hash, page/chapter/provision/paragraph location.
+- Original text, language, parsing method, surrounding context, text hash.
+- Table, footnote, definition, exception, or amendment markers.
+- OCR quality, character anomalies, manual proofreading status.
 
-### 3.4 候选规则 `RuleCandidate`
+Citations cannot contain only context-free vector fragments. Reports must open originals and highlight complete legal units.
 
-规则节点使用现有 [rules.json](../../knowledge/hong_kong/fsie/rules.json) 的方向扩展：
+<a id="34-候选规则-rulecandidate"></a>
 
-- 规则 ID、节点、目的和适用范围；
-- 输入事实字段、证据要求、前置条件、例外和输出状态；
-- 适用日期、来源 `unit_id`、提取引用和相邻上下文；
-- 候选值、提取模型/提示版本、校验结果和差异；
-- `unverified/verified/rejected` 状态及专业审核记录。
+### 3.4 Rule candidates `RuleCandidate`
 
-规则输出优先使用 `in_scope`、`unknown`、`condition_not_demonstrated`、`human_review_required` 等状态，禁止把缺失事实映射成“不符合”或“符合”。
+Extend the existing [rules.json](../../knowledge/hong_kong/fsie/rules.json) approach with:
 
-### 3.5 事实与证据 `FactCandidate` / `Fact`
+- Rule ID, node, purpose, scope.
+- Inputs, evidence, prerequisites, exceptions, output statuses.
+- Applicability dates, source `unit_id`, extracted quotation, adjacent context.
+- Candidate values, extraction model/prompt versions, checks, differences.
+- `unverified/verified/rejected` and professional review records.
 
-案件事实必须区分：
+Prefer statuses such as `in_scope`, `unknown`, `condition_not_demonstrated`, and `human_review_required`. Missing facts must not become satisfied or not satisfied.
 
-- 客户原始陈述；
-- AI 提取的候选事实；
-- 顾问确认的事实；
-- 有外部证据支持的事实；
-- 系统假设、未知、冲突和过期事实。
+<a id="35-事实与证据-factcandidate--fact"></a>
 
-每条事实至少保存字段名、值、单位/币种、时间区间、来源文本、证据文件、置信度、确认状态、修改历史和受影响规则节点。LLM 只能写入候选区；顾问确认后才可进入规则输入。
+### 3.5 Facts and evidence `FactCandidate` / `Fact`
 
-## 4. 端到端提取流程
+Distinguish:
 
-### 阶段 A：来源发现与抓取
+- Original client statements.
+- AI-extracted candidate facts.
+- Advisor-confirmed facts.
+- Externally evidenced facts.
+- Assumed, unknown, conflicting, and stale facts.
 
-输入：官方入口、已批准 URL、上次快照。
+Each stores field, value, unit/currency, period, source text, evidence file, confidence, confirmation status, history, and affected nodes. LLMs write only to candidates; advisor confirmation precedes rule inputs.
 
-步骤：
+<a id="4-端到端提取流程"></a>
 
-1. 仅允许清单中的 HTTPS 官方来源；
-2. 记录重定向和内容类型，拒绝非预期域名或可疑下载；
-3. 保存原件、计算 SHA-256、记录抓取时间；
-4. 同 URL 新旧快照做字节和结构差异比较；
-5. 生成 `captured` 事件，失败则 `blocked`，不得静默继续。
+## 4. End-to-end extraction
 
-出口条件：原件可重放、哈希可验证、来源元数据完整。
+<a id="阶段-a来源发现与抓取"></a>
 
-### 阶段 B：格式解析与 OCR
+### Stage A: discovery and capture
 
-输入：不可变来源快照。
+Inputs: official entry points, approved URLs, previous snapshots.
 
-处理顺序：
+Steps:
 
-1. 可搜索 PDF/HTML/Word 采用保留版面信息的解析器；
-2. 扫描件单独进入 OCR 队列，保留页面图像和 OCR 版本；
-3. 表格、脚注、定义和修订标记必须单独识别；
-4. 对百分号、数字、小数点、负号、日期和条款编号运行字符级异常检查；
-5. 低 OCR 质量或页面结构不稳定时标记 `blocked`，不进入规则提取。
+1. Allow only manifest-listed official HTTPS sources.
+2. Record redirects/types; reject unexpected domains/suspicious downloads.
+3. Save originals, calculate SHA-256, record time.
+4. Compare old/new snapshots at byte and structural levels.
+5. Emit `captured`; failures become `blocked`, never silently continue.
 
-出口条件：每个文本片段都能定位回原件页码/区域；解析文本哈希可重现。
+Exit: replayable originals, verifiable hashes, complete metadata.
 
-### 阶段 C：法律单元切分与分类
+<a id="阶段-b格式解析与-ocr"></a>
 
-按条款、段落、定义、条件、例外、表格和脚注切分，不按固定字数盲切。分类器可以辅助判断，但最终单元边界和法律类型必须可人工修正。
+### Stage B: parsing and OCR
 
-必须保留：
+Input: immutable snapshots.
 
-- 单元前后文；
-- 条款层级；
-- 交叉引用；
-- 修订前后关系；
-- 法律原文与解释材料的区别。
+Order:
 
-### 阶段 D：LLM 候选提取
+1. Parse searchable PDF/HTML/Word while retaining layout information.
+2. Send scans to a separate OCR queue, retaining page images/OCR versions.
+3. Identify tables, footnotes, definitions, amendments separately.
+4. Check percentages, numbers, decimals, minus signs, dates, and provision identifiers for character anomalies.
+5. Block low-quality OCR/unstable structures before extraction.
 
-LLM 只输出严格结构化候选，不输出税务结论。每个候选字段必须包含：
+Exit: each passage maps to the original page/region; text hashes are reproducible.
+
+<a id="阶段-c法律单元切分与分类"></a>
+
+### Stage C: legal segmentation/classification
+
+Segment by provisions, paragraphs, definitions, conditions, exceptions, tables, and footnotes, not arbitrary character counts. Classifiers may assist; humans must be able to correct boundaries/types.
+
+Retain:
+
+- Surrounding context.
+- Provision hierarchy.
+- Cross-references.
+- Amendment relationships.
+- Distinction between legislation and explanatory materials.
+
+<a id="阶段-dllm-候选提取"></a>
+
+### Stage D: LLM candidate extraction
+
+LLMs produce strict structured candidates, not tax conclusions. Each field includes:
 
 ```json
 {
   "field": "minimum_holding_period",
   "value": null,
   "unit": "months",
-  "source_quote": "原文完整摘录",
+  "source_quote": "Complete quotation from the original source",
   "source_unit_id": "...",
   "extraction_status": "not_found",
   "needs_human_review": true
 }
 ```
 
-强制规则：
+Mandatory rules:
 
-- 引用中找不到的数字必须返回 `not_found`；
-- 数值、百分比、期间、金额和日期必须使用类型化字段；
-- 模型不能从 FAQ 例子推导普遍适用的法定阈值；
-- 模型不能合并不同司法管辖区或不同生效期间的规则；
-- 低置信度、多个候选值或上下文冲突必须进入人工队列。
+- Numbers absent from quotations return `not_found`.
+- Numbers, percentages, periods, amounts, and dates use typed fields.
+- Do not infer general statutory thresholds from FAQ examples.
+- Do not merge jurisdictions or effective periods.
+- Low confidence, multiple candidates, or contextual conflicts enter human queues.
 
-### 阶段 E：自动提取校验
+<a id="阶段-e自动提取校验"></a>
 
-自动校验不是法律批准，而是发现明显错误：
+### Stage E: automated validation
 
-- **引用存在性**：候选值必须能在引用文本中定位；
-- **类型校验**：百分比、金额、日期、期间和枚举值格式正确；
-- **范围校验**：数值超出合理范围时阻断，不自动修正；
-- **单位校验**：港币、外币、百分比、月/年不得混淆；
-- **时间校验**：案件日期与规则生效期间一致；
-- **来源校验**：来源属于正确司法管辖区和权威层级；
-- **逻辑校验**：例外不得在主条件缺失时直接触发；
-- **交叉引用校验**：被引用条款实际存在且版本一致。
+Checks identify obvious errors, not legal approval:
 
-任何失败都会保留候选结果和错误信息，状态改为 `blocked` 或 `human_review`。
+- **Quotation existence:** locate candidate values in quoted text.
+- **Types:** valid percentages, amounts, dates, periods, enums.
+- **Ranges:** block unreasonable values without automatic correction.
+- **Units:** distinguish HKD, foreign currencies, percentages, months/years.
+- **Time:** align case dates with effective periods.
+- **Sources:** correct jurisdiction/authority.
+- **Logic:** exceptions cannot trigger without primary conditions.
+- **Cross-references:** cited provisions exist in consistent versions.
 
-### 阶段 F：专业审核与激活
+Retain candidates/errors on any failure; set `blocked` or `human_review`.
 
-审核人查看原文、上下文、候选结构、自动校验报告和历史版本，做出：
+<a id="阶段-f专业审核与激活"></a>
 
-- `verified`：该规则在限定范围内可用；
-- `rejected`：候选提取或解释错误；
-- `needs_scope_change`：需要新增字段、例外或司法管辖区维度；
-- `needs_more_evidence`：资料不足，不能批准。
+### Stage F: professional review/activation
 
-高影响规则、数值阈值、反滥用规则和模型无法确定的判断事项至少需要第二名审核人或书面专家确认。审核记录必须包含理由，不接受只有一个“通过”按钮。
+Reviewers inspect originals, context, candidates, check reports, and history, then choose:
 
-## 5. 公司事实提取与匹配
+- `verified`: usable within defined scope.
+- `rejected`: incorrect extraction/interpretation.
+- `needs_scope_change`: additional fields, exceptions, or jurisdiction dimensions required.
+- `needs_more_evidence`: insufficient materials for approval.
 
-### 5.1 事实采集顺序
+High-impact rules, thresholds, anti-abuse rules, and matters the model cannot determine require at least a second reviewer or written expert confirmation. Record reasons; a pass button alone is insufficient.
 
-1. 公司/集团身份与案件日期；
-2. 收入类型、付款方、收款方、来源地和收取方式；
-3. 持股比例、持有期、直接/间接关系和受益所有人；
-4. 境外纳税与底层利润信息；
-5. 香港人员、场所、活动、支出、决策和外包监督；
-6. 商业目的、重组、混合错配和其他人工判断事实；
-7. 证据文件与待确认问题。
+<a id="5-公司事实提取与匹配"></a>
 
-访谈优先追问阻断结论的字段。顾问可以回答“不知道”“稍后提供”“不适用”或“按假设分析”；未知不能转为否定。
+## 5. Company fact extraction/matching
 
-### 5.2 事实匹配算法
+<a id="51-事实采集顺序"></a>
 
-对于每个 `case_id + income_event_id + tax_period`：
+### 5.1 Collection order
 
-1. 加载适用日期与司法管辖区的 `active` 规则；
-2. 读取事实卡当前确认版本；
-3. 为每个规则节点生成 `satisfied / not_satisfied / unknown / conflict / human_review_required`；
-4. 计算规则依赖图，关键事实变化时只重跑受影响节点；
-5. 生成证据缺口、规则版本、来源单元和停止原因；
-6. 只有所有确定性前提满足且无阻断项时，才允许生成研究阶段的结构化结果。
+1. Company/group identity and case date.
+2. Income type, payer, recipient, source jurisdiction, receipt method.
+3. Ownership, period, direct/indirect relationships, beneficial owner.
+4. Foreign taxation/underlying profits.
+5. Hong Kong personnel, premises, activities, spending, decisions, outsourcing oversight.
+6. Commercial purpose, restructuring, hybrid mismatches, other judgment facts.
+7. Evidence and confirmation questions.
 
-## 6. 校验、测试和回归体系
+Prioritize conclusion blockers. Advisors may answer unknown, provide later, not applicable, or analyze under assumptions. Unknown never becomes negative.
 
-### 6.1 测试层级
+<a id="52-事实匹配算法"></a>
 
-- 来源抓取测试：域名、状态码、内容类型、哈希和重定向；
-- 解析测试：页面数、文本长度、表格、OCR 字符和页码定位；
-- 提取单元测试：已知数字、日期、否定、例外和“未找到”；
-- 规则单元测试：正常、边界、缺失、冲突、生效期和版本切换；
-- 事实抽取测试：实体、金额、币种、日期、持股和资金路径；
-- 引用测试：每项实质性结果都能解析到 `source_manifest + legal_unit`；
-- 安全测试：提示词注入、恶意文件、越权、租户隔离和敏感日志；
-- 端到端测试：虚构案件从输入到停止/研究报告全链路运行。
+### 5.2 Matching algorithm
 
-### 6.2 质量指标
+For each `case_id + income_event_id + tax_period`:
 
-第一阶段只使用可解释指标：
+1. Load `active` rules for dates/jurisdiction.
+2. Read the currently confirmed fact card version.
+3. Produce `satisfied / not_satisfied / unknown / conflict / human_review_required` per node.
+4. Compute dependencies; rerun only affected nodes on critical changes.
+5. Produce evidence gaps, rule versions, source units, stop reasons.
+6. Allow structured research results only when deterministic prerequisites are met without blockers.
 
-- 来源元数据必填完整率：100%；
-- 原件哈希和版本可重放率：100%；
-- 关键数值引用可定位率：100%；
-- 阻断性事实静默漏问率：0%；
-- 未验证规则进入计算率：0%；
-- 无法解析法源或链接的评测命中：0%；
-- 同一事实、规则版本和案件日期的结构化结果一致率：100%；
-- 所有候选案例均保留验证状态和错误记录。
+<a id="6-校验测试和回归体系"></a>
 
-专家试点前再增加事实召回率、引用接受率、顾问修改率和高风险升级正确率。所有指标必须保存测试集版本、分母、公式、阈值、证据位置和批准人。
+## 6. Validation, tests, regression
 
-### 6.3 测试数据原则
+<a id="61-测试层级"></a>
 
-- L0 只使用虚构案例或完成脱敏审批的案例；
-- 每个案例声明适用日期、预期追问、证据缺口和预期停止状态；
-- 候选案例不能标记为税务金标；
-- 专家确认后另存不可变的金标版本，不覆盖候选版本；
-- 任何无法解析到来源清单的法规、条款或链接都会阻断发布。
+### 6.1 Testing layers
 
-## 7. 失败处理与变更管理
+- Capture: domains, statuses, types, hashes, redirects.
+- Parsing: page count, text length, tables, OCR characters, page locations.
+- Extraction units: known numbers/dates, negations, exceptions, not-found cases.
+- Rules: normal, boundary, missing, conflict, effective periods, version changes.
+- Facts: entities, amounts, currencies, dates, ownership, fund flows.
+- Citations: every substantive result resolves to `source_manifest + legal_unit`.
+- Security: injection, malicious files, unauthorized access, tenant isolation, sensitive logs.
+- End to end: fictional cases from input to stopping/research reports.
 
-以下情况必须停止自动结论：原件缺失、哈希改变、OCR 质量不足、引用不存在、数值冲突、规则过期、关键事实未知、事实矛盾、提示词注入、专家否决或权限测试失败。
+<a id="62-质量指标"></a>
 
-法规变更处理：
+### 6.2 Quality metrics
 
-1. 新快照与旧快照做差异比较；
-2. 将受影响来源和规则标为 `stale/potentially_stale`；
-3. 冻结受影响规则节点；
-4. 生成待审核影响清单；
-5. 专家确认后发布新规则版本；
-6. 查找使用旧版本的历史报告，不修改历史结果，只增加影响提示。
+Initially use interpretable metrics only:
 
-## 8. 实施顺序与交付物
+- Required source metadata completeness: 100%.
+- Original hash/version replayability: 100%.
+- Critical numeric citation locatability: 100%.
+- Silent omission of blocking questions: 0%.
+- Unverified rules entering calculations: 0%.
+- Unresolved legal sources/links in evaluation: 0%.
+- Structured result consistency for identical facts/rules/dates: 100%.
+- Every candidate case retains validation status/error records.
 
-### Iteration 1：契约与清单
+Before expert pilots, add fact recall, citation acceptance, advisor revisions, and correct high-risk escalation. Record test set versions, denominators, formulas, thresholds, evidence, and approvers.
 
-- 完成来源、法律单元、候选规则、事实、证据和验证事件 schema；
-- 将当前 JSON 包纳入校验；
-- 固定状态机和停止状态。
+<a id="63-测试数据原则"></a>
 
-### Iteration 2：受控来源管线
+### 6.3 Test data principles
 
-- 实现官方来源抓取、重定向限制、哈希、快照和失败记录；
-- 完成 PDF/HTML/Word 解析与页面定位；
-- 产出第一版香港 FSIE source manifest 和解析报告。
+- L0 uses fictional or approved de-identified cases only.
+- Every case declares dates, expected questions, gaps, and stopping states.
+- Candidates are not tax gold standards.
+- Expert-confirmed gold versions are separate and immutable, not candidate overwrites.
+- Any unresolved manifest statute/provision/link blocks release.
 
-### Iteration 3：法律单元与候选提取
+<a id="7-失败处理与变更管理"></a>
 
-- 实现法律单元切分、条款定位、表格/脚注保留；
-- 接入严格 JSON 的 LLM 提取器；
-- 建立候选值、原文引用和自动校验结果。
+## 7. Failure and change management
 
-### Iteration 4：专家审核工作流
+Stop automatic conclusions for missing originals, changed hashes, inadequate OCR, nonexistent citations, numeric conflicts, stale rules, unknown critical facts, contradictions, injection, expert rejection, or failed permission tests.
 
-- 实现审核队列、差异查看、批准/否决/退回和审核记录；
-- 只有验证规则可以进入 `active`；
-- 形成第一批专家审核包。
+For regulatory changes:
 
-### Iteration 5：公司事实卡与规则匹配
+1. Compare snapshots.
+2. Set affected sources/rules `stale/potentially_stale`.
+3. Freeze affected nodes.
+4. Generate an impact review list.
+5. Publish new rules after expert confirmation.
+6. Find historical reports using old versions; add impact notices without changing old results.
 
-- 实现虚构案件输入、事实候选、顾问确认、冲突和证据缺口；
-- 按 `case + income event + tax period` 执行规则节点；
-- 生成研究状态的节点结果和停止原因。
+<a id="8-实施顺序与交付物"></a>
 
-### Iteration 6：回归与 L0 发布门槛
+## 8. Implementation order/deliverables
 
-- 至少 10 个版本化候选案例；
-- 完成来源、解析、提取、规则、引用和安全测试；
-- 生成覆盖、错误、过期和审核状态报告；
-- 若任一阻断条件失败，保持 L0 研究状态，不进入顾问试点。
+<a id="iteration-1契约与清单"></a>
 
-## 9. 角色与审批责任
+### Iteration 1: contracts/catalogs
 
-| 工作 | 责任人 | 最终批准 |
+- Source, unit, candidate rule, fact, evidence, validation-event schemas.
+- Validate current JSON packages.
+- Pin state machines/stopping states.
+
+<a id="iteration-2受控来源管线"></a>
+
+### Iteration 2: controlled source pipeline
+
+- Official capture, redirect restrictions, hashes, snapshots, failures.
+- PDF/HTML/Word parsing and page locations.
+- Initial Hong Kong FSIE manifest/parsing report.
+
+<a id="iteration-3法律单元与候选提取"></a>
+
+### Iteration 3: legal units/candidate extraction
+
+- Segmentation, provision locations, tables/footnotes.
+- Strict JSON LLM extraction.
+- Candidate values, originals, automated checks.
+
+<a id="iteration-4专家审核工作流"></a>
+
+### Iteration 4: expert review
+
+- Queues, differences, approve/reject/return, records.
+- Only verified rules become `active`.
+- Initial expert review packages.
+
+<a id="iteration-5公司事实卡与规则匹配"></a>
+
+### Iteration 5: company cards/rule matching
+
+- Fictional input, candidate facts, confirmation, conflicts, gaps.
+- Execute per `case + income event + tax period`.
+- Research-mode node results/stopping reasons.
+
+<a id="iteration-6回归与-l0-发布门槛"></a>
+
+### Iteration 6: regression/L0 gates
+
+- At least 10 versioned candidates.
+- Source, parsing, extraction, rule, citation, security tests.
+- Coverage/error/staleness/review reports.
+- Any failed blocker retains L0 research status and prevents advisor pilots.
+
+<a id="9-角色与审批责任"></a>
+
+## 9. Roles and approval
+
+| Work | Responsible | Final approval |
 |---|---|---|
-| 来源抓取与完整性 | 工程负责人 | 工程负责人 |
-| 法律单元解析 | 知识运营负责人 | 知识运营负责人 |
-| 规则解释与阈值 | 规则工程师 | 香港税务专家 |
-| 事实字段和追问顺序 | 产品/规则负责人 | 香港税务专家 |
-| 模型提示和提取评测 | AI/工程负责人 | 工程负责人 + 专家抽检 |
-| 发布、安全、备份 | 安全/平台负责人 | 发布负责人 |
+| Capture/completeness | Engineering lead | Engineering lead |
+| Legal parsing | Knowledge operations lead | Knowledge operations lead |
+| Rule interpretation/thresholds | Rule engineer | Hong Kong expert |
+| Fields/interview order | Product/rule owner | Hong Kong expert |
+| Prompts/extraction evaluation | AI/engineering lead | Engineering lead + expert spot checks |
+| Release/security/backups | Security/platform lead | Release owner |
 
-没有明确姓名时，角色不能被视为已分配；在 M0 里程碑必须填写实际负责人。
+Roles are unassigned without names; M0 must record actual owners.
 
-## 10. 完成定义
+<a id="10-完成定义"></a>
 
-本计划的第一阶段只有同时满足以下条件才算完成：
+## 10. Definition of done
 
-- 来源清单可重放，原件哈希和版本完整；
-- 法律单元可从报告引用跳回原件；
-- 所有候选提取都有原文引用和机器校验记录；
-- 规则、事实和报告版本彼此关联；
-- 未知、冲突和过期状态不会静默生成结论；
-- 未验证规则进入计算率为 0%；
-- 虚构案例可重复运行并得到一致结构化状态；
-- 专家审核记录明确哪些规则已验证、哪些仍缺资料；
-- 安全、权限、备份和恢复测试通过；
-- 仓库和运行环境不包含客户资料、密钥或未经批准的原始受限材料。
+The first phase completes only when:
 
-## 11. 当前包与下一步
+- Replayable manifests and complete original hashes/versions.
+- Report citations navigate to originals.
+- All candidate extractions have originals/machine checks.
+- Linked rule/fact/report versions.
+- Unknown/conflict/stale statuses never silently produce conclusions.
+- 0% unverified rules enter calculations.
+- Repeatable fictional cases produce consistent structured states.
+- Expert records distinguish verified rules from evidence gaps.
+- Security/permissions/backup/recovery tests pass.
+- Repository/runtime contain no client data, keys, or unapproved restricted originals.
 
-当前 [香港 FSIE 候选知识包](../../knowledge/hong_kong/fsie/README.md) 已提供 6 个候选来源、6 个候选规则、8 个证据要求和 3 个虚构案例。下一步应优先实现 Iteration 2 的受控来源管线，并由香港税务专家确认第一批规则节点；在此之前，不能将候选规则描述为已验证规则。
+<a id="11-当前包与下一步"></a>
+
+## 11. Current package and next step
+
+The current [Hong Kong FSIE candidate package](../../knowledge/hong_kong/fsie/README.md) provides 6 candidate sources, 6 candidate rules, 8 evidence requirements, and 3 fictional cases. Prioritize Iteration 2's controlled pipeline and expert confirmation of initial nodes. Until then, candidate rules must not be described as validated.

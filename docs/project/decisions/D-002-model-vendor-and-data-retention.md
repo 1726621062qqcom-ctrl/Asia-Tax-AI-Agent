@@ -1,29 +1,26 @@
-# D-002 模型供应商与数据保留（L0 阶段决策）
+<a id="d-002-模型供应商与数据保留l0-阶段决策"></a>
 
-| 项目 | 内容 |
+# D-002 Model Provider and Data Retention (L0 Decision)
+
+| Item | Details |
 |---|---|
-| 决策项 | 技术路线图第 11 节「模型供应商和数据保留条款」（原定最迟 2026-08-31，已逾期后补办） |
-| 决策日期 | 2026-09-03 |
-| 状态 | L0 部分已决；数据保留条款待供应商书面确认 |
+| Decision | Technical roadmap section 11, “Model provider and data retention terms” (original deadline 2026-08-31; completed after the deadline) |
+| Decision date | 2026-09-03 |
+| Status | L0 decisions partially resolved; written provider confirmation of retention terms pending |
 
-## 决策内容
+<a id="决策内容"></a>
 
-1. **L0 接入方式**：通过供应商中立的 OpenAI 兼容适配层（`packages/model_adapter`）接入，
-   供应商、模型名与密钥全部来自环境变量（`.env`，git 忽略），业务代码不绑定任何供应商；
-2. **数据边界（强制）**：L0 阶段只允许向模型发送**虚构/合成数据**
-   （虚构案例描述与事实词典字段名），与路线图临时默认值一致；
-   任何真实客户数据、试点数据不得进入模型，此限制在代码路径上由
-   「intake 只处理合成夹具与显式标注虚构的案件描述」保证，进入 L1 前须另立决策；
-3. **密钥管理**：密钥只存 `.env`；禁止写入代码、日志、提交或报告。
-   2026-09-03 曾在协作对话中明文出现过一把钥匙，已按上述规则落盘，
-   并建议尽快轮换；
-4. **供应商身份**：由项目方提供的密钥确认（端点以 `.env` 的
-   `FSIE_MODEL_BASE_URL` 为准），正式供应商名称与数据保留条款在
-   本文件补记前，L1 相关数据流程保持冻结；
-5. **输出约束**：模型只允许产出候选事实（`ai_candidate`）与文本草稿，
-   判断权始终在确定性规则引擎与人工复核（PRD 第 3、5 节）。
+## Decision
 
-## 未决事项
+1. **L0 integration**: use the provider-neutral OpenAI-compatible adapter (`packages/model_adapter`). Provider, model name, and key all come from environment variables (`.env`, ignored by Git); business code is not tied to any provider.
+2. **Mandatory data boundary**: at L0, models may receive **fictional/synthetic data only** (fictional case descriptions and fact dictionary field names), matching the roadmap's interim default. No real client or pilot data may enter the model. Code enforces this through intake processing of synthetic fixtures and case descriptions explicitly labeled fictional. A separate decision is required before L1.
+3. **Key management**: store keys only in `.env`, never in code, logs, commits, or reports. A key appeared in plaintext in a collaboration conversation on 2026-09-03; it was stored according to these rules, with a recommendation to rotate it promptly.
+4. **Provider identity**: established by the project-supplied key (the endpoint is `FSIE_MODEL_BASE_URL` in `.env`). L1 data workflows remain frozen until the formal provider name and retention terms are recorded here.
+5. **Output limits**: the model may produce only candidate facts (`ai_candidate`) and text drafts. Determinations remain with the deterministic rule engine and human review (PRD sections 3 and 5).
 
-- 供应商数据保留与训练使用条款的书面确认（L1 前必须完成）；
-- 模型版本固定与变更回归策略（随提示词版本管理一并定）。
+<a id="未决事项"></a>
+
+## Open items
+
+- Written confirmation of provider retention and training-use terms, required before L1.
+- Model version pinning and change regression strategy, to be decided alongside prompt versioning.

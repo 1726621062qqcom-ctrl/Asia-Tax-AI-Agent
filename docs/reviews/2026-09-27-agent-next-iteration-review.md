@@ -1,104 +1,132 @@
-# Agent 下一阶段改进建议
+<a id="agent-下一阶段改进建议"></a>
 
-日期：2026-09-27。范围：PRD、技术路线图、2026 项目计划、云端知识链路验收记录；补充核对 D-002 模型数据决策和裁定研究卡。原规划文件未修改。
+# Recommendations for the Next Agent Iteration
 
-## 总体判断
+Date: 2026-09-27. Scope: PRD, technical roadmap, 2026 plan, cloud knowledge acceptance, plus D-002 and ruling research cards. Original planning documents were not changed.
 
-已有自然交流、云端资料检索、事实确认、部分规则分析和引用快照。下一阶段应优先完成“理解问题 → 关键追问 → 查找适用依据 → 回答并引用 → 生成可复核稿”的用户任务。
+<a id="总体判断"></a>
 
-本次列出 4 项发现：P1 三项、P2 一项；风险两项、决策待定一项、确认的文档缺陷一项。最关键改进是基于证据直接回答问题。现有证据支持继续迭代，不支持宣布完成 PRD 或进入 L1。未重新运行应用测试、验证税务解释或核实人员到位情况。
+## Overall assessment
 
-## 已有优势
+Natural conversation, cloud retrieval, fact confirmation, partial rules, and citation snapshots exist. Next prioritize the user task: understand the question → ask critical follow-ups → find applicable evidence → answer with citations → produce a reviewable draft.
 
-- PRD 将模型表达、确定性规则和专业判断分开，边界清楚。
-- 云端记录明确承认关键词检索、来源变化、权限和原件归档的限制。
-- 已有失败重试、事实确认、历史引用快照和事实修改后分析失效的基础。
+Four findings: three P1 and one P2; two risks, one open decision, one confirmed documentation defect. The main improvement is directly answering from evidence. Evidence supports continued iteration, not complete PRD delivery or L1. Application tests, tax explanations, and staffing availability were not reverified.
 
-## 问题与建议
+<a id="已有优势"></a>
 
-### 1. 检索结果还未成为完整回答
+## Existing strengths
 
-- 编号：REV-001；P1；risk；产品价值 / 跨文档追踪；高置信度；pending。
-- 证据：PRD「FR-05、FR-06」要求逐项依据和内部复核稿；CLOUD_KNOWLEDGE_SLICE「检索方法与边界」说明目前资料咨询返回原文，未基于原文生成税务分析。
-- 后果：用户仍需自行阅读和组合资料，多轮交流不能稳定完成研究任务。
-- 建议：先完成单一股息问题旅程，输出简短回答、适用条件、缺失事实和逐项来源；证据不足时明确缺口。一般聊天继续自然回复，具体案件进入事实确认和规则分析。
-- 负责人：产品 / 工程。
+- The PRD clearly separates model expression, deterministic rules, and professional judgment.
+- Cloud records explicitly acknowledge limits in keywords, source changes, permissions, and original-file archiving.
+- Retry, confirmation, historical citation snapshots, and invalidation after fact changes already have foundations.
 
-### 2. 证据进入模型的范围尚需明确
+<a id="问题与建议"></a>
 
-- 编号：REV-002；P1；decision-needed；技术可行性 / 数据治理；高置信度；pending。
-- 证据：D-002「数据边界」仅允许合成数据；四张裁定研究卡的 model_input_authorized 均为 false；云端记录明确原文不送外部模型。
-- 后果：不能默认通过给当前 DeepSeek 请求附上所有原文来完成证据生成。
-- 建议：建立可送模型的来源白名单与数据类别；明确公开资料的使用审查、供应商条款和案件脱敏边界。未获允许的资料继续检索展示；选择经批准的处理路径。这里描述的是项目现行约束，不是认定公开资料依法禁止模型处理。
-- 负责人：产品 / 数据负责人 / 工程。
+## Findings and recommendations
 
-### 3. 工程测试不能替代回答质量验收
+<a id="1-检索结果还未成为完整回答"></a>
 
-- 编号：REV-003；P1；risk；可测试性 / 交付；高置信度；pending。
-- 证据：PRD「11.1、11.2」要求冻结案例端到端回归、关键事实覆盖和引用验证；云端记录的离线规则案例、测试替身浏览器测试和真实合成案件验证只覆盖其中一部分。
-- 后果：即使测试全通过，仍可能答非所问、引用不支持结论或遗漏阻断事实。
-- 建议：从现有十个候选案例建立完整对话评测，记录问题、应追问事实、路径、应引用段落及禁止输出；加入未知、矛盾、无依据、越界和来源变化。工程预期答案不得标记为税务金标。专家参与后扩为 PRD 所述 30–50 个验证案例。
-- 负责人：工程 / 产品；专业正确性由香港税务专家确认。
+### 1. Retrieval results are not yet complete answers
 
-### 4. “十节点自动规则”表述与人工判断边界不一致
+- ID: REV-001; P1; risk; product value/cross-document traceability; high confidence; pending.
+- Evidence: PRD FR-05/FR-06 require itemized evidence and review drafts; CLOUD_KNOWLEDGE_SLICE “Retrieval method and boundaries” says inquiries return originals without source-based tax analysis.
+- Consequence: users must read/combine materials themselves; multi-turn conversation cannot reliably complete research tasks.
+- Recommendation: complete one dividend journey with a short answer, applicability conditions, missing facts, and itemized sources; state insufficient-evidence gaps. General chat stays natural; specific cases enter confirmation/rules.
+- Owner: product/engineering.
 
-- 编号：REV-004；P2；confirmed-defect；内部一致性 / 跨文档追踪；高置信度；pending。
-- 证据：CLOUD_KNOWLEDGE_SLICE「与 PRD 尚有的差距」写“完整的十节点自动规则”；PRD「FR-04」和技术路线「4.3」要求判断性事项返回人工复核。
-- 后果：容易把完成十节点覆盖误解成自动化所有税务判断。
-- 建议：补齐每个节点的输入、规则结果或人工复核出口、证据和状态；保留专业判断边界。
-- 负责人：产品 / 工程。
+<a id="2-证据进入模型的范围尚需明确"></a>
 
-## 对照关系与待核实事项
+### 2. Scope of evidence permitted into models needs clarification
 
-| 主题 | 目标文档 | 当前记录 | 判断 |
+- ID: REV-002; P1; decision-needed; technical feasibility/data governance; high confidence; pending.
+- Evidence: D-002 permits synthetic data only; all four ruling cards have model_input_authorized=false; cloud records exclude originals from external models.
+- Consequence: attaching every original passage to current DeepSeek requests is not an authorized default.
+- Recommendation: establish source allowlists/data categories; clarify public-source review, provider terms, and case de-identification. Unapproved materials remain retrieval/display-only; use approved processing routes. This describes current project constraints, not a legal conclusion that public materials cannot be processed by models.
+- Owner: product/data owner/engineering.
+
+<a id="3-工程测试不能替代回答质量验收"></a>
+
+### 3. Engineering tests cannot replace answer-quality acceptance
+
+- ID: REV-003; P1; risk; testability/delivery; high confidence; pending.
+- Evidence: PRD 11.1/11.2 require frozen end-to-end cases, critical fact coverage, and citation validation. Offline rule cases, substitute browser tests, and live synthetic cloud cases cover only part.
+- Consequence: all tests may pass while answers miss the question, citations fail to support conclusions, or blocking facts are omitted.
+- Recommendation: build full conversation evaluation from the existing ten candidates, recording questions, required follow-ups, paths, expected passages, and prohibited outputs. Include unknowns, conflicts, missing evidence, out-of-scope cases, and source changes. Engineering expectations are not tax gold standards. With experts, expand to 30–50 validated cases.
+- Owner: engineering/product; Hong Kong experts confirm professional correctness.
+
+<a id="4-十节点自动规则表述与人工判断边界不一致"></a>
+
+### 4. “Automatic ten-node rules” conflicts with human judgment boundaries
+
+- ID: REV-004; P2; confirmed-defect; internal consistency/cross-document traceability; high confidence; pending.
+- Evidence: CLOUD_KNOWLEDGE_SLICE's PRD gaps refer to complete automatic ten-node rules; PRD FR-04/roadmap 4.3 require human review for judgment matters.
+- Consequence: complete node coverage may be mistaken for automation of every tax judgment.
+- Recommendation: complete each node's inputs, rule results or human-review exit, evidence, and statuses, preserving professional boundaries.
+- Owner: product/engineering.
+
+<a id="对照关系与待核实事项"></a>
+
+## Alignment and open checks
+
+| Topic | Target document | Current record | Assessment |
 |---|---|---|---|
-| 证据回答 | PRD FR-05、FR-06 | 原文返回及规则清单 | 实现缺口，关联问题 1 |
-| 判断边界 | PRD FR-04、技术路线 4.3 | “十节点自动规则” | 表述冲突，关联问题 4 |
-| 来源更新 | PRD 8.1、8.2 | 八个 HTML 来源变化待核对 | 需审核变化及影响，不能直接认定法律已变化 |
-| 发布进度 | 项目计划 M2、M3 | 已有部分工程验收 | 人员、走查和地区交付证据未核实，不能仅据日期判定完成或延期 |
+| Evidence-based answers | PRD FR-05/FR-06 | Original passages/rule lists | Implementation gap, finding 1 |
+| Judgment boundaries | PRD FR-04, roadmap 4.3 | “Automatic ten-node rules” | Wording conflict, finding 4 |
+| Source updates | PRD 8.1/8.2 | Eight HTML sources changed, awaiting checks | Review changes/impact; do not automatically infer legal changes |
+| Release progress | Plan M2/M3 | Partial engineering acceptance | Staffing, walkthroughs, and regional delivery unverified; dates alone establish neither completion nor delay |
 
-扫描器已执行，报告零条机械候选发现；该结果不代表语义一致或验收通过。终端中文输出存在编码显示问题，本文依据 UTF-8 原文人工对照。
+The scanner reported zero mechanical candidates; this establishes neither semantic consistency nor acceptance. Terminal Chinese had encoding/display issues; this review manually checked UTF-8 originals.
 
-## 推荐实施顺序及验收
+<a id="推荐实施顺序及验收"></a>
 
-1. **回答与评测一起做**：保留日常对话，识别研究/具体案件/范围外问题；关键身份不清时只问一个主要问题。允许使用的证据支持简短回答，每项实质结论能定位来源，缺证据不猜。先用十个候选案例验证完整对话。
-2. **动态访谈与十节点覆盖**：按影响结果的程度排序缺失事实；区分未知、否定、冲突及假设；补全节点的确定性输出或人工出口，不重复追问已确认事实。
-3. **检索与版本治理**：以事实、规则节点和适用期间生成查询；先测现有检索基线，再实施路线图里的混合检索和重排。案例比较应展示相同事实、差异和适用限制。审核来源变化、建立云端原件版本及受影响报告失效机制。
-4. **复核稿与人工处理**：生成事实、假设、路径、支持及限制证据、待补资料的内部稿；支持复核修改、批准/退回理由和版本归档。正文简洁，证据折叠。
-5. **团队使用与发布**：真实账号、组织/案件权限、复核身份、数据库最小权限、云端原件、恢复演练和部署。开始团队使用前落实身份与权限；L1 按文档另需专家与数据流程门槛。
+## Recommended order and acceptance
 
-以上是依赖顺序，不是工期承诺。香港深度场景优先；其他三地区仍保留来源目录基线目标，扩展深度须重新核对资源。暂不把多 Agent、广泛税种扩展或大量 UI 面板排在上述任务之前。
+1. **Build answers and evaluation together.** Keep casual chat; identify research, specific cases, and out-of-scope questions. Ask one main question when critical identity is unclear. Approved evidence supports concise answers and locatable sources for every substantive conclusion; do not guess without evidence. Start with full conversations for ten candidates.
+2. **Dynamic interviews/ten-node coverage.** Order missing facts by effect on results; distinguish unknown, negative, conflict, and assumption. Complete deterministic results or human exits; do not repeat confirmed facts.
+3. **Retrieval/version governance.** Generate queries from facts, nodes, and applicability periods; measure the current baseline before roadmap hybrid retrieval/reranking. Case comparisons show shared facts, differences, and applicability limits. Review source changes, establish cloud original versions, and invalidate affected reports.
+4. **Drafts/human handling.** Draft facts, assumptions, paths, supporting/limiting evidence, and missing materials; support edits, approval/return reasons, and archived versions. Keep body concise with expandable evidence.
+5. **Team use/release.** Implement real accounts, organization/case permissions, reviewer identity, least-privilege databases, cloud originals, recovery drills, and deployment. Identity/permissions precede team use; L1 additionally requires expert/data gates.
 
-示例任务：“从中国大陆获得一笔股息，要交多少税？”应先确认收款主体是个人还是公司，再结合税务身份澄清用户关注付款端扣税还是收款端处理。通过对话获取背景，不增加地区选择器；这里是交互示例，不提供税率判断。
+This is dependency order, not a schedule commitment. Prioritize Hong Kong depth; retain other jurisdictions' source-catalog baseline and recheck resources before expanding depth. Multi-Agent work, broad tax expansion, and large numbers of UI panels are not higher priorities.
 
-## 文档变更建议（尚未应用）
+Example: “How much tax is due on a dividend from mainland China?” First establish whether the recipient is an individual or company, then clarify whether the user means payer withholding or recipient treatment using tax identity. Gather context conversationally without adding a region selector. This is an interaction example, not a tax-rate determination.
 
-### 建议修改 1：修正节点完成标准
+<a id="文档变更建议尚未应用"></a>
 
-- CHG-001，关联 REV-004。
-- 目标：CLOUD_KNOWLEDGE_SLICE「与 PRD 尚有的差距」。
-- 动作：将“完整的十节点自动规则及动态证据访谈”替换为“十节点判断链的完整覆盖（确定性规则与明确的人工复核出口）及动态证据访谈”。
-- 联动修改：无。检查：与 PRD FR-04、技术路线 4.3 一致。
-- 状态：pending / not-applied。
+## Proposed documentation changes (not applied)
 
-### 建议修改 2：增加下一轮可验收任务表
+<a id="建议修改-1修正节点完成标准"></a>
 
-- CHG-002，关联 REV-001、REV-002、REV-003。
-- 目标：PROJECT_PLAN_2026 新增“当前迭代任务与证据”小节。
-- 动作：插入任务表，按上文顺序列目标行为、负责人、依赖、验收案例、失败条件和证据位置；首项明确模型输入来源白名单及完整对话评测。日期在资源核实后填写。
-- 联动修改：无。检查：不将候选案例当金标，不改变原四地区基线或 L1 门槛。
-- 状态：pending / not-applied。
+### Revision 1: correct node completion criteria
 
-## 决策与追踪
+- CHG-001, linked to REV-004.
+- Target: CLOUD_KNOWLEDGE_SLICE, gaps relative to PRD.
+- Replace “complete automatic ten-node rules and dynamic evidence interviews” with “complete coverage of the ten-node decision chain, comprising deterministic rules and explicit human-review exits, plus dynamic evidence interviews.”
+- Related edits: none. Check consistency with PRD FR-04/roadmap 4.3.
+- Status: pending / not-applied.
 
-| 建议修改 | 影响文件 | 用户决定 |
+<a id="建议修改-2增加下一轮可验收任务表"></a>
+
+### Revision 2: add an assessable next-iteration task table
+
+- CHG-002, linked to REV-001, REV-002, REV-003.
+- Target: add “Current iteration tasks and evidence” in PROJECT_PLAN_2026.
+- Insert target behavior, owners, dependencies, acceptance cases, failures, and evidence locations in the order above. The first item explicitly includes model source allowlists and complete conversation evaluation. Set dates after verifying capacity.
+- Related edits: none. Check that candidates are not gold standards and the four-jurisdiction baseline/L1 gates remain unchanged.
+- Status: pending / not-applied.
+
+<a id="决策与追踪"></a>
+
+## Decisions and tracking
+
+| Revision | Affected file | User decision |
 |---|---|---|
-| 1：修正节点完成标准 | CLOUD_KNOWLEDGE_SLICE.md | 待确认 |
-| 2：增加当前迭代验收表 | PROJECT_PLAN_2026.md | 待确认 |
+| 1: node completion criteria | CLOUD_KNOWLEDGE_SLICE.md | Pending |
+| 2: iteration acceptance table | PROJECT_PLAN_2026.md | Pending |
 
-| 自然语言事项 | 内部发现 | 内部变更 |
+| Item | Internal findings | Internal change |
 |---|---|---|
-| 回答、输入范围与评测 | REV-001、REV-002、REV-003 | CHG-002 |
-| 十节点完成标准 | REV-004 | CHG-001 |
+| Answers, input scope, evaluation | REV-001, REV-002, REV-003 | CHG-002 |
+| Ten-node completion criteria | REV-004 | CHG-001 |
 
-待决事项：模型可使用的资料类别、当前团队容量与责任人、专家审核安排。本报告供下一轮选取任务，不修改现有授权范围，也不宣称完成发布验收。
+Open decisions: permitted model input categories, current team capacity/owners, expert review scheduling. This report supports next-round task selection without changing authorization or claiming release acceptance.
