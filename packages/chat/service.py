@@ -65,6 +65,8 @@ def turn_prompt(doc: dict, text: str) -> tuple[str, str]:
         '混合消息可在 research 中同时提供 facts，但不能忽略明确的案情修订。'
         'clarify：无法分清用户要查一般规定还是分析自身案件；facts/query为空。不要默认把歧义解释成个人或公司不明。'
         'unsupported：明确要求香港企业境外股息之外的案件分析时；说明范围，facts/query为空。一般查资料仍用research。'
+        '工具不支持某种个案分析不代表该用户的问题不能讨论；范围、定义和制度适用性仍应使用research查官方依据。'
+        '用户追问为什么、什么意思、怎样继续时，结合上一轮具体卡点回答，不重复整段拒绝，不要求重填已知信息。'
         '客户说明个人或公司时使用recipient_type，不能从语言风格猜测主体类型。'
         'facts 仅使用下面字段词典，从本次用户消息明确给出的事实提取，不重复填入历史字段。'
         '假设举例和一般问题不是用户自己的案情；问候、谢谢、不知道聊什么都不能编造事实。'
@@ -332,15 +334,19 @@ class ChatService(DomainCoordinator):
                 patch = self.extractor(document, message)
                 return {'intent': 'intake' if patch else 'research', 'facts': patch, 'reply': '', 'query': message}
             return self.turner(document, message)
+        # Stub routers keep offline tests offline. Real conversations use the same
+        # configured model to explain only the evidence authorized for model use.
+        from packages.agent.grounded import respond
+        responder = respond if self.turner is plan_turn and self.extractor is None else None
         if self.orchestration == 'hybrid':
             from packages.agent.hybrid import HybridWorkflow
             return HybridWorkflow(self.provider, self.turner if self.extractor is None else route,
                                   self.analyzer, self.dynamic_planner, self.planner,
-                                  self.harness_mode, self.tool_planner).invoke(
+                                  self.harness_mode, self.tool_planner, responder=responder).invoke(
                                       doc, text, owner, request_id, turn, entry_hint)
         from packages.agent.task_state import legacy_projection
         legacy_doc, paused = legacy_projection(doc)
-        prepared = TurnWorkflow(self.provider, route).invoke(legacy_doc, text, owner, request_id, turn)
+        prepared = TurnWorkflow(self.provider, route, responder=responder).invoke(legacy_doc, text, owner, request_id, turn)
         if paused:
             prepared['orchestration'] = legacy_doc['orchestration']
             prepared['turn']['reply'] += '\n新编排中的待办已暂停保留；恢复新编排后可继续。'

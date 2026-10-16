@@ -58,18 +58,180 @@ BASE = {'recipient_type': 'company', 'income_type': 'dividend', 'analysis_jurisd
         'consultation_goal': 'scope', 'payer_jurisdiction': '新加坡'}
 
 
-@pytest.mark.parametrize('hint,text,kind', [
-    ('dividend_consultation', '分析境外股息的 FSIE 处理，需要先确认哪些事实？', 'consultation'),
-    ('fact_intake', '帮我整理境外股息分析所需的案例事实和证据清单。', 'fact_intake'),
-    ('reference_lookup', '研究境外股息的 FSIE 处理，应当查阅哪些官方资料？', 'reference_lookup'),
-])
-def test_shortcut_generic_preparation_does_not_invent_case_or_interview(chat, hint, text, kind):
-    doc = send(chat, chat.store.create('owner'), text=text, entry_hint=hint)
+@pytest.mark.parametrize('text,kind', [(text, kind) for text, (kind, _) in SHORTCUTS.items()
+                                     if kind != 'consultation'])
+@pytest.mark.parametrize('locale', ['zh', 'en'])
+def test_fact_and_reference_shortcuts_start_their_own_workflows(chat, text, kind, locale):
+    chat.turner = lambda *_: pytest.fail('Starting a selected task must not depend on model routing')
+    doc = send(chat, chat.store.create('owner'), text=text, entry_hint=kind, locale=locale)
+    message = doc['messages'][-1]
     assert doc['workflow']['effective_task'] == kind
-    assert doc['facts'] == {} and not doc['messages'][-1]['question']
+    assert doc['workflow']['trace'] == ['route', 'facts', kind, 'observe', 'validate']
+    assert doc['facts'] == {} and not chat.provider.searches and not doc['analyses']
+    assert message['kind'] == 'intake' and 'research' not in message
+    assert message['question']['field'] == ('recipient_type' if kind == 'fact_intake' else None)
+    assert message['question']['task_id'] == doc['orchestration']['active_task']['id']
+    assert doc['dialogue']['pending'] == message['question']
+    assert doc['orchestration']['active_task']['status'] == doc['workflow']['status'] == 'waiting_user'
+    assert doc['orchestration']['active_task']['uses_case'] == (kind == 'fact_intake')
+    assert 'li|' not in message['text']
+    if kind == 'reference_lookup':
+        assert doc['dialogue']['pending']['id'].startswith('hybrid:reference:')
+        assert ('Which rule or official case' if locale == 'en' else '你想查哪项规定') in message['text']
+
+
+def test_reference_question_resumes_as_independent_lookup_without_rewriting_facts(chat):
+    doc = edit(chat, chat.store.create('owner'), {**BASE, 'accrual_date': '2025-04-10',
+                                                'income_event_status': 'occurred'})
+    doc = chat.confirm('owner', doc['id'], doc['revision'], str(uuid4()))
+    facts, confirmed = deepcopy(doc['facts']), doc['confirmed_revision']
+    doc = send(chat, doc, text='我想查香港境外股息的法规或官方案例，请帮我找到依据。',
+               entry_hint='reference_lookup')
+    qid, task_id = doc['dialogue']['pending']['id'], doc['orchestration']['active_task']['id']
+    doc = chat.store.get('owner', doc['id'])
+    doc = send(chat, doc, parsed('research', query='Case 68', uses_case=False),
+               text='Case 68', reply_to_question_id=qid)
     assert doc['messages'][-1]['kind'] == 'research'
+    assert doc['orchestration']['active_task']['id'] == task_id
     assert doc['orchestration']['active_task']['status'] == 'completed'
+    assert doc['facts'] == facts and doc['confirmed_revision'] == confirmed
+    request, context = chat.provider.searches[-1]
+    assert request.query == 'Case 68' and request.kind == 'ruling'
+    assert request.date_status == 'not_needed' and request.fact_filters == []
+    assert context.case_id is None
+    with pytest.raises(WorkflowError, match='question_changed'):
+        send(chat, doc, text='Case 69', reply_to_question_id=qid)
+
+
+def test_reference_unknown_pause_and_resume_do_not_start_fact_interview(chat):
+    doc = send(chat, chat.store.create('owner'), text='研究境外股息的 FSIE 处理，应当查阅哪些官方资料？',
+               entry_hint='reference_lookup')
+    task_id = doc['orchestration']['active_task']['id']
+    for control in ('不知道', '暂时没有资料', '暂停', '继续案件'):
+        doc = send(chat, doc, text=control)
+        assert not doc['facts'] and not chat.provider.searches
+        assert doc['orchestration']['active_task']['id'] == task_id
+        assert doc['orchestration']['active_task']['kind'] == 'reference_lookup'
+        assert doc['dialogue']['pending']['id'].startswith('hybrid:reference:')
+        assert doc['dialogue']['pending']['field'] is None
+    assert doc['workflow']['status'] == 'waiting_user'
+
+
+def test_fact_shortcut_continues_existing_intake_without_reasking_known_fields(chat):
+    doc = edit(chat, chat.store.create('owner'), BASE)
+    doc = send(chat, doc, text='请带我逐步整理这笔股息的事实，并指出还缺哪些信息。',
+               entry_hint='fact_intake')
+    assert doc['dialogue']['pending']['field'] == 'entity_hk_business_status'
+    task_id = doc['orchestration']['active_task']['id']
+    doc = send(chat, doc, text='有', reply_to_question_id=doc['dialogue']['pending']['id'])
+    assert doc['facts']['entity_hk_business_status']['value'] == 'yes'
+    assert doc['orchestration']['active_task']['id'] == task_id
+    assert not chat.provider.searches and not doc['analyses']
+
+
+@pytest.mark.parametrize('text', [text for text, (kind, _) in SHORTCUTS.items() if kind == 'consultation'])
+@pytest.mark.parametrize('locale', ['zh', 'en'])
+def test_dividend_shortcut_starts_consultation_without_model_or_lookup(chat, text, locale):
+    chat.turner = lambda *_: pytest.fail('The selected consultation must not depend on model routing')
+    doc = send(chat, chat.store.create('owner'), text=text,
+               entry_hint='dividend_consultation', locale=locale)
+    message = doc['messages'][-1]
+    assert doc['workflow']['trace'] == ['route', 'facts', 'consultation', 'observe', 'validate']
+    assert doc['workflow']['effective_task'] == 'consultation'
+    assert doc['workflow']['status'] == 'waiting_user'
+    assert doc['facts'] == {} and not chat.provider.searches and not doc['analyses']
+    assert doc['confirmed_facts'] is None
+    assert message['kind'] == 'intake' and 'research' not in message
+    assert message['question']['field'] == 'recipient_type'
+    assert doc['dialogue']['pending'] == message['question']
+    assert message['question']['task_id'] == doc['orchestration']['active_task']['id']
+    assert doc['orchestration']['active_task']['status'] == 'waiting_user'
+    assert 'li|' not in message['text']
+    if locale == 'en':
+        assert 'Please clarify:' in message['text']
+    assert chat.store.get('owner', doc['id'])['dialogue']['pending'] == message['question']
+
+
+def test_consultation_continues_after_reload_and_rejects_stale_question(chat):
+    doc = send(chat, chat.store.create('owner'), text=next(iter(SHORTCUTS)),
+               entry_hint='dividend_consultation')
+    task_id = doc['orchestration']['active_task']['id']
+    question_id = doc['dialogue']['pending']['id']
+    doc = chat.store.get('owner', doc['id'])
+    doc = send(chat, doc, text='公司', reply_to_question_id=question_id)
+    assert doc['facts']['recipient_type']['value'] == 'company'
+    assert doc['dialogue']['pending']['field'] == 'income_type'
+    assert doc['orchestration']['active_task']['id'] == task_id
+    assert not chat.provider.searches
+    before = chat.store.get('owner', doc['id'])
+    with pytest.raises(WorkflowError, match='question_changed'):
+        send(chat, doc, text='个人', reply_to_question_id=question_id)
+    assert chat.store.get('owner', doc['id']) == before
+
+
+def test_consultation_uses_existing_facts_and_keeps_confirmation_gate(chat):
+    doc = edit(chat, chat.store.create('owner'), BASE)
+    doc = send(chat, doc, text=next(iter(SHORTCUTS)), entry_hint='dividend_consultation')
+    assert doc['dialogue']['pending']['field'] == 'entity_hk_business_status'
+    assert {key: value['value'] for key, value in doc['facts'].items()} == BASE
+    assert not chat.provider.searches and not doc['analyses']
+    with pytest.raises(WorkflowError, match='confirmation_required'):
+        chat.run('owner', doc['id'], doc['revision'], str(uuid4()))
+
+
+def test_preparation_question_in_auto_remains_independent_research(chat):
+    doc = send(chat, chat.store.create('owner'), parsed('research', uses_case=False),
+               text=next(iter(SHORTCUTS)))
+    assert doc['messages'][-1]['kind'] == 'research'
+    assert not doc['messages'][-1]['question'] and not doc['facts']
+    assert doc['workflow']['effective_task'] == 'reference_lookup'
     assert chat.provider.searches[0][1].case_id is None
+
+
+def test_mismatched_shortcut_hint_does_not_force_consultation(chat):
+    doc = send(chat, chat.store.create('owner'), parsed('research', uses_case=False),
+               text=next(iter(SHORTCUTS)), entry_hint='reference_lookup')
+    assert doc['workflow']['effective_task'] == 'reference_lookup'
+    assert doc['messages'][-1]['kind'] == 'research' and not doc['messages'][-1]['question']
+
+
+@pytest.mark.parametrize('sse', [False, True])
+@pytest.mark.parametrize('hint,text,kind,field', [
+    ('dividend_consultation', '分析境外股息的 FSIE 处理，需要先确认哪些事实？', 'consultation', 'recipient_type'),
+    ('fact_intake', '请带我逐步整理这笔股息的事实，并指出还缺哪些信息。', 'fact_intake', 'recipient_type'),
+    ('reference_lookup', '我想查香港境外股息的法规或官方案例，请帮我找到依据。', 'reference_lookup', None),
+])
+def test_shortcut_api_starts_own_workflow_and_replays_once(chat, sse, hint, text, kind, field):
+    from apps.api.main import app
+    from apps.api.auth import optional_user
+    from apps.api.chat import get_service
+    app.dependency_overrides[optional_user] = lambda: {'id': 'fixture', 'email': 'fixture@example.invalid'}
+    app.dependency_overrides[get_service] = lambda: chat
+    chat.turner = lambda *_: pytest.fail('No model is needed to start the selected consultation')
+    try:
+        with TestClient(app) as client:
+            headers = {'x-asiatax-request': '1'}
+            original = client.post('/api/cases', headers=headers).json()
+            path = f"/api/cases/{original['id']}/messages"
+            payload = {'text': text, 'revision': original['revision'],
+                       'request_id': str(uuid4()), 'data_approved': True,
+                       'entry_hint': hint}
+            response = client.post(path, headers={**headers, **({'accept': 'text/event-stream'} if sse else {})}, json=payload)
+            assert response.status_code == 200
+            if sse:
+                events = [json.loads(line[6:]) for line in response.text.splitlines() if line.startswith('data: ')]
+                assert [event['type'] for event in events] == ['done']
+                result = events[0]['case']
+            else:
+                result = response.json()
+            assert result['workflow']['effective_task'] == kind
+            assert result['workflow']['status'] == 'waiting_user'
+            assert result['messages'][-1]['question']['field'] == field
+            replay = client.post(path, headers=headers, json=payload)
+            assert replay.status_code == 200 and replay.json() == result
+            assert len(result['messages']) == 2 and not chat.provider.searches
+    finally:
+        app.dependency_overrides.clear()
 
 
 def test_fixed_hint_and_auto_share_fact_policy(chat):
@@ -528,7 +690,8 @@ def test_rewrite_of_second_task_does_not_drop_first_reply(chat):
              dict(kind='reference_lookup', query='香港股息参股', uses_case=False)]
     doc = send(chat, chat.store.create('owner'), parsed('research', tasks=tasks), '查收取和参股')
     assert len(chat.provider.searches) == 3
-    assert doc['messages'][-1]['text'].count('模拟联调资料，不是真实税务依据') == 2
+    assert doc['messages'][-1]['text'].count('模拟联调资料，不是真实税务依据') == 1
+    assert len(doc['messages'][-1]['research_results']) == 3
     assert len(doc['messages'][-1]['research_results']) == 3
 
 

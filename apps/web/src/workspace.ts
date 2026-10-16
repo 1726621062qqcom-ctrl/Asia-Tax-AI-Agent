@@ -40,7 +40,7 @@ export type BusinessTask = { id: string; kind: "consultation" | "fact_intake" | 
 export type EvidenceAnswer = {
   summary: string;
   conditions: string[];
-  claims: { text: string; evidence_ids: string[]; kind: "excerpt" }[];
+  claims: { text: string; evidence_ids: string[]; kind: "excerpt" | "grounded_summary" }[];
   limitations: string[];
   review_status: "pending_final_review";
   text: string;
@@ -191,13 +191,13 @@ export const suggestions = [
     id: "facts",
     entryHint: "fact_intake" as EntryHint,
     title: "梳理事实",
-    text: "帮我整理境外股息分析所需的案例事实和证据清单。",
+    text: "请带我逐步整理这笔股息的事实，并指出还缺哪些信息。",
   },
   {
     id: "sources",
     entryHint: "reference_lookup" as EntryHint,
     title: "查阅依据",
-    text: "研究境外股息的 FSIE 处理，应当查阅哪些官方资料？",
+    text: "我想查香港境外股息的法规或官方案例，请帮我找到依据。",
   },
 ];
 export function caseTitle(current: Case, t: (text: string) => string): string {

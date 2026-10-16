@@ -158,7 +158,7 @@ def question(doc, field, attempt=1):
         pair = doc.get('fact_conflicts', {}).get(field, {})
         from packages.chat.facts import catalog
         label = next((f['description_zh'] for f in catalog() if f['field_name'] == field), field)
-        text = f'关于“{label}”，之前记录为 {pair.get("previous", "待核对")}，本次为 {pair.get("candidate", "待核对")}，本次应采用哪个值？'
+        text = f'关于“{label}”，之前记录为 {human_value(pair.get("previous", "待核对"))}，本次为 {human_value(pair.get("candidate", "待核对"))}，本次应采用哪个值？'
         why, example = '保留双方陈述，未澄清前不选择其一。', '请给出本次正确值；无法确认也可以说明。'
     else:
         text, why, example = PROMPTS[field]
@@ -197,9 +197,9 @@ def render_question(q, locale='zh'):
             return 'Would you like to add more information, see a partial draft, or pause?'
         if q.get('kind') == 'mode':
             if q['text'].isascii():
-                return q['text'] + '\n\n' + q['why'] + '\nFor example: ' + q['example']
+                return q['text'] + ('\n\n' + q['why'] if q['why'] else '') + ('\nFor example: ' + q['example'] if q['example'] else '')
             return 'Would you like to check the general rules or analyze your own transaction?'
-    return q['text'] + '\n\n' + q['why'] + '\n例如：' + q['example']
+    return q['text'] + ('\n\n' + q['why'] if q['why'] else '') + ('\n例如：' + q['example'] if q['example'] else '')
 
 
 def normalize(text):
@@ -222,6 +222,12 @@ def deterministic_turn(doc, text):
     value = normalize(text)
     state = doc.get('dialogue', {})
     pending = state.get('pending')
+    if pending and pending['id'].startswith('boundary:scope:') and state.get('status') == 'active':
+        if value in ('查适用范围', '先查适用范围', '查一般规定', 'check the scope', 'yes', '是', '好'):
+            query = ('香港 FSIE 适用范围：个人收取境外股息是否属于实体及跨国企业实体的定义？'
+                     if values(doc).get('recipient_type') == 'individual' else '香港 FSIE 适用范围及收款主体的定义')
+            return {'intent': 'research', 'facts': {}, 'query': query,
+                    'reply': '将核对香港 FSIE 的适用范围。', 'uses_case': False, 'task_kind': 'reference_lookup'}
     if explicit_summary_request(text):
         return {'intent': 'intake', 'facts': {}, 'reply': '将汇总已提供的信息。', 'query': '', 'action': 'summary'}
     if state.get('status') in ('paused', 'suspended') and value in UNKNOWN | {'是', '否', 'yes', 'no'}:
@@ -315,12 +321,33 @@ def correction_fields(turn, text, doc):
     return authorized
 
 
+def human_value(value, locale='zh'):
+    if locale == 'en' or not isinstance(value, str):
+        return str(value)
+    return {'company': '公司', 'individual': '个人', 'dividend': '股息', 'interest': '利息',
+            'unknown': '尚不清楚', 'conflict': '存在冲突，待核对', 'HK': '香港',
+            'scope': '适用范围', 'receipt': '收款处理', 'participation': '参股豁免',
+            'substance': '经济实质', 'full_analysis': '整体分析', 'yes': '是', 'no': '否',
+            'occurred': '已发生', 'planned': '计划发生', 'cash': '现金', 'in_kind': '非现金',
+            'mixed': '混合形式'}.get(value, value)
+
+
+def gap_line(gap, locale='zh'):
+    from packages.chat.facts import catalog
+    field = next((f for f in catalog() if f['field_name'] == gap['field']), {})
+    en = locale == 'en'
+    label = field.get('label_en' if en else 'description_zh', gap['field']).split('；')[0].split('，')[0]
+    reason = {'missing': '尚未提供', 'unknown': '尚不清楚', 'conflict': '前后陈述待核对',
+              'unavailable': '暂时无法提供', 'unanswered': '尚未说明'}.get(gap['reason'], '待核对')
+    return f'- {label}: {gap["reason"]}' if en else f'- {label}：{reason}；{gap["impact"]}'
+
+
 def partial_text(doc):
     from packages.chat.facts import catalog
     labels = {f['field_name']: f['description_zh'] for f in catalog()}
     facts = values(doc)
-    known = [f'- {labels.get(k, k)}：{v}' for k, v in facts.items() if resolved(v)]
-    missing = [f'- {labels.get(g["field"], g["field"])}：{g["reason"]}；{g["impact"]}' for g in gaps(doc)]
+    known = [f'- {labels.get(k, k)}：{human_value(v)}' for k, v in facts.items() if resolved(v)]
+    missing = [gap_line(g) for g in gaps(doc)]
     return ('已按您的选择整理当前信息；这不是完整分析或税务结论。\n\n已知陈述：\n' + '\n'.join(known or ['- 暂无']) +
             '\n\n待补与待核对：\n' + '\n'.join(missing or ['- 当前访谈必需项已记录，事实与依据仍需核对。']) +
             '\n\n判断性事项保留至最终顾问复核。可在案例信息中核对事实后生成研究稿，也可继续补充。')
@@ -329,9 +356,9 @@ def partial_text(doc):
 def summary_text(doc):
     from packages.chat.facts import catalog
     labels = {f['field_name']: f['description_zh'] for f in catalog()}
-    rows = [f'- {labels.get(k,k)}：{v}' for k,v in values(doc).items()]
-    missing = [f'- {labels.get(g["field"],g["field"])}：{g["reason"]}；{g["impact"]}' for g in gaps(doc)]
-    return ('以下是当前已记录的用户陈述，unknown 表示未知，conflict 表示存在冲突；尚未确认或形成税务结论。'
+    rows = [f'- {labels.get(k,k)}：{human_value(v)}' for k,v in values(doc).items()]
+    missing = [gap_line(g) for g in gaps(doc)]
+    return ('以下是你目前提供的信息；尚不清楚或前后有冲突的部分会单独标出，暂不据此作税务判断。'
             '\n\n已提供的信息：\n' + '\n'.join(rows or ['- 暂无']) +
             '\n\n待补与待核对：\n' + '\n'.join(missing or ['- 仍需核对事实与对应依据。']) +
             '\n\n本次仅汇总信息，原追问进度保留；不会自动确认事实或授权部分分析稿。')
@@ -366,8 +393,10 @@ def update_dialogue(doc, turn, patch, locale='zh'):
         state['status'] = 'suspended'
         return state, None, turn['reply']
     if turn['intent'] == 'unsupported':
-        state['status'], state['pending'] = 'unsupported', None
-        return state, None, turn['reply']
+        from packages.agent.responses import scope_question
+        q = scope_question(doc, locale)
+        state['status'], state['pending'] = 'active', q
+        return state, q, turn['reply'] + '\n\n' + render_question(q, locale)
     if action == 'pause':
         state['status'] = 'paused'
         return state, None, 'Paused and saved. Say “resume” when you are ready to continue.' if english else '已暂停并保存当前进度。需要继续时可以说“继续案件”。'
@@ -378,6 +407,10 @@ def update_dialogue(doc, turn, patch, locale='zh'):
         return state, None, ('Partial draft requested. Known facts are retained, and unresolved items still require review.' if english else partial_text(doc))
     if turn['intent'] == 'clarify':
         q = mode_question(doc)
+        from packages.agent.policy import concrete_tax_claim
+        reply = turn.get('reply', '')
+        if ('?' in reply or '？' in reply) and len(reply) <= 500 and not concrete_tax_claim(reply):
+            q.update(text=reply, why='', example='')
         state['status'], state['pending'] = 'active', q
         return state, q, render_question(q, locale)
     if action == 'resume' and not patch and state.get('pending') and state['pending'].get('field') and \

@@ -28,8 +28,8 @@ class TurnState(TypedDict, total=False):
 
 
 class TurnWorkflow:
-    def __init__(self, provider, turner):
-        self.provider, self.turner = provider, turner
+    def __init__(self, provider, turner, responder=None):
+        self.provider, self.turner, self.responder = provider, turner, responder
         graph = StateGraph(TurnState)
         for name, action in [('route', self.route), ('facts', self.facts), ('retrieve', self.retrieve),
                              ('compose', self.compose), ('validate', self.validate)]:
@@ -120,7 +120,8 @@ class TurnWorkflow:
         case_request = turn['intent'] == 'intake' or bool(patch) or turn.get('uses_case', False)
         if turn['intent'] == 'unsupported' or (case_request and action not in ('pause', 'new_case', 'summary') and not dialogue.supported(known)):
             turn['intent'] = 'unsupported'
-            turn['reply'] = 'Case analysis currently supports Hong Kong foreign-dividend FSIE for corporate recipients. This request is outside that scope.' if doc.get('_ui_locale') == 'en' else '目前案件分析仅支持香港境外股息 FSIE 的企业场景。本次问题超出已实现的能力范围，已记录范围缺口。'
+            from packages.agent.responses import scope_reply
+            turn['reply'] = scope_reply(projected, state['text'], doc.get('_ui_locale', 'zh'))
             meta.update(status='unsupported', reason_code='out_of_scope')
         elif active_conflicts and case_request and action not in ('partial', 'pause', 'new_case', 'unknown', 'unavailable'):
             if turn['intent'] == 'research':
@@ -134,7 +135,7 @@ class TurnWorkflow:
         turn['facts'] = patch
         interview, question, reply = dialogue.update_dialogue(projected, turn, patch, locale=doc.get('_ui_locale', 'zh'))
         turn['reply'] = reply
-        if question:
+        if question and turn['intent'] != 'unsupported':
             meta.update(status='waiting_user', reason_code='fact_conflict' if active_conflicts and question.get('field') else
                         'information_gap_choice' if question['kind'] == 'choice' else
                         'intent_unclear' if question['kind'] == 'mode' else 'fact_collection')
@@ -163,7 +164,7 @@ class TurnWorkflow:
             fact_filters=[{'field_name': key, 'value': facts[key]} for key in
                           ('income_type', 'source_analysis', 'entity_hk_business_status', 'receipt_location', 'recipient_type')
                           if isinstance(facts.get(key), str) and facts[key] not in ('unknown', 'conflict')])
-        bundle = retrieve(self.provider, request, TrustedContext(owner=state['owner'], case_id=state['doc']['id']))
+        bundle = retrieve(self.provider, request, TrustedContext(owner=state['owner'], case_id=state['doc']['id'] if uses_case else None))
         interview = deepcopy(state['dialogue'])
         if bundle['status'] == 'unavailable':
             if not state['patch']:
@@ -178,7 +179,7 @@ class TurnWorkflow:
             bundle['gaps'] += [labels.get(g['field'], g['field']) + '：' + g['reason'] + '；' + g['impact'] for g in
                               dialogue.gaps({**state['doc'], 'facts': {k: {'value': v} for k, v in facts.items()}, 'dialogue': interview})[:3]]
         bundle['query_context'] = {'applicable_date': date, 'date_status': request.date_status,
-                                   'jurisdiction': request.jurisdiction, 'uses_case': uses_case}
+                                   'jurisdiction': request.jurisdiction, 'uses_case': uses_case, 'case_facts': facts}
 
         meta = deepcopy(state['workflow'])
         meta.update(status='draft_ready' if bundle['reason_code'] == 'evidence_available' else 'paused_gap',
@@ -188,7 +189,8 @@ class TurnWorkflow:
         return {'research': bundle, 'workflow': meta, 'dialogue': interview}
 
     def compose(self, state):
-        answer = compose_answer(state['research'], locale=state['doc'].get('_ui_locale', 'zh'))
+        answer = compose_answer(state['research'], locale=state['doc'].get('_ui_locale', 'zh'),
+                                question=state['text'], responder=self.responder)
         turn = deepcopy(state['turn'])
         turn['reply'] = answer['text']
         if state['patch']:
@@ -207,7 +209,8 @@ class TurnWorkflow:
             interview, question, followup = dialogue.update_dialogue(projected, {**turn, 'intent': 'intake', 'action': 'continue'}, {}, locale=state['doc'].get('_ui_locale', 'zh'))
             update.update(dialogue=interview, question=question)
             if question:
-                turn['reply'] += '\n\n' + followup
+                from packages.agent.knowledge import append_followup
+                turn['reply'] = append_followup(turn['reply'], followup)
                 meta = deepcopy(state['workflow'])
                 meta.update(status='waiting_user', retrieval_reason_code=meta['reason_code'],
                             reason_code='information_gap_choice' if question['kind'] == 'choice' else 'fact_collection')

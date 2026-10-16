@@ -14,7 +14,7 @@ for (const [button, hint, task] of [
   ["梳理事实", "fact_intake", "梳理事实"],
   ["查阅依据", "reference_lookup", "查阅依据"],
 ]) {
-  test(`shortcut ${hint} transmits its task and avoids a case interview for generic preparation`, async ({ page }) => {
+  test(`shortcut ${hint} transmits its task and starts the intended workflow`, async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: button, exact: true }).click();
     const sent = page.waitForRequest(req => req.method() === "POST" && req.url().endsWith("/messages"));
@@ -22,11 +22,64 @@ for (const [button, hint, task] of [
     expect((await sent).postDataJSON().entry_hint).toBe(hint);
     await expect(page.locator(".message.assistant")).toHaveCount(1);
     await expect(page.locator(".composer-area [role=status]")).toContainText(task);
-    await expect(page.locator(".message.assistant")).not.toContainText("收款方是个人还是公司");
+    if (hint !== "reference_lookup") {
+      await expect(page.locator(".message.assistant")).toContainText("这笔收入由个人还是公司收取？");
+      await expect(page.locator(".message.assistant")).not.toContainText("li|");
+    } else {
+      await expect(page.locator(".message.assistant")).toContainText("你想查哪项规定或哪个官方案例？");
+    }
     await page.reload();
     await expect(page.locator(".composer-area [role=status]")).toContainText(task);
+    if (hint !== "reference_lookup") {
+      await page.getByRole("textbox", { name: "输入你的税务问题" }).fill("公司");
+      await submit(page);
+      await expect(page.locator(".message.assistant")).toHaveCount(2);
+      await expect(page.locator(".message.assistant").last()).toContainText("这笔款项是什么类型的收入？");
+    } else {
+      await page.getByRole("textbox", { name: "输入你的税务问题" }).fill("Case 68");
+      await submit(page);
+      await expect(page.locator(".message.assistant")).toHaveCount(2);
+      await expect(page.locator(".message.assistant").last()).toContainText("Synthetic browser fixture: date retained.");
+    }
   });
 }
+
+for (const [button, question] of [
+  ["Organize facts", "Please clarify:"],
+  ["Explore sources", "Which rule or official case would you like to look up?"],
+]) {
+  test(`English shortcut ${button} starts the localized workflow`, async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Switch to English", exact: true }).click();
+    await page.getByRole("button", { name: button, exact: true }).click();
+    await page.getByRole("button", { name: "Send message", exact: true }).click();
+    const consent = page.getByRole("checkbox");
+    if (await consent.isVisible()) {
+      await consent.check();
+      await page.getByRole("button", { name: "Send message", exact: true }).click();
+    }
+    await expect(page.locator(".message.assistant")).toHaveCount(1);
+    await expect(page.locator(".message.assistant")).toContainText(question);
+  });
+}
+
+test('individual recipient gets a contextual boundary and can continue with an independent reference', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '境外股息', exact: true }).click();
+  await submit(page);
+  await expect(page.locator('.message.assistant')).toHaveCount(1);
+  await page.getByRole('textbox', { name: '输入你的税务问题' }).fill('个人');
+  await submit(page);
+  await expect(page.locator('.message.assistant')).toHaveCount(2);
+  await expect(page.locator('.message.assistant').last()).toContainText('你说明这笔收入由个人收取');
+  await expect(page.locator('.message.assistant').last()).toContainText('要先查香港 FSIE 的适用范围吗');
+  await expect(page.locator('.message.assistant').last()).not.toContainText('已记录范围缺口');
+  await page.reload();
+  await page.getByRole('textbox', { name: '输入你的税务问题' }).fill('Case 68');
+  await submit(page);
+  await expect(page.locator('.message.assistant')).toHaveCount(3);
+  await expect(page.locator('.message.assistant').last()).toContainText('Synthetic browser fixture: date retained.');
+});
 
 test("editing a shortcut clears the task hint and keeps normal conversation", async ({ page }) => {
   await page.goto("/");

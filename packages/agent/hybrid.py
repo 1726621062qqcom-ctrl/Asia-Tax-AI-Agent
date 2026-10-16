@@ -27,12 +27,16 @@ class HybridState(TurnState, total=False):
 SHORTCUTS = {
     '分析境外股息的 FSIE 处理，需要先确认哪些事实？': ('consultation', '香港境外股息FSIE分析所需事实与官方资料'),
     '帮我整理境外股息分析所需的案例事实和证据清单。': ('fact_intake', '香港境外股息FSIE案例事实及证据要求'),
+    '请带我逐步整理这笔股息的事实，并指出还缺哪些信息。': ('fact_intake', ''),
     '研究境外股息的 FSIE 处理，应当查阅哪些官方资料？': ('reference_lookup', '香港境外股息FSIE官方资料'),
+    '我想查香港境外股息的法规或官方案例，请帮我找到依据。': ('reference_lookup', ''),
     'What facts should we confirm first when researching FSIE treatment of foreign dividends?': ('consultation', '香港境外股息FSIE官方资料'),
     'What facts should be confirmed first when analyzing foreign dividends under FSIE?': ('consultation', '香港境外股息FSIE官方资料'),
     'Which facts should we confirm before analyzing foreign dividends under FSIE?': ('consultation', '香港境外股息FSIE官方资料'),
     'Help me organize the facts and evidence needed to analyze foreign dividends.': ('fact_intake', '香港境外股息FSIE事实及证据要求'),
+    'Help me organize the facts of this dividend step by step and identify any missing information.': ('fact_intake', ''),
     'Which official sources should we consult when researching foreign dividends under FSIE?': ('reference_lookup', '香港境外股息FSIE官方资料'),
+    'Help me find the rules or official cases for Hong Kong foreign dividends.': ('reference_lookup', ''),
 }
 
 
@@ -43,10 +47,11 @@ def requested_analysis(text):
 
 class HybridWorkflow(TurnWorkflow):
     def __init__(self, provider, turner, analyzer, dynamic=False, planner=None,
-                 harness_mode='rewrite', tool_planner=None):
+                 harness_mode='rewrite', tool_planner=None, responder=None):
         self.original_provider, self.original_turner = provider, turner
         self.analyzer, self.dynamic = analyzer, dynamic
         self.harness_mode, self.tool_planner = harness_mode, tool_planner
+        self.responder = responder
         from packages.agent.harness import plan_next
         self.planner = planner or plan_next
         self.graph = self.build_graph()
@@ -92,7 +97,11 @@ class HybridWorkflow(TurnWorkflow):
         if state['turn']['intent'] in ('chat', 'clarify', 'unsupported') or state['turn'].get('action') in ('pause', 'new_case'):
             return 'validate'
         if state.get('question') and state['turn']['intent'] != 'research':
-            return 'validate'
+            # A dependent lookup converted to intake by a fact conflict must
+            # remain blocked, even though its original query is still present.
+            if state['turn'].get('query'):
+                return 'validate'
+            return state['job']['kind']
         if (self.dynamic and self.harness_mode == 'tools' and state['entry_hint'] == 'auto'
                 and state['turn'].get('action', 'continue') in ('continue', 'resume', 'retry_research')):
             return 'tool_harness'
@@ -114,7 +123,11 @@ class HybridWorkflow(TurnWorkflow):
         return ToolHarness(self, self.tool_planner).invoke(state)
 
     def invoke(self, doc, text, owner, request_id, turn=None, entry_hint='auto'):
+        # Evidence explanation needs room alongside route/tool selection. The
+        # shared time, search and action bounds remain enforced across both.
         self.budget = RunBudget()
+        if self.responder:
+            self.budget.model_limit += 2
         self.provider = BudgetedProvider(self.original_provider, self.budget, dialogue.fingerprint(doc))
         token = current_budget.set(self.budget)
         try:
@@ -135,15 +148,27 @@ class HybridWorkflow(TurnWorkflow):
         doc['_entry_hint'] = state['entry_hint']
         parsed = dialogue.deterministic_turn(doc, state['text'])
         pending = doc.get('dialogue', {}).get('pending')
+        if pending and pending['id'].startswith('hybrid:reference:'):
+            # Unknown/pause/resume controls belong to the source query, not a
+            # customer fact interview. Arbitrary input still uses the router.
+            doc['_entry_hint'] = 'reference_lookup'
+            if parsed and parsed.get('action') in ('unknown', 'unavailable', 'resume', 'pause'):
+                parsed.update(task_kind='reference_lookup', uses_case=False)
+                if parsed['action'] != 'pause':
+                    parsed['action'] = 'continue'
         if pending and doc.get('dialogue', {}).get('status') == 'active' and pending['id'].startswith('hybrid:scope:') and \
                 dialogue.normalize(state['text']) in ('香港', 'hong kong', 'hk'):
             active = doc.get('orchestration', {}).get('active_task') or {}
             parsed = {'intent': 'research', 'facts': {}, 'query': '香港 ' + active.get('query', '股息规定'),
                       'reply': '将按香港范围查阅。', 'uses_case': False, 'task_kind': 'reference_lookup'}
         if not parsed and state['entry_hint'] != 'auto' and state['text'] in SHORTCUTS:
-            kind, query = SHORTCUTS[state['text']]
-            parsed = {'intent': 'research', 'facts': {}, 'query': query, 'reply': 'I will check the relevant sources.' if doc.get('_ui_locale') == 'en' else '将查阅所需资料。',
-                      'uses_case': False, 'task_kind': kind}
+            kind, _ = SHORTCUTS[state['text']]
+            if task_state.HINT_TASK.get(state['entry_hint']) == kind:
+                # Each button starts its own task before any tool is selected.
+                # Selecting a task is not evidence of any customer fact.
+                parsed = {'intent': 'intake', 'facts': {}, 'query': '',
+                          'reply': 'I received your request.' if doc.get('_ui_locale') == 'en' else '已收到本次请求。',
+                          'uses_case': kind != 'reference_lookup', 'task_kind': kind}
         if not parsed:
             parsed = state.get('turn')
         if not parsed:
@@ -196,6 +221,13 @@ class HybridWorkflow(TurnWorkflow):
                 'job': job, 'workflow': meta}
 
     def facts(self, state):
+        turn = state['turn']
+        pending = state['doc'].get('dialogue', {}).get('pending') or {}
+        if (state['job']['kind'] == 'reference_lookup' and turn['intent'] == 'intake'
+                and not turn['facts'] and not turn['query'] and turn.get('action', 'continue') == 'continue'
+                and (state['entry_hint'] == 'reference_lookup'
+                     or pending.get('id', '').startswith('hybrid:reference:'))):
+            return self.reference_question(state)
         result = super().facts(state)
         original = state['turn']
         # An independent reference task is not dependent on a conflicting case patch.
@@ -205,6 +237,8 @@ class HybridWorkflow(TurnWorkflow):
             parsed['facts'] = result['patch']
             result['turn'] = parsed
             result['dialogue'].pop('deferred_query', None)
+            result['dialogue'].update(status='suspended', pending=None)
+            result['question'] = None
         if independent:
             result['turn']['uses_case'] = False
         if result['question']:
@@ -214,6 +248,27 @@ class HybridWorkflow(TurnWorkflow):
         if requested_analysis(state['text']) and original.get('action', 'continue') == 'continue':
             result['question'] = None
         return result
+
+    def reference_question(self, state):
+        """Ask for a search target without collecting or changing case facts."""
+        doc = state['doc']
+        english = doc.get('_ui_locale') == 'en'
+        revision = doc['revision'] + 1
+        question = {
+            'id': f'hybrid:reference:{revision}', 'kind': 'mode', 'field': None,
+            'text': 'Which rule or official case would you like to look up?' if english else '你想查哪项规定或哪个官方案例？',
+            'why': 'Enter your question, section number or case number so I can find the relevant official sources.' if english else '请直接告诉我具体问题、条文编号或案例编号，我会据此查找官方资料。',
+            'example': 'Hong Kong FSIE economic substance, or Case 68.' if english else '香港 FSIE 的经济实质要求；或 Case 68。',
+            'attempt': 1, 'based_on_revision': revision,
+            'task_id': state['orchestration']['active_task']['id'],
+        }
+        interview = deepcopy(doc.get('dialogue', {}))
+        interview.update(status='active', pending=question)
+        turn = {**state['turn'], 'reply': dialogue.render_question(question, 'en' if english else 'zh')}
+        meta = {**state['workflow'], 'status': 'waiting_user', 'reason_code': 'reference_query_required',
+                'identification': dialogue.identification(doc)}
+        return {'turn': turn, 'patch': {}, 'conflicts': {}, 'workflow': meta,
+                'dialogue': interview, 'question': question}
 
     def projected(self, state):
         doc = deepcopy(state['doc'])
@@ -273,7 +328,8 @@ class HybridWorkflow(TurnWorkflow):
                     interview = deepcopy(state['dialogue'])
                     interview.update(status='active', pending=q)
                     return {**self.result(state, turn, meta, job, 'need_scope', question=q), 'dialogue': interview}
-                turn['reply'] = 'The connected research sources currently cover Hong Kong foreign-dividend FSIE. This jurisdiction or topic is outside that coverage, so Hong Kong sources cannot be used to answer it.' if english else '当前检索接入覆盖香港境外股息 FSIE；本次请求地区或主题未覆盖，不能套用香港资料回答。'
+                from packages.agent.responses import scope_reply
+                turn['reply'] = scope_reply(self.projected(state), state['text'], 'en' if english else 'zh', lookup=True)
                 meta.update(status='unsupported', reason_code='out_of_scope')
                 return self.result(state, turn, meta, job, 'out_of_scope', question=None)
             uses_case = bool(job.get('uses_case', turn.get('uses_case', bool(state['patch']))))
@@ -292,10 +348,11 @@ class HybridWorkflow(TurnWorkflow):
                     ('income_type', 'source_analysis', 'entity_hk_business_status', 'receipt_location', 'recipient_type')
                     if isinstance(facts.get(k), str) and facts[k] not in ('unknown', 'conflict')])
             bundle = retrieve(self.provider, req, TrustedContext(owner=state['owner'], case_id=state['doc']['id'] if uses_case else None))
-            bundle['query_context'] = {'uses_case': uses_case, 'applicable_date': when, 'date_status': date_status, 'jurisdiction': 'HK'}
+            bundle['query_context'] = {'uses_case': uses_case, 'applicable_date': when, 'date_status': date_status, 'jurisdiction': 'HK', 'case_facts': facts}
             if bundle['status'] == 'unavailable' and not state['patch'] and not state['task_results']:
                 raise WorkflowError('knowledge_unavailable')
-            answer = compose_answer(bundle, locale='en' if english else 'zh')
+            answer = compose_answer(bundle, locale='en' if english else 'zh',
+                                    question=state['text'], responder=self.responder)
             validate_answer(answer, bundle)
             turn.update(intent='research', query=query, reply=answer['text'])
             if state['patch']:
@@ -318,13 +375,14 @@ class HybridWorkflow(TurnWorkflow):
                     projected['dialogue'] = interview
                     interview, q, followup = dialogue.update_dialogue(projected, {**turn, 'intent': 'intake', 'action': 'continue'}, {}, locale='en' if english else 'zh')
                     if q:
-                        turn['reply'] += '\n\n' + (dialogue.render_question(q, locale='en') if english else followup)
+                        from packages.agent.knowledge import append_followup
+                        turn['reply'] = append_followup(turn['reply'], dialogue.render_question(q, locale='en') if english else followup)
                         meta.update(status='waiting_user', retrieval_reason_code=meta['reason_code'], reason_code='fact_collection')
             return {**self.result(state, turn, meta, job, bundle['reason_code'], question=q),
                     'research': bundle, 'research_results': state['research_results'] + [bundle],
                     'answer': answer, 'dialogue': interview}
         except BudgetExceeded:
-            turn['reply'] = 'This turn reached its execution limit. Completed results and unfinished tasks are retained; continue or adjust the task.' if english else '本轮执行预算已用尽，已取得的结果和未完成事项会分别保留；请继续或调整当前任务。'
+            turn['reply'] = 'This search is not complete yet. The results so far are saved; narrow the question or ask to continue.' if english else '这次查询还没有全部完成，已有结果已保留。你可以缩小问题范围，或继续查询未完成的部分。'
             meta.update(status='paused_gap', reason_code='budget_exhausted')
             return self.result(state, turn, meta, job, 'budget_exhausted', question=None)
 
@@ -397,14 +455,15 @@ class HybridWorkflow(TurnWorkflow):
             latest = {}
             for item, answer in zip(state['task_results'], state['answers']):
                 latest[item.get('tool_call_id', item['task_id'])] = answer
-            turn['reply'] = '\n\n'.join(latest.values())
+            from packages.agent.knowledge import join_answers
+            turn['reply'] = join_answers(latest.values(), 'en' if english else 'zh')
         if meta.get('reason_code') == 'planner_failed':
             turn['reply'] += '\nSubsequent scheduling failed. The results above were verified; retry unfinished searches.' if english else '\n后续调度失败，以上为已校验的结果；可重试未完成查询。'
         elif meta.get('harness_stop') not in (None, 'finished', 'waiting_user', 'analysis_ready'):
             turn['reply'] += '\nTool scheduling stopped. The results above were verified; unfinished items still need attention.' if english else '\n本轮工具调度已停止，以上为已校验的结果；未完成事项需继续处理。'
         if meta.get('pending_tasks'):
             turn['reply'] += '\nOther tasks remain. Progress is saved; add the missing information or ask to continue.' if english else '\n还有未完成的后续任务，已保留进度；补充当前信息或明确继续后再推进。'
-        if english and state.get('question') and not state.get('answer') and not state.get('research'):
+        if english and state.get('question') and not state.get('answer') and not state.get('research') and state['turn']['intent'] != 'unsupported':
             turn['reply'] = dialogue.render_question(state['question'], locale='en')
         control = deepcopy(state['orchestration'])
         task = control['active_task']

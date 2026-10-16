@@ -172,10 +172,11 @@ def answer(query: str, research: dict, locale: str) -> dict:
                 "sources": list(units.values()),
             }, ensure_ascii=False), max_tokens=1800)
             text, citations, missing = validate_answer(raw, units)
+            from packages.agent.knowledge import append_followup
             if missing:
-                text += "\n\n" + ("To check your case: " if en else "还需确认：") + missing[0]
-            text += ("\n\nResearch draft; verify the applicable year and current rule with a tax adviser." if en else
-                     "\n\n这是待复核的研究草稿；适用年度及现行规则仍需税务专业人士核对。")
+                text = append_followup(text, ("To check your case: " if en else "还需确认：") + missing[0])
+            text = append_followup(text, ("Research draft; verify the applicable year and current rule with a tax adviser." if en else
+                     "这是待复核的研究草稿；适用年度及现行规则仍需税务专业人士核对。"))
             return {"text": text, "citations": citations, "answer_status": "source_grounded"}
         except Exception:
             pass

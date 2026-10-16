@@ -35,8 +35,12 @@ export const en: Record<string, string> = {
     "Which facts should we confirm before analyzing foreign dividends under FSIE?",
   "帮我整理境外股息分析所需的案例事实和证据清单。":
     "Help me organize the facts and evidence needed to analyze foreign dividends.",
+  "请带我逐步整理这笔股息的事实，并指出还缺哪些信息。":
+    "Help me organize the facts of this dividend step by step and identify any missing information.",
   "研究境外股息的 FSIE 处理，应当查阅哪些官方资料？":
     "Which official sources should we consult when researching foreign dividends under FSIE?",
+  "我想查香港境外股息的法规或官方案例，请帮我找到依据。":
+    "Help me find the rules or official cases for Hong Kong foreign dividends.",
   输入你的税务问题: "Enter your tax question",
   "有什么税务问题？": "What is your tax question?",
   "Enter 发送": "Enter to send",

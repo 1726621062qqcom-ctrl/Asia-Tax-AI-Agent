@@ -38,7 +38,7 @@ def validate_answer(result, units):
         raise ValueError('paragraphs')
     if not isinstance(missing, list) or len(missing) > 6 or any(not isinstance(s, str) or len(s) > 250 or re.search(r'https?://|\]\(|<[^>]+>', s) for s in missing):
         raise ValueError('missing_info')
-    output, records = [], []
+    output, records, references = [], [], []
     for paragraph in paragraphs:
         if not isinstance(paragraph, dict) or set(paragraph) != {'text', 'evidence'}:
             raise ValueError('paragraph_shape')
@@ -62,8 +62,12 @@ def validate_answer(result, units):
             if link not in links:
                 links.append(link)
             records.append({'unit_id': unit['unit_id'], 'quote': quote})
-        output.append(text.strip() + '\n' + ' · '.join(links))
-    return '\n\n'.join(output), records, missing
+        if text.strip() not in output:
+            output.append(text.strip())
+        references.extend(links)
+    body = '\n\n'.join(output)
+    body += ('\n\nReferences:\n' if english(body) else '\n\n法规及官方依据：\n') + '\n'.join('- ' + ref for ref in dict.fromkeys(references))
+    return body, records, missing
 
 
 async def compose_async(question, research):
@@ -113,9 +117,10 @@ async def compose_async(question, research):
                     logging.getLogger(__name__).warning('answer_incomplete finish=%s', choice.get('finish_reason'))
                     raise ValueError('incomplete_answer')
                 text, citations, missing = validate_answer(json.loads(choice['message']['content']), units)
+                from packages.agent.knowledge import append_followup
                 if missing:
-                    text += ('\n\nTo confirm:\n' if en else '\n\n还需确认：\n') + '\n'.join('- ' + s for s in missing)
-                text += ('\n\nSource coverage through ' if en else '\n\n资料覆盖截至 ') + catalog()['legal_coverage_cutoff'] + ('. Not a real-time update or final tax opinion.' if en else '；非实时更新，个案适用性仍需专业复核。')
+                    text = append_followup(text, ('To confirm:\n' if en else '还需确认：\n') + '\n'.join('- ' + s for s in missing))
+                text = append_followup(text, ('Source coverage through ' if en else '资料覆盖截至 ') + catalog()['legal_coverage_cutoff'] + ('. Not a real-time update or final tax opinion.' if en else '；非实时更新，个案适用性仍需专业复核。'))
                 return {'text': text, 'citations': citations, 'answer_status': 'source_grounded'}
             except (httpx.HTTPError, ValueError, KeyError, TypeError, IndexError) as exc:
                 logging.getLogger(__name__).warning('answer_failure stage=%s attempt=%s', type(exc).__name__, attempt + 1)

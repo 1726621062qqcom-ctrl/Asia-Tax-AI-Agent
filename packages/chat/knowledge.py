@@ -42,8 +42,13 @@ TOPIC_LOCATORS = [
 
 
 def topic_locators(query: str) -> list[str]:
-    return list(dict.fromkeys(ref for pattern, refs in TOPIC_LOCATORS
+    refs = list(dict.fromkeys(ref for pattern, refs in TOPIC_LOCATORS
                              if re.search(pattern, query, re.I) for ref in refs))
+    # A general FSIE/dividend query still needs relevant navigation. Raw Chinese
+    # BM25 hits can otherwise point at unrelated IRO sections.
+    if not refs and re.search(r'FSIE|境外股息|foreign.{0,10}dividend', query, re.I):
+        return ['s.15H(1)', 's.15I(1)', 's.15I(3)']
+    return refs
 
 
 def outside_scope(query: str) -> bool:

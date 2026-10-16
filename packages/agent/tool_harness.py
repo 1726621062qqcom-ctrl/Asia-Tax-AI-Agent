@@ -45,7 +45,8 @@ class ToolHarness:
                     from packages.chat.service import WorkflowError
                     raise WorkflowError(meta['error_code'])
         if not payload['task_results']:
-            payload['turn']['reply'] = '本轮未取得可用工具结果；当前问题尚未完成，不能生成税务结论。'
+            payload['turn']['reply'] = ('I could not complete this lookup. You can narrow the question or provide a section or case number.'
+                if payload['doc'].get('_ui_locale') == 'en' else '这次还没能完成查询。你可以缩小问题范围，或提供要核对的条文、案例编号。')
         payload['workflow'] = meta
         return payload
 
@@ -111,8 +112,8 @@ class ToolHarness:
                     reply = dialogue.summary_text(doc)
                 else:
                     gaps = dialogue.gaps(doc)
-                    reply = '当前目标的事实缺口：\n' + '\n'.join(
-                        f'- {g["field"]}：{g["reason"]}；{g["impact"]}' for g in gaps)
+                    reply = ('Information still needed:\n' if doc.get('_ui_locale') == 'en' else '还需补充的信息：\n') + '\n'.join(
+                        dialogue.gap_line(g, doc.get('_ui_locale', 'zh')) for g in gaps)
                     if not gaps:
                         reply += '当前访谈必需项已记录；仍需核对事实和法源，不代表已满足免税条件。'
                 meta = {**payload['workflow'], 'status': 'completed', 'reason_code': 'read_only_result'}

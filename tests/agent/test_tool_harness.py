@@ -72,7 +72,7 @@ def test_law_and_cases_use_distinct_provider_arguments(chat):
     result = send(chat)
     assert [req.kind for req, _ in chat.provider.calls] == ['law', 'ruling']
     assert len(result['messages'][-1]['research_results']) == 2
-    assert result['messages'][-1]['text'].count('模拟联调资料') == 2
+    assert result['messages'][-1]['text'].count('模拟联调资料') == 1
 
 
 def test_check_gaps_is_read_only_and_does_not_authorize_partial(chat):
@@ -80,7 +80,8 @@ def test_check_gaps_is_read_only_and_does_not_authorize_partial(chat):
     doc = chat.edit('owner', doc['id'], 0, str(uuid4()), {'recipient_type': 'unknown'})
     chat.tool_planner = Planner(tool('check_fact_gaps'), tool('finish'))
     result = send(chat, doc)
-    assert 'unknown' in result['messages'][-1]['text']
+    assert '收款主体：尚不清楚' in result['messages'][-1]['text']
+    assert 'recipient_type' not in result['messages'][-1]['text']
     assert result['facts'] == doc['facts']
     assert not result['dialogue'].get('partial_consent') and not result['analyses']
     assert not chat.provider.calls
@@ -97,7 +98,9 @@ def test_ordinary_chat_never_enters_tool_loop(chat, hint):
 def test_fixed_entry_remains_on_fixed_path(chat):
     chat.tool_planner = lambda *_: pytest.fail('Shortcut must keep fixed path')
     result = send(chat, text='研究境外股息的 FSIE 处理，应当查阅哪些官方资料？', entry_hint='reference_lookup')
-    assert len(chat.provider.calls) == 1 and 'harness_version' not in result['workflow']
+    assert not chat.provider.calls and 'harness_version' not in result['workflow']
+    assert result['workflow']['status'] == 'waiting_user'
+    assert result['dialogue']['pending']['id'].startswith('hybrid:reference:')
 
 
 def test_duplicate_stops_without_second_query(chat):

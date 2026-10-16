@@ -8,6 +8,7 @@ REASONS = {
     'evidence_restricted': 'BR-17', 'retrieval_failed': 'BR-31', 'partial_requested': 'BR-28',
     'ordinary_chat': 'HY-02', 'budget_exhausted': 'HY-05', 'confirmation_required': 'BR-13',
     'partial_confirmation_required': 'BR-23', 'analysis_ready': 'BR-34',
+    'reference_query_required': 'BR-04',
 }
 
 
@@ -33,7 +34,7 @@ def scope(query, job, facts, hint):
     if job.get('uses_case'):
         if not dialogue.supported(facts):
             return 'unsupported'
-        if facts.get('analysis_jurisdiction') != 'HK':
+        if not dialogue.resolved(facts.get('analysis_jurisdiction')):
             return 'need_scope'
         return 'HK'
     if hk or re.search(r'\bcase\s*\d+\b', lower) or hint in task_state.HINT_TASK:

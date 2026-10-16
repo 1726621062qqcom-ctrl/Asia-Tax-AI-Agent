@@ -2,6 +2,7 @@
 from __future__ import annotations
 from hashlib import sha256
 from time import monotonic
+import re
 from urllib.parse import urlsplit
 
 from packages.agent.contracts import SearchRequest, SearchResult, TrustedContext
@@ -99,7 +100,7 @@ def retrieve(provider, request: SearchRequest, context: TrustedContext):
                 gaps.append('入模文本校验失败：' + evidence.evidence_id)
                 continue
             evidence_for_model.append({'evidence_id': evidence.evidence_id,
-                'text': evidence.model_text[:4000], 'source_version_id': evidence.source_version_id,
+                'text': evidence.model_text, 'source_version_id': evidence.source_version_id,
                 'locator': evidence.locator, 'content_hash': evidence.content_hash,
                 'display_allowed': evidence.display_use == 'allowed'})
     if result.status == 'error':
@@ -129,7 +130,70 @@ def display_result(bundle):
     return {k: v for k, v in bundle.items() if k != 'model_evidence'}
 
 
-def compose_answer(bundle, locale='zh'):
+def public_gaps(gaps, english=False):
+    """Keep diagnostic IDs in retrieval metadata, not in the conversation."""
+    messages = []
+    for gap in gaps:
+        if '不匹配' in gap:
+            message = 'Some results do not match the requested jurisdiction, topic or period.' if english else '部分检索结果与所问的地区、主题或期间不符，已排除。'
+        elif any(word in gap for word in ('校验', '版本不可用', '未定位')):
+            message = 'Some source passages could not be verified and were excluded.' if english else '部分原文未能核实，本次没有用来支持回答。'
+        elif any(word in gap for word in ('预算', '只返回', 'truncat')):
+            message = 'Only part of the relevant material was retrieved; narrow the search to continue.' if english else '本次只取得部分资料，可以缩小问题后继续查找。'
+        else:
+            message = 'The available sources do not fully cover this question.' if english else '现有资料还不能完整覆盖这个问题。'
+        if message not in messages:
+            messages.append(message)
+    return messages[:3]
+
+
+def citation_lines(bundle, evidence_ids):
+    passages = {p['evidence_id']: p for p in bundle['passages']}
+    originals = {e['evidence_id']: e for e in bundle['model_evidence']}
+    lines, seen = [], set()
+    for evidence_id in evidence_ids:
+        passage = passages.get(evidence_id)
+        if not passage:
+            continue
+        # Model text can cover a parent section with several display spans.
+        label = originals.get(evidence_id, {}).get('locator') or passage.get('locator') or passage.get('title') or 'Official source'
+        label = re.sub(r'[\[\]\n<>]', '', label)
+        if label.startswith('hk.cap112.') and '#' in label:
+            label = 'IRO ' + label.split('#', 1)[1].replace('s', 's.', 1)
+        url = passage.get('url')
+        item = f'[{label}]({url})' if url and urlsplit(url).scheme in ('https', 'http') else label
+        if item not in seen:
+            lines.append('- ' + item)
+            seen.add(item)
+    return lines
+
+
+def append_followup(text, followup):
+    for heading in ('法规及官方依据：\n', 'References:\n'):
+        if heading in text:
+            body, references = text.rsplit(heading, 1)
+            return body.rstrip() + '\n\n' + followup + '\n\n' + heading + references
+    return text + '\n\n' + followup
+
+
+def join_answers(answers, locale='zh'):
+    """Merge task answers once, retaining distinct content and final citations."""
+    paragraphs, references = [], []
+    for answer in answers:
+        body = answer
+        for heading in ('法规及官方依据：\n', 'References:\n'):
+            if heading in body:
+                body, footer = body.rsplit(heading, 1)
+                references.extend(line for line in footer.splitlines() if line.strip())
+                break
+        paragraphs.extend(part.strip() for part in body.split('\n\n') if part.strip())
+    body = '\n\n'.join(dict.fromkeys(paragraphs))
+    if references:
+        body += '\n\n' + ('References:\n' if locale == 'en' else '法规及官方依据：\n') + '\n'.join(dict.fromkeys(references))
+    return body
+
+
+def compose_answer(bundle, locale='zh', question='', responder=None):
     reason = bundle['reason_code']
     summaries = {
         'no_match': '本次查询未找到匹配依据，不能据此认定相关规定不存在，也不能形成税务结论。',
@@ -149,17 +213,7 @@ def compose_answer(bundle, locale='zh'):
     answer = {'summary': (english_summaries if english else summaries)[reason], 'conditions': [
         'Only within the scope of this query; verify the date, entity and case facts.' if english else
         '仅适用于本次查询范围；日期、主体及具体事实仍须核对。'],
-              'claims': [], 'limitations': bundle['gaps'][:], 'review_status': 'pending_final_review'}
-    if english:
-        gap_prefixes = {
-            '资料法域、主题或适用日期不匹配：': 'Source jurisdiction, topic or effective date mismatch: ',
-            '原文版本不可用或校验失败：': 'Source version unavailable or verification failed: ',
-            '子条款定位校验失败：': 'Subsection locator verification failed: ',
-            '入模文本校验失败：': 'Model excerpt verification failed: ',
-            '读取原文预算已用尽': 'Source-reading budget exhausted',
-        }
-        answer['limitations'] = [next((value + gap[len(key):] for key, value in gap_prefixes.items()
-                                        if gap.startswith(key)), gap) for gap in answer['limitations']]
+              'claims': [], 'limitations': public_gaps(bundle['gaps'], english), 'review_status': 'pending_final_review'}
     context = bundle.get('query_context', {})
     if reason == 'no_match':
         answer['limitations'].append(('Unmatched query: ' if english else '未匹配的查询：') + bundle['query'])
@@ -171,17 +225,48 @@ def compose_answer(bundle, locale='zh'):
     if bundle['is_synthetic']:
         answer['summary'] = ('[Synthetic test data, not an official tax source] ' if english else '【模拟联调资料，不是真实税务依据】') + answer['summary']
         answer['limitations'].append('Synthetic sources only verify the workflow and cannot support a real tax conclusion.' if english else '模拟资料仅验证流程，不能用于实际税务结论。')
-    # Extractive first release: mechanically auditable, no invented claims or URLs.
+    # Safe extractive fallback when the model is unavailable or citations fail.
     for evidence in bundle['model_evidence'][:7]:
         if not evidence.get('display_allowed', True):
             continue
-        answer['claims'].append({'text': evidence['text'][:500], 'evidence_ids': [evidence['evidence_id']], 'kind': 'excerpt'})
+        text = evidence['text'][:500]
+        if text not in {claim['text'] for claim in answer['claims']}:
+            answer['claims'].append({'text': text, 'evidence_ids': [evidence['evidence_id']], 'kind': 'excerpt'})
+    if responder and bundle['model_evidence'] and not bundle['is_synthetic'] and reason != 'retrieval_failed':
+        from packages.agent.grounded import claims_from_result
+        permitted = [e for e in bundle['model_evidence'] if e.get('display_allowed', True)]
+        try:
+            claims, missing = claims_from_result(responder({'question': question or bundle['query'],
+                'query': bundle['query'], 'locale': locale, 'coverage': reason,
+                'uses_case': bundle.get('query_context', {}).get('uses_case', False),
+                'case_facts_for_context_only': bundle.get('query_context', {}).get('case_facts', {}),
+                'sources': permitted[:7]}), permitted[:7])
+            if bundle.get('query_context', {}).get('uses_case') is False:
+                # An independent rule lookup must not restart a case interview.
+                missing = []
+            answer.update(claims=claims, summary=claims[0]['text'], composition='grounded', missing_info=missing)
+        except Exception:
+            answer['composition'] = 'extractive_fallback'
     lines = [answer['summary'], '\n' + ('Conditions: ' if english else '适用条件：') + ('; ' if english else '；').join(answer['conditions'])]
-    for claim in answer['claims']:
-        lines.append(('\nSource excerpt [' if english else '\n依据摘录 [') + claim['evidence_ids'][0] + (']:\n' if english else ']：\n') + claim['text'])
+    if answer.get('composition') == 'grounded':
+        lines = [claim['text'] for claim in answer['claims']]
+        if bundle['is_synthetic']:
+            lines.insert(0, '[Synthetic test data, not an official tax source]' if english else '【模拟联调资料，不是真实税务依据】')
+        if answer['missing_info']:
+            lines.append(('To confirm:\n' if english else '还需确认：\n') + '\n'.join('- ' + item for item in answer['missing_info']))
+    else:
+        if answer.get('composition') == 'extractive_fallback':
+            lines.append('The explanation could not be verified; the excerpts below are for checking.' if english else '这次解释未通过核验，下面保留可核对的原文摘录。')
+        for index, claim in enumerate(answer['claims'], 1):
+            lines.append(('\nSource excerpt [' if english else '\n依据摘录 [') + str(index) + (']:\n' if english else ']：\n') + claim['text'])
     if answer['limitations']:
-        lines.append(('\nGaps: ' if english else '\n缺口：') + ('; ' if english else '；').join(answer['limitations']))
-    answer['text'] = '\n'.join(lines)
+        lines.append(('\nGaps: ' if english else '\n还不能确认的部分：') + ('; ' if english else '；').join(answer['limitations']))
+    references = citation_lines(bundle, [ref for claim in answer['claims'] for ref in claim['evidence_ids']])
+    if not references and bundle['passages']:
+        references = citation_lines(bundle, [p['evidence_id'] for p in bundle['passages']])
+    if references:
+        lines.append(('References:\n' if english else '法规及官方依据：\n') + '\n'.join(references))
+    answer['text'] = '\n\n'.join(lines)
     return answer
 
 
@@ -190,7 +275,13 @@ def validate_answer(answer, bundle):
     for claim in answer['claims']:
         if not claim['evidence_ids'] or any(ref not in permitted for ref in claim['evidence_ids']):
             raise ValueError('Unknown or unauthorized citation')
-        if claim.get('kind') != 'excerpt' or not any(claim['text'] in permitted[ref]['text'] for ref in claim['evidence_ids']):
+        if claim.get('kind') == 'grounded_summary':
+            from packages.agent.grounded import claims_from_result
+            checked, _ = claims_from_result({'paragraphs': [{'text': claim['text'], 'evidence': claim.get('supports')}],
+                                             'missing_info': []}, list(permitted.values()))
+            if checked[0]['evidence_ids'] != claim['evidence_ids']:
+                raise ValueError('Citation mismatch')
+        elif claim.get('kind') != 'excerpt' or not any(claim['text'] in permitted[ref]['text'] for ref in claim['evidence_ids']):
             raise ValueError('Unsupported claim')
     if answer['review_status'] != 'pending_final_review':
         raise ValueError('Agent cannot approve')

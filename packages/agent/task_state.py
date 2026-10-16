@@ -77,7 +77,8 @@ def resolve(doc, turn, hint, proposals):
         state['suspended_task'] = active
         active = None
     if not active or active['kind'] != kind or active.get('status') in ('completed', 'failed'):
-        active = new_task(kind, bool(turn.get('facts')) or turn.get('uses_case', False) or intent == 'intake',
+        active = new_task(kind, bool(turn.get('facts')) or turn.get('uses_case', False) or
+                          (intent == 'intake' and kind != 'reference_lookup'),
                           'shortcut' if hint != 'auto' else 'auto')
     active['status'] = 'active'
     state['active_task'] = active
