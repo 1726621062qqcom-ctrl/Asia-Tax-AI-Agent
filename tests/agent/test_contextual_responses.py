@@ -237,3 +237,19 @@ def test_model_cannot_narrow_lookup_with_invented_statute_numbers(tmp_path, orch
         assert '参股豁免' in seen[0].query
     finally:
         store.engine.dispose()
+
+
+def test_grounded_composer_repairs_missing_citations_once(monkeypatch):
+    from packages.agent import grounded
+    from packages.model_adapter.client import OpenAICompatibleClient
+    data = bundle()
+    calls = []
+    def chat(_self, _system, user, **_kwargs):
+        calls.append(user)
+        if len(calls) == 1:
+            return {'paragraphs': [{'text': 'Unverified material.', 'evidence': []}], 'missing_info': []}
+        return response(data)
+    monkeypatch.setattr(OpenAICompatibleClient, 'chat_json', chat)
+    result = grounded.respond({'locale': 'zh', 'sources': data['model_evidence'], 'question': 'scope'})
+    assert len(calls) == 2 and 'citations_required' in calls[1]
+    assert result == response(data)
