@@ -197,7 +197,10 @@ def research_query(doc: dict, text: str, query: str) -> str:
     query = query.translate(str.maketrans('（）', '()'))
     query = re.sub(r'(?<![a-z0-9])(?:s\.?\s*|sections?\s+)?15[a-z]{1,2}(?![a-z0-9])\s*(?:\(\s*\d+\s*\))?', keep_reference, query, flags=re.I)
     query = re.sub(r'(?:ruling|case|裁定|案例)\s*(?:no\.?|第|编号|編號)?\s*\d+(?!\d)', keep_reference, query, flags=re.I)
-    return text + '\n' + query
+    from packages.agent.dialogue import COMMANDS, normalize
+    if query.strip() == text.strip() or normalize(text) in COMMANDS:
+        return query[:500]
+    return text[:250] + '\n' + query[:249]
 
 
 def invalidate(doc: dict, clear_domain_actions=True, clear_domain_professional=True) -> None:

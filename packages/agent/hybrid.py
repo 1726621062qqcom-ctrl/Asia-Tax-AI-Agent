@@ -335,7 +335,8 @@ class HybridWorkflow(TurnWorkflow):
             uses_case = bool(job.get('uses_case', turn.get('uses_case', bool(state['patch']))))
             facts = raw_facts(self.projected(state)) if uses_case else {}
             when, date_status = dialogue.query_date(facts) if uses_case else (None, 'not_needed')
-            query = job.get('query') or turn['query']
+            from packages.chat.service import research_query
+            query = research_query(state['doc'], state['text'], job.get('query') or turn['query'])
             from packages.chat.knowledge import references
             law_refs, ruling_refs = references(query)
             req = SearchRequest(request_id=state['request_id'], trace_id=meta['trace_id'], query=query,

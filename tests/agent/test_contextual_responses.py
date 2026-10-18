@@ -217,3 +217,23 @@ def test_quote_whitespace_is_canonicalized_but_changed_words_are_rejected():
     result['paragraphs'][0]['evidence'][0]['quote'] = '(1)The applicable requirement is not met.'
     with pytest.raises(ValueError, match='unsupported_citation'):
         claims_from_result(result, evidence)
+
+
+@pytest.mark.parametrize('orchestration', ['legacy', 'hybrid'])
+def test_model_cannot_narrow_lookup_with_invented_statute_numbers(tmp_path, orchestration):
+    from packages.chat.knowledge import references
+    seen = []
+    class RecordingProvider(MockKnowledgeProvider):
+        def search_evidence(self, request, context):
+            seen.append(request)
+            return super().search_evidence(request, context)
+    store = ChatStore(f'sqlite:///{tmp_path}/query.sqlite')
+    service = ChatService(store, provider=RecordingProvider(), orchestration=orchestration,
+        turner=lambda *_: turn(intent='research', query='香港 FSIE 适用范围 经济实质 参股豁免 s.15H s.15K s.15N', uses_case=False))
+    try:
+        doc = store.create('owner')
+        service.message('owner', doc['id'], 0, str(uuid4()), '请解释香港 FSIE 股息的适用范围、经济实质和参股豁免。', True)
+        assert seen and references(seen[0].query) == ([], [])
+        assert '参股豁免' in seen[0].query
+    finally:
+        store.engine.dispose()
