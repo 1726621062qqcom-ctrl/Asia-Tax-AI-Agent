@@ -156,7 +156,7 @@ def answer(query: str, research: dict, locale: str) -> dict:
     config = current_model_config()
     if config.is_configured:
         system = (
-            "You are Taxora researching Hong Kong profits-tax deductions for ordinary business expenses. "
+            "You are Taxrora researching Hong Kong profits-tax deductions for ordinary business expenses. "
             "Use ONLY the supplied official source passages. Never treat an expense category as proof of deductibility. "
             "Distinguish section 16 general conditions from section 17 exclusions and accounting adjustments. "
             "Do not decide a particular claim without business purpose, assessment year, private-use share, capital nature and records. "
