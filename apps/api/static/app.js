@@ -20,7 +20,7 @@ function renderFacts(facts) {
 }
 function renderAnswer(answer) {
   const article=el('article','assistant-message');
-  const label=el('div','assistant-label','ASIA TAX');label.append(el('b','',modeNames[answer.mode]||answer.mode));article.append(label);
+  const label=el('div','assistant-label','TAXRORA');label.append(el('b','',modeNames[answer.mode]||answer.mode));article.append(label);
   const sources=new Map(answer.citations.map((c,i)=>[c.id,{...c,num:i+1}]));
   for(const section of answer.sections){const block=el('section','answer-section');block.append(el('h3','',section.title));for(const item of section.paragraphs){const p=el('p','',item.text);for(const cid of item.citations){const c=sources.get(cid);if(!c)continue;const a=el('a','citation-link',String(c.num));a.href=`#source-${answer.turn}-${c.num}`;a.setAttribute('aria-label',`查看来源 ${c.num}：${c.title}`);a.addEventListener('click',()=>{article.querySelector('.sources').open=true;});p.append(a);}block.append(p);}article.append(block);}
   if(answer.questions.length){const block=el('div','questions');block.append(el('h3','','接下来，先确认这些信息'));for(const q of answer.questions){const button=el('button','',q);button.type='button';button.addEventListener('click',()=>{$('message').value=q+'\n我的补充：';$('message').focus();});block.append(button);}article.append(block);}
@@ -30,7 +30,7 @@ function renderAnswer(answer) {
 async function sendMessage(event){
   event?.preventDefault(); if(busy)return;
   const message=$('message').value.trim();if(!message){status('请先输入一个问题。',true);$('message').focus();return;}
-  if(expired){status('对话已过期，请先新建对话。',true);return;}
+  if(expired){status('对话已过期或云服务已重启，请先新建对话。',true);return;}
   if(!$('synthetic-ack').checked){status('请确认本次仅讨论一般问题或虚构案例。',true);$('synthetic-ack').focus();return;}
   setBusy(true);status('正在整理事实与查找官方依据…');
   const request=retryRequest?.message===message?retryRequest:{message,request_id:crypto.randomUUID()};
@@ -39,7 +39,7 @@ async function sendMessage(event){
     if(!sessionReady){await api('/api/session','POST',{synthetic_acknowledged:true});sessionReady=true;}
     $('welcome').hidden=true;userNode=el('div','user-message',message);$('messages').append(userNode);$('message').value='';scrollBottom();
     const answer=await api('/api/chat','POST',request);retryRequest=null;renderAnswer(answer);status(answer.mode==='local_research'?'当前为本地资料模式：展示检索结果与固定研究提示，未调用模型。':answer.mode==='model_fallback'?'模型暂不可用或回答未通过校验，本轮已回退到本地资料。':'已完成本轮研究。');
-  }catch(err){userNode?.remove();$('message').value=message;retryRequest=request;if(err.status===401){sessionReady=false;expired=true;}status(err.message==='Failed to fetch'?'连接失败，内容已保留。请检查本地服务后重试。':err.message,true);if(!expired){const retry=el('button','','重试');retry.type='button';retry.addEventListener('click',()=>sendMessage());$('status').append(retry);}}
+  }catch(err){userNode?.remove();$('message').value=message;retryRequest=request;if(err.status===401){sessionReady=false;expired=true;}status(err.message==='Failed to fetch'?'连接失败，内容已保留。云服务可能正在唤醒，请稍后重试。':err.message,true);if(!expired){const retry=el('button','','重试');retry.type='button';retry.addEventListener('click',()=>sendMessage());$('status').append(retry);}}
   finally{setBusy(false);$('message').focus();}
 }
 async function clearChat(){try{await api('/api/session','DELETE');sessionReady=false;expired=false;retryRequest=null;$('messages').replaceChildren();$('welcome').hidden=false;$('message').value='';renderFacts([]);status('已清空对话和公司事实。');$('clear-dialog').close();}catch(err){status(err.message,true);$('clear-dialog').close();}}
@@ -52,7 +52,7 @@ $('new-chat').addEventListener('click',requestClear);$('mobile-new').addEventLis
 $('cancel-clear').addEventListener('click',()=>$('clear-dialog').close());$('confirm-clear').addEventListener('click',clearChat);
 $('facts-toggle').addEventListener('click',()=>{const open=$('facts-panel').classList.toggle('open');$('facts-toggle').setAttribute('aria-expanded',String(open));$('facts-toggle').textContent=open?'收起公司事实':'查看公司事实';});
 $('about-toggle').addEventListener('click',()=>{const hidden=!$('about-detail').hidden;$('about-detail').hidden=hidden;$('about-toggle').setAttribute('aria-expanded',String(!hidden));});
-async function loadConfig(){try{const c=await api('/api/config');$('mode').textContent=c.mode==='model_research'?'● 模型已连接':'● 本地资料模式';if(c.mode==='model_research')$('mode').classList.add('online');$('coverage').textContent=`法律覆盖基线 ${c.legal_coverage_cutoff}。`;$('about-detail').textContent=`资料 ${c.corpus_version}；抓取 ${c.retrieved_at.slice(0,10)}。${c.drift?'新快照存在内容漂移，待法律变更复核。':''}${c.mode==='local_research'?'尚未启用模型，使用本地检索与固定研究提示。':'使用已配置模型生成候选研究回答。'}对话最多 20 轮，1 小时无操作过期；刷新页面不恢复历史。`;status(c.mode==='local_research'?'本地资料模式已就绪；可查询、补充和更正虚构案例。':'已就绪。');}catch(err){$('mode').textContent='连接失败';status('无法连接研究服务。请确认本地服务正在运行。',true);}}
+async function loadConfig(){try{const c=await api('/api/config');$('mode').textContent=c.mode==='model_research'?'● 模型已连接':'● 本地资料模式';if(c.mode==='model_research')$('mode').classList.add('online');$('coverage').textContent=`法律覆盖基线 ${c.legal_coverage_cutoff}。`;$('about-detail').textContent=`资料 ${c.corpus_version}；抓取 ${c.retrieved_at.slice(0,10)}。${c.drift?'新快照存在内容漂移，待法律变更复核。':''}${c.mode==='local_research'?'尚未启用模型，使用本地检索与固定研究提示。':'使用已配置模型生成候选研究回答。'}对话最多 20 轮，1 小时无操作过期；刷新页面不恢复历史，云服务休眠或重启会清空对话。`;status(c.mode==='local_research'?'本地资料模式已就绪；可查询、补充和更正虚构案例。':'已就绪。');}catch(err){$('mode').textContent='连接失败';status('无法连接研究服务。云服务可能正在唤醒，请稍后刷新页面。',true);}}
 loadConfig();
 // Optional imperative WebMCP surface; it stages a question without sending any data.
 if(document.modelContext?.registerTool){

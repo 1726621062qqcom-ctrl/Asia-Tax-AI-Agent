@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: taxrora
+    runtime: python
+    plan: free
+    region: singapore
+    branch: main
+    buildCommand: pip install .
+    startCommand: uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /health
+    autoDeployTrigger: off
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.16
+      - key: FSIE_CHAT_ENABLE_MODEL
+        value: "false"
+      - key: FSIE_SECURE_COOKIES
+        value: "true"
+      - key: FSIE_ALLOWED_HOSTS
+        value: '["localhost","127.0.0.1"]'

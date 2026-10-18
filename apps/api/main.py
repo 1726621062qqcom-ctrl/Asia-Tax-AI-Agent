@@ -35,10 +35,10 @@ def create_app(service: ConsultationService | None = None, store: SessionStore |
             app.state.service = ConsultationService(client=client)
         yield
 
-    app = FastAPI(title='Asia Tax AI — 香港 FSIE 研究对话',version='0.2.0',lifespan=lifespan)
+    app = FastAPI(title='Taxrora — 香港 FSIE 研究对话',version='0.2.0',lifespan=lifespan)
     app.state.service = service
     app.state.sessions = store or SessionStore()
-    app.add_middleware(TrustedHostMiddleware,allowed_hosts=['localhost','127.0.0.1','[::1]','testserver'])
+    app.add_middleware(TrustedHostMiddleware,allowed_hosts=get_settings().deployment_hosts())
 
     @app.middleware('http')
     async def local_boundary(request: Request, call_next):
@@ -84,7 +84,7 @@ def create_app(service: ConsultationService | None = None, store: SessionStore |
             raise HTTPException(429,'当前对话数量已达上限，请稍后再试。')
         app.state.sessions.delete(request.cookies.get(COOKIE))
         response.set_cookie(COOKIE,new.token,httponly=True,samesite='strict',max_age=3600,
-                            secure=request.url.scheme=='https',path='/api')
+                            secure=get_settings().secure_cookies or request.url.scheme=='https',path='/api')
         return {'created':True}
 
     @app.delete('/api/session')

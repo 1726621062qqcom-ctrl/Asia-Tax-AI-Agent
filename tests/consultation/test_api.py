@@ -101,3 +101,37 @@ def test_model_not_enabled_by_credentials_alone(monkeypatch):
             assert c.get('/api/config').json()['mode']=='local_research'
     finally:
         get_settings.cache_clear();get_model_config.cache_clear()
+
+
+def test_deployed_hostname_and_https_session(monkeypatch):
+    from packages.persistence.config import get_settings
+    monkeypatch.setenv('FSIE_ALLOWED_HOSTS', '["127.0.0.1","taxrora.onrender.com"]')
+    get_settings.cache_clear()
+    try:
+        with TestClient(create_app(ConsultationService()), base_url='https://taxrora.onrender.com') as c:
+            assert c.get('/').status_code == 200
+            assert c.get('/health', headers={'Host': 'untrusted.example'}).status_code == 400
+            response = c.post('/api/session', headers={**HEADERS, 'Origin': 'https://taxrora.onrender.com'},
+                              json={'synthetic_acknowledged': True})
+            assert response.status_code == 200
+            assert 'Secure' in response.headers['set-cookie']
+            assert send(c).status_code == 200
+    finally:
+        get_settings.cache_clear()
+
+
+def test_render_hostname_and_tls_termination(monkeypatch):
+    from packages.persistence.config import get_settings
+    monkeypatch.setenv('RENDER_EXTERNAL_HOSTNAME', 'taxrora-app.onrender.com')
+    monkeypatch.setenv('FSIE_SECURE_COOKIES', 'true')
+    get_settings.cache_clear()
+    try:
+        with TestClient(create_app(ConsultationService()), base_url='http://taxrora-app.onrender.com') as c:
+            assert c.get('/').status_code == 200
+            assert c.get('/health', headers={'Host': 'another-app.onrender.com'}).status_code == 400
+            response = c.post('/api/session', headers={**HEADERS, 'Origin': 'https://taxrora-app.onrender.com'},
+                              json={'synthetic_acknowledged': True})
+            assert response.status_code == 200
+            assert 'Secure' in response.headers['set-cookie']
+    finally:
+        get_settings.cache_clear()
