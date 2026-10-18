@@ -131,6 +131,9 @@ def test_production_router_connects_grounded_composer_without_external_calls(tmp
     from packages.chat import service as module
     from packages.agent import grounded
     from packages.model_adapter.client import OpenAICompatibleClient
+    from packages.model_adapter.client import ModelConfig
+    monkeypatch.setattr(module, 'current_model_config',
+                        lambda: ModelConfig('https://model.invalid/v1', 'test-only', 'test-model'))
     provider = MockKnowledgeProvider()
     provider.fixture = deepcopy(provider.fixture)
     provider.fixture['search_response']['is_synthetic'] = False
@@ -242,6 +245,10 @@ def test_model_cannot_narrow_lookup_with_invented_statute_numbers(tmp_path, orch
 def test_grounded_composer_repairs_missing_citations_once(monkeypatch):
     from packages.agent import grounded
     from packages.model_adapter.client import OpenAICompatibleClient
+    from packages.chat import service as module
+    from packages.model_adapter.client import ModelConfig
+    monkeypatch.setattr(module, 'current_model_config',
+                        lambda: ModelConfig('https://model.invalid/v1', 'test-only', 'test-model'))
     data = bundle()
     calls = []
     def chat(_self, _system, user, **_kwargs):
