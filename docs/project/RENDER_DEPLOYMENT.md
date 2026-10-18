@@ -10,6 +10,7 @@
 4. 部署成功后检查网站。构建失败时查看日志并修复，不代表新版本已上线。
 
 Render 服务名为 taxrora，使用 Free 方案，自动部署设置为 On Commit。
+GitHub 来源使用 Render App 授权的 `ZhihongWu-dev/Asia-Tax-AI-Agent`，而非仅填写公开仓库 URL；App 授权中必须包含此仓库，才能接收推送事件。
 构建命令：`bash scripts/render_build.sh`。
 启动命令：`uvicorn apps.api.main:app --host 0.0.0.0 --port $PORT --workers 1`。
 健康检查：`/health`。
