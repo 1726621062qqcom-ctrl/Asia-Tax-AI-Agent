@@ -157,7 +157,7 @@ def question(doc, field, attempt=1):
     if facts.get(field) == 'conflict':
         pair = doc.get('fact_conflicts', {}).get(field, {})
         from packages.chat.facts import catalog
-        label = next((f['description_zh'] for f in catalog() if f['field_name'] == field), field)
+        label = field_label(field)
         text = f'关于“{label}”，之前记录为 {human_value(pair.get("previous", "待核对"))}，本次为 {human_value(pair.get("candidate", "待核对"))}，本次应采用哪个值？'
         why, example = '保留双方陈述，未澄清前不选择其一。', '请给出本次正确值；无法确认也可以说明。'
     else:
@@ -304,7 +304,7 @@ def correction_fields(turn, text, doc):
             spec = next((f for f in catalog() if f['field_name'] == field), {})
             aliases = {
                 'recipient_type': ('主体', '个人', '公司', 'recipient'), 'dividend_amount': ('金额', '股息', 'amount'),
-                'holding_percentage_pct': ('持股', '比例', 'holding'), 'accrual_date': ('累算', 'accrual'),
+                'holding_percentage_pct': ('持股', '持有', '股份', '比例', 'holding', 'own'), 'accrual_date': ('累算', 'accrual'),
                 'receipt_date': ('收款', '收取', 'receipt'), 'income_type': ('收入', '股息', '利息', 'income'),
                 'analysis_jurisdiction': ('地区', '香港', 'jurisdiction'), 'consultation_goal': ('目标', '问题', 'goal'),
             }.get(field, (field, spec.get('description_zh', field), spec.get('label_en', field)))
@@ -313,6 +313,17 @@ def correction_fields(turn, text, doc):
                              if isinstance(value, (int, float)) else str(value).casefold() in quote.casefold())
             if any(alias.casefold() in quote.casefold() for alias in aliases) and (value_present or value_alias and value_alias in quote):
                 authorized.add(field)
+    # A clear, field-bound replacement does not depend on the router also
+    # emitting a redundant correction annotation.
+    for clause in re.split(r'[；;。\n]', text):
+        if not re.search(r'说错|更正|改为|不是|correct|instead|not\s+\d', clause, re.I):
+            continue
+        if turn.get('corrections') and 'holding_percentage_pct' not in turn['corrections'] and not re.search(r'不是\s*\d|not\s+\d', clause, re.I):
+            continue
+        match = re.search(r'(?:持有|持股(?:比例)?(?:为|是)?|(?:we\s+)?(?:own|hold))\s*(\d+(?:\.\d+)?)\s*%', clause, re.I)
+        candidate = turn.get('facts', {}).get('holding_percentage_pct')
+        if match and isinstance(candidate, (int, float)) and float(match.group(1)) == candidate:
+            authorized.add('holding_percentage_pct')
     pending = doc.get('dialogue', {}).get('pending')
     if pending and pending.get('field') in turn['facts'] and doc.get('dialogue', {}).get('status') == 'active':
         field = pending['field']
@@ -322,21 +333,57 @@ def correction_fields(turn, text, doc):
 
 
 def human_value(value, locale='zh'):
-    if locale == 'en' or not isinstance(value, str):
+    if isinstance(value, list):
+        return '; '.join(str(item) for item in value)
+    if not isinstance(value, str):
         return str(value)
+    if locale == 'en':
+        return {'unknown': 'Not yet known', 'conflict': 'Conflicting statements; please confirm',
+                'company': 'Company', 'individual': 'Individual', 'dividend': 'Dividend',
+                'direct': 'Direct holding', 'indirect': 'Indirect holding', 'received_in_hk': 'Received in Hong Kong',
+                'general_entity': 'Not a pure equity-holding entity (unconfirmed)',
+                'candidate_foreign_dividend': 'Foreign dividend (user statement; unconfirmed)',
+                'yes': 'Yes', 'no': 'No', 'occurred': 'Already occurred', 'planned': 'Planned',
+                'cash': 'Cash', 'in_kind': 'In kind', 'mixed': 'Mixed', 'HK': 'Hong Kong',
+                '香港': 'Hong Kong', '内地': 'Mainland China', '中国内地': 'Mainland China', '中国大陆': 'Mainland China',
+                '新加坡': 'Singapore', '内地子公司': 'Mainland China subsidiary',
+                'full_analysis': 'Overall review', 'scope': 'Scope', 'receipt': 'Receipt',
+                'participation': 'Participation requirements', 'substance': 'Economic substance'}.get(value, value)
     return {'company': '公司', 'individual': '个人', 'dividend': '股息', 'interest': '利息',
             'unknown': '尚不清楚', 'conflict': '存在冲突，待核对', 'HK': '香港',
             'scope': '适用范围', 'receipt': '收款处理', 'participation': '参股豁免',
             'substance': '经济实质', 'full_analysis': '整体分析', 'yes': '是', 'no': '否',
             'occurred': '已发生', 'planned': '计划发生', 'cash': '现金', 'in_kind': '非现金',
-            'mixed': '混合形式'}.get(value, value)
+            'mixed': '混合形式', 'direct': '直接持有', 'indirect': '间接持有',
+            'received_in_hk': '在香港收取', 'not_received_in_hk': '未在香港收取',
+            'general_entity': '非纯股权持有实体（待核对）',
+            'candidate_foreign_dividend': '境外股息（用户陈述，待核对）',
+            'in_hk': '香港', 'outside_hk': '香港以外'}.get(value, value)
+
+
+def field_label(name, locale='zh'):
+    from packages.chat.facts import catalog
+    spec = next((f for f in catalog() if f['field_name'] == name), {})
+    if locale == 'en':
+        return {'holding_percentage_pct': 'Shareholding percentage', 'income_type': 'Income type',
+                'continuous_holding_period_months': 'Continuous holding period (months)',
+                'entity_hk_business_status': 'Business carried on in Hong Kong',
+                'receipt_location': 'Receipt location', 'investee_entity': 'Investee company',
+                'payer_entity': 'Dividend payer'}.get(name, spec.get('label_en', name.replace('_', ' ').capitalize()))
+    return {'holding_percentage_pct': '持股比例（%）', 'bank_or_account_path': '账户及资金路径',
+            'dividend_amount': '股息金额', 'dividend_currency': '股息币种',
+            'receipt_location': '收取地点', 'income_type': '收入类型',
+            'investee_entity': '被投资公司', 'payer_entity': '派息公司',
+            'evidence_inventory': '已有及待补材料', 'acquisition_date': '取得股权日期',
+            'accrual_date': '收入累算日期', 'receipt_date': '收取日期'}.get(name,
+                spec.get('description_zh', name.replace('_', ' ')).split('；')[0].split('，')[0])
 
 
 def gap_line(gap, locale='zh'):
     from packages.chat.facts import catalog
     field = next((f for f in catalog() if f['field_name'] == gap['field']), {})
     en = locale == 'en'
-    label = field.get('label_en' if en else 'description_zh', gap['field']).split('；')[0].split('，')[0]
+    label = field_label(gap['field'], locale)
     reason = {'missing': '尚未提供', 'unknown': '尚不清楚', 'conflict': '前后陈述待核对',
               'unavailable': '暂时无法提供', 'unanswered': '尚未说明'}.get(gap['reason'], '待核对')
     return f'- {label}: {gap["reason"]}' if en else f'- {label}：{reason}；{gap["impact"]}'
@@ -344,7 +391,7 @@ def gap_line(gap, locale='zh'):
 
 def partial_text(doc):
     from packages.chat.facts import catalog
-    labels = {f['field_name']: f['description_zh'] for f in catalog()}
+    labels = {f['field_name']: field_label(f['field_name']) for f in catalog()}
     facts = values(doc)
     known = [f'- {labels.get(k, k)}：{human_value(v)}' for k, v in facts.items() if resolved(v)]
     missing = [gap_line(g) for g in gaps(doc)]
@@ -353,15 +400,24 @@ def partial_text(doc):
             '\n\n判断性事项保留至最终顾问复核。可在案例信息中核对事实后生成研究稿，也可继续补充。')
 
 
-def summary_text(doc):
-    from packages.chat.facts import catalog
-    labels = {f['field_name']: f['description_zh'] for f in catalog()}
-    rows = [f'- {labels.get(k,k)}：{human_value(v)}' for k,v in values(doc).items()]
-    missing = [gap_line(g) for g in gaps(doc)]
-    return ('以下是你目前提供的信息；尚不清楚或前后有冲突的部分会单独标出，暂不据此作税务判断。'
-            '\n\n已提供的信息：\n' + '\n'.join(rows or ['- 暂无']) +
-            '\n\n待补与待核对：\n' + '\n'.join(missing or ['- 仍需核对事实与对应依据。']) +
-            '\n\n本次仅汇总信息，原追问进度保留；不会自动确认事实或授权部分分析稿。')
+def summary_text(doc, locale=None):
+    locale = locale or doc.get('_ui_locale', 'zh')
+    english = locale == 'en'
+    rows = [f'- {field_label(k, locale)}: {human_value(v, locale)}' + ('%' if k == 'holding_percentage_pct' and isinstance(v, (int, float)) else '')
+            for k,v in values(doc).items()]
+    for field, mention in doc.get('fact_context', {}).get('partial_dates', {}).items():
+        shown = f'{mention["year"]}-{mention["month"]:02}' if english and mention.get('month') else str(mention['year']) if english else mention['source_quote']
+        rows.append(f'- {field_label(field, locale)}: {shown}' +
+                    (' (exact day not provided)' if english else '（未提供确切日）'))
+    all_gaps = gaps(doc)
+    missing = [gap_line(g, locale) for g in all_gaps[:5]]
+    if len(all_gaps) > 5:
+        missing.append('- These are the first priorities; other details can be checked as the review progresses.' if english else
+                       '- 先补充以上重点，其余细节可随分析进展逐步核对。')
+    return (('Recorded facts (user statements; not yet verified):\n' if english else '已记录的事实（用户陈述，尚待核对）：\n') +
+            '\n'.join(rows or ['- None yet' if english else '- 暂无']) +
+            ('\n\nInformation to confirm:\n' if english else '\n\n待补与待核对：\n') +
+            '\n'.join(missing or ['- Review the supporting records.' if english else '- 请核对对应材料。']))
 
 
 def update_dialogue(doc, turn, patch, locale='zh'):
@@ -380,12 +436,7 @@ def update_dialogue(doc, turn, patch, locale='zh'):
     action = turn.get('action', 'continue')
     english = locale == 'en'
     if action == 'summary':
-        if english:
-            from packages.chat.facts import catalog
-            labels = {f['field_name']: f.get('label_en', f['field_name']) for f in catalog()}
-            rows = [f'- {labels.get(key, key)}: {value}' for key, value in values(doc).items()]
-            return state, None, 'Recorded case facts (unconfirmed):\n' + '\n'.join(rows or ['- None yet']) + '\nReview the facts and sources before drawing a tax conclusion.'
-        return state, None, summary_text(doc)
+        return state, None, summary_text(doc, locale)
     if action == 'new_case':
         state['status'] = 'suspended'
         return state, None, 'This is a separate case. Start a new chat so it does not overwrite the current record.' if english else '这是另一笔案件，请使用“新对话”建立独立记录，避免覆盖当前案件。'
@@ -426,6 +477,14 @@ def update_dialogue(doc, turn, patch, locale='zh'):
         q = choice(doc)
         state['status'], state['pending'] = 'active', q
         return state, q, ('Unknown or unavailable information remains unresolved.\n\n' if english else '已保留未知或暂缺信息，相关判断会暂停。\n\n') + render_question(q, locale)
+    if doc.get('fact_context', {}).get('transaction_scope', {}).get('status') == 'multiple_unbound':
+        q = {'id': f'transaction:{doc.get("revision", 0) + 1}', 'kind': 'mode', 'field': None,
+             'text': 'Which payment should we examine further? Please identify its payer and recipient.' if english else
+                     '接下来要深入分析哪一笔付款？请说明这笔款项的派息方和收款方。',
+             'why': 'Each payment needs its own facts and supporting records.' if english else '每笔付款分别核对事实与材料，不能把不同主体的持股比例混用。',
+             'example': '', 'attempt': 1, 'based_on_revision': doc.get('revision', 0) + 1}
+        state['status'], state['pending'] = 'active', q
+        return state, q, render_question(q, locale)
     field = next_field(doc)
     if field:
         attempt = state['attempts'].get(field, 0) + 1

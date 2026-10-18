@@ -28,13 +28,13 @@ def scope(query, job, facts, hint):
         return 'unsupported'
     if any(x in lower for x in ('利息', 'interest', '特许权', 'royalt', '增值税', 'vat')):
         return 'unsupported'
-    hk = '香港' in query or 'hong kong' in lower or 'fsie' in lower
+    hk = '香港' in query or 'hong kong' in lower or 'fsie' in lower or bool(re.search(r'\bhk\b', lower))
     if not hk and any(x in lower for x in ('新加坡税', '新加坡的税', 'singapore tax', '中国税', '内地税', 'mainland tax', '美国税', 'us tax')):
         return 'unsupported'
     if job.get('uses_case'):
         if not dialogue.supported(facts):
             return 'unsupported'
-        if not dialogue.resolved(facts.get('analysis_jurisdiction')):
+        if not dialogue.resolved(facts.get('analysis_jurisdiction')) and not hk:
             return 'need_scope'
         return 'HK'
     if hk or re.search(r'\bcase\s*\d+\b', lower) or hint in task_state.HINT_TASK:

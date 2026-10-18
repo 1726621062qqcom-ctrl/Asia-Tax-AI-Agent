@@ -1,6 +1,7 @@
 """Retrieve, authorize and project evidence before any answer is constructed."""
 from __future__ import annotations
 from hashlib import sha256
+from copy import deepcopy
 from time import monotonic
 import re
 from urllib.parse import urlsplit
@@ -8,6 +9,7 @@ from urllib.parse import urlsplit
 from packages.agent.contracts import SearchRequest, SearchResult, TrustedContext
 from packages.agent.providers import failure
 from packages.agent.budget import BudgetExceeded
+from packages.agent.tracing import instrument, emit
 
 
 def applicable(evidence, request):
@@ -22,6 +24,7 @@ def applicable(evidence, request):
     return True
 
 
+@instrument('knowledge.retrieve')
 def retrieve(provider, request: SearchRequest, context: TrustedContext):
     if hasattr(provider, "for_request"):
         provider = provider.for_request()
@@ -46,6 +49,7 @@ def retrieve(provider, request: SearchRequest, context: TrustedContext):
     evidence_for_model, passages, gaps = [], [], list(result.coverage.missing_requirements)
     verified_ids = []
     rejected = False
+    retrieval_stop = None
     for evidence in result.evidence[:request.limit if not request.locators else 50]:
         if not applicable(evidence, request):
             gaps.append('资料法域、主题或适用日期不匹配：' + evidence.evidence_id)
@@ -59,7 +63,9 @@ def retrieve(provider, request: SearchRequest, context: TrustedContext):
             try:
                 display = provider.get_evidence(evidence.display_ref, 'display', context)
             except BudgetExceeded:
-                raise
+                retrieval_stop = 'budget_exhausted'
+                gaps.append('原文读取预算已用尽，部分资料尚未取得')
+                break
             except Exception:
                 display = None
             if (display is None or display.status != 'ok' or display.reference != evidence.reference() or
@@ -76,7 +82,7 @@ def retrieve(provider, request: SearchRequest, context: TrustedContext):
                 url = None
             passage = {'unit_id': evidence.unit_id, 'source_id': evidence.source_id,
                 'evidence_id': evidence.evidence_id, 'source_version_id': evidence.source_version_id,
-                'locator': evidence.locator, 'text': display.text, 'title': evidence.title, 'url': url,
+                'locator': evidence.locator, 'source_type': evidence.source_type, 'text': display.text, 'title': evidence.title, 'url': url,
                 'text_sha256': evidence.content_hash, 'is_synthetic': evidence.is_synthetic or result.is_synthetic,
                 'model_use': evidence.model_use, 'policy_version': evidence.policy_version,
                 'drift': evidence.drift, 'heading': evidence.heading, 'retrieved_at': evidence.retrieved_at,
@@ -102,6 +108,7 @@ def retrieve(provider, request: SearchRequest, context: TrustedContext):
             evidence_for_model.append({'evidence_id': evidence.evidence_id,
                 'text': evidence.model_text, 'source_version_id': evidence.source_version_id,
                 'locator': evidence.locator, 'content_hash': evidence.content_hash,
+                'title': evidence.title, 'url': evidence.url,
                 'display_allowed': evidence.display_use == 'allowed'})
     if result.status == 'error':
         reason = 'retrieval_failed'
@@ -113,7 +120,11 @@ def retrieve(provider, request: SearchRequest, context: TrustedContext):
         reason = 'evidence_restricted'
     else:
         reason = 'evidence_available'
+    emit('evidence.admission', reason_code=reason, model_evidence_count=len(evidence_for_model),
+         display_passage_count=len(passages), verified_count=len(verified_ids), gap_count=len(gaps),
+         source_locators=[e.get('locator') for e in evidence_for_model])
     return {
+        'retrieval_stop': retrieval_stop,
         'status': 'unavailable' if result.status == 'error' else 'available' if passages else 'no_matching_units',
         'method': 'knowledge_provider_v0.1', 'query': request.query, 'provider': result.provider,
         'is_synthetic': result.is_synthetic, 'corpus_version': result.corpus_version,
@@ -147,7 +158,7 @@ def public_gaps(gaps, english=False):
     return messages[:3]
 
 
-def citation_lines(bundle, evidence_ids):
+def citation_lines(bundle, evidence_ids, locale='zh', supports=None):
     passages = {p['evidence_id']: p for p in bundle['passages']}
     originals = {e['evidence_id']: e for e in bundle['model_evidence']}
     lines, seen = [], set()
@@ -155,9 +166,21 @@ def citation_lines(bundle, evidence_ids):
         passage = passages.get(evidence_id)
         if not passage:
             continue
-        # Model text can cover a parent section with several display spans.
-        label = originals.get(evidence_id, {}).get('locator') or passage.get('locator') or passage.get('title') or 'Official source'
+        # A parent source may support several conditions. Keep its verified
+        # identity; a selected quote alone does not prove subsection-level scope.
+        original = originals.get(evidence_id, {})
+        label = original.get('locator') or passage.get('locator') or passage.get('title') or 'Official source'
+        if not original.get('locator'):
+            title = passage.get('title', '').casefold()
+            if 'faq' in title:
+                label = 'IRD FSIE FAQ' if locale == 'en' else '税务局 FSIE 常见问题'
+            elif 'example' in title:
+                label = 'IRD FSIE examples' if locale == 'en' else '税务局 FSIE 示例'
+            elif 'fsie' in title or 'foreign-sourced' in title:
+                label = 'IRD FSIE guidance' if locale == 'en' else '税务局 FSIE 指引'
         label = re.sub(r'[\[\]\n<>]', '', label)
+        if locale == 'en' and re.search(r'[\u3400-\u9fff]', label):
+            label = f'Official source {list(passages).index(evidence_id) + 1}'
         if label.startswith('hk.cap112.') and '#' in label:
             label = 'IRO ' + label.split('#', 1)[1].replace('s', 's.', 1)
         url = passage.get('url')
@@ -193,6 +216,78 @@ def join_answers(answers, locale='zh'):
     return body
 
 
+def merge_bundles(bundles, question, case_context=None):
+    """Union already-authorized evidence; never upgrade a source's permissions."""
+    merged = deepcopy(bundles[0])
+    merged.update(query=bundles[0]['query'] if len(bundles) == 1 else question, passages=[], model_evidence=[], gaps=[], verified_evidence_ids=[])
+    for field in ('passages', 'model_evidence', 'gaps', 'verified_evidence_ids'):
+        seen = set()
+        groups = [bundle.get(field, []) for bundle in bundles]
+        # The final model has seven source slots: interleave independent searches
+        # so the first law search cannot consume every slot before guidance/rulings.
+        if field == 'model_evidence':
+            groups = [[group[index] for group in groups if index < len(group)]
+                      for index in range(max(map(len, groups), default=0))]
+        for group in groups:
+            for item in group:
+                if field == 'passages':
+                    key = (item['evidence_id'], item.get('source_version_id'), item.get('locator'), item['text_sha256'])
+                elif field == 'model_evidence':
+                    key = (item['evidence_id'], item.get('source_version_id'), item['content_hash'])
+                else:
+                    key = item
+                if key not in seen:
+                    merged[field].append(deepcopy(item))
+                    seen.add(key)
+    # Keep the required primary sections in the final source window. A long FAQ
+    # must not push the last primary section out merely by returning more chunks.
+    merged['model_evidence'].sort(key=lambda e: 0 if (e.get('locator') or '').startswith('s.') else 1)
+    merged['retrieval_stop'] = next((b['retrieval_stop'] for b in bundles if b.get('retrieval_stop')), None)
+    # An ID must identify exactly one version in the final evidence namespace.
+    versions = {}
+    for evidence in merged['model_evidence']:
+        versions.setdefault(evidence['evidence_id'], set()).add((evidence['source_version_id'], evidence['content_hash']))
+    ambiguous = {key for key, values in versions.items() if len(values) > 1}
+    merged['model_evidence'] = [e for e in merged['model_evidence'] if e['evidence_id'] not in ambiguous]
+    merged['passages'] = [p for p in merged['passages'] if p['evidence_id'] not in ambiguous]
+    if ambiguous:
+        merged['gaps'].append('原文版本不可用或校验失败')
+    merged['is_synthetic'] = any(b.get('is_synthetic') for b in bundles)
+    merged['status'] = 'available' if merged['passages'] else 'no_matching_units'
+    merged['reason_code'] = ('evidence_insufficient' if merged['gaps'] or any(b['reason_code'] != 'evidence_available' for b in bundles)
+                             else 'evidence_available') if merged['model_evidence'] else bundles[-1]['reason_code']
+    merged['task_contexts'] = [{'query': b['query'], 'reason_code': b['reason_code'],
+                               'uses_case': b.get('query_context', {}).get('uses_case', False)} for b in bundles]
+    merged['query_context'] = deepcopy(case_context or bundles[-1].get('query_context', {}))
+    return merged
+
+
+def relevant_excerpt(text, question):
+    """Choose a contiguous source passage; never cut a sentence at character 500."""
+    patterns = []
+    for key, pattern in (
+        (r'持股|持有期|participation|holding', r'12 months|5%|participation requirement'),
+        (r'日期|date', r'\b\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b'),
+        (r'外包|outsourc', r'arranged by|outsourc'),
+        (r'抵免|credit', r'credit'),
+        (r'收到|收取|汇回|received', r'remitted|satisfaction of any debt|received in Hong Kong'),
+    ):
+        if re.search(key, question, re.I):
+            patterns.append(pattern)
+    match = re.search('|'.join(patterns), text, re.I) if patterns else None
+    start = max(0, text.rfind('\n\n', 0, match.start()) + 2) if match else 0
+    if len(text) - start <= 1600:
+        return text[start:].strip()
+    end = text.find('\n\n', start + 600)
+    if end < 0 or end - start > 2000:
+        # Select complete source lines instead of truncating inside a line.
+        end = text.find('\n', start + 600)
+    if end < 0:
+        end = len(text)
+    return text[start:end].strip()
+
+
+@instrument('answer.compose')
 def compose_answer(bundle, locale='zh', question='', responder=None):
     reason = bundle['reason_code']
     summaries = {
@@ -216,7 +311,7 @@ def compose_answer(bundle, locale='zh', question='', responder=None):
               'claims': [], 'limitations': public_gaps(bundle['gaps'], english), 'review_status': 'pending_final_review'}
     context = bundle.get('query_context', {})
     if reason == 'no_match':
-        answer['limitations'].append(('Unmatched query: ' if english else '未匹配的查询：') + bundle['query'])
+        answer['limitations'].append('No matching source was found for the requested issue.' if english else '未匹配的查询：' + bundle['query'])
         if context.get('applicable_date'):
             answer['limitations'].append(('Check sources for the applicable period: ' if english else '需核对适用期间的依据：') + str(context['applicable_date']))
         elif context.get('uses_case'):
@@ -229,57 +324,118 @@ def compose_answer(bundle, locale='zh', question='', responder=None):
     for evidence in bundle['model_evidence'][:7]:
         if not evidence.get('display_allowed', True):
             continue
-        text = evidence['text'][:500]
+        text = relevant_excerpt(evidence['text'], question or bundle['query'])
         if text not in {claim['text'] for claim in answer['claims']}:
             answer['claims'].append({'text': text, 'evidence_ids': [evidence['evidence_id']], 'kind': 'excerpt'})
     if responder and bundle['model_evidence'] and not bundle['is_synthetic'] and reason != 'retrieval_failed':
         from packages.agent.grounded import claims_from_result
         permitted = [e for e in bundle['model_evidence'] if e.get('display_allowed', True)]
-        try:
-            claims, missing = claims_from_result(responder({'question': question or bundle['query'],
-                'query': bundle['query'], 'locale': locale, 'coverage': reason,
-                'uses_case': bundle.get('query_context', {}).get('uses_case', False),
-                'case_facts_for_context_only': bundle.get('query_context', {}).get('case_facts', {}),
-                'sources': permitted[:7]}), permitted[:7])
-            if bundle.get('query_context', {}).get('uses_case') is False:
-                # An independent rule lookup must not restart a case interview.
-                missing = []
-            answer.update(claims=claims, summary=claims[0]['text'], composition='grounded', missing_info=missing)
-        except Exception as exc:
-            answer['composition'] = 'extractive_fallback'
-            # Audit the failure category without persisting provider errors or secrets.
-            answer['composition_error'] = str(exc) if isinstance(exc, ValueError) and str(exc) in {
-                'answer_shape', 'paragraphs', 'missing_info', 'paragraph', 'citations_required',
-                'citation_shape', 'unsupported_citation'} else type(exc).__name__
+        payload = {'question': question or bundle['query'], 'query': bundle['query'], 'locale': locale, 'coverage': reason,
+                   'uses_case': context.get('uses_case', False), 'case_facts_for_context_only': context.get('case_facts', {}),
+                   'case_context': context.get('fact_context', {}), 'task_results': bundle.get('task_contexts', []),
+                   'sources': permitted[:7]}
+        from packages.agent.budget import current_budget
+        budget = current_budget.get()
+        verified_candidate = None
+        def room():
+            return budget is None or (budget.counts.get('model', 0) < budget.model_limit and budget.remaining() > 3)
+        for attempt in range(2):
+            try:
+                emit('answer.attempt', attempt=attempt+1, language=locale, source_count=len(permitted[:7]),
+                     mode='quality_review' if 'quality_review' in payload else 'repair' if 'validation_feedback' in payload else 'initial')
+                draft = responder(payload)
+                claims, missing = claims_from_result(draft, permitted[:7], locale=locale)
+                if context.get('uses_case'):
+                    from packages.agent.grounded import validate_case_claims
+                    validate_case_claims(claims, context.get('case_facts', {}), payload['question'])
+                if locale == 'en':
+                    from packages.chat.language import english_text
+                    if any(not english_text(item) for item in missing):
+                        raise ValueError('reply_language')
+                if context.get('uses_case') is False:
+                    missing = []
+                # Complex exemption/credit questions get one bounded re-reading,
+                # sharing the original evidence and the same execution budget.
+                if attempt == 0 and room() and (re.search(r'抵免|双重征税|credit|double tax', payload['question'], re.I)
+                                                or context.get('uses_case') and len(payload['question']) > 600):
+                    verified_candidate = (claims, missing)
+                    payload.update(previous_answer=draft, quality_review=(
+                        'Recheck the direction and prerequisites of each exemption and tax-credit rule. '
+                        'Do not say that failure of economic substance establishes or prevents participation exemption or credits. '
+                        'State only relationships established by the quoted source; say when general credit conditions are not covered. '
+                        'Keep the full answer around 350 English words or 700 Chinese characters, using short headings and lists. '
+                        'Remove missing_info items already requested in the documents section. '
+                        'Do not calculate an exact or approximate holding duration from month-only dates; the legal accrual date may be unknown. '
+                        'Do not assert source, business-in-Hong-Kong, residence or entity classification as established unless the user explicitly stated it. '
+                        'A year such as 2027 is not a month. A planned payment and an unmade resolution are not actual events.'))
+                    continue
+                answer.update(claims=claims, summary=claims[0]['text'], composition='grounded', missing_info=missing,
+                              composition_attempts=attempt + 1)
+                break
+            except Exception as exc:
+                emit('answer.validation', 'rejected', attempt=attempt+1, error_type=type(exc).__name__,
+                     reason_code=str(exc) if isinstance(exc, ValueError) and str(exc) in (
+                         'unsupported_citation', 'reply_language', 'answer_shape', 'paragraphs', 'missing_info',
+                         'paragraph', 'citations_required', 'citation_shape', 'unconfirmed_entity_classification',
+                         'unconfirmed_date_precision', 'unconfirmed_accrual', 'unconfirmed_holding_duration') else 'explanation_unavailable')
+                if isinstance(locals().get('draft'), dict):
+                    # Structural diagnostics only; never persist rejected prose or source text.
+                    answer['composition_diagnostic'] = [
+                        {'keys': sorted(p), 'text_length': len(p.get('text', '')) if isinstance(p.get('text'), str) else None,
+                         'evidence_count': len(p.get('evidence', [])) if isinstance(p.get('evidence', []), list) else None}
+                        for p in draft.get('paragraphs', []) if isinstance(p, dict)] if isinstance(draft.get('paragraphs'), list) else []
+                code = str(exc) if isinstance(exc, ValueError) and str(exc) in (
+                    'unsupported_citation', 'reply_language', 'answer_shape', 'paragraphs', 'missing_info',
+                    'paragraph', 'citations_required', 'citation_shape', 'unconfirmed_entity_classification',
+                         'unconfirmed_date_precision', 'unconfirmed_accrual', 'unconfirmed_holding_duration') else 'explanation_unavailable'
+                if attempt == 0 and room():
+                    payload.update(previous_answer=locals().get('draft'), validation_feedback={
+                        'error': code, 'case_guard': ('Treat years as years and months as months. Do not calculate holding duration without verified accrual and acquisition dates. An unmade resolution does not establish a legal accrual finding. Describe planned events as uncompleted and accrual as unconfirmed.' if code.startswith('unconfirmed_') else ''), 'instruction': 'Return the required JSON in the requested language. Each paragraph MUST have exactly text and evidence keys, no heading/title/kind keys. Put short Markdown headings INSIDE text. Each text must be at most 1500 characters with no URLs. EVERY paragraph must contain at least one valid evidence_id/span_id pair from sources, including any fact summaries or document checklists: integrate them with the related legal reason rather than writing unsupported standalone paragraphs. Entity classification is unconfirmed unless explicitly present in case facts; explain conditional alternatives instead. Keep the whole answer concise.'})
+                    continue
+                if verified_candidate:
+                    claims, missing = verified_candidate
+                    answer.update(claims=claims, summary=claims[0]['text'], composition='grounded',
+                                  missing_info=missing, composition_attempts=attempt + 1, quality_review_error=code)
+                else:
+                    answer.update(composition='extractive_fallback', composition_error=code, composition_attempts=attempt + 1)
+                break  # No further model attempt after an exhausted budget or failed final repair.
     lines = [answer['summary'], '\n' + ('Conditions: ' if english else '适用条件：') + ('; ' if english else '；').join(answer['conditions'])]
     if answer.get('composition') == 'grounded':
-        lines = []
-        for index, claim in enumerate(answer['claims'], 1):
-            links = citation_lines(bundle, claim['evidence_ids'])
-            paragraph = (f"{index}. " if len(answer['claims']) > 1 else '') + claim['text']
-            if links:
-                paragraph += '\n\n' + ('   ' if len(answer['claims']) > 1 else '') + ('Source: ' if english else '依据：') + ' · '.join(link.removeprefix('- ') for link in links)
-            lines.append(paragraph)
+        # A document checklist already is the next-step list. Keep machine-readable
+        # missing_info, but do not print a second near-identical checklist below it.
+        answer['next_steps_in_body'] = any(re.search(
+            r'(?:\*\*|^|\n)(?:Documents? to (?:request|assemble|gather)|Next steps?|优先材料|材料清单|需.{0,3}材料|下一步)',
+            claim['text'], re.I) for claim in answer['claims'])
+        lines = [re.sub(r'\s*[•●]\s*', '\n- ', claim['text']) + ' ' + ' · '.join(
+            link.removeprefix('- ') for link in citation_lines(bundle, claim['evidence_ids'], locale, claim.get('supports')))
+                 for claim in answer['claims']]
         if bundle['is_synthetic']:
             lines.insert(0, '[Synthetic test data, not an official tax source]' if english else '【模拟联调资料，不是真实税务依据】')
-        if answer['missing_info']:
+        if answer['missing_info'] and not answer['next_steps_in_body']:
             lines.append(('To confirm:\n' if english else '还需确认：\n') + '\n'.join('- ' + item for item in answer['missing_info']))
     else:
         if answer.get('composition') == 'extractive_fallback':
-            lines.append('The explanation could not be verified; the excerpts below are for checking.' if english else '本次未能生成通过引用校验的解释。')
-        if answer['claims']:
-            lines.append('Open the source cards below to read the original provisions. The excerpts are not a completed answer to your question.' if english else '请展开下方“法规原文”核对条文。检索到原文不等于已经完成对问题的解释，本次不据此判断条件已满足。')
+            lines = ['I found source material, but could not verify a reliable explanation for this question. The original sources are available below.' if english else
+                     '已找到相关资料，但这次还未能形成可核实的解释。你可以先核对下方原文依据。']
+        show_excerpts = answer.get('composition') != 'extractive_fallback' or bool(re.search(r'原文|逐字|quote|exact wording|text of', question, re.I))
+        for index, claim in enumerate(answer['claims'][:2] if show_excerpts else [], 1):
+            lines.append(('\nSource excerpt [' if english else '\n依据摘录 [') + str(index) + (']:\n' if english else ']：\n') + claim['text'])
     if answer['limitations']:
         lines.append(('\nGaps: ' if english else '\n还不能确认的部分：') + ('; ' if english else '；').join(answer['limitations']))
-    references = citation_lines(bundle, [ref for claim in answer['claims'] for ref in claim['evidence_ids']])
+    references = citation_lines(bundle, [ref for claim in answer['claims'] for ref in claim['evidence_ids']], locale)
     if not references and bundle['passages']:
-        references = citation_lines(bundle, [p['evidence_id'] for p in bundle['passages']])
-    if references:
+        references = citation_lines(bundle, [p['evidence_id'] for p in bundle['passages']], locale)
+    if references and answer.get('composition') != 'grounded':
         lines.append(('References:\n' if english else '法规及官方依据：\n') + '\n'.join(references))
     answer['text'] = '\n\n'.join(lines)
+    emit('answer.result', composition=answer.get('composition', 'extractive'),
+         attempts=answer.get('composition_attempts', 0), claim_count=len(answer['claims']),
+         missing_count=len(answer.get('missing_info', [])), reason_code=answer.get('composition_error'),
+         quality_review_error=answer.get('quality_review_error'), language=locale)
     return answer
 
 
+@instrument('answer.validate')
 def validate_answer(answer, bundle):
     permitted = {e['evidence_id']: e for e in bundle['model_evidence']}
     for claim in answer['claims']:

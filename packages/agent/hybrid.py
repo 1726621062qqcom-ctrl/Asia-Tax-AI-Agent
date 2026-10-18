@@ -1,6 +1,7 @@
 """Shared guarded subgraphs and bounded dynamic scheduling; pure proposals only."""
 from copy import deepcopy
 from uuid import uuid4
+import re
 from langgraph.graph import StateGraph, START, END
 
 from packages.agent import dialogue, task_state
@@ -10,6 +11,7 @@ from packages.agent.budget import RunBudget, BudgetedProvider, BudgetExceeded, c
 from packages.agent.contracts import SearchRequest, TrustedContext
 from packages.agent.knowledge import retrieve, compose_answer, validate_answer
 from packages.chat.facts import raw_facts
+from packages.agent.tracing import trace_id
 
 
 class HybridState(TurnState, total=False):
@@ -22,6 +24,7 @@ class HybridState(TurnState, total=False):
     rewrite_count: int
     answers: list
     research_results: list
+    research_only: bool
 
 
 SHORTCUTS = {
@@ -60,7 +63,8 @@ class HybridWorkflow(TurnWorkflow):
         def run(state):
             from time import monotonic
             started = monotonic()
-            result = callback(state)
+            from packages.agent.tracing import node
+            result = node(name, callback, state)
             meta = deepcopy(result.get('workflow', state.get('workflow', {})))
             meta.setdefault('trace', []).append(name)
             meta.setdefault('timings_ms', {})[name] = round((monotonic() - started) * 1000, 2)
@@ -92,6 +96,14 @@ class HybridWorkflow(TurnWorkflow):
         return parent.compile()
 
     def path(self, state):
+        from packages.agent.tracing import emit
+        destination = self._path(state)
+        emit('graph.dispatch', destination=destination, action=state['turn'].get('action'),
+             intent=state['turn']['intent'], entry_hint=state['entry_hint'],
+             dynamic_planner=self.dynamic, harness_mode=self.harness_mode, has_question=bool(state.get('question')))
+        return destination
+
+    def _path(self, state):
         if state['turn'].get('action') == 'summary':
             return 'validate'
         if state['turn']['intent'] in ('chat', 'clarify', 'unsupported') or state['turn'].get('action') in ('pause', 'new_case'):
@@ -134,7 +146,8 @@ class HybridWorkflow(TurnWorkflow):
             return self.graph.invoke({'doc': deepcopy(doc), 'text': text, 'owner': owner, 'request_id': request_id,
                 'entry_hint': entry_hint, 'task_results': [], 'answers': [], 'research_results': [], 'rewrite_count': 0,
                 'analysis_result': None, **({'turn': turn} if turn is not None else {}),
-                'workflow': {'version': '0.3.0', 'policy_version': task_state.VERSION, 'trace_id': str(uuid4()),
+                'workflow': {'version': '0.3.0', 'policy_version': task_state.VERSION, 'trace_id': trace_id(),
+                             'reply_locale': doc.get('_ui_locale', 'zh'),
                              'status': 'ready', 'reason_code': None}}, {'recursion_limit': 40})
         except BudgetExceeded:
             from packages.chat.service import WorkflowError
@@ -175,11 +188,27 @@ class HybridWorkflow(TurnWorkflow):
             parsed = self.original_turner(doc, state['text']) if self.original_turner is plan_turn else \
                 model_call(self.original_turner, doc, state['text'])
         parsed = deepcopy(parsed)
+        if (doc.get('_guard_extraction') and not doc.get('facts') and len(state['text']) < 350
+                and re.search(r'材料清单|documents? (?:should|to)|documentation checklist', state['text'], re.I)
+                and not re.search(r'\d', state['text'])):
+            parsed.update(intent='research', facts={}, query=state['text'][:500], uses_case=False,
+                          task_kind='reference_lookup', tasks=[{'kind': 'reference_lookup', 'query': state['text'][:500], 'uses_case': False}])
         parsed['reply'] = parsed.get('reply') or ('I received your request.' if doc.get('_ui_locale') == 'en' else '已收到本次请求。')
         try:
             parsed = validate_turn(parsed)
         except (ValueError, TypeError, KeyError):
             raise WorkflowError('model_failed') from None
+        from packages.agent.research_context import explanatory_request
+        if (parsed['intent'] == 'intake' and parsed.get('action', 'continue') == 'continue'
+                and explanatory_request(state['text']) and not requested_analysis(state['text'])):
+            # Mixed fact/research requests must not terminate at the first unknown field.
+            # Facts still pass through the normal extraction and conflict guards.
+            parsed.update(intent='research', query=parsed['query'] or state['text'][:500],
+                          uses_case=parsed.get('uses_case', bool(parsed['facts'])), task_kind='reference_lookup')
+            parsed['tasks'] = [{'kind': 'reference_lookup', 'query': parsed['query'],
+                                'uses_case': parsed['uses_case']}]
+            from packages.agent.tracing import emit
+            emit('route.repaired', reason_code='mixed_facts_and_research', effective_intent='research')
         from packages.agent.policy import concrete_tax_claim
         if parsed['intent'] == 'chat' and concrete_tax_claim(parsed['reply']):
             parsed.update(intent='research', query=state['text'][:500], reply='Specific tax conditions must be checked against sources.' if doc.get('_ui_locale') == 'en' else '具体税务条件须查阅依据。', uses_case=False)
@@ -279,6 +308,7 @@ class HybridWorkflow(TurnWorkflow):
                 doc['facts'][key] = {'value': value}
         doc['fact_conflicts'] = {**doc.get('fact_conflicts', {}), **state['conflicts']}
         doc['dialogue'] = deepcopy(state['dialogue'])
+        doc['fact_context'] = deepcopy(state.get('fact_context', doc.get('fact_context', {})))
         return doc
 
     def scope(self, state, job):
@@ -337,29 +367,40 @@ class HybridWorkflow(TurnWorkflow):
             when, date_status = dialogue.query_date(facts) if uses_case else (None, 'not_needed')
             from packages.chat.service import research_query
             query = research_query(state['doc'], state['text'], job.get('query') or turn['query'])
-            from packages.chat.knowledge import references
+            from packages.chat.knowledge import references, topic_locators
             law_refs, ruling_refs = references(query)
+            # Preserve the task's required material when the planner shortens
+            # its search wording. This is navigation within the approved HK scope.
+            from packages.agent.research_context import law_navigation
+            checklist_refs = law_navigation(state['text']) if (
+                not law_refs and not ruling_refs and job.get('tool_kind') not in ('ruling', 'guidance')) else []
             req = SearchRequest(request_id=state['request_id'], trace_id=meta['trace_id'], query=query,
                 jurisdiction='HK', topic='dividend', applicable_date=when, date_status=date_status,
                 deadline_ms=10000,
                 intent='case_analysis' if uses_case else 'reference_lookup', income_type=facts.get('income_type'),
                 entity_type=facts.get('recipient_type') if facts.get('recipient_type') in ('company', 'individual', 'unknown') else 'not_needed',
                 kind=job.get('tool_kind') or ('ruling' if ruling_refs and not law_refs else 'all'),
+                locators=checklist_refs,
                 fact_filters=[{'field_name': k, 'value': facts[k]} for k in
                     ('income_type', 'source_analysis', 'entity_hk_business_status', 'receipt_location', 'recipient_type')
                     if isinstance(facts.get(k), str) and facts[k] not in ('unknown', 'conflict')])
             bundle = retrieve(self.provider, req, TrustedContext(owner=state['owner'], case_id=state['doc']['id'] if uses_case else None))
             bundle['query_context'] = {'uses_case': uses_case, 'applicable_date': when, 'date_status': date_status, 'jurisdiction': 'HK', 'case_facts': facts}
+            bundle['query_context']['fact_context'] = self.projected(state).get('fact_context', {})
             if bundle['status'] == 'unavailable' and not state['patch'] and not state['task_results']:
                 raise WorkflowError('knowledge_unavailable')
-            answer = compose_answer(bundle, locale='en' if english else 'zh',
-                                    question=state['text'], responder=self.responder)
-            validate_answer(answer, bundle)
-            turn.update(intent='research', query=query, reply=answer['text'])
+            # The tool path collects evidence without writing an answer or advancing intake.
+            # Final validation merges all searches and composes once, leaving room for repair.
+            answer = None if state.get('research_only') or self.responder else compose_answer(
+                bundle, locale='en' if english else 'zh', question=state['text'])
+            if answer:
+                validate_answer(answer, bundle)
+            turn.update(intent='research', query=query, reply=answer['text'] if answer else '')
             if state['patch']:
                 turn['reply'] = ('These fact changes will be saved with this message; earlier analysis must be reconfirmed.\n\n' if english else '本次事实修订将在本轮提交时保存，旧分析需重新确认。\n\n') + turn['reply']
             meta.update(status='draft_ready' if bundle['reason_code'] == 'evidence_available' else 'paused_gap',
-                        reason_code=bundle['reason_code'], retrieval_calls=self.budget.counts.get('search', 0))
+                        reason_code=bundle.get('retrieval_stop') or bundle['reason_code'],
+                        retrieval_calls=self.budget.counts.get('search', 0))
             interview = deepcopy(state['dialogue'])
             q = state.get('question')
             if bundle['status'] == 'unavailable':
@@ -371,7 +412,7 @@ class HybridWorkflow(TurnWorkflow):
                     interview.pop('deferred_query', None)
                 if not uses_case and not state['patch']:
                     interview['status'] = 'suspended'
-                if uses_case or state['patch']:
+                if (uses_case or state['patch']) and not state.get('research_only'):
                     projected = self.projected(state)
                     projected['dialogue'] = interview
                     interview, q, followup = dialogue.update_dialogue(projected, {**turn, 'intent': 'intake', 'action': 'continue'}, {}, locale='en' if english else 'zh')
@@ -379,7 +420,7 @@ class HybridWorkflow(TurnWorkflow):
                         from packages.agent.knowledge import append_followup
                         turn['reply'] = append_followup(turn['reply'], dialogue.render_question(q, locale='en') if english else followup)
                         meta.update(status='waiting_user', retrieval_reason_code=meta['reason_code'], reason_code='fact_collection')
-            return {**self.result(state, turn, meta, job, bundle['reason_code'], question=q),
+            return {**self.result(state, turn, meta, job, bundle.get('retrieval_stop') or bundle['reason_code'], question=q),
                     'research': bundle, 'research_results': state['research_results'] + [bundle],
                     'answer': answer, 'dialogue': interview}
         except BudgetExceeded:
@@ -442,28 +483,66 @@ class HybridWorkflow(TurnWorkflow):
             return {'workflow': meta, 'next_action': 'validate', 'orchestration': control}
 
     def validate(self, state):
+        # Tool executions collect evidence; only this final stage explains it.
+        composed = bool(state.get('research_results') and not state.get('analysis_result'))
+        if composed:
+            from packages.agent.knowledge import merge_bundles, append_followup
+            projected = self.projected(state)
+            uses_case = any(b.get('query_context', {}).get('uses_case') for b in state['research_results'])
+            facts = raw_facts(projected) if uses_case else {}
+            if projected.get('fact_context', {}).get('transaction_scope', {}).get('status') == 'multiple_unbound':
+                from packages.agent.fact_context import TRANSACTION_FIELDS
+                facts = {k: v for k, v in facts.items() if k not in TRANSACTION_FIELDS}
+            merged = merge_bundles(state['research_results'], state['text'], {
+                'uses_case': uses_case, 'case_facts': facts, 'fact_context': projected.get('fact_context', {})})
+            answer = compose_answer(merged, locale=state['doc'].get('_ui_locale', 'zh'),
+                                    question=state['text'], responder=self.responder)
+            reply = answer['text']
+            if not self.responder and any(t.get('reason_code') == 'read_only_result' for t in state['task_results']):
+                reply = dialogue.summary_text(projected, state['doc'].get('_ui_locale', 'zh')) + '\n\n' + reply
+            if state.get('question') and not (answer.get('composition') == 'grounded' and
+                                             (answer.get('missing_info') or answer.get('next_steps_in_body'))):
+                reply = append_followup(reply, dialogue.render_question(state['question'], state['doc'].get('_ui_locale', 'zh')))
+            if any(t.get('tool_call_id') for t in state['task_results']):
+                from packages.agent.research_context import evidence_observation
+                from packages.agent.tracing import emit
+                emit('research.coverage', **evidence_observation(merged, state['text']))
+            state = {**state, 'research': merged, 'answer': answer, 'turn': {**state['turn'], 'reply': reply}}
         result = super().validate(state)
         meta = deepcopy(state['workflow'])
         meta.update(task_results=state['task_results'], budget=self.budget.snapshot())
+        if composed:
+            meta['answer_compositions'] = 1
         from packages.agent.policy import decisions
         meta['rule_decisions'] = decisions(meta, state['turn'])
         if state['orchestration'].get('queued_tasks'):
             meta['pending_tasks'] = len(state['orchestration']['queued_tasks'])
         turn = deepcopy(state['turn'])
         english = state['doc'].get('_ui_locale') == 'en'
-        if len(state['answers']) > 1:
+        if len(state['answers']) > 1 and not composed:
             # A rewrite supersedes its earlier no-match result; unrelated tasks retain theirs.
             latest = {}
             for item, answer in zip(state['task_results'], state['answers']):
                 latest[item.get('tool_call_id', item['task_id'])] = answer
             from packages.agent.knowledge import join_answers
             turn['reply'] = join_answers(latest.values(), 'en' if english else 'zh')
+        if self.responder and not composed and state['task_results'] and all(
+                item['reason_code'] == 'read_only_result' for item in state['task_results']):
+            shown = self.projected(state)
+            if english:
+                from packages.chat.language import english_case_view
+                shown = english_case_view(shown)
+            turn['reply'] = dialogue.summary_text(shown, 'en' if english else 'zh')
+        elif self.responder and english and state['turn'].get('action') == 'summary':
+            from packages.chat.language import english_case_view
+            turn['reply'] = dialogue.summary_text(english_case_view(self.projected(state)), 'en')
+        from packages.agent.knowledge import append_followup
         if meta.get('reason_code') == 'planner_failed':
-            turn['reply'] += '\nSubsequent scheduling failed. The results above were verified; retry unfinished searches.' if english else '\n后续调度失败，以上为已校验的结果；可重试未完成查询。'
+            turn['reply'] = append_followup(turn['reply'], 'Some requested research is unfinished. You can retry the remaining question.' if english else '部分查询还未完成，可以继续查询剩余问题。')
         elif meta.get('harness_stop') not in (None, 'finished', 'waiting_user', 'analysis_ready'):
-            turn['reply'] += '\nTool scheduling stopped. The results above were verified; unfinished items still need attention.' if english else '\n本轮工具调度已停止，以上为已校验的结果；未完成事项需继续处理。'
+            turn['reply'] = append_followup(turn['reply'], ('Some source checks could not be completed in this response. The explanation above uses only the sources obtained; the remaining checks can be continued.' if english else '本次有部分资料尚未查完，上面的说明只基于已取得的依据，未完成的部分可以继续查询。') if meta.get('harness_stop') == 'budget_exhausted' else ('Some requested research is unfinished. The explanation above uses the available sources.' if english else '部分查询还未完成，上面的说明基于当前可核对的依据。'))
         if meta.get('pending_tasks'):
-            turn['reply'] += '\nOther tasks remain. Progress is saved; add the missing information or ask to continue.' if english else '\n还有未完成的后续任务，已保留进度；补充当前信息或明确继续后再推进。'
+            turn['reply'] = append_followup(turn['reply'], 'Other requested items remain. Add the missing information or ask to continue.' if english else '还有未完成的问题；可以补充当前信息，或继续查询。')
         if english and state.get('question') and not state.get('answer') and not state.get('research') and state['turn']['intent'] != 'unsupported':
             turn['reply'] = dialogue.render_question(state['question'], locale='en')
         control = deepcopy(state['orchestration'])
@@ -487,4 +566,5 @@ class HybridWorkflow(TurnWorkflow):
         control['last_run'] = {'request_id': state['request_id'], 'status': meta['status'],
             'reason_code': meta.get('reason_code'), 'policy_version': task_state.VERSION,
             'actions': [t['kind'] for t in state['task_results']]}
-        return {**result, 'workflow': meta, 'turn': turn, 'orchestration': control}
+        return {**result, 'workflow': meta, 'turn': turn, 'orchestration': control,
+                'research': state['research'], 'answer': state['answer']}

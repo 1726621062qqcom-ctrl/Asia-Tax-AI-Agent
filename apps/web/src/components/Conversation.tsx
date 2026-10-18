@@ -5,11 +5,12 @@ import { useState } from "react";
 import AnswerText from "./AnswerText";
 import {
   fieldLabel,
+  uniquePassages,
   type Case,
   type FieldSpec,
   type Analysis,
 } from "../workspace";
-import { useLocale } from "../locale";
+import { useLocale, translate } from "../locale";
 import Passages from "./Passages";
 import BrandLoader from "./BrandLoader";
 import DomainResult from "./DomainResult";
@@ -192,6 +193,9 @@ export default function Conversation({
   partial?: string;
 }) {
   const { t, locale } = useLocale();
+  const actionLocale = [...current.messages].reverse().find(
+    (message) => message.role === "assistant" && message.reply_locale,
+  )?.reply_locale || locale;
   const bottom = useRef<HTMLDivElement>(null);
   const latest = useRef<HTMLDivElement>(null);
   const following = useRef(true);
@@ -226,7 +230,7 @@ export default function Conversation({
               <p>{message.text}</p>
               {message.delivery === "failed" && (
                 <small className="delivery-failed">
-                  {t("发送未完成，可重试")}
+                  {translate("发送未完成，可重试", message.reply_locale || locale)}
                 </small>
               )}
             </div>
@@ -236,21 +240,19 @@ export default function Conversation({
             <div className="research-response">
               {message.text && <AnswerText text={message.text} />}
               <details className="research-sources">
-              <summary>{locale === "en" ? "Original sources" : "法规原文"}</summary>
+              <summary>{(message.reply_locale || locale) === "en" ? "Original sources" : "法规原文"}</summary>
               <p>
-                {t(
+                {translate(
                   message.research.is_synthetic
                     ? "模拟联调资料，不是真实税务依据。"
                     : message.research.reason_code === "evidence_restricted"
                       ? "仅展示已获许可的参考原文；未用于模型分析。"
                       : message.research.passages.length
                         ? "以下为来源原文片段，适用性待核对。"
-                        : "未取得可展示的匹配资料。",
+                        : "未取得可展示的匹配资料。", message.reply_locale || locale,
                 )}
               </p>
-              {(message.research_results || [message.research]).map((result, i) => (
-                <Passages key={`${result.query}-${i}`} passages={result.passages} />
-              ))}
+              <Passages passages={uniquePassages(message.research_results || [message.research])} replyLocale={message.reply_locale} />
               </details>
             </div>
           ) : message.kind === "analysis" ? (
@@ -310,7 +312,7 @@ export default function Conversation({
         <div className="conversation-actions">
           <HintButton className="text-button" onClick={onFacts}>
             <FileText size={15} />
-            {t("核对案例事实")}
+            {translate("核对案例事实", actionLocale)}
           </HintButton>
           {current.state === "confirmed" && (
             <HintButton
@@ -318,7 +320,7 @@ export default function Conversation({
               className="primary-button"
               onClick={onAnalyze}
             >
-              {t("开始分析")}
+              {translate("开始分析", actionLocale)}
             </HintButton>
           )}
         </div>

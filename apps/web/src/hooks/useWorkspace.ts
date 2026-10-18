@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError, type FactPatch } from "../api";
 import type { Case, FieldSpec, Message, EntryHint } from "../workspace";
-import { useLocale } from "../locale";
+import { useLocale, answerLanguage, type Locale } from "../locale";
 
 export function useWorkspace() {
   const { locale } = useLocale();
@@ -11,6 +11,7 @@ export function useWorkspace() {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [errorCaseId, setErrorCaseId] = useState("");
+  const [errorLocale, setErrorLocale] = useState<Locale>(locale);
   const locked = useRef(false);
   const controller = useRef<AbortController | null>(null);
   const [partial, setPartial] = useState<{ caseId: string; text: string } | null>(null);
@@ -18,6 +19,7 @@ export function useWorkspace() {
   const retryRef = useRef<{
     operation: () => Promise<void>;
     caseId: string;
+    replyLocale: Locale;
   } | null>(null);
   const [workingCaseId, setWorkingCaseId] = useState("");
   const [outbox, setOutbox] = useState<{ caseId: string; message: Message }[]>(
@@ -77,6 +79,7 @@ export function useWorkspace() {
   async function perform(
     operation: () => Promise<void>,
     caseId = current?.id || "",
+    replyLocale: Locale = locale,
   ) {
     if (locked.current) return false;
     locked.current = true;
@@ -84,7 +87,8 @@ export function useWorkspace() {
     setWorkingCaseId(caseId);
     setErrorCaseId(caseId);
     setError("");
-    retryRef.current = { operation, caseId };
+    setErrorLocale(replyLocale);
+    retryRef.current = { operation, caseId, replyLocale };
     try {
       await operation();
       retryRef.current = null;
@@ -118,6 +122,7 @@ export function useWorkspace() {
   function send(text: string, approved: boolean) {
     const doc = storedCurrent,
       requestId = crypto.randomUUID();
+    const replyLocale = answerLanguage(text, doc.reply_locale, locale);
     const entryHint = entrySelections[doc.id]?.text.trim() === text ? entrySelections[doc.id].hint : "auto";
     const pending = doc.dialogue?.status === "active" ? doc.dialogue.pending : null;
     return perform(async () => {
@@ -134,7 +139,7 @@ export function useWorkspace() {
         ),
         {
           caseId: doc.id,
-          message: { id: localId, role: "user", text, delivery: "sending" },
+          message: { id: localId, role: "user", text, delivery: "sending", reply_locale: replyLocale },
         },
       ]);
       setDrafts((all) =>
@@ -146,7 +151,7 @@ export function useWorkspace() {
         setPartial({ caseId: doc.id, text: "" });
         const next = await api.stream(doc, text, approved, requestId, abort.signal, (chunk, reset) =>
           setPartial(previous => previous?.caseId === doc.id ? { ...previous, text: reset ? "" : previous.text + chunk } : previous),
-          entryHint, text.startsWith("结构答复：") ? doc.domain_workflow?.pending_question_id || null : pending?.id || null, locale);
+          entryHint, text.startsWith("结构答复：") ? doc.domain_workflow?.pending_question_id || null : pending?.id || null, replyLocale);
         update(next);
         setEntrySelections(all => { const copy = { ...all }; delete copy[doc.id]; return copy; });
         setOutbox((all) => all.filter((item) => item.message.id !== localId));
@@ -173,7 +178,7 @@ export function useWorkspace() {
         controller.current = null;
         setPartial(null);
       }
-    });
+    }, doc.id, replyLocale);
   }
   function save(patch: FactPatch) {
     const doc = current,
@@ -224,7 +229,7 @@ export function useWorkspace() {
       return;
     }
     if (retryRef.current)
-      void perform(retryRef.current.operation, retryRef.current.caseId);
+      void perform(retryRef.current.operation, retryRef.current.caseId, retryRef.current.replyLocale);
   }
   return {
     cases,
@@ -238,6 +243,7 @@ export function useWorkspace() {
     busy,
     currentBusy: busy && workingCaseId === current?.id,
     error: !current || errorCaseId === current.id ? error : "",
+    errorLocale,
     setActiveId,
     drafts,
     changeDraft,

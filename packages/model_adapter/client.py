@@ -16,6 +16,7 @@ from functools import lru_cache
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from packages.agent.tracing import instrument
 
 
 class ModelSettings(BaseSettings):
@@ -91,11 +92,16 @@ class OpenAICompatibleClient:
         }
         payload.update(structured_options(self.config))
         body = self._post("/chat/completions", payload)
+        from packages.agent.tracing import emit
+        usage = body.get('usage', {})
+        emit('model.usage', model=self.config.model_name, usage={k: usage[k] for k in
+             ('prompt_tokens', 'completion_tokens', 'total_tokens') if isinstance(usage, dict) and isinstance(usage.get(k), int)})
         try:
             return body["choices"][0]["message"]["content"] or ""
         except (KeyError, IndexError, TypeError) as exc:
             raise ModelError(f"unexpected chat response shape: {str(body)[:300]}") from exc
 
+    @instrument('model.request')
     def chat_json(self, system: str, user: str, *, temperature: float = 0.0, max_tokens: int = 2000) -> dict:
         raw = self.chat(system, user, temperature=temperature, max_tokens=max_tokens)
         return parse_json_loose(raw)

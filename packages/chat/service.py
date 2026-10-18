@@ -47,6 +47,7 @@ def turn_prompt(doc: dict, text: str) -> tuple[str, str]:
         "dialogue": doc.get('dialogue', {}),
         "task_context": project(doc),
         "entry_hint": doc.get('_entry_hint', 'auto'),
+        "case_context": doc.get('fact_context', {}),
     }
     system = (
         '你是 Taxrora，一位自然、简洁、友好的对话助手，擅长协助税务研究。'
@@ -54,6 +55,7 @@ def turn_prompt(doc: dict, text: str) -> tuple[str, str]:
         '根据用户当前语言回答；用户要求切换语言或改变表达时照做。结合历史理解追问、指代与上下文。'
         '只输出 JSON 对象，格式为 {"intent":"chat|research|intake|clarify|unsupported","reply":"自然语言回复",'
         '"facts":{},"query":""}。reply 简洁清晰，可在需要时使用 Markdown 列表、标题或表格；不要输出 HTML。'
+        '可额外返回decision_summary，用一句不超过240字符的简短摘要说明选择这个任务类别的依据，不输出内部思维、逐步推理或敏感案情。'
         'chat：问候、感谢、非税务一般知识、复述已知案情、对话改写和拒绝无依据免税要求；facts必须为{}，query必须为""。'
         '复述案情不属于intake；拒绝用户越权也用chat正常解释，不得输出额外字段。'
         'research：用户查法条、官方资料、案例编号，或需要核对具体税务规则、税率、条件与适用性的咨询；'
@@ -62,7 +64,8 @@ def turn_prompt(doc: dict, text: str) -> tuple[str, str]:
         '用户未指定编号时不要猜测或生成法条编号，只使用主题关键词。'
         'reply 只简短说明将查阅什么，不假装已经读过原文，不编造引文、网址、最新法律或裁定结论。'
         'intake：用户明确描述/更正具体案情或回答事实追问时，提取 facts，reply 简短回应收到的信息。'
-        '混合消息可在 research 中同时提供 facts，但不能忽略明确的案情修订。'
+        '混合消息在描述案情同时要求解释条件、核对证据或列材料时，必须用research并同时提取facts；缺少在港经营等事实不应降级为纯intake。'
+        '只回答事实追问或只要求逐步收集案情时才用intake；研究回答须保留未知事项，不推定条件已满足。'
         'clarify：无法分清用户要查一般规定还是分析自身案件；facts/query为空。不要默认把歧义解释成个人或公司不明。'
         'unsupported：明确要求香港企业境外股息之外的案件分析时；说明范围，facts/query为空。一般查资料仍用research。'
         '工具不支持某种个案分析不代表该用户的问题不能讨论；范围、定义和制度适用性仍应使用research查官方依据。'
@@ -84,6 +87,9 @@ def turn_prompt(doc: dict, text: str) -> tuple[str, str]:
         '分析香港收款方和其他地区付款方必须区分，使用 analysis_jurisdiction；不要从语言、币种推断地区。'
         'consultation_goal 使用 scope/receipt/participation/substance/full_analysis；用户明确要求整体分析可写 full_analysis。'
         '已发生/计划存 income_event_status；缺确切日期不能用今天或把年份补成一月一日。'
+        '只提供年月时绝不能补具体日：August 2025不是2025-08-01，保留在描述中并询问确切日。'
+        '同一消息涉及多笔股息时，先区分各自派息方、收款方和持股链；不得混合为一组单交易facts。'
+        '有员工、办公室或投资控股业务不等于已确认纯股权持有身份、税务居民或经济实质充分性。'
         '新一笔交易/另一个主体另起案件使用 new_case，不得把新案件事实覆盖当前案件。'
         '追问只绑定 active 的 pending；suspended/paused 后的孤立是、否、不知道不能自动填旧问题。'
         '集团结构、员工职责、场所、境外缴税先放对应 description 字段；不得从原始描述推断充分性、MNE资格或税项合资格。'
@@ -102,9 +108,9 @@ def turn_prompt(doc: dict, text: str) -> tuple[str, str]:
             for field in catalog()
         ], ensure_ascii=False, separators=(',', ':'))
     )
-    if doc.get('_ui_locale') == 'en':
-        system += (' The interface language is English. Write every user-visible reply in English, '
-                   'even if the user message or conversation history is in Chinese. Keep JSON keys, '
+    from packages.chat.language import reply_language
+    if reply_language(doc, text, doc.get('_ui_locale', 'zh')) == 'en':
+        system += (' The answer language for this turn is English. Write every user-visible reply in English. No mixed-language generated text. Keep JSON keys, '
                    'fact field names, legal references, and source identifiers unchanged. Do not translate source quotations.')
     return system, json.dumps(context, ensure_ascii=False)
 
@@ -113,8 +119,10 @@ def validate_turn(result: dict, text: str = '') -> dict:
     if not isinstance(result, dict):
         raise ValueError('Invalid conversational object')
     required = {'intent', 'reply', 'facts', 'query'}
-    if not required.issubset(result) or set(result) - required - {'action', 'corrections', 'uses_case', 'task_kind', 'tasks'} or result['intent'] not in ('chat', 'research', 'intake', 'clarify', 'unsupported'):
+    if not required.issubset(result) or set(result) - required - {'action', 'corrections', 'uses_case', 'task_kind', 'tasks', 'decision_summary'} or result['intent'] not in ('chat', 'research', 'intake', 'clarify', 'unsupported'):
         raise ValueError('Invalid conversational turn')
+    if 'decision_summary' in result and (not isinstance(result['decision_summary'], str) or len(result['decision_summary']) > 240):
+        raise ValueError('Invalid decision summary')
     if not isinstance(result['facts'], dict):
         raise ValueError('Invalid fact shape')
     result['facts'] = validate_patch(result['facts'])
@@ -170,8 +178,15 @@ def plan_turn(doc: dict, text: str) -> dict:
         from packages.agent.budget import model_call
         for attempt in range(2 if budget else 1):
             try:
-                return validate_turn(model_call(lambda: client.chat_json(system, user, max_tokens=2500)), text)
-            except (ValueError, TypeError, KeyError):
+                parsed = validate_turn(model_call(lambda: client.chat_json(system, user, max_tokens=2500)), text)
+                from packages.chat.language import reply_language, english_text
+                if parsed['intent'] == 'chat' and reply_language(doc, text, doc.get('_ui_locale', 'zh')) == 'en' and not english_text(parsed['reply']):
+                    raise ValueError('reply_language')
+                return parsed
+            except (ValueError, TypeError, KeyError) as exc:
+                from packages.agent.tracing import emit
+                emit('route.validation', 'rejected', attempt=attempt+1, error_type=type(exc).__name__,
+                     reason_code='reply_language' if str(exc) == 'reply_language' else 'invalid_route_shape')
                 if not budget or attempt:
                     raise
                 user += '\n上次返回结构不合法。请按约定格式重新解析当前输入，不补猜事实。'
@@ -239,6 +254,11 @@ def public(doc: dict) -> dict:
     from packages.agent.dialogue import identification, gaps
     from packages.domain_bridge.state import ensure, sync
     doc = deepcopy(doc)
+    # Older cases may contain diagnostics from the former chat panel.
+    # Keep those historical records at rest, but never deliver them to chat clients.
+    doc.get('workflow', {}).pop('execution_trace', None)
+    for message in doc.get('messages', []):
+        message.get('workflow', {}).pop('execution_trace', None)
     ensure(doc)
     sync(doc)
     result = {k: v for k, v in doc.items() if k not in ("receipts", "domain_payloads", "message_payloads", "domain_chat_payloads")}
@@ -325,12 +345,42 @@ class ChatService(DomainCoordinator):
         return doc, duplicate
 
     def prepare_turn(self, owner, doc, request_id, text, turn=None, entry_hint='auto', reply_to_question_id=None, locale='zh'):
+        from packages.agent.tracing import ExecutionTrace, current_trace, emit, export
+        trace = ExecutionTrace(doc['id'], request_id)
+        token = current_trace.set(trace)
+        try:
+            emit('turn', 'started', orchestration=self.orchestration, entry_hint=entry_hint,
+                 input_characters=len(text), fact_count=len(doc.get('facts', {})))
+            prepared = self._prepare_turn(owner, doc, request_id, text, turn, entry_hint, reply_to_question_id, locale)
+            emit('turn', 'completed', status_code=prepared['workflow'].get('status'),
+                 reason_code=prepared['workflow'].get('reason_code'), error_code=prepared['workflow'].get('error_code'),
+                 budget=prepared['workflow'].get('budget'))
+            prepared['workflow']['trace_id'] = trace.trace_id
+            return prepared
+        except BaseException as exc:
+            emit('turn', 'error', error_type=type(exc).__name__, error_code=getattr(exc, 'code', None))
+            raise
+        finally:
+            export(trace)
+            current_trace.reset(token)
+
+    def _prepare_turn(self, owner, doc, request_id, text, turn=None, entry_hint='auto', reply_to_question_id=None, locale='zh'):
         from packages.agent.workflow import TurnWorkflow
-        # Locale is request-scoped; never persist it on the case document.
-        doc = {**doc, '_ui_locale': locale}
+        from packages.chat.language import reply_language
+        locale = reply_language(doc, text, locale)
+        # Previous diagnostics are durable UI records, not inputs to new planning
+        # or graph state copies. Retain the original stored document for commit.
+        def compact_workflow(workflow):
+            return {k: v for k, v in workflow.items() if k != 'execution_trace'}
+        doc = {**doc, 'workflow': compact_workflow(doc.get('workflow', {})),
+               'messages': [{**m, **({'workflow': compact_workflow(m['workflow'])} if m.get('workflow') else {})}
+                            for m in doc.get('messages', [])],
+               '_ui_locale': locale, '_guard_extraction': self.turner is plan_turn and self.extractor is None}
         if entry_hint in ('auto', 'reference_lookup') and not reply_to_question_id:
             from packages.chat import expenses
             if expenses.should_handle(doc, text):
+                from packages.agent.tracing import emit
+                emit('graph.dispatch', destination='expense_research', summary_source='server_rule')
                 return expenses.prepare(doc, text, locale)
         def route(document, message):
             if self.extractor is not None:
@@ -372,6 +422,9 @@ class ChatService(DomainCoordinator):
         doc['data_approved'] = True
         doc['title'] = doc['title'] or text[:50]
         doc['workflow'] = prepared['workflow']
+        doc['reply_locale'] = prepared['workflow'].get('reply_locale', doc.get('reply_locale', 'zh'))
+        if 'fact_context' in prepared:
+            doc['fact_context'] = prepared['fact_context']
         doc['dialogue'] = prepared['dialogue']
         if 'orchestration' in prepared:
             doc['orchestration'] = prepared['orchestration']
@@ -386,6 +439,7 @@ class ChatService(DomainCoordinator):
                    'kind': 'research' if research is not None else 'intake' if turn['intent'] == 'intake' else 'chat',
                    'text': turn['reply'], 'question_fields': questions(doc) if turn['intent'] == 'intake' else [],
                    'state': doc['state'], 'created_at': now(), 'workflow': prepared['workflow']}
+        message['reply_locale'] = doc['reply_locale']
         message['question'] = prepared.get('question')
         message['guided'] = turn['intent'] == 'intake' or message['question'] is not None
         if research is not None:

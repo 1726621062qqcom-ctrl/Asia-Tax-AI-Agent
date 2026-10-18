@@ -28,6 +28,7 @@ def test_boundary_explains_actual_fact_and_can_resume_as_reference(tmp_path, orc
         doc = store.create('owner')
         doc = service.message('owner', doc['id'], doc['revision'], str(uuid4()), label, True, locale=locale)
         message = doc['messages'][-1]
+        locale = message['reply_locale']
         assert doc['workflow']['reason_code'] == 'out_of_scope'
         assert not doc['analyses'] and 'research' not in message
         assert ('个人' if locale == 'zh' else 'individual') in message['text'] if label == '个人' else True
@@ -76,10 +77,11 @@ def test_explanation_uses_actual_question_and_deduplicates_before_final_referenc
     assert seen[0]['sources'] == data['model_evidence']
     assert result['composition'] == 'grounded'
     assert result['text'].count('这里是有依据的解释') == 1
-    assert result['text'].index('法规及官方依据：') > result['text'].index('有依据的解释')
+    assert '法规及官方依据：' not in result['text']
+    assert result['text'].endswith('模拟段落 1')
     assert 'mock-evidence-1' not in result['text']
     extended = append_followup(result['text'], '请确认收款日期。')
-    assert extended.index('请确认收款日期') < extended.index('法规及官方依据：')
+    assert extended.startswith(result['text']) and extended.endswith('请确认收款日期。')
 
 
 @pytest.mark.parametrize('invalid', ['quote', 'id', 'empty', 'error'])
@@ -200,14 +202,15 @@ def test_multiple_requested_topics_are_represented_before_limit():
     assert 's.15K(2)' in refs and 's.15M(2)' in refs
 
 
-def test_explanation_cites_each_point_and_fallback_does_not_dump_raw_law():
+def test_explanation_cites_each_point_inline_and_fallback_does_not_dump_raw_law():
     data = bundle()
     answer = compose_answer(data, responder=lambda _: response(data))
-    assert '依据：' in answer['text']
+    assert '法规及官方依据：' not in answer['text']
+    assert answer['text'].endswith('模拟段落 1')
     fallback = compose_answer(data, responder=lambda _: {'invalid': True})
     assert fallback['composition_error'] == 'answer_shape'
     assert fallback['claims'][0]['text'] not in fallback['text']
-    assert '法规原文' in fallback['text']
+    assert '原文依据' in fallback['text']
 
 
 def test_quote_whitespace_is_canonicalized_but_changed_words_are_rejected():
@@ -257,6 +260,6 @@ def test_grounded_composer_repairs_missing_citations_once(monkeypatch):
             return {'paragraphs': [{'text': 'Unverified material.', 'evidence': []}], 'missing_info': []}
         return response(data)
     monkeypatch.setattr(OpenAICompatibleClient, 'chat_json', chat)
-    result = grounded.respond({'locale': 'zh', 'sources': data['model_evidence'], 'question': 'scope'})
+    result = compose_answer(data, question='scope', responder=grounded.respond)
     assert len(calls) == 2 and 'citations_required' in calls[1]
-    assert result == response(data)
+    assert result['composition'] == 'grounded'

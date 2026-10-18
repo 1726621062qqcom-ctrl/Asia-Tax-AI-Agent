@@ -27,20 +27,28 @@ class RunBudget:
         return max(0, self.seconds - (monotonic() - self.started))
 
     def consume(self, kind):
+        from packages.agent.tracing import emit
         limit = getattr(self, kind + '_limit')
         if self.remaining() <= 0 or self.counts.get(kind, 0) >= limit:
+            emit('budget', 'error', resource=kind, limit=limit, counts=self.snapshot(), reason_code='budget_exhausted')
             raise BudgetExceeded(kind)
         self.counts[kind] = self.counts.get(kind, 0) + 1
+        emit('budget', resource=kind, limit=limit, counts=self.snapshot())
 
     def snapshot(self):
         return {**self.counts, 'elapsed_ms': round((monotonic() - self.started) * 1000, 2)}
 
 
 def model_call(callback, *args):
+    from packages.agent.tracing import span, emit
     budget = current_budget.get()
     if budget:
         budget.consume('model')
-    return callback(*args)
+    with span('model.call', call_number=budget.counts.get('model') if budget else None):
+        result = callback(*args)
+        if isinstance(result, dict):
+            emit('model.decision', summary_source='model', **{k: result[k] for k in ('intent', 'action', 'tool', 'query', 'reason', 'decision_summary', 'uses_case', 'task_kind') if k in result})
+        return result
 
 
 class BudgetedProvider:
@@ -49,16 +57,21 @@ class BudgetedProvider:
         self.budget, self.facts_hash = budget, facts_hash
 
     def search_evidence(self, request, context):
+        from packages.agent.tracing import emit, span
         payload = request.model_dump(mode='json', exclude={'request_id', 'trace_id', 'deadline_ms'})
         key = ('search', context.owner, context.case_id, self.facts_hash, json.dumps(payload, sort_keys=True))
         if key in self.budget.cache:
+            emit('retrieval.cache', cache_hit=True, query=request.query)
             result = deepcopy(self.budget.cache[key])
             return result.model_copy(update={'request_id': request.request_id, 'trace_id': request.trace_id})
         self.budget.consume('search')
         deadline = min(request.deadline_ms, max(1, int(self.budget.remaining() * 1000)))
-        result = self.provider.search_evidence(request.model_copy(update={'deadline_ms': deadline}), context)
+        with span('retrieval.search', query=request.query, kind=request.kind, locators=request.locators,
+                  jurisdiction=request.jurisdiction, applicable_date=str(request.applicable_date) if request.applicable_date else None):
+            result = self.provider.search_evidence(request.model_copy(update={'deadline_ms': deadline}), context)
         from packages.agent.contracts import SearchResult
         result = SearchResult.model_validate(result)
+        emit('retrieval.result', provider=result.provider, result_status=result.status, evidence_count=len(result.evidence))
         if result.request_id != request.request_id or result.trace_id != request.trace_id:
             raise ValueError('Response identity mismatch')
         if self.budget.remaining() <= 0:
@@ -68,15 +81,18 @@ class BudgetedProvider:
         return result
 
     def get_evidence(self, reference, purpose, context):
+        from packages.agent.tracing import emit, span
         key = ('evidence', context.owner, context.case_id, reference.model_dump_json(), purpose)
         if key in self.budget.cache:
+            emit('evidence.cache', cache_hit=True, purpose=purpose)
             return deepcopy(self.budget.cache[key])
         self.budget.consume('evidence')
         # HTTP adapter enforces this deadline; legacy in-process adapters remain bounded
         # by their own DB timeout and are checked again on return.
         bounded = getattr(self.provider, 'get_evidence_bounded', None)
-        result = bounded(reference, purpose, context, min(1, self.budget.remaining())) if bounded else \
-            self.provider.get_evidence(reference, purpose, context)
+        with span('evidence.read', purpose=purpose):
+            result = bounded(reference, purpose, context, min(1, self.budget.remaining())) if bounded else \
+                self.provider.get_evidence(reference, purpose, context)
         if self.budget.remaining() <= 0:
             raise BudgetExceeded('time')
         self.budget.cache[key] = deepcopy(result)

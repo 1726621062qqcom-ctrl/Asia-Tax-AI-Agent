@@ -77,7 +77,7 @@ def test_fact_and_reference_shortcuts_start_their_own_workflows(chat, text, kind
     assert 'li|' not in message['text']
     if kind == 'reference_lookup':
         assert doc['dialogue']['pending']['id'].startswith('hybrid:reference:')
-        assert ('Which rule or official case' if locale == 'en' else '你想查哪项规定') in message['text']
+        assert ('Which rule or official case' if message['reply_locale'] == 'en' else '你想查哪项规定') in message['text']
 
 
 def test_reference_question_resumes_as_independent_lookup_without_rewriting_facts(chat):
@@ -147,7 +147,7 @@ def test_dividend_shortcut_starts_consultation_without_model_or_lookup(chat, tex
     assert message['question']['task_id'] == doc['orchestration']['active_task']['id']
     assert doc['orchestration']['active_task']['status'] == 'waiting_user'
     assert 'li|' not in message['text']
-    if locale == 'en':
+    if doc['messages'][-1]['reply_locale'] == 'en':
         assert 'Please clarify:' in message['text']
     assert chat.store.get('owner', doc['id'])['dialogue']['pending'] == message['question']
 
@@ -594,7 +594,7 @@ def test_model_budget_already_used_ends_with_verified_result(chat, monkeypatch):
     doc = send(chat, chat.store.create('owner'), parsed('research'), '查香港股息')
     assert len(chat.provider.searches) == 1
     assert doc['workflow']['status'] == 'partial_failure'
-    assert '后续调度失败' in doc['messages'][-1]['text']
+    assert '部分查询还未完成' in doc['messages'][-1]['text']
 
 
 def test_model_planner_receives_only_safe_metadata_even_after_display_history(chat):

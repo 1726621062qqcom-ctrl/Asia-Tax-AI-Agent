@@ -9,6 +9,19 @@ async function submit(page: Page) {
   }
 }
 
+test('conversation stays free of execution log controls after send and reload', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '查阅依据', exact: true }).click();
+  await submit(page);
+  await expect(page.locator('.message.assistant')).toHaveCount(1);
+  await expect(page.locator('.agent-trace, .recent-agent-traces')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '导出本轮 JSON', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '查看最近执行记录（含失败）', exact: true })).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator('.message.assistant')).toHaveCount(1);
+  await expect(page.locator('.agent-trace, .recent-agent-traces')).toHaveCount(0);
+});
+
 for (const [button, hint, task] of [
   ["境外股息", "dividend_consultation", "股息咨询"],
   ["梳理事实", "fact_intake", "梳理事实"],
@@ -140,4 +153,16 @@ test("requested fact summary renders known values without confirming or authoriz
   expect(doc.confirmed_facts).toBeNull();
   expect(doc.dialogue.partial_consent).toBeUndefined();
   expect(doc.analyses).toEqual([]);
+});
+
+test('fact actions follow an English answer while the interface stays Chinese', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('textbox', { name: '输入你的税务问题' }).fill('Our Hong Kong company received a dividend. Please help organize the facts.');
+  await submit(page);
+  await expect(page.locator('.message.assistant')).toHaveCount(1);
+  await expect(page.getByRole('button', { name: 'Review case facts', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: '核对案例事实', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('textbox', { name: '输入你的税务问题' })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Review case facts', exact: true })).toBeVisible();
 });

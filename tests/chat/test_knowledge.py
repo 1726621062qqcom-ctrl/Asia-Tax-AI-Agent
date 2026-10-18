@@ -17,10 +17,10 @@ def test_multiple_references_use_cloud_query_and_ranking(monkeypatch):
     from sqlalchemy import create_engine, text
     engine = create_engine('sqlite://')
     with engine.begin() as conn:
-        conn.execute(text('CREATE TABLE sources (id INTEGER PRIMARY KEY, source_id TEXT, l0_in_scope BOOLEAN, parse_status TEXT, actual_sha256 TEXT, manifest_sha256 TEXT, retrieved_at DATETIME)'))
+        conn.execute(text('CREATE TABLE sources (id INTEGER PRIMARY KEY, source_id TEXT, l0_in_scope BOOLEAN, parse_status TEXT, actual_sha256 TEXT, manifest_sha256 TEXT, retrieved_at DATETIME, source_type TEXT, jurisdiction TEXT, effective_from DATE, effective_to DATE)'))
         conn.execute(text('CREATE TABLE legal_units (source_db_id INTEGER, unit_ref TEXT, statute_locator TEXT, heading TEXT, text TEXT, text_sha256 TEXT, unit_type TEXT, ordinal INTEGER)'))
         for number, sid in [(1, 'law'), (2, 'hk_ird_advance_68')]:
-            conn.execute(text("INSERT INTO sources VALUES (:id,:sid,1,'parsed',NULL,NULL,NULL)"), {'id': number, 'sid': sid})
+            conn.execute(text("INSERT INTO sources (id,source_id,l0_in_scope,parse_status) VALUES (:id,:sid,1,'parsed')"), {'id': number, 'sid': sid})
         for index, ref in enumerate(['s.15K(1)', 's.15K(2)', 's.15K(3)', 's.15M(1)', 's.15M(2)', 's.15H(5)', 's.15H(6)', 's.15H(7)', 's.15H(1)', 's.15I(1)', 's.15I(3)', 's.15N(2)', 's.15N(5)', 's.15N(4)'], 1):
             conn.execute(text("INSERT INTO legal_units VALUES (1,:ref,:ref,'Heading','Synthetic text','hash','subsection',:n)"), {'ref': ref, 'n': index})
         for n in range(1, 8):

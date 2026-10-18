@@ -19,7 +19,7 @@ from pydantic import BaseModel
 from packages.agent.contracts import (Coverage, Evidence, EvidenceResult, Reference, SearchRequest,
                                       SearchResult, TrustedContext)
 from packages.domain_bridge.bridge import PINNED_DB_SHA256, DomainError, release_path, verify_release
-from packages.agent.source_policy import public_hk_official
+from packages.agent.source_policy import public_hk_official, canonical_source_id, source_kind, FSIE_GUIDANCE_PATHS
 
 app = FastAPI(title='Official tax library read-only API', version='0.1.0')
 _thread = local()
@@ -149,11 +149,11 @@ def search(body: SearchWire, request: Request):
                             status='no_match', coverage=Coverage(status='partial', scope='Li official library',
                                                                 missing_requirements=['本资料库不包含独立税务裁定案例']))
     navigation = list(r.locators)
-    if not navigation and r.jurisdiction == 'HK':
+    if not navigation and r.jurisdiction == 'HK' and r.kind != 'guidance':
         from packages.chat.knowledge import outside_scope, references, topic_locators
         explicit, cases = references(r.query)
         navigation = explicit or ([] if cases or outside_scope(r.query) else topic_locators(r.query))
-    hits = lib.search(r.query, k=r.limit, jur=r.jurisdiction.lower() if r.jurisdiction else None, as_of=r.applicable_date.isoformat() if r.applicable_date else None,
+    hits = lib.search(r.query, k=min(50, r.limit * 6) if r.kind != 'all' else r.limit, jur=r.jurisdiction.lower() if r.jurisdiction else None, as_of=r.applicable_date.isoformat() if r.applicable_date else None,
                       channels=('exact', 'bm25'), today=date.today().isoformat())
     retrieval_gap = None
     if not isinstance(hits, list):
@@ -172,7 +172,12 @@ def search(body: SearchWire, request: Request):
             selected.append(hit)
             seen.add(key)
     # Read seven parent sections once, then project all verified child spans.
-    # The other seven evidence reads remain available for the routed ruling source.
+    # The shared remaining reads also serve PostgreSQL guidance and ruling sources.
+    if r.kind != 'all':
+        # Filter by doc metadata before truncation; a statutory locator is not guidance.
+        selected = [hit for hit in selected if source_kind((lib.con.execute(
+            'SELECT type FROM doc WHERE id = ?', (lib.meta[hit.cite_id]['expr_id'],)
+        ).fetchone() or {'type': None})['type']) == r.kind]
     max_evidence = 7 if navigation else r.limit
     truncated = len(selected) > max_evidence
     selected = selected[:max_evidence]
@@ -196,7 +201,8 @@ def search(body: SearchWire, request: Request):
         reference = _reference(hit.cite_id, start, end)
         cutoff = date.fromisoformat(hit.valid_to) - timedelta(days=1) if hit.valid_to else None
         source_id = 'hk_hkel_iro_cap112' if meta['expr_id'] == 'hk.cap112.en' else meta['expr_id']
-        is_fsie = source_id == 'hk_hkel_iro_cap112' and re.search(r'#s15(?:H|I|J|K|L|M|N|O|P|Q|R|S)$', hit.cite_id)
+        source_id = canonical_source_id(source_id, doc['url'] if doc else None)
+        is_fsie = source_id in FSIE_GUIDANCE_PATHS or source_id == 'hk_hkel_iro_cap112' and re.search(r'#s15(?:H|I|J|K|L|M|N|O|P|Q|R|S)$', hit.cite_id)
         official_for_model = public_hk_official(source_id, doc['url'] if doc else None)
         evidence.append(Evidence(**reference.model_dump(), source_id=source_id, content_hash=sha256(excerpt.encode()).hexdigest(),
                                  title=hit.title or hit.cite_id, source_type=doc['type'] if doc else 'official',

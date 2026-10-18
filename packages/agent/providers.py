@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Literal
 from urllib.parse import urlsplit
 from time import monotonic
+from queue import Queue, Empty
+from threading import BoundedSemaphore, Thread
 
 import httpx
 from pydantic import Field
@@ -16,6 +18,9 @@ from packages.agent.contracts import (SearchRequest, SearchResult, TrustedContex
 from packages.agent.source_policy import public_hk_official
 
 ROOT = Path(__file__).resolve().parents[2]
+# Bound outstanding read-only database workers even if the OS stalls a socket.
+# Timed-out work never writes case state or starts models, and late results are ignored.
+_DATABASE_READ_SLOTS = BoundedSemaphore(2)
 
 
 def failure(request, provider, code, retryable=False):
@@ -50,7 +55,7 @@ class MockKnowledgeProvider:
 
 
 class LegacyKnowledgeProvider:
-    """Existing A database adapter; only named public official sources enter models."""
+    """PostgreSQL sources/legal_units adapter, scoped by the approved FSIE manifest."""
     def __init__(self, searcher=None):
         self.searcher = searcher
         self._snapshot = {}
@@ -63,7 +68,7 @@ class LegacyKnowledgeProvider:
         if self.searcher:
             return self.searcher(request.query)
         if request.locators:
-            docs = read_documents(locators=request.locators)
+            docs = read_documents(locators=request.locators, kind=request.kind)
             docs = [d for d in docs if d.get('locator') in request.locators][:50]
             return {'status': 'available' if docs else 'no_matching_units', 'passages': docs}
         if request.kind == 'ruling':
@@ -76,6 +81,24 @@ class LegacyKnowledgeProvider:
         return search(request.query, request.kind, request.limit)
 
     def search_evidence(self, request, context):
+        # DB connect/statement timeouts do not bound a stale TLS socket or pool
+        # pre-ping. Enforce the entire adapter call's deadline at its boundary.
+        deadline = monotonic() + request.deadline_ms / 1000
+        if not _DATABASE_READ_SLOTS.acquire(timeout=max(0, deadline - monotonic())):
+            return failure(request, 'legacy', 'TIMEOUT', True)
+        result = Queue(maxsize=1)
+        def read():
+            try:
+                result.put(self._search_evidence(request, context))
+            finally:
+                _DATABASE_READ_SLOTS.release()
+        Thread(target=read, name='knowledge-read', daemon=True).start()
+        try:
+            return result.get(timeout=max(0, deadline - monotonic()))
+        except Empty:
+            return failure(request, 'legacy', 'TIMEOUT', True)
+
+    def _search_evidence(self, request, context):
         try:
             raw = self._documents(request)
             if raw['status'] == 'unavailable':
@@ -89,8 +112,9 @@ class LegacyKnowledgeProvider:
                 official_for_model = public_hk_official(item['source_id'], item.get('url'))
                 evidence.append(Evidence(**ref.model_dump(), source_id=item['source_id'],
                     content_hash=digest, title=item.get('title') or item['source_id'],
-                    source_type='legacy_reference', locator=item.get('locator'), url=item.get('url'),
-                    jurisdiction='HK', topic='dividend', model_use='allowed' if official_for_model else 'denied',
+                    source_type=item.get('source_type') or 'legacy_reference', locator=item.get('locator'), url=item.get('url'),
+                    jurisdiction=item.get('jurisdiction') or 'HK', topic='dividend',
+                    effective_from=item.get('effective_from'), effective_to=item.get('effective_to'), model_use='allowed' if official_for_model else 'denied',
                     model_text=item['text'] if official_for_model else None, display_use='allowed',
                     drift=bool(item.get('drift')), heading=item.get('heading'), retrieved_at=item.get('retrieved_at'),
                     coverage_cutoff=item.get('coverage_cutoff'), snapshot_sha256=item.get('snapshot_sha256'),
@@ -193,21 +217,35 @@ class CKnowledgeProvider:
 
 
 class RoutedKnowledgeProvider:
-    """Explicit source routing, never a fallback after failed law retrieval."""
-    def __init__(self, law, rulings):
-        self.law, self.rulings = law, rulings
+    """Route by source kind: fixed SQLite law, PostgreSQL FSIE guidance/rulings.
+
+    Technical failure is returned to the caller, never masked by another corpus.
+    """
+    def __init__(self, law, rulings, guidance=None):
+        # Fixed SQLite supplies legislation; PostgreSQL supplies FSIE guidance and rulings.
+        self.law, self.rulings, self.guidance = law, rulings, guidance or rulings
 
     def for_request(self):
-        return RoutedKnowledgeProvider(self.law, self.rulings.for_request() if hasattr(self.rulings, 'for_request') else self.rulings)
+        return RoutedKnowledgeProvider(self.law,
+            self.rulings.for_request() if hasattr(self.rulings, 'for_request') else self.rulings,
+            self.guidance.for_request() if hasattr(self.guidance, 'for_request') else self.guidance)
 
     def search_evidence(self, request, context):
-        return (self.rulings if request.kind == 'ruling' else self.law).search_evidence(request, context)
+        provider = self.rulings if request.kind == 'ruling' else self.guidance if request.kind == 'guidance' else self.law
+        return provider.search_evidence(request, context)
 
     def get_evidence(self, reference, purpose, context):
-        return (self.law if reference.unit_id.startswith('li|') else self.rulings).get_evidence(reference, purpose, context)
+        return self._reference_provider(reference).get_evidence(reference, purpose, context)
+
+    def _reference_provider(self, reference):
+        if reference.unit_id.startswith('li|'):
+            return self.law
+        if reference.unit_id.startswith('hk_ird_advance_'):
+            return self.rulings
+        return self.guidance
 
     def get_evidence_bounded(self, reference, purpose, context, timeout):
-        provider = self.law if reference.unit_id.startswith('li|') else self.rulings
+        provider = self._reference_provider(reference)
         return provider.get_evidence_bounded(reference, purpose, context, timeout) if hasattr(provider, 'get_evidence_bounded') else provider.get_evidence(reference, purpose, context)
 
 

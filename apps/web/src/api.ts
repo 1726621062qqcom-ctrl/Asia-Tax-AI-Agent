@@ -12,6 +12,7 @@ export function isRetryable(code: string) {
     "model_not_configured",
     "service_unavailable",
     "storage_unavailable",
+    "auth_unavailable",
     "knowledge_unavailable",
     "tool_failed",
   ].includes(code);

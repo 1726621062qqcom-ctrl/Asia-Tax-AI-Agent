@@ -172,7 +172,7 @@ def test_retrieval_failure_is_not_no_match_or_mock_fallback(chat):
 def test_no_match_rewrite_is_bounded_to_one_query(chat):
     chat.provider = Provider('MOCK-02')
     chat.tool_planner = Planner(tool('search_law', QUERY), tool('search_law', QUERY + '官方指引'),
-                                tool('search_cases', QUERY + '参考裁定'))
+                                tool('search_law', QUERY + '参考裁定'))
     result = send(chat)
     assert len(chat.provider.calls) == 2
     assert result['workflow']['harness_stop'] == 'rewrite_limit'
@@ -299,3 +299,17 @@ def test_tool_loop_via_actual_message_api(chat, sse):
             assert duplicate.status_code == 200 and len(chat.provider.calls) == before
     finally:
         app.dependency_overrides.clear()
+
+
+def test_requested_sources_are_completed_for_consultation_job_not_only_lookup(chat):
+    from packages.agent.hybrid import HybridWorkflow
+    from packages.agent.tool_harness import ToolHarness
+    from packages.agent.budget import RunBudget
+    workflow = HybridWorkflow(chat.provider, chat.turner, chat.analyzer, responder=lambda _: {})
+    workflow.budget = RunBudget()
+    state = {'payload': {'job': {'kind': 'consultation', 'query': QUERY, 'uses_case': True},
+        'turn': {'query': QUERY}, 'text': '请查香港境外股息的法条和官方指引', 'doc': {'facts': {}, 'dialogue': {}},
+        'patch': {}, 'conflicts': {}, 'dialogue': {}, 'entry_hint': 'auto'}, 'calls': [
+            {'tool': 'search_law', 'status': 'draft_ready', 'reason_code': 'evidence_available'}]}
+    pending = ToolHarness(workflow).pending_search(state)
+    assert pending and pending.tool == 'search_guidance'

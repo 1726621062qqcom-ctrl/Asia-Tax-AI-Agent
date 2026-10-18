@@ -13,6 +13,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from packages.chat.knowledge import knowledge_engine
 from packages.persistence.models import LegalUnit, Source
+from packages.agent.tracing import instrument, emit
 
 MANIFEST = Path(__file__).resolve().parents[2] / "knowledge/hong_kong/profits_tax_deductions/source_manifest.json"
 EXPENSE_WORDS = re.compile(
@@ -48,6 +49,7 @@ def should_handle(doc: dict, text: str) -> bool:
                 not re.search(r"股息|FSIE|结构分析|dividend|structure analysis|你好|谢谢|你是谁|功能|hello|thanks", text, re.I))
 
 
+@instrument('node.expense.search')
 def search(query: str, limit: int = 6, kind: str = "all") -> dict:
     """Use only this package's pinned official sources and verify unit hashes."""
     package = manifest()
@@ -136,6 +138,7 @@ def search(query: str, limit: int = 6, kind: str = "all") -> dict:
             "query": query, "method": "expense_official_lexical"}
 
 
+@instrument('node.expense.answer')
 def answer(query: str, research: dict, locale: str) -> dict:
     en = locale == "en"
     passages = research["passages"]
@@ -178,8 +181,8 @@ def answer(query: str, research: dict, locale: str) -> dict:
             text = append_followup(text, ("Research draft; verify the applicable year and current rule with a tax adviser." if en else
                      "这是待复核的研究草稿；适用年度及现行规则仍需税务专业人士核对。"))
             return {"text": text, "citations": citations, "answer_status": "source_grounded"}
-        except Exception:
-            pass
+        except Exception as exc:
+            emit('expense.answer_fallback', 'rejected', error_type=type(exc).__name__)
     base = next((p for p in passages if p["locator"] == "s.16(1)"), passages[0])
     exclusion = next((p for p in passages if p["locator"] == "s.17(1)"), None)
     links = [f"[{base['locator'] or base['title']}]({base['url']})"]
@@ -192,6 +195,7 @@ def answer(query: str, research: dict, locale: str) -> dict:
             "answer_status": "source_excerpt_only"}
 
 
+@instrument('node.expense.prepare')
 def prepare(doc: dict, text: str, locale: str) -> dict:
     history = (doc.get("expense_context") or {}).get("user_messages", [])[-3:]
     query = "\n".join([*history, text])[:500]
@@ -204,6 +208,7 @@ def prepare(doc: dict, text: str, locale: str) -> dict:
         "turn": {"intent": "research", "facts": {}, "query": query, "reply": response["text"]},
         "patch": {}, "conflicts": {}, "research": research, "answer": response,
         "workflow": {"version": "expenses-0.1.0", "trace_id": str(uuid4()),
+                     "reply_locale": locale,
                      "status": "draft_ready" if pending else "paused_gap",
                      "reason_code": "evidence_available" if pending else "evidence_insufficient"},
         "dialogue": doc.get("dialogue", {}), "question": None,

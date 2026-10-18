@@ -1,4 +1,5 @@
 export const workflow: Record<string, [string, string]> = {
+  "error:auth_unavailable": ["认证服务暂不可用，请稍后重试。", "The sign-in service is temporarily unavailable. Please retry."],
   "task:consultation": ["股息咨询", "Dividend consultation"],
   "task:fact_intake": ["梳理事实", "Organize facts"],
   "task:reference_lookup": ["查阅依据", "Reference lookup"],

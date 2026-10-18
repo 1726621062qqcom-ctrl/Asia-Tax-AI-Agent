@@ -51,6 +51,7 @@ export type GuidedQuestion = {
   task_id?: string;
 };
 export type Message = {
+  reply_locale?: "zh" | "en";
   research_results?: KnowledgeResult[];
   guided?: boolean;
   question?: GuidedQuestion | null;
@@ -133,6 +134,7 @@ export type Analysis = {
   passages: Passage[];
 };
 export type Case = {
+  reply_locale?: "zh" | "en";
   schema_version?: string;
   legacy_bindings?: Record<string, string>;
   domain_confirmation?: { facts_hash: string; revision: number } | null;
@@ -178,7 +180,18 @@ export type DomainOutcome = { status: "needs_input" | "ready" | "blocked" | "uns
   notes?: string[]; unmodelled?: unknown[] };
 export type Panel = "facts" | "sources" | "structure" | "about" | null;
 export function fieldLabel(field: FieldSpec, locale: string) {
-  return locale === "en" ? field.label_en : field.description_zh;
+  const clean: Record<string, string> = { holding_percentage_pct: "持股比例（%）", bank_or_account_path: "账户及资金路径",
+    dividend_amount: "股息金额", dividend_currency: "股息币种", evidence_inventory: "已有及待补材料" };
+  return locale === "en" ? field.label_en : clean[field.field_name] || field.description_zh.split(/[；，]/)[0];
+}
+
+export function uniquePassages(results: KnowledgeResult[]) {
+  const seen = new Set<string>();
+  return results.flatMap(result => result.passages).filter(p => {
+    const key = JSON.stringify([p.source_id, p.unit_id, p.locator, p.text_sha256]);
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
 }
 export const suggestions = [
   {

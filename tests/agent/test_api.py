@@ -36,6 +36,23 @@ def mutation(doc, **kwargs):
     return dict(revision=doc['revision'], request_id=str(uuid4()), **kwargs)
 
 
+def test_chat_api_never_delivers_execution_logs_including_old_cases(api):
+    client, service = api
+    doc = new_case(client)
+    response = client.post(f"/api/cases/{doc['id']}/messages", headers=HEADERS,
+                           json=mutation(doc, text='香港 FSIE 股息', data_approved=True))
+    assert response.status_code == 200
+    assert 'execution_trace' not in response.text
+    stored = service.store.get('user:' + USER['id'], doc['id'])
+    stored['workflow']['execution_trace'] = {'private_log': 'LEGACY_LOG'}
+    stored['messages'][-1]['workflow']['execution_trace'] = {'private_log': 'LEGACY_LOG'}
+    service.store.save('user:' + USER['id'], stored, stored['revision'])
+    for path in (f"/api/cases/{doc['id']}", '/api/cases'):
+        result = client.get(path, headers=HEADERS)
+        assert result.status_code == 200 and 'LEGACY_LOG' not in result.text and 'execution_trace' not in result.text
+    assert client.get(f"/api/cases/{doc['id']}/traces", headers=HEADERS).status_code == 404
+
+
 def test_sse_and_json_shared_graph_and_retry(api):
     client, service = api
     a, b = new_case(client), new_case(client)

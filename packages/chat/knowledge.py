@@ -29,11 +29,13 @@ STOP.update('there any show list available official source sources some us find 
 
 # Navigation hints to existing source units, not tax determinations.
 TOPIC_LOCATORS = [
+    (r'材料清单|準備材料|准备材料|可执行.{0,5}方案|降低.{0,12}税负|documentation checklist|documents? (?:to|should)|tax.{0,10}(?:plan|burden)|action plan',
+     ['s.15K(1)', 's.15K(2)', 's.15K(3)', 's.15M(1)', 's.15M(2)', 's.15N(2)', 's.15N(6)', 's.15N(7)', 's.15N(3)', 's.15N(4)']),
     (r'外包|outsourc', ['s.15K(3)', 's.15K(2)']),
     (r'经济实质|經濟實質|economic substance|纯股权|純股權|pure equity', ['s.15K(1)', 's.15K(2)', 's.15K(3)']),
     (r'参[与股]豁免|參[與股]豁免|participation|持股比例|持有期|holding period', ['s.15M(1)', 's.15M(2)', 's.15N(2)', 's.15N(6)', 's.15N(7)', 's.15N(3)', 's.15N(4)']),
     (r'收取|汇回|匯回|境外银行|received|remit', ['s.15H(5)', 's.15H(6)', 's.15H(7)']),
-    (r'抵免|重复征税|双重征税|交过税|credit|double tax', ['s.15N(5)', 's.15K(1)']),
+    (r'抵免|重复征税|双重征税|交过税|credit|double tax', ['s.15N(5)', 's.15M(1)', 's.15M(2)', 's.15N(2)', 's.15N(3)', 's.15N(4)', 's.15K(1)']),
     (r'反混合|hybrid', ['s.15N(3)']),
     (r'主要目的|main purpose', ['s.15N(4)']),
     (r'申报|申報|reporting|notification', ['s.15J']),
@@ -99,13 +101,19 @@ def read_documents(query: str = '', kind: str = 'all', locators: list[str] | Non
     entries = {s['source_id']: s for s in manifest['sources'] if s.get('l0_in_scope', True)
                and urlsplit(s['url']).hostname in manifest['allowed_source_domains']}
     conditions = [Source.source_id.in_(entries), Source.l0_in_scope.is_(True), Source.parse_status == 'parsed']
+    from packages.agent.source_policy import SOURCE_TYPES
+    if kind in SOURCE_TYPES:
+        # Manifest types also support read-only fixtures with a minimal SQL schema.
+        ids = [sid for sid, entry in entries.items() if entry.get('source_type') in SOURCE_TYPES[kind]]
+        if any(entry.get('source_type') for entry in entries.values()):
+            conditions.append(Source.source_id.in_(ids))
     token_matches = []
     if kind == 'ruling':
         conditions.append(LegalUnit.unit_type == 'ruling_block')
     elif kind == 'law':
         conditions.append(LegalUnit.statute_locator.is_not(None))
     elif kind == 'guidance':
-        conditions.extend([LegalUnit.statute_locator.is_(None), LegalUnit.unit_type != 'ruling_block'])
+        conditions.append(LegalUnit.unit_type != 'ruling_block')
     if unit_id is not None:
         conditions.append(LegalUnit.unit_ref == unit_id)
     if locators is not None:
@@ -140,6 +148,7 @@ def read_documents(query: str = '', kind: str = 'all', locators: list[str] | Non
                 LegalUnit.unit_ref, LegalUnit.statute_locator, LegalUnit.heading,
                 LegalUnit.text, LegalUnit.text_sha256, LegalUnit.unit_type, LegalUnit.ordinal,
                 Source.source_id, Source.actual_sha256, Source.manifest_sha256, Source.retrieved_at,
+                Source.source_type, Source.jurisdiction, Source.effective_from, Source.effective_to,
             ).join(Source, LegalUnit.source_db_id == Source.id).where(*conditions)
         if token_matches:
             # Bounded lexical candidate stage keeps full-page HTML tables off the wire.
@@ -153,6 +162,10 @@ def read_documents(query: str = '', kind: str = 'all', locators: list[str] | Non
             'unit_id': r.unit_ref, 'locator': r.statute_locator, 'heading': r.heading,
             'text': r.text, 'text_sha256': r.text_sha256, 'unit_type': r.unit_type,
             'ordinal': r.ordinal, 'source_id': r.source_id,
+            'source_type': r.source_type or entries[r.source_id].get('source_type'),
+            'jurisdiction': r.jurisdiction or entries[r.source_id].get('jurisdiction', 'HK'),
+            'effective_from': r.effective_from,
+            'effective_to': r.effective_to,
             'title': entries[r.source_id]['title'], 'url': entries[r.source_id]['url'],
             'snapshot_sha256': r.actual_sha256, 'manifest_sha256': r.manifest_sha256,
             'retrieved_at': r.retrieved_at.isoformat() if r.retrieved_at else None,
@@ -176,10 +189,12 @@ def terms(query: str) -> list[str]:
 def rank_documents(documents: list[dict], query: str, kind: str = 'all', limit: int = 6) -> list[dict]:
     if limit <= 0:
         return []
-    candidates = [d for d in documents if kind == 'all' or
+    from packages.agent.source_policy import source_kind
+    candidates = [d for d in documents if (not d.get('source_type') or kind == 'all' or
+                  source_kind(d['source_type']) == kind) and (kind == 'all' or
                   (kind == 'ruling' and d['unit_type'] == 'ruling_block') or
                   (kind == 'law' and d['locator']) or
-                  (kind == 'guidance' and not d['locator'] and d['unit_type'] != 'ruling_block')]
+                  (kind == 'guidance' and d['unit_type'] != 'ruling_block'))]
     refs, rulings = references(query)
     if refs or rulings:
         ordered = sorted(candidates, key=lambda d: (d['source_id'], d['ordinal'], d['unit_id']))

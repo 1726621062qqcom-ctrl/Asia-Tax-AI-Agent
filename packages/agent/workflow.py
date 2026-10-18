@@ -2,6 +2,7 @@
 from __future__ import annotations
 from copy import deepcopy
 from time import monotonic
+import re
 from typing import TypedDict
 from uuid import uuid4
 
@@ -10,6 +11,7 @@ from packages.agent.contracts import SearchRequest, TrustedContext
 from packages.agent.knowledge import retrieve, compose_answer, validate_answer
 from packages.chat.facts import validate_patch, raw_facts
 from packages.agent import dialogue
+from packages.agent.tracing import trace_id
 
 
 class TurnState(TypedDict, total=False):
@@ -25,6 +27,7 @@ class TurnState(TypedDict, total=False):
     workflow: dict
     dialogue: dict
     question: dict | None
+    fact_context: dict
 
 
 class TurnWorkflow:
@@ -35,7 +38,8 @@ class TurnWorkflow:
                              ('compose', self.compose), ('validate', self.validate)]:
             def timed(state, action=action, name=name):
                 started = monotonic()
-                update = action(state)
+                from packages.agent.tracing import node
+                update = node(name, action, state)
                 meta = deepcopy(update.get('workflow', state.get('workflow', {})))
                 meta.setdefault('trace', []).append(name)
                 meta.setdefault('timings_ms', {})[name] = round((monotonic() - started) * 1000, 2)
@@ -52,7 +56,8 @@ class TurnWorkflow:
     def invoke(self, doc, text, owner, request_id, turn=None):
         return self.graph.invoke({'doc': deepcopy(doc), 'text': text, 'owner': owner, 'request_id': request_id,
             **({'turn': turn} if turn is not None else {}),
-            'workflow': {'version': '0.2.0', 'trace_id': str(uuid4()), 'status': 'ready', 'reason_code': None}},
+            'workflow': {'version': '0.2.0', 'trace_id': trace_id(), 'status': 'ready', 'reason_code': None,
+                         'reply_locale': doc.get('_ui_locale', 'zh')}},
             {'recursion_limit': 10})
 
     def route(self, state):
@@ -69,7 +74,34 @@ class TurnWorkflow:
         doc = state['doc']
         previous_dialogue = doc.get('dialogue', {})
         patch = validate_patch(turn['facts'])
+        fact_context = deepcopy(doc.get('fact_context', {}))
+        if doc.get('_guard_extraction'):
+            from packages.agent.fact_context import guard_extraction
+            from packages.agent.tracing import emit
+            proposed_fields = set(patch)
+            patch, fact_context = guard_extraction(patch, state['text'], fact_context)
+            emit('facts.guard', proposed_fields=sorted(proposed_fields), retained_fields=sorted(patch),
+                 removed_fields=sorted(proposed_fields-set(patch)),
+                 partial_date_fields=sorted(fact_context.get('partial_dates', {})),
+                 transaction_scope=fact_context.get('transaction_scope', {}).get('status'))
         old = raw_facts(doc)
+        for field, partial in list(fact_context.get('partial_dates', {}).items()):
+            existing = old.get(field)
+            if not existing or existing in ('unknown', 'conflict'):
+                continue
+            prefix = str(partial['year']) + (f'-{partial["month"]:02}' if partial.get('month') else '')
+            if not existing.startswith(prefix) or re.search(r'更正|说错|correct|exact day.*unknown|不知道.{0,8}(?:哪天|确切|具体)', state['text'], re.I):
+                patch[field] = None
+                fact_context.get('sources', {}).pop(field, None)
+            else:
+                fact_context['partial_dates'].pop(field)
+        if (doc.get('_guard_extraction') and not old.get('analysis_jurisdiction')
+                and re.search(r'税率|百分之|多少.{0,8}税|tax rate|how much.{0,15}tax', state['text'], re.I)
+                and re.search(r'从|获得|收到|from|receiv', state['text'], re.I)
+                and not re.search(r'香港|hong kong|FSIE|预提税|所得税|withholding|income tax', state['text'], re.I)):
+            turn.update(intent='clarify', query='', reply=(
+                'Is the recipient an individual or a company, and which jurisdiction’s tax treatment should we check?'
+                if doc.get('_ui_locale') == 'en' else '这笔股息由个人还是公司收取？你想了解哪个地区的税务处理？'))
         pending = previous_dialogue.get('pending')
         # New transaction belongs in a separate case, irrespective of extracted fields.
         if action == 'new_case':
@@ -107,6 +139,7 @@ class TurnWorkflow:
                 conflicts[key] = {'previous': previous, 'candidate': value}
                 patch[key] = 'conflict'
         projected = deepcopy(doc)
+        projected['fact_context'] = fact_context
         for key, value in patch.items():
             if value is None:
                 projected['facts'].pop(key, None)
@@ -116,6 +149,7 @@ class TurnWorkflow:
         projected.setdefault('fact_conflicts', {}).update(conflicts)
         known = raw_facts(projected)
         meta = deepcopy(state['workflow'])
+        meta['reply_locale'] = doc.get('_ui_locale', 'zh')
         active_conflicts = [k for k, v in known.items() if v == 'conflict']
         case_request = turn['intent'] == 'intake' or bool(patch) or turn.get('uses_case', False)
         if turn['intent'] == 'unsupported' or (case_request and action not in ('pause', 'new_case', 'summary') and not dialogue.supported(known)):
@@ -147,7 +181,7 @@ class TurnWorkflow:
             meta.update(status='completed', reason_code='facts_summarized')
         meta['identification'] = dialogue.identification(projected)
         return {'turn': turn, 'patch': patch, 'conflicts': conflicts, 'workflow': meta,
-                'dialogue': interview, 'question': question}
+                'dialogue': interview, 'question': question, 'fact_context': fact_context}
 
     def retrieve(self, state):
         uses_case = bool(state['patch']) or state['turn'].get('uses_case', False)
@@ -222,4 +256,7 @@ class TurnWorkflow:
     def validate(self, state):
         if state['answer'] is not None:
             validate_answer(state['answer'], state['research'])
+        if self.responder and 'orchestration' not in state and state['doc'].get('_ui_locale') == 'en' and state['turn'].get('action') == 'summary':
+            from packages.chat.language import english_case_view
+            return {'turn': {**state['turn'], 'reply': dialogue.summary_text(english_case_view(state['doc']), 'en')}}
         return {}

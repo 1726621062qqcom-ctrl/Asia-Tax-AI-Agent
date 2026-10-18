@@ -1,4 +1,8 @@
-"""Portable local workspace storage; separate from the research knowledge DB."""
+"""Revision-guarded chat documents; production uses PostgreSQL, tests may use SQLite.
+
+This document is the chat fact source. The normalized cases/facts tables belong
+to the original rule slice and are not an automatically synchronized second copy.
+"""
 from __future__ import annotations
 
 from datetime import datetime, timezone

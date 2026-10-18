@@ -1,8 +1,9 @@
 import type { Passage } from "../workspace";
-import { useLocale } from "../locale";
+import { useLocale, translate, type Locale } from "../locale";
 
-export default function Passages({ passages }: { passages: Passage[] }) {
-  const { t } = useLocale();
+export default function Passages({ passages, replyLocale }: { passages: Passage[]; replyLocale?: Locale }) {
+  const { locale } = useLocale();
+  const t = (text: string) => translate(text, replyLocale || locale);
   return (
     <div className="knowledge-passages">
       {passages.map((p) => (
@@ -17,7 +18,7 @@ export default function Passages({ passages }: { passages: Passage[] }) {
             <p className="passage-warning">{t("来源内容已变化，待核对。")}</p>
           )}
           <blockquote>{p.text}</blockquote>
-          {!!p.context?.length && <details><summary>{t("上下文原文")}</summary><Passages passages={p.context} /></details>}
+          {!!p.context?.length && <details><summary>{t("上下文原文")}</summary><Passages passages={p.context} replyLocale={replyLocale} /></details>}
           {p.url && (
             <a href={p.url} target="_blank" rel="noopener noreferrer">
               {t("在官方网站阅读")}

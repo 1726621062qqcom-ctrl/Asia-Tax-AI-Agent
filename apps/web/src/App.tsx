@@ -10,7 +10,7 @@ import {
 import { caseTitle, sourceInfo, type Panel } from "./workspace";
 import { useWorkspace } from "./hooks/useWorkspace";
 import { isRetryable } from "./api";
-import { useLocale } from "./locale";
+import { useLocale, translate } from "./locale";
 import { useOverlayFocus } from "./hooks/useOverlayFocus";
 import Composer from "./components/Composer";
 import Conversation from "./components/Conversation";
@@ -30,6 +30,7 @@ export default function App() {
     busy,
     currentBusy,
     error,
+    errorLocale,
     setActiveId,
     drafts,
     changeDraft,
@@ -195,9 +196,9 @@ export default function App() {
             )}
             {error && !panel && (
               <div className="request-error" role="alert">
-                {t(`error:${error}`)}{" "}
+                {translate(`error:${error}`, errorLocale)}{" "}
                 {isRetryable(error) && (
-                  <HintButton onClick={retry}>{t("重试")}</HintButton>
+                  <HintButton onClick={retry}>{translate("重试", errorLocale)}</HintButton>
                 )}
               </div>
             )}
