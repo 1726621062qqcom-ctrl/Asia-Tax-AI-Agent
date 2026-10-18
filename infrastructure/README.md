@@ -6,7 +6,7 @@ Taxrora 使用 Render 免费 Web Service，优先申请 `taxrora.onrender.com`�
 
 根目录 `render.yaml` 声明唯一的 Python Web Service，明确设置 `plan: free`，不创建数据库或磁盘，不启用模型。Render 直接构建 Python 应用，无需本机 Docker。
 
-1. 将已验证的代码推送到 GitHub `main`。
+1. 将已验证的代码推送到 GitHub `deploy/taxrora-free-demo`。远程 `main` 已包含比本地 Demo 更新的完整应用，不要用 Demo 覆盖它。
 2. 登录 Render，创建 Blueprint 并选择本仓库；核对只有一个 Free Web Service，再部署。也可手动创建 Web Service，照 `render.yaml` 填写配置。
 3. 如果名称被占用，选择 `taxrora-app` 等可用名称。平台注入的 `RENDER_EXTERNAL_HOSTNAME` 自动加入准确的主机白名单；不要使用通配符。
 4. 使用平台 HTTPS 地址验收首页、健康检查、新建对话、回答引用、更正和清空。`FSIE_SECURE_COOKIES=true` 确保代理终止 TLS 时 Cookie 仍标记 Secure。
