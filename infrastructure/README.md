@@ -1,6 +1,15 @@
 # Infrastructure
 
-Taxrora 使用 Render 免费 Web Service，优先申请 `taxrora.onrender.com`，实际地址以平台分配为准。无需旧域名、Cloudflare Tunnel 或本地常开电脑。当前配置已准备，线上状态须以部署验收为准。
+Taxrora 已部署到 Render 免费 Web Service：**https://taxrora.onrender.com**。无需旧域名、Cloudflare Tunnel 或本地常开电脑。
+
+## 首次部署验收
+
+- 日期：2026-10-18（Asia/Shanghai）；上线代码：`1797fb13498ed4d1f23761cf105f53716b53bd05`，分支 `deploy/taxrora-free-demo`。
+- 云服务 ID：`srv-dba8d8dg1s2s73b625hg`；Singapore；Python 3；Free；自动部署关闭。
+- Render 首次构建和上线成功，云端健康检查返回 200；浏览器首页品牌为 Taxrora，问答成功展示 8 项官方引用。
+- 线上 API 验证：资料模式、会话创建、Secure Cookie、聊天回答、事实更正及清空通过；未调用模型。
+- 发布前验证：133 项离线测试通过，9 项集成测试未运行；知识包、12 个抽取样本、10 个聊天行为场景检查通过。
+- 远程 `main` 未修改。此分支为独立 Demo，不包含最新完整主线的 React、登录和数据库功能。
 
 ## Render 免费部署
 
