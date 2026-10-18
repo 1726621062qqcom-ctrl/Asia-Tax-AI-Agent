@@ -235,6 +235,8 @@ export default function Conversation({
           ) : message.kind === "research" && message.research ? (
             <div className="research-response">
               {message.text && <AnswerText text={message.text} />}
+              <details className="research-sources">
+              <summary>{locale === "en" ? "Original sources" : "法规原文"}</summary>
               <p>
                 {t(
                   message.research.is_synthetic
@@ -249,6 +251,7 @@ export default function Conversation({
               {(message.research_results || [message.research]).map((result, i) => (
                 <Passages key={`${result.query}-${i}`} passages={result.passages} />
               ))}
+              </details>
             </div>
           ) : message.kind === "analysis" ? (
             (() => {

@@ -182,3 +182,38 @@ def test_multiple_task_answers_have_one_deduplicated_reference_footer():
 def test_known_hk_region_does_not_trigger_another_jurisdiction_question(region):
     from packages.agent.policy import scope
     assert scope('境外股息', {'uses_case': True}, {'analysis_jurisdiction': region}, 'auto') == 'HK'
+
+
+def test_legal_question_with_unknown_facts_is_not_a_summary_command():
+    from packages.agent import dialogue
+    question = '香港公司收到新加坡子公司的境外股息，应核对哪些 FSIE 条件？请用中文分点解释，列出对应法条和官方来源，未知事实不要当作已满足。'
+    assert dialogue.deterministic_turn({}, question) is None
+    assert dialogue.explicit_summary_request('把我已经提供的信息列出来，并说还缺哪些关键资料')
+
+
+def test_multiple_requested_topics_are_represented_before_limit():
+    refs = topic_locators('香港 FSIE 适用范围、经济实质和参股豁免')[:7]
+    assert 's.15H(1)' in refs and 's.15I(1)' in refs
+    assert 's.15K(2)' in refs and 's.15M(2)' in refs
+
+
+def test_explanation_cites_each_point_and_fallback_does_not_dump_raw_law():
+    data = bundle()
+    answer = compose_answer(data, responder=lambda _: response(data))
+    assert '依据：' in answer['text']
+    fallback = compose_answer(data, responder=lambda _: {'invalid': True})
+    assert fallback['composition_error'] == 'answer_shape'
+    assert fallback['claims'][0]['text'] not in fallback['text']
+    assert '法规原文' in fallback['text']
+
+
+def test_quote_whitespace_is_canonicalized_but_changed_words_are_rejected():
+    from packages.agent.grounded import claims_from_result
+    evidence = [{'evidence_id': 'law:1', 'text': '(1)The applicable requirement is met.'}]
+    result = {'paragraphs': [{'text': 'This is a supported explanation.', 'evidence': [
+        {'evidence_id': 'law:1', 'quote': '(1) The applicable requirement is met.'}]}], 'missing_info': []}
+    claims, _ = claims_from_result(result, evidence)
+    assert claims[0]['supports'][0]['quote'] == evidence[0]['text']
+    result['paragraphs'][0]['evidence'][0]['quote'] = '(1)The applicable requirement is not met.'
+    with pytest.raises(ValueError, match='unsupported_citation'):
+        claims_from_result(result, evidence)

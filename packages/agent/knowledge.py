@@ -245,20 +245,30 @@ def compose_answer(bundle, locale='zh', question='', responder=None):
                 # An independent rule lookup must not restart a case interview.
                 missing = []
             answer.update(claims=claims, summary=claims[0]['text'], composition='grounded', missing_info=missing)
-        except Exception:
+        except Exception as exc:
             answer['composition'] = 'extractive_fallback'
+            # Audit the failure category without persisting provider errors or secrets.
+            answer['composition_error'] = str(exc) if isinstance(exc, ValueError) and str(exc) in {
+                'answer_shape', 'paragraphs', 'missing_info', 'paragraph', 'citations_required',
+                'citation_shape', 'unsupported_citation'} else type(exc).__name__
     lines = [answer['summary'], '\n' + ('Conditions: ' if english else '适用条件：') + ('; ' if english else '；').join(answer['conditions'])]
     if answer.get('composition') == 'grounded':
-        lines = [claim['text'] for claim in answer['claims']]
+        lines = []
+        for index, claim in enumerate(answer['claims'], 1):
+            links = citation_lines(bundle, claim['evidence_ids'])
+            paragraph = (f"{index}. " if len(answer['claims']) > 1 else '') + claim['text']
+            if links:
+                paragraph += '\n\n' + ('   ' if len(answer['claims']) > 1 else '') + ('Source: ' if english else '依据：') + ' · '.join(link.removeprefix('- ') for link in links)
+            lines.append(paragraph)
         if bundle['is_synthetic']:
             lines.insert(0, '[Synthetic test data, not an official tax source]' if english else '【模拟联调资料，不是真实税务依据】')
         if answer['missing_info']:
             lines.append(('To confirm:\n' if english else '还需确认：\n') + '\n'.join('- ' + item for item in answer['missing_info']))
     else:
         if answer.get('composition') == 'extractive_fallback':
-            lines.append('The explanation could not be verified; the excerpts below are for checking.' if english else '这次解释未通过核验，下面保留可核对的原文摘录。')
-        for index, claim in enumerate(answer['claims'], 1):
-            lines.append(('\nSource excerpt [' if english else '\n依据摘录 [') + str(index) + (']:\n' if english else ']：\n') + claim['text'])
+            lines.append('The explanation could not be verified; the excerpts below are for checking.' if english else '本次未能生成通过引用校验的解释。')
+        if answer['claims']:
+            lines.append('Open the source cards below to read the original provisions. The excerpts are not a completed answer to your question.' if english else '请展开下方“法规原文”核对条文。检索到原文不等于已经完成对问题的解释，本次不据此判断条件已满足。')
     if answer['limitations']:
         lines.append(('\nGaps: ' if english else '\n还不能确认的部分：') + ('; ' if english else '；').join(answer['limitations']))
     references = citation_lines(bundle, [ref for claim in answer['claims'] for ref in claim['evidence_ids']])

@@ -42,8 +42,16 @@ TOPIC_LOCATORS = [
 
 
 def topic_locators(query: str) -> list[str]:
-    refs = list(dict.fromkeys(ref for pattern, refs in TOPIC_LOCATORS
-                             if re.search(pattern, query, re.I) for ref in refs))
+    groups = [list(refs) for pattern, refs in TOPIC_LOCATORS if re.search(pattern, query, re.I)]
+    # Give each requested topic a slot before adding its secondary provisions.
+    # Otherwise a multi-topic query can use all seven slots on the first topic.
+    refs = []
+    while any(groups):
+        for group in groups:
+            if group:
+                ref = group.pop(0)
+                if ref not in refs:
+                    refs.append(ref)
     # A general FSIE/dividend query still needs relevant navigation. Raw Chinese
     # BM25 hits can otherwise point at unrelated IRO sections.
     if not refs and re.search(r'FSIE|境外股息|foreign.{0,10}dividend', query, re.I):
@@ -243,7 +251,11 @@ def search(query: str, kind: str = 'all', limit: int = 7) -> dict:
                 d['context'] = [p for p in neighbors if p['source_id'] == d['source_id']
                                 and max(0, d['ordinal'] - 1) <= p['ordinal'] <= d['ordinal'] + 2
                                 and p['unit_id'] != d['unit_id'] and p['snapshot_sha256'] == d['snapshot_sha256']][:3]
+        refs, rulings = references(query)
+        requested = refs if refs else ([] if rulings else topic_locators(query))
+        missing = [ref for ref in requested if not any(locator_matches(d.get('locator'), ref) for d in results)]
         return {'status': 'available' if results else 'no_matching_units', 'passages': results,
+                'truncated': bool(missing),
                 'method': 'catalog_keyword_and_locator', 'query': query}
     except Exception:
         # Connection details, filesystem paths and raw DB errors stay on the server.

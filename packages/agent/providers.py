@@ -98,7 +98,9 @@ class LegacyKnowledgeProvider:
             return SearchResult(request_id=request.request_id, trace_id=request.trace_id,
                 retrieval_id=request.request_id, provider='legacy', is_synthetic=False,
                 corpus_version='legacy-unversioned', status='ok' if evidence else 'no_match', evidence=evidence,
-                coverage=Coverage(status='unchecked', scope='Existing reference search; applicability unverified'))
+                coverage=Coverage(status='partial' if raw.get('truncated') else 'unchecked',
+                    scope='Existing reference search; applicability unverified', truncated=bool(raw.get('truncated')),
+                    missing_requirements=['本次只返回部分相关条款，未覆盖的条件须继续查证。'] if raw.get('truncated') else []))
         except Exception:
             return failure(request, 'legacy', 'UNAVAILABLE', True)
 

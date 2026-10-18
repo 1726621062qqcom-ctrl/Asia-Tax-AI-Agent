@@ -228,7 +228,7 @@ def deterministic_turn(doc, text):
                      if values(doc).get('recipient_type') == 'individual' else '香港 FSIE 适用范围及收款主体的定义')
             return {'intent': 'research', 'facts': {}, 'query': query,
                     'reply': '将核对香港 FSIE 的适用范围。', 'uses_case': False, 'task_kind': 'reference_lookup'}
-    if explicit_summary_request(text):
+    if explicit_summary_request(text) and not re.search(r'法条|法规|官方|FSIE|解释|查阅|分析|statute|legislation|explain|research', text, re.I):
         return {'intent': 'intake', 'facts': {}, 'reply': '将汇总已提供的信息。', 'query': '', 'action': 'summary'}
     if state.get('status') in ('paused', 'suspended') and value in UNKNOWN | {'是', '否', 'yes', 'no'}:
         return {'intent': 'clarify', 'facts': {}, 'reply': '请说明本次问题。', 'query': ''}
@@ -275,7 +275,7 @@ def explicit_summary_request(text):
     value = normalize(text)
     if re.search(r'不要(?:汇总|总结|列出)|不用(?:汇总|总结|列出)|do not summarize|don.t summarize', value, re.I):
         return False
-    return bool(re.search(r'(?:列出|汇总|总结|列出来).{0,30}(?:已提供|已经提供|已知|案情|事实|信息)|'
+    return bool(re.search(r'(?:列出|汇总|总结|列出来)[^，,。；;！？!?\n]{0,30}(?:已提供|已经提供|已知|案情|事实|信息)|'
                           r'(?:已提供|已经提供|已知).{0,20}(?:列出来|列出|汇总|总结)|'
                           r'summari[sz]e.{0,25}(?:facts|case information)', value, re.I))
 
