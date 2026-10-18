@@ -1,4 +1,4 @@
-/** Original Taxora T mark, approved in the September 28 brand concept. */
+/** Original Taxrora T mark, approved in the September 28 brand concept. */
 export function BrandMark({ size = 32 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" fill="currentColor" aria-hidden="true" focusable="false">
@@ -12,9 +12,9 @@ export function BrandMark({ size = 32 }: { size?: number }) {
 
 export default function Brand() {
   return (
-    <span className="brand-lockup" role="img" aria-label="Taxora">
+    <span className="brand-lockup" role="img" aria-label="Taxrora">
       <BrandMark />
-      <span className="brand-wordmark" aria-hidden="true"><strong>Tax</strong>ora</span>
+      <span className="brand-wordmark" aria-hidden="true"><strong>Tax</strong>rora</span>
     </span>
   );
 }

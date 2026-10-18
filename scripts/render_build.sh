@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+npm --prefix apps/web ci --include=dev
+npm --prefix apps/web run build
+python -m pip install .

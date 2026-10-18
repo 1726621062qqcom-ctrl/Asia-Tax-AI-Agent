@@ -40,8 +40,8 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = locale === "zh" ? "zh-CN" : "en";
     document.title =
       locale === "zh"
-        ? "Taxora · 税务研究助手"
-        : "Taxora · Tax Research Assistant";
+        ? "Taxrora · 税务研究助手"
+        : "Taxrora · Tax Research Assistant";
   }, [locale]);
   return (
     <LocaleContext.Provider

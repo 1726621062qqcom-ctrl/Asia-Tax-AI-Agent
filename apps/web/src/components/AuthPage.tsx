@@ -76,9 +76,9 @@ export default function AuthPage({ configured, initialError, recovery, onLogin, 
   const title = recovery ? say("设置新密码", "Set a new password") : mode === "login" ? say("欢迎回来", "Welcome back") : mode === "signup" ? say("创建你的账号", "Create your account") : mode === "resend" ? say("验证你的邮箱", "Verify your email") : say("找回密码", "Reset your password");
   const action = recovery ? say("保存新密码", "Save password") : mode === "login" ? say("登录", "Sign in") : mode === "signup" ? say("创建账号", "Create account") : mode === "resend" ? resendLabel : say("发送重置邮件", "Send reset email");
   return <main className="auth-page">
-    <section className="auth-story" aria-label="Taxora">
+    <section className="auth-story" aria-label="Taxrora">
       <Brand />
-      <div className="auth-story-copy"><span className="auth-eyebrow">TAXORA / {say("税衡", "TAX INTELLIGENCE")}</span>
+      <div className="auth-story-copy"><span className="auth-eyebrow">TAXRORA / {say("税衡", "TAX INTELLIGENCE")}</span>
         <h1>{say("看清税务，", "Clarity in tax.")}<br />{say("找到更优路径。", "A better path forward.")}</h1>
         <p>{say("从事实与依据出发，让每一步判断更清晰。", "Start with facts and evidence. Make every next step clearer.")}</p>
       </div>

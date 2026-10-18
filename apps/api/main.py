@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import os
+import re
+
 from fastapi import FastAPI
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
@@ -15,7 +18,12 @@ app = FastAPI(title="Asia Tax AI Agent — HK FSIE L0", version="0.1.0")
 from apps.api.auth import router as auth_router
 app.include_router(auth_router)
 app.include_router(router)
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "testserver"])
+# Trust only this service's platform hostname, never every Render tenant.
+allowed_hosts = ["127.0.0.1", "localhost", "testserver"]
+render_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "")
+if re.fullmatch(r"[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.onrender\.com", render_hostname):
+    allowed_hosts.append(render_hostname)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
 
 
 @app.middleware("http")

@@ -48,7 +48,7 @@ export default function DetailsPanel({
         ? t("结构分析")
         : panel === "sources"
         ? t("法规与来源")
-        : t("关于 Taxora");
+        : t("关于 Taxrora");
   const selected =
     sourceInfo.find((s) => s.id === selectedSource) || sourceInfo[0];
   return (
@@ -158,7 +158,7 @@ export default function DetailsPanel({
         )}
         {panel === "about" && (
           <div className="about-content">
-            <h3>Taxora</h3>
+            <h3>Taxrora</h3>
             <p>{t("税务研究与专业复核的工作空间。")}</p>
             <details open>
               <summary>{t("当前服务状态")}</summary>

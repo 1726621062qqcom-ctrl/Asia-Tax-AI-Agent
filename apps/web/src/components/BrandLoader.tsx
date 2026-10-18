@@ -14,7 +14,7 @@ export default function BrandLoader({ label, fullPage = false }: {
         <span className="brand-loader-orbit" />
         <BrandMark size={fullPage ? 64 : 28} />
       </span>
-      {fullPage && <span className="brand-loader-wordmark" aria-hidden="true"><strong>Tax</strong>ora</span>}
+      {fullPage && <span className="brand-loader-wordmark" aria-hidden="true"><strong>Tax</strong>rora</span>}
     </div>
   );
 }

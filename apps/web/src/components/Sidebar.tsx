@@ -128,7 +128,7 @@ export default function Sidebar({
         </HintButton>
         <HintButton className="side-link" onClick={() => onPanel("about")}>
           <CircleHelp size={17} />
-          {t("关于 Taxora")}
+          {t("关于 Taxrora")}
         </HintButton>
       </div>
     </aside>

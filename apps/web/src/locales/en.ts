@@ -14,7 +14,7 @@ export const en: Record<string, string> = {
   研究案例: "Research cases",
   没有找到匹配的案例: "No matching chats",
   法规资料库: "Source library",
-  "关于 Taxora": "About Taxora",
+  "关于 Taxrora": "About Taxrora",
   税务助手: "Tax assistant",
   收起案例信息: "Close case details",
   打开案例信息: "Open case details",
