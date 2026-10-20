@@ -172,7 +172,7 @@ export default function StructurePanel({ current, onUpdate }: Props) {
     </div> : <><label htmlFor="structure-json">{say("结构案情（JSON）", "Structure facts (JSON)")}</label><textarea id="structure-json" rows={12} value={draft} onChange={e => setDraft(e.target.value)} /></>}
     {Object.keys(bindings).length > 0 && <details><summary>{say("确认事实归属后，这些字段将在两边同步", "These fields synchronize after their ownership is confirmed")}</summary><ul>{Object.entries(bindings).map(([f, a]) => <li key={f}>{f} → {a}</li>)}</ul></details>}
     <label className="structure-consent"><input type="checkbox" checked={approved} onChange={e => setApproved(e.target.checked)} />{say("本次仅提交合成研究资料，不含真实客户或个人信息。", "Submit synthetic research data only, without real client or personal information.")}</label>
-    <button onClick={() => void save()} disabled={busy || !draft}>{say("保存结构案情", "Save structure facts")}</button>
+    <button className="primary-button" onClick={() => void save()} disabled={busy || !draft}>{say("保存结构案情", "Save structure facts")}</button>
     {current.domain_case && <div className="structure-actions"><button disabled={busy || !ready} onClick={() => void run(() => api.domainPlan(current, crypto.randomUUID()))}>{say("运行结构规划", "Run structure analysis")}</button>
       <button disabled={busy} onClick={() => void run(() => api.domainControl(current, current.domain_workflow?.status === "paused" ? "resume" : "pause"))}>{current.domain_workflow?.status === "paused" ? say("恢复结构分析", "Resume analysis") : say("暂停结构分析", "Pause analysis")}</button></div>}
     {error && <p role="alert" className="request-error">{error}</p>}
