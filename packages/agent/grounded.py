@@ -42,7 +42,10 @@ SYSTEM = (
     '完整个案用简短的Markdown粗体标题区分当前判断、每项相关条件和优先材料；英文对应Current position、各项Condition、Documents to request。'
     '经济实质、参与条件、境外税等不同法律条件必须各用一个paragraph对象，各自绑定支持该条件的evidence；不要把多个条件塞进同一paragraph。'
     '系统只在每个paragraph末尾添加链接，因此每个独立法律论点必须单独输出；所选span须覆盖本论点的全部条件，不能只引用外包条款支持整套经济实质要求。'
-    '全文英文控制在350至450词以内，中文控制在700至1000字以内；每个条件一般不超过70个英文词。复杂条件用项目符号，不堆成长段。'
+    '按用户所需详略回答，默认中文250至450字、英文180至250词；明确要求完整分析时中文最多800字。'
+    '用户要求先问关键问题时，只用1至2段给简短判断，再在missing_info列最多3个简短问题，不展开整套制度。'
+    '追问用户能直接提供的事实，如实际业务、员工职责和持股起始日期；不要让用户自行判断是否属于纯股权持有实体或是否符合经济实质。'
+    '优先用分红、公司实际经营活动、境外已缴税款等日常用词；FSIE、QDMTT和英文法条原句只在用户要求解释时使用。'
     '优先材料必须使用真正的Markdown列表，每项以换行加减号开头，禁止把多个圆点符号塞在同一行。'
     '不要单列Where the analysis stops重复前文的未知条件，把当前不能确定的结论集中写在Current position。'
     '每段必须带至少一个有效的evidence；案情和材料清单要结合相关法律条件解释，不另写无依据段落。'
@@ -104,8 +107,13 @@ def respond(payload):
     budget = current_budget.get()
     seconds = min(25, budget.remaining()) if budget else 25
     config = replace(config, timeout_seconds=max(.001, seconds), total_timeout_seconds=max(.001, seconds), max_retries=0)
+    style = ''
+    if re.search(r'优先问|先问|ask.{0,25}(?:three|3).{0,15}questions first', payload.get('question', ''), re.I):
+        style = (' 本轮为先澄清再分析：覆盖上文完整个案的篇幅要求，paragraphs仅1至2段、合计最多150个中文字，'
+                 '只说明问题类型和为什么不能立即给税额，不展开各项豁免条款。missing_info最多3项，每项一个简短问题。'
+                 '这些篇幅要求不允许省略已陈述结论的必要前提，不确定时用条件句。')
     return model_call(lambda: OpenAICompatibleClient(config).chat_json(
-        SYSTEM + (' Answer in English.' if payload['locale'] == 'en' else ' 使用简体中文，原文引用不翻译。'),
+        SYSTEM + style + (' Answer in English.' if payload['locale'] == 'en' else ' 使用简体中文，不插入英文术语；仅用户要求的逐字原文引用不翻译。'),
         json.dumps(payload, ensure_ascii=False), max_tokens=2400))
 
 
@@ -115,8 +123,10 @@ def claims_from_result(result, evidence, locale=None):
     paragraphs, missing = result['paragraphs'], result['missing_info']
     if not isinstance(paragraphs, list) or not 1 <= len(paragraphs) <= 8:
         raise ValueError('paragraphs')
-    if not isinstance(missing, list) or len(missing) > 3 or any(not safe_text(s, 250) for s in missing):
+    if not isinstance(missing, list) or len(missing) > 12 or any(not safe_text(s, 1000) for s in missing):
         raise ValueError('missing_info')
+    # More valid follow-ups must not discard the entire supported answer.
+    missing = list(dict.fromkeys(missing))
     permitted = {e['evidence_id']: e for e in evidence}
     claims, seen = [], set()
     for paragraph in paragraphs:

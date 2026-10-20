@@ -1,6 +1,7 @@
 """Source-bound extraction guards. Partial dates never become rule-engine dates."""
 from copy import deepcopy
 from datetime import date
+from decimal import Decimal
 import re
 
 MONTHS = 'January February March April May June July August September October November December'.split()
@@ -10,6 +11,27 @@ TRANSACTION_FIELDS = {
     'receipt_location', 'bank_or_account_path', 'continuous_holding_period_months',
     'payer_jurisdiction', 'dividend_form',
 }
+
+def selected_transaction(text):
+    """Bind only an explicitly numbered priority to its labelled source paragraph."""
+    selection = re.search(r'(?:优先|只|仅)(?:分析|计算|处理|讨论)(第[一二三]笔)', text)
+    if not selection:
+        return None
+    label = selection[1]
+    match = re.search(re.escape(label) + r'[：:]\s*(.*?)(?=\n|第[一二三]笔[：:]|$)', text, re.S)
+    if match and re.search(r'股息|分红', match[1]) and not re.search(r'卖出|出售', match[1]):
+        return {'status': 'selected', 'label': label, 'source_quote': match[1].strip(),
+                'selection_quote': selection[0]}
+    return None
+
+
+def amount_in_source(value, source):
+    """Verify extracted monetary units against the selected paragraph, not other payments."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    amounts = re.findall(r'(\d[\d,]*(?:\.\d+)?)\s*(亿|万)?\s*(?:元|港币|港元)', source)
+    return len(amounts) == 1 and Decimal(str(value)) == (
+        Decimal(amounts[0][0].replace(',', '')) * {'亿': 100000000, '万': 10000, '': 1}[amounts[0][1]])
 
 
 def date_span(value, text):
@@ -72,7 +94,28 @@ def guard_extraction(patch, text, previous=None):
             patch.pop(field)
     multi = bool(re.search(r'two steps|two (?:planned |possible )?(?:dividends|payments)|first distinguish|两笔|两步|先区分', text, re.I)
                  and re.search(r'dividend|股息|分红', text, re.I))
-    if multi:
+    selected = selected_transaction(text) if multi else None
+    if selected:
+        context['transaction_scope'] = selected
+        source = selected['source_quote']
+        # Only retain selected-transaction values supported by that paragraph.
+        for field in TRANSACTION_FIELDS & patch.keys():
+            value = patch[field]
+            if field == 'dividend_amount':
+                supported = amount_in_source(value, source)
+            elif field == 'holding_percentage_pct':
+                supported = bool(re.search(rf'(?<![\d.]){re.escape(str(value))}\s*[%％]', source))
+            elif field.endswith('_date'):
+                supported = value not in ('unknown', 'conflict') and date_span(value, source)
+            else:
+                aliases = {'CN': '内地|中国|CN', 'HK': '香港|HK', 'SG': '新加坡|SG',
+                           'CNY': '人民币|CNY', 'cash': '现金|cash',
+                           'received_in_hk': '香港.{0,15}(?:银行|账户)',
+                           'direct': '直接', 'indirect': '间接'}
+                supported = bool(re.search(aliases.get(str(value), re.escape(str(value))), source, re.I))
+            if not supported:
+                patch.pop(field, None)
+    elif multi:
         context['transaction_scope'] = {'status': 'multiple_unbound', 'source_quote': text[:6000]}
         # Preserve the described chain, not a flat mixture of its separate payments.
         for field in TRANSACTION_FIELDS:

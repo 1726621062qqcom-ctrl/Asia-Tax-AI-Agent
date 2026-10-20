@@ -396,3 +396,23 @@ def test_case_date_review_rejects_observed_live_precision_and_accrual_errors(tex
     with pytest.raises(ValueError, match=error):
         validate_case_claims([{'text': text}], {}, question)
     validate_case_claims([{'text': 'The expected year is 2027. The dividend is planned; the legal accrual date is unconfirmed.'}], {}, question)
+
+
+def test_valid_extra_followups_are_prioritized_without_losing_the_answer(production_chat):
+    from packages.agent.knowledge import retrieve, compose_answer
+    from packages.agent.contracts import SearchRequest, TrustedContext
+    chat, _ = production_chat
+    bundle = retrieve(chat.provider, SearchRequest(query='香港境外股息', request_id=str(uuid4()), trace_id=str(uuid4())),
+                      context=TrustedContext(owner='test', case_id='test'))
+    bundle['query_context'] = {'uses_case': True}
+    def respond(payload):
+        source = payload['sources'][0]
+        return {'paragraphs': [{'text': 'A supported explanation.',
+                'evidence': [{'evidence_id': source['evidence_id'], 'quote': source['text'][:30]}]}],
+                'missing_info': ['Question ' + str(i) for i in range(5)]}
+    answer = compose_answer(bundle, 'en', 'What facts are missing?', responder=respond)
+    assert answer['composition'] == 'grounded'
+    assert len(answer['missing_info']) == 5
+    assert 'Question 2' in answer['text'] and 'Question 3' not in answer['text']
+    assert '2 further conditions remain unverified' in answer['text']
+    validate_answer(answer, bundle)

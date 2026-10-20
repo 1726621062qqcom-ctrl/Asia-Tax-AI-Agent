@@ -406,13 +406,24 @@ def compose_answer(bundle, locale='zh', question='', responder=None):
         answer['next_steps_in_body'] = any(re.search(
             r'(?:\*\*|^|\n)(?:Documents? to (?:request|assemble|gather)|Next steps?|优先材料|材料清单|需.{0,3}材料|下一步)',
             claim['text'], re.I) for claim in answer['claims'])
-        lines = [re.sub(r'\s*[•●]\s*', '\n- ', claim['text']) + ' ' + ' · '.join(
+        def display_text(text):
+            if english or re.search(r'原文|逐字|quote|exact wording', question, re.I):
+                return text
+            # Translate generated terminology only; official quotations and links stay intact.
+            text = re.sub(r'\bunderlying profits\b', '用于分红的基础利润', text, flags=re.I)
+            return re.sub(r'(?<![A-Za-z])FSIE(?![A-Za-z])(?:制度)?', '境外收入豁免制度', text, flags=re.I)
+        lines = [re.sub(r'\s*[•●]\s*', '\n- ', display_text(claim['text'])) + ' ' + ' · '.join(
             link.removeprefix('- ') for link in citation_lines(bundle, claim['evidence_ids'], locale, claim.get('supports')))
                  for claim in answer['claims']]
         if bundle['is_synthetic']:
             lines.insert(0, '[Synthetic test data, not an official tax source]' if english else '【模拟联调资料，不是真实税务依据】')
         if answer['missing_info'] and not answer['next_steps_in_body']:
-            lines.append(('To confirm:\n' if english else '还需确认：\n') + '\n'.join('- ' + item for item in answer['missing_info']))
+            lines.append(('To confirm first:\n' if english else '优先确认：\n') +
+                         '\n'.join('- ' + display_text(item) for item in answer['missing_info'][:3]))
+            remaining = len(answer['missing_info']) - 3
+            if remaining > 0:
+                lines.append(f'{remaining} further conditions remain unverified; this is not a complete conclusion.'
+                             if english else f'另有 {remaining} 项条件尚未核实；先确认以上问题，再继续梳理，当前不是完整结论。')
     else:
         if answer.get('composition') == 'extractive_fallback':
             lines = ['I found source material, but could not verify a reliable explanation for this question. The original sources are available below.' if english else
