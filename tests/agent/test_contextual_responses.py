@@ -263,3 +263,41 @@ def test_grounded_composer_repairs_missing_citations_once(monkeypatch):
     result = compose_answer(data, question='scope', responder=grounded.respond)
     assert len(calls) == 2 and 'citations_required' in calls[1]
     assert result['composition'] == 'grounded'
+
+
+@pytest.mark.parametrize('orchestration', ['legacy', 'hybrid'])
+def test_share_sale_boundary_explains_difference_without_echo_or_case_mutation(tmp_path, orchestration):
+    from packages.chat.service import validate_turn
+    question = '我是香港一家投资公司的代理人，然后我最近投资了大陆一家公司，股价从100港币上升到了150港币，共1000股，我现在想出手，要交多少的税大概？'
+    parsed = validate_turn({'intent': 'unsupported', 'facts': {}, 'query': '',
+                           'reply': '股权出售需要另行核对。', 'scope_reason': 'equity_disposal'}, question)
+    store = ChatStore(f'sqlite:///{tmp_path}/sale.sqlite')
+    chat = ChatService(store, provider=MockKnowledgeProvider(), orchestration=orchestration,
+                       turner=lambda *_: parsed)
+    try:
+        doc = store.create('owner')
+        doc = chat.message('owner', doc['id'], 0, str(uuid4()), question, True)
+        answer = doc['messages'][-1]
+        assert '买卖差价' in answer['text'] and '派发股息不同' in answer['text']
+        assert question not in answer['text'] and '关于你问的' not in answer['text']
+        assert '并不等于你在做个人投资' in answer['text']
+        assert not doc['facts'] and not doc['analyses']
+        assert answer['question']['scope_reason'] == 'equity_disposal'
+        chat.turner = lambda *_: pytest.fail('The suggested lookup must be actionable without another model route')
+        doc = chat.message('owner', doc['id'], doc['revision'], str(uuid4()), '查处置收益规定', True,
+                           reply_to_question_id=answer['question']['id'])
+        assert doc['messages'][-1]['kind'] == 'research'
+        assert '股权处置收益' in doc['messages'][-1]['research']['query']
+        assert not doc['facts'] and not doc['analyses']
+    finally:
+        store.engine.dispose()
+
+
+def test_scope_reason_is_a_validated_label_not_freeform_model_output():
+    from packages.chat.service import validate_turn
+    from packages.agent.responses import scope_reply
+    with pytest.raises(ValueError, match='Invalid scope reason'):
+        validate_turn({'intent': 'unsupported', 'facts': {}, 'query': '', 'reply': 'Explanation',
+                       'scope_reason': 'tax free at 0%'})
+    text = 'A long and potentially sensitive user question that must not be echoed.'
+    assert text not in scope_reply({'facts': {}}, text)

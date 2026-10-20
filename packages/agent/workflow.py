@@ -155,7 +155,7 @@ class TurnWorkflow:
         if turn['intent'] == 'unsupported' or (case_request and action not in ('pause', 'new_case', 'summary') and not dialogue.supported(known)):
             turn['intent'] = 'unsupported'
             from packages.agent.responses import scope_reply
-            turn['reply'] = scope_reply(projected, state['text'], doc.get('_ui_locale', 'zh'))
+            turn['reply'] = scope_reply(projected, state['text'], doc.get('_ui_locale', 'zh'), scope_reason=turn.get('scope_reason'))
             meta.update(status='unsupported', reason_code='out_of_scope')
         elif active_conflicts and case_request and action not in ('partial', 'pause', 'new_case', 'unknown', 'unavailable'):
             if turn['intent'] == 'research':

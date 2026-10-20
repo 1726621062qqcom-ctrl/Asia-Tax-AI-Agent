@@ -223,7 +223,10 @@ def deterministic_turn(doc, text):
     state = doc.get('dialogue', {})
     pending = state.get('pending')
     if pending and pending['id'].startswith('boundary:scope:') and state.get('status') == 'active':
-        if value in ('查适用范围', '先查适用范围', '查一般规定', 'check the scope', 'yes', '是', '好'):
+        if value in ('查处置收益规定', 'check disposal rules', '查适用范围', '先查适用范围', '查一般规定', 'check the scope', 'yes', '是', '好'):
+            if pending.get('scope_reason') == 'equity_disposal':
+                return {'intent': 'research', 'facts': {}, 'query': '香港 FSIE 股权处置收益与股息的区别、适用范围及官方规定',
+                        'reply': '将核对股权处置收益的官方规定。', 'uses_case': False, 'task_kind': 'reference_lookup'}
             query = ('香港 FSIE 适用范围：个人收取境外股息是否属于实体及跨国企业实体的定义？'
                      if values(doc).get('recipient_type') == 'individual' else '香港 FSIE 适用范围及收款主体的定义')
             return {'intent': 'research', 'facts': {}, 'query': query,
@@ -445,7 +448,7 @@ def update_dialogue(doc, turn, patch, locale='zh'):
         return state, None, turn['reply']
     if turn['intent'] == 'unsupported':
         from packages.agent.responses import scope_question
-        q = scope_question(doc, locale)
+        q = scope_question(doc, locale, turn.get('scope_reason'))
         state['status'], state['pending'] = 'active', q
         return state, q, turn['reply'] + '\n\n' + render_question(q, locale)
     if action == 'pause':

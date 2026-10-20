@@ -67,7 +67,10 @@ def turn_prompt(doc: dict, text: str) -> tuple[str, str]:
         '混合消息在描述案情同时要求解释条件、核对证据或列材料时，必须用research并同时提取facts；缺少在港经营等事实不应降级为纯intake。'
         '只回答事实追问或只要求逐步收集案情时才用intake；研究回答须保留未知事项，不推定条件已满足。'
         'clarify：无法分清用户要查一般规定还是分析自身案件；facts/query为空。不要默认把歧义解释成个人或公司不明。'
-        'unsupported：明确要求香港企业境外股息之外的案件分析时；说明范围，facts/query为空。一般查资料仍用research。'
+        'unsupported：明确要求香港企业境外股息之外的案件分析时；facts/query为空，并返回scope_reason：equity_disposal/individual/other_jurisdiction/other。一般查资料仍用research。'
+        '股票或股权涨价后出售赚取差价应识别为equity_disposal，不是dividend；派息、分红才是股息线索。'
+        '公司代理人不等于个人投资者，第一人称我不代表收入归个人。不能仅因投资大陆公司就确认所得来源或纳税地区。'
+        'unsupported时reply简短说明具体区别，不复述用户整段问题，不猜税率、不算应缴税，不把工具覆盖范围当成法律适用范围。'
         '工具不支持某种个案分析不代表该用户的问题不能讨论；范围、定义和制度适用性仍应使用research查官方依据。'
         '用户追问为什么、什么意思、怎样继续时，结合上一轮具体卡点回答，不重复整段拒绝，不要求重填已知信息。'
         '客户说明个人或公司时使用recipient_type，不能从语言风格猜测主体类型。'
@@ -119,8 +122,10 @@ def validate_turn(result: dict, text: str = '') -> dict:
     if not isinstance(result, dict):
         raise ValueError('Invalid conversational object')
     required = {'intent', 'reply', 'facts', 'query'}
-    if not required.issubset(result) or set(result) - required - {'action', 'corrections', 'uses_case', 'task_kind', 'tasks', 'decision_summary'} or result['intent'] not in ('chat', 'research', 'intake', 'clarify', 'unsupported'):
+    if not required.issubset(result) or set(result) - required - {'action', 'corrections', 'uses_case', 'task_kind', 'tasks', 'decision_summary', 'scope_reason'} or result['intent'] not in ('chat', 'research', 'intake', 'clarify', 'unsupported'):
         raise ValueError('Invalid conversational turn')
+    if 'scope_reason' in result and (result['intent'] != 'unsupported' or result['scope_reason'] not in ('equity_disposal', 'individual', 'other_jurisdiction', 'other')):
+        raise ValueError('Invalid scope reason')
     if 'decision_summary' in result and (not isinstance(result['decision_summary'], str) or len(result['decision_summary']) > 240):
         raise ValueError('Invalid decision summary')
     if not isinstance(result['facts'], dict):
