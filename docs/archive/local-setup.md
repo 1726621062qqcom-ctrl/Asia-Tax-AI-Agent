@@ -1,4 +1,4 @@
-> 当前启动方式（2026-10-20）：先安装固定依赖 `python scripts/install_li_release.py`，再运行 `python scripts/run_chat.py`。本地和 Render 均读取 `config/runtime.json`，由 API 自动管理资料服务。以下日期记录中的本地开关状态是历史验收记录，不代表当前机器配置。以 `/health` 的 runtime 字段为准。详见 [部署说明](docs/project/RENDER_DEPLOYMENT.md)。
+> 当前启动方式（2026-10-20）：先安装固定依赖 `python scripts/install_li_release.py`，再运行 `python scripts/run_chat.py`。本地和 Render 均读取 `config/runtime.json`，由 API 自动管理资料服务。以下日期记录中的本地开关状态是历史验收记录，不代表当前机器配置。以 `/health` 的 runtime 字段为准。详见 [部署说明](../project/RENDER_DEPLOYMENT.md)。
 
 # 本地测试启动说明
 
@@ -51,9 +51,9 @@ FSIE_AGENT_DYNAMIC_PLANNER=false FSIE_AGENT_HARNESS_MODE=rewrite \
 .venv/bin/python scripts/check_combined_local.py
 ```
 
-当前输出问题的诊断与输出格式设计保留在 `docs/reviews/`。环境配置不包含对这些业务问题的修复；本地运行用于复现当前 main 行为。
+当前输出问题的诊断与输出格式设计保留在 `docs/archive/reviews/`。环境配置不包含对这些业务问题的修复；本地运行用于复现当前 main 行为。
 
-2026-10-17更新：本地工作区已接入回答质量核心改造（未推送），包括按提问语言回答、工具材料统一生成、原文片段引用校验、月级日期保护和明确持股更正。实施及真实网页回归记录见 `docs/reviews/2026-10-17-answer-quality-implementation.md`；上文的“复现main”描述对应初始环境配置，当前工作区包含后续修改。
+2026-10-17更新：本地工作区已接入回答质量核心改造（未推送），包括按提问语言回答、工具材料统一生成、原文片段引用校验、月级日期保护和明确持股更正。实施及真实网页回归记录见 `docs/archive/reviews/2026-10-17-answer-quality-implementation.md`；上文的“复现main”描述对应初始环境配置，当前工作区包含后续修改。
 
 ## 配置验证记录
 
@@ -70,7 +70,7 @@ FSIE_AGENT_DYNAMIC_PLANNER=false FSIE_AGENT_HARNESS_MODE=rewrite \
 
 ## 动态工具规划（2026-10-17）
 
-节点埋点写入独立日志：`data/local-setup/agent-logs/events.jsonl`实时保存事件，`runs.jsonl`保存每轮汇总，默认5MB轮转并保留3份历史。聊天里已移除日志面板、下载和历史入口，详细日志不随案件API返回。用 `.venv/bin/python scripts/agent_logs.py list`、`show --trace-id TRACE_UUID --limit 0`、`stats`查询。完整说明见 `docs/reviews/2026-10-17-agent-logging-system.md`。原 `agent-traces.jsonl`保留为旧版历史文件，新日志使用上述独立目录。
+节点埋点写入独立日志：`data/local-setup/agent-logs/events.jsonl`实时保存事件，`runs.jsonl`保存每轮汇总，默认5MB轮转并保留3份历史。聊天里已移除日志面板、下载和历史入口，详细日志不随案件API返回。用 `.venv/bin/python scripts/agent_logs.py list`、`show --trace-id TRACE_UUID --limit 0`、`stats`查询。完整说明见 `docs/archive/reviews/2026-10-17-agent-logging-system.md`。原 `agent-traces.jsonl`保留为旧版历史文件，新日志使用上述独立目录。
 
 本地 `.env` 已启用 `FSIE_AGENT_DYNAMIC_PLANNER=true`、`FSIE_AGENT_HARNESS_MODE=tools`，编排模式保持 `hybrid`。普通对话可按用户目标调用事实读取、缺口检查、法条/指引/案例检索；三个快捷按钮保留明确入口，后续普通输入由任务路由继续处理。已有待回答问题和事实冲突优先处理，显式多任务队列不再重复交给工具规划器执行。
 

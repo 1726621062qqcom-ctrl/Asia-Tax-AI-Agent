@@ -2,7 +2,7 @@
 
 # Li × Zijian Initial Integration Workflow (Historical Record)
 
-> This records the initial MVP, not the final integration. See the [merged handoff README](../../README_MERGED.md) and [integration acceptance record](COMBINED_INTEGRATION_ACCEPTANCE.md) for later shared facts, fixed structures, reports, and tests.
+> This records the initial MVP, not the final integration. See the [merged handoff README](../setup/README.md) and [integration acceptance record](COMBINED_INTEGRATION_ACCEPTANCE.md) for later shared facts, fixed structures, reports, and tests.
 
 On 2026-10-11, local integration code was connected to Zijian's workspace using the complete Li release snapshot at `771e4524961bcc36718db1c9331e7a5f4cda0ce7`. It is a controlled engineering prototype, short of the original full dual-orchestration acceptance.
 

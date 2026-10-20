@@ -1,6 +1,6 @@
 # Audit Record for the Earlier Li Release
 
-> This is a historical record for c8a4cf7. The current 771e452 release has resolved the earlier missing items. See the [merged handoff README](../../../../README_MERGED.md) for current installation and acceptance testing entry points.
+> This is a historical record for c8a4cf7. The current 771e452 release has resolved the earlier missing items. See the [merged handoff README](../../../setup/README.md) for current installation and acceptance testing entry points.
 
 Audit date: 2026-10-11. Source: LiZiheng / c8a4cf7a59ef9d8895cd115ce2e4df66850b30e2.
 

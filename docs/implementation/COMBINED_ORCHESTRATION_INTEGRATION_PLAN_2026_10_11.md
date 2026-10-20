@@ -2,7 +2,7 @@
 
 # Zijian × LiZiheng Orchestration and Database Integration Plan (Source-Audited Revision)
 
-> Historical design objectives/original checks. The [merged handoff README](../../README_MERGED.md) governs current implementation/configuration/testing; see [acceptance](COMBINED_INTEGRATION_ACCEPTANCE.md) for actual completion/environment blockers.
+> Historical design objectives/original checks. The [merged handoff README](../setup/README.md) governs current implementation/configuration/testing; see [acceptance](COMBINED_INTEGRATION_ACCEPTANCE.md) for actual completion/environment blockers.
 
 Date: 2026-10-11. Latest Li release obtained; local rules, engine, and sample checks passed. Initial planning, saving, read-only knowledge, and page integration implemented; see [initial workflow](LI_BRIDGE_MVP_2026_10_11.md). Unified fact migration/full acceptance pending.
 

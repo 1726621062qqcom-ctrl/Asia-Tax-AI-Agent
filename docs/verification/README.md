@@ -1,6 +1,6 @@
 # Acceptance Testing Entry Point for the Current main
 
-Use this page to begin the next round of live workflow testing. The [integrated setup and run guide](../../README_MERGED.md) is authoritative for detailed installation commands. See the [integration acceptance record](../implementation/COMBINED_INTEGRATION_ACCEPTANCE.md) for results from the previous checks; those are not results from this round.
+Use this page to begin the next round of live workflow testing. The [integrated setup and run guide](../setup/README.md) is authoritative for detailed installation commands. See the [integration acceptance record](../implementation/COMBINED_INTEGRATION_ACCEPTANCE.md) for results from the previous checks; those are not results from this round.
 
 See the [live workflow smoke test record](REAL_CHAIN_SMOKE_2026_10_12.md) for the first actual tests on 2026-10-12 and the assessment plan for the two evaluation tracks.
 
@@ -22,6 +22,6 @@ See the [live workflow acceptance record](REAL_CHAIN_ACCEPTANCE_2026_10_13.md) f
 | Manual page operation | Current chat workspace and test accounts | Sign-in, the three entry points, fact confirmation, analysis, recovery after refresh, and export |
 | Quality comparison | [Evaluation index](../../evals/README.md) | Old/new answers to the same questions, source matches, expert assessments, and timings |
 
-Use `check_postgres_acceptance.py` for a complete repeat verification with a disposable database. It creates, migrates, and cleans up a test database, so read the [run guide](../../README_MERGED.md) first and confirm the connection being used. Evaluation reports should distinguish engineering acceptance, live model acceptance, and tax expert approval. Retrievable citations establish traceability but do not independently establish the correctness of a tax judgment.
+Use `check_postgres_acceptance.py` for a complete repeat verification with a disposable database. It creates, migrates, and cleans up a test database, so read the [run guide](../setup/README.md) first and confirm the connection being used. Evaluation reports should distinguish engineering acceptance, live model acceptance, and tax expert approval. Retrievable citations establish traceability but do not independently establish the correctness of a tax judgment.
 
 The current `main` uses the pinned Li component release. Later commits on the C branch, including new traceability checks, require separate comparison and integration and cannot be counted as accepted on `main`. The early `demo/hk-web` also remains a separate branch.

@@ -8,7 +8,7 @@
 |---|---|
 | Date | 2026-10-02 |
 | Status | Reviewable rule design + structured configuration draft; not yet connected to the business runtime |
-| Basis | [Business process v0.3](AGENT_BUSINESS_WORKFLOW_V0_1.md), work week plan, [Product direction](../product/STRATEGIC_PRODUCT_PLAN.md) and existing environment policies |
+| Basis | [Business process v0.3](AGENT_BUSINESS_WORKFLOW_V0_1.md), work week plan, `STRATEGIC_PRODUCT_PLAN.md` (historical reference; not present in this repository) and existing environment policies |
 | Scope of application | Initially applies to L0 synthetic cases for Hong Kong foreign-sourced dividend FSIE; the common workflow rules can be reused by subsequent rule packages |
 | structured version | [agent_business_rules.v0.1.json](agent_business_rules.v0.1.json) covers BR-01~47; the new dialogue rules in this revision are designed based on sections 9~13, and have not yet been coded into this configuration. |
 

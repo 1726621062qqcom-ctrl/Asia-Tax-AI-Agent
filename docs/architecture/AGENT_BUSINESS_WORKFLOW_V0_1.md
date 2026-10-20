@@ -22,7 +22,7 @@ For specific trigger conditions, actions and status, see [Agent business rules v
 
 The user is checking whether the case records are accurate and will not automatically obtain the `advisor_confirmed` status. Subjective judgments, unresolved conflicts and missing evidence will be handed over to the final advisor as matters to be reviewed. The system must not write unknowns as negative in order to advance the process, or treat paused nodes as if conditions have been met.
 
-L0 Data boundaries sent to the model follow [D-002](../project/decisions/D-002-model-vendor-and-data-retention.md), using fictional or synthetic cases; candidate rules and hypothesis run results are marked with research markers. Currently [`policy.py`](../../packages/orchestration/policy.py) still prohibits solution optimization. Proposed/occurred is the case stage and also records the tax subject, relevant entities and jurisdictions, transaction date and user requested output.
+L0 Data boundaries sent to the model follow [D-002](../project/decisions/D-002-model-vendor-and-data-retention.md), using fictional or synthetic cases; candidate rules and hypothesis run results are marked with research markers. Currently `packages/orchestration/policy.py` (historical reference; absent from current main) still prohibits solution optimization. Proposed/occurred is the case stage and also records the tax subject, relevant entities and jurisdictions, transaction date and user requested output.
 
 | Request | Current processing |
 |---|---|
@@ -296,7 +296,7 @@ The following table is the expected behavior of subsequent joint debugging. This
 
 ## 9. Implementation responsibilities and module handoff
 
-The above tool name, new state and record structure are design contracts and need to be implemented. The existing [`queues.py`](../../packages/orchestration/queues.py), which assigns client statements, candidate facts and conflicts to advisors, must be changed to user verification and clarification, and identification of verification versions. The existing [`permissions.py`](../../packages/orchestration/permissions.py) still limits the fact confirmation status improvement, and users cannot directly write to `advisor_confirmed` for verification.
+The above tool name, new state and record structure are design contracts and need to be implemented. The existing `packages/orchestration/queues.py` (historical reference; absent from current main), which assigns client statements, candidate facts and conflicts to advisors, must be changed to user verification and clarification, and identification of verification versions. The existing `packages/orchestration/permissions.py` (historical reference; absent from current main) still limits the fact confirmation status improvement, and users cannot directly write to `advisor_confirmed` for verification.
 
 L0 can use the explicit research hypothesis strategy to generate restricted candidate analysis; the existing [`intake/cli.py`](../../packages/intake/cli.py) directly passes extracted values to the rule chain, and needs to be connected to status checks, snapshots and audits. If L1 adopts the same final review mode in the future, the pre-analysis contract subject to permissions must be implemented, and the L0 hypothesis channel cannot be used directly for real cases.
 

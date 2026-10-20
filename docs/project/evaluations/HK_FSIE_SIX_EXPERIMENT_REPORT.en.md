@@ -20,7 +20,7 @@ An invented material fact, confused transaction party, or unsupported definitive
 
 - Model: the locally configured `deepseek-flash`; knowledge: the project's configured cloud collection of Hong Kong official materials. All six runs used **fictional facts** and isolated temporary SQLite case sessions. No personal user conversation was written.
 - Three long-question runs used the existing `ChatService` with the real model, retrieval, and response path. Three form runs saved the same stated facts field by field and used the existing confirmation and analysis path. Where facts were missing, the run explicitly requested a partial research draft before analysis. **These were not clicks through a new template picker or browser UI tests.**
-- [Local raw JSON](../../../reports/fsie-user-six-experiments.json) is ignored by Git under `reports/`; regenerate it on another machine using the [evaluation script](../../../scripts/evaluate_fsie_user_cases.py).
+- Local raw JSON (`reports/fsie-user-six-experiments.json`, generated locally) is ignored by Git under `reports/`; regenerate it on another machine using the [evaluation script](../../../scripts/evaluate_fsie_user_cases.py).
 - Completion only means a response returned in this run. These three synthetic cases have no expert-approved tax gold labels and cannot establish overall accuracy or retrieval recall.
 
 ## Actual outcomes of the six planned runs

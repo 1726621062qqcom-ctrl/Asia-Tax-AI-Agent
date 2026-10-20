@@ -1,6 +1,6 @@
 # Taxrora
 
-The current `main` branch includes the tax chat workspace, A/B integration code, and combined orchestration, shared facts, and database interfaces for the pinned Li component release. See the [integrated setup and run guide](README_MERGED.md) for installation and operation, and start with the [acceptance testing entry point](docs/verification/README.md) before testing. The Li component is installed at a pinned version; later commits on the C branch do not automatically become part of `main`.
+The current `main` branch includes the tax chat workspace, A/B integration code, and combined orchestration, shared facts, and database interfaces for the pinned Li component release. See the [setup and run guide](docs/setup/README.md) for installation and operation, and start with the [acceptance testing entry point](docs/verification/README.md) before testing. The Li component is installed at a pinned version; later commits on the C branch do not automatically become part of `main`.
 
 See the [account and authentication guide](docs/project/TAXORA_AUTH.md) for email sign-in and cloud user data configuration.
 
@@ -16,12 +16,18 @@ The repository has passed engineering acceptance for the L0 internal research pr
 
 Hong Kong is currently the only MVP with in-depth coverage. Under the conservative resource baseline, mainland China, Japan, and South Korea initially receive a `source-catalog baseline`, to be expanded into standard research packages when additional engineering and knowledge operations resources become available.
 
+## Start here
+
+- [Local installation and startup](docs/setup/README.md)
+- [Cloud deployment and team updates](docs/project/RENDER_DEPLOYMENT.md)
+- [Documentation and historical archives](docs/README.md)
+
 ## Core documents
 
 - [Product requirements document](docs/product/PRD.md)
 - [Technical roadmap](docs/architecture/TECHNICAL_ROADMAP.md)
 - [2026 project plan](docs/project/PROJECT_PLAN_2026.md)
-- [Critical documentation review](docs/reviews/2026-08-15-prd-roadmap-project-plan-plain-language-review.md)
+- [Critical documentation review](docs/archive/reviews/2026-08-15-prd-roadmap-project-plan-plain-language-review.md)
 - [Documentation index](docs/README.md)
 
 ## Repository structure

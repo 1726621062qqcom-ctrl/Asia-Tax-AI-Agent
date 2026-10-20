@@ -40,7 +40,7 @@ Anonymous Pollinations probes: POST to `text.pollinations.ai/openai` returned 40
 
 The local B repository and process have no free-provider key. The original project has Alibaba Cloud Qwen Token Plan configuration; only its presence, host, and model name were checked. The key was not printed, copied, or used. Sufficient free/included quota has not been verified, and this alternative requires user authorization before use.
 
-The current [complete preflight](runs/preflight_full_2026_10_03.json) reports **62 blocked, 0 passed, 0 failed, and 0 model calls**, due to missing_openrouter_key. It is not an online pass report. The existing 268 Python engineering regression tests and the online results of these 62 scripts must be reported separately.
+The current [complete preflight](../archive/b-workflow-2026-10/preflight_full_2026_10_03.json) reports **62 blocked, 0 passed, 0 failed, and 0 model calls**, due to missing_openrouter_key. It is not an online pass report. The existing 268 Python engineering regression tests and the online results of these 62 scripts must be reported separately.
 
 ## Running the evaluation
 

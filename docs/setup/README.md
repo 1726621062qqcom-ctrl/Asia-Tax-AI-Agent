@@ -1,6 +1,6 @@
 # Taxora Integrated Setup and Integration Testing
 
-This document describes how to run the current integrated `main`. The goal is to connect chat, structure calculations, source retrieval, and research reports within one case, so team members can install and retest the system using this guide. The Li component uses the release specified here; later updates on its branch require separate integration. The current delivery is an internal research prototype, and tax interpretations still require review by the responsible professional. Start testing with the [acceptance testing entry point](docs/verification/README.md).
+This document describes how to run the current integrated `main`. The goal is to connect chat, structure calculations, source retrieval, and research reports within one case, so team members can install and retest the system using this guide. The Li component uses the release specified here; later updates on its branch require separate integration. The current delivery is an internal research prototype, and tax interpretations still require review by the responsible professional. Start testing with the [acceptance testing entry point](../verification/README.md).
 
 ## 1. Framework responsibilities
 
@@ -46,7 +46,7 @@ flowchart TD
 | Source usage | Li original text may currently be displayed but must not be sent to the model; technical locatability does not establish professional tax review |
 | Calculation currency | Initial support requires explicit **CNY**; missing currency is rejected, and HKD/SGD returns `unsupported`, with no silent currency conversion. Rule fields such as group revenue in euros still use their specified units |
 
-The initial business form covers dividends from direct shareholdings; advanced JSON supports complex structures. API inputs support the other five templates and two-template combinations, but no claim is made that each has passed business acceptance. Vector retrieval, Li's document extractor, automatic currency conversion, and a multi-user expert collaboration interface are outside this verified delivery. Public hosting is documented in [the deployment guide](docs/project/RENDER_DEPLOYMENT.md).
+The initial business form covers dividends from direct shareholdings; advanced JSON supports complex structures. API inputs support the other five templates and two-template combinations, but no claim is made that each has passed business acceptance. Vector retrieval, Li's document extractor, automatic currency conversion, and a multi-user expert collaboration interface are outside this verified delivery. Public hosting is documented in [the deployment guide](../project/RENDER_DEPLOYMENT.md).
 
 ## 3. File guide
 
@@ -111,7 +111,7 @@ FSIE_AGENT_REVIEWER_IDS=[]
 
 The installation directory is used by default, so `FSIE_LI_RELEASE_DIR` need not be set. Provide an absolute path when using an external complete snapshot. In managed combined mode the API generates an ephemeral token and loopback URL; do not set `FSIE_AGENT_C_TOKEN` or `FSIE_AGENT_C_URL` manually. A separately operated C-only provider still requires explicit endpoint and token configuration.
 
-Run the existing migrations and knowledge loading workflow against a dedicated test database; see the [cloud research workflow](docs/project/CLOUD_KNOWLEDGE_SLICE.md) and [authentication guide](docs/project/TAXORA_AUTH.md). `chat_cases` is created during service initialization; changing the URL is not a migration mechanism for existing cases. The original ruling database needs imported tables such as `legal_units/sources`; an empty database reports ruling materials as unavailable.
+Run the existing migrations and knowledge loading workflow against a dedicated test database; see the [cloud research workflow](../project/CLOUD_KNOWLEDGE_SLICE.md) and [authentication guide](../project/TAXORA_AUTH.md). `chat_cases` is created during service initialization; changing the URL is not a migration mechanism for existing cases. The original ruling database needs imported tables such as `legal_units/sources`; an empty database reports ruling materials as unavailable.
 
 Team members with local Docker can first start the database included in the repository:
 
@@ -175,7 +175,7 @@ First set `FSIE_DATABASE_URL` in the local `.env.integration` to the dedicated P
 
 This script creates a random database, runs migrations, imports the rule package, builds official sources, runs `tests/persistence` and actual HTTP/Li combined acceptance, and finally deletes the database it created. It does not migrate or empty the original database in the connection configuration. Source snapshots are stored in an ignored directory, and hash differences between web pages and manifests are recorded. Model tests are explicitly skipped and must be run separately. Outputs and sanitized substep logs default to `data/`.
 
-On 2026-10-11, this passed with PostgreSQL 17.11 / pgvector 0.8.7: 14 persistence checks passed and two model checks were skipped; ten official source documents produced 697 parsed units; the actual HTTP combined report obtained 21 statutory locations and seven ruling passages. See the sanitized [PostgreSQL acceptance results](docs/implementation/COMBINED_POSTGRES_RESULT_2026_10_11.json). This round also completed Alembic chat-table metadata and the Source jurisdiction index declaration, verifying that a downgrade preserves chat data and RLS and that an upgrade continues using the same case.
+On 2026-10-11, this passed with PostgreSQL 17.11 / pgvector 0.8.7: 14 persistence checks passed and two model checks were skipped; ten official source documents produced 697 parsed units; the actual HTTP combined report obtained 21 statutory locations and seven ruling passages. See the sanitized [PostgreSQL acceptance results](../implementation/COMBINED_POSTGRES_RESULT_2026_10_11.json). This round also completed Alembic chat-table metadata and the Source jurisdiction index declaration, verifying that a downgrade preserves chat data and RLS and that an upgrade continues using the same case.
 
 The integration machine also retains an isolated database runtime within the project and `.env.integration`; neither is uploaded. On this machine, start it with `data/local-postgres/runtime/bin/pg_ctl -D data/local-postgres/cluster -l data/local-postgres/server.log start` and stop it with `data/local-postgres/runtime/bin/pg_ctl -D data/local-postgres/cluster stop`. This runtime is machine-specific; other team members should configure connections for their own PostgreSQL environments.
 

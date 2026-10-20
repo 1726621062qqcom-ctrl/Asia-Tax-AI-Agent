@@ -2,7 +2,7 @@
 
 # Agent Workflow Audit · 2026-09-27
 
-> This records the baseline before this development round. Web APIs, fact confirmation, research results, and session persistence were implemented later; see the [web research workflow record](../project/LIVE_CHAT_SLICE.md) for current status, limits, and startup. The full PRD workflow remains incomplete.
+> This records the baseline before this development round. Web APIs, fact confirmation, research results, and session persistence were implemented later; see the [web research workflow record](../../project/LIVE_CHAT_SLICE.md) for current status, limits, and startup. The full PRD workflow remains incomplete.
 
 <a id="结论与核查范围"></a>
 
@@ -10,7 +10,7 @@
 
 **An L0 command-line research slice exists, but the interactive product workflow required by the PRD is incomplete. The current webpage cannot fully answer tax questions.**
 
-Reviewed `feat/tax-chat-workspace` code, the [PRD](../product/PRD.md), [technical roadmap](../architecture/TECHNICAL_ROADMAP.md), and [L0 acceptance record](../project/L0_ACCEPTANCE_RECORD.md). Old `demo/hk-web` is unmerged and its APIs do not count as current page capabilities. This records implementation gaps without changing approved scope or release gates.
+Reviewed `feat/tax-chat-workspace` code, the [PRD](../../product/PRD.md), [technical roadmap](../../architecture/TECHNICAL_ROADMAP.md), and [L0 acceptance record](../../project/L0_ACCEPTANCE_RECORD.md). Old `demo/hk-web` is unmerged and its APIs do not count as current page capabilities. This records implementation gaps without changing approved scope or release gates.
 
 The 2026-09-05 record establishes model/database/candidate-case integration validation of the command-line slice at that time, not current DeepSeek availability or complete FR-01–FR-08 delivery. Historical RAG means rule-to-legal-unit citations, not completion of keyword/vector hybrid retrieval.
 

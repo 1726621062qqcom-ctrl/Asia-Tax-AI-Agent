@@ -78,7 +78,7 @@ Explain vision, delivery level, jurisdictions, core documents, structure, develo
 - `docs/product/`: scope/users/requirements/acceptance.
 - `docs/architecture/`: architecture/data/security/roadmap.
 - `docs/project/`: schedule/resources/owners/dependencies/milestones.
-- `docs/reviews/`: reports/approvals/regression.
+- `docs/archive/reviews/`: reports/approvals/regression.
 - `docs/superpowers/specs/`: existing design history, without migration/rewrite in this task.
 
 <a id="未来代码目录"></a>
@@ -101,7 +101,7 @@ Explain vision, delivery level, jurisdictions, core documents, structure, develo
 | `docs/PRD.md` | `docs/product/PRD.md` |
 | `docs/TECHNICAL_ROADMAP.md` | `docs/architecture/TECHNICAL_ROADMAP.md` |
 | `docs/PROJECT_PLAN_2026.md` | `docs/project/PROJECT_PLAN_2026.md` |
-| `docs/reviews/2026-08-15-prd-roadmap-project-plan-plain-language-review.md` | Unchanged |
+| `docs/archive/reviews/2026-08-15-prd-roadmap-project-plan-plain-language-review.md` | Unchanged |
 
 Fix relative links in the three core documents/root README. Keep stable review filenames for dates/subjects.
 

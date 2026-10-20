@@ -2,7 +2,7 @@
 
 # Combined Orchestration Engineering Acceptance and Handoff
 
-Date: 2026-10-11. Baseline: `zijian-Luo / 1de0163`; pinned Li dependency `771e4524961bcc36718db1c9331e7a5f4cda0ce7`. See the [merged README](../../README_MERGED.md) for installation, framework, and takeover tests.
+Date: 2026-10-11. Baseline: `zijian-Luo / 1de0163`; pinned Li dependency `771e4524961bcc36718db1c9331e7a5f4cda0ce7`. See the [merged README](../setup/README.md) for installation, framework, and takeover tests.
 
 Later Windows revalidation found the source-set hash below incorrect. The current installer uses cross-platform hash `d4c5495302fc9c755eb750d70fc181dc99f58e6905a79709e93845ea7b5d37e9`. See [2026-10-13 acceptance](../verification/REAL_CHAIN_ACCEPTANCE_2026_10_13.md) for actual combined results.
 
