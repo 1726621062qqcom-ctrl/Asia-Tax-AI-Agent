@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 @contextmanager
-def knowledge_server():
+def knowledge_server(*, on_start=None):
     from packages.domain_bridge.bridge import release_path, verify_release
 
     release = release_path()
@@ -43,6 +43,8 @@ def knowledge_server():
             if process.poll() is not None or monotonic() - started > 15:
                 raise RuntimeError('knowledge_server_unavailable')
             sleep(.1)
+        if on_start is not None:
+            on_start(process)
         yield url, token
     finally:
         process.terminate()

@@ -46,7 +46,7 @@ flowchart TD
 | Source usage | Li original text may currently be displayed but must not be sent to the model; technical locatability does not establish professional tax review |
 | Calculation currency | Initial support requires explicit **CNY**; missing currency is rejected, and HKD/SGD returns `unsupported`, with no silent currency conversion. Rule fields such as group revenue in euros still use their specified units |
 
-The initial business form covers dividends from direct shareholdings; advanced JSON supports complex structures. API inputs support the other five templates and two-template combinations, but no claim is made that each has passed business acceptance. Vector retrieval, Li's document extractor, automatic currency conversion, a multi-user expert collaboration interface, and public deployment are outside this verified delivery.
+The initial business form covers dividends from direct shareholdings; advanced JSON supports complex structures. API inputs support the other five templates and two-template combinations, but no claim is made that each has passed business acceptance. Vector retrieval, Li's document extractor, automatic currency conversion, and a multi-user expert collaboration interface are outside this verified delivery. Public hosting is documented in [the deployment guide](docs/project/RENDER_DEPLOYMENT.md).
 
 ## 3. File guide
 
@@ -102,15 +102,14 @@ FSIE_AUTH_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 FSIE_AUTH_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
 FSIE_AUTH_SITE_URL=http://127.0.0.1:8000
 FSIE_AGENT_ORCHESTRATION=hybrid
-FSIE_AGENT_DYNAMIC_PLANNER=false
-FSIE_AGENT_HARNESS_MODE=rewrite
+FSIE_AGENT_DYNAMIC_PLANNER=true
+FSIE_AGENT_HARNESS_MODE=tools
 FSIE_AGENT_PROVIDER=combined
-FSIE_AGENT_C_URL=http://127.0.0.1:8010
 # JSON array of Supabase user UUIDs (not emails or values prefixed with user:). No one has permission by default.
 FSIE_AGENT_REVIEWER_IDS=[]
 ```
 
-The installation directory is used by default, so `FSIE_LI_RELEASE_DIR` need not be set. Provide an absolute path when using an external complete snapshot. The optional `FSIE_AGENT_C_TOKEN` is shared by both sides; the knowledge service and B both read `.env`. The knowledge service listens only on loopback; remote operation requires HTTPS, tokens, and access controls.
+The installation directory is used by default, so `FSIE_LI_RELEASE_DIR` need not be set. Provide an absolute path when using an external complete snapshot. In managed combined mode the API generates an ephemeral token and loopback URL; do not set `FSIE_AGENT_C_TOKEN` or `FSIE_AGENT_C_URL` manually. A separately operated C-only provider still requires explicit endpoint and token configuration.
 
 Run the existing migrations and knowledge loading workflow against a dedicated test database; see the [cloud research workflow](docs/project/CLOUD_KNOWLEDGE_SLICE.md) and [authentication guide](docs/project/TAXORA_AUTH.md). `chat_cases` is created during service initialization; changing the URL is not a migration mechanism for existing cases. The original ruling database needs imported tables such as `legal_units/sources`; an empty database reports ruling materials as unavailable.
 
@@ -123,18 +122,15 @@ python -m alembic upgrade head
 
 The database connection must match this environment. These commands do not configure cloud accounts or populate ruling materials for you.
 
-Start two terminals, both at the repository root with the virtual environment activated.
+Start at the repository root with the virtual environment activated. The API now manages its knowledge service automatically; no second terminal is required.
 
-To run the combined workflow accepted in this round directly on one computer, you can instead use a single terminal with `python -m scripts.run_combined`. It starts a temporary local knowledge service and cleans it up on exit. This entry point explicitly uses hybrid + combined to avoid missing the relevant `.env` switches.
+To run the combined workflow accepted in this round directly on one computer, you can instead use a single terminal with `python -m scripts.run_combined`. It is now a compatibility alias for `scripts/run_chat.py`. Every API entry point uses `config/runtime.json` and starts and stops its own local knowledge service. Existing environment overrides still take precedence; inspect `/health` for the effective settings.
 
 ```sh
-# Terminal 1
-python -m uvicorn apps.knowledge_api.main:app --host 127.0.0.1 --port 8010
-# Terminal 2
 python scripts/run_chat.py
 ```
 
-Open http://127.0.0.1:8000 and sign in. You can first check http://127.0.0.1:8010/health; `knowledge_ready=true` means the pinned materials are installed. The normal entry point retains email authentication; the test service's identity substitute is not used for normal startup.
+Open http://127.0.0.1:8000 and sign in. Check http://127.0.0.1:8000/health; `runtime.knowledge_ready=true` means the managed library service is running. The normal entry point retains email authentication; the test service's identity substitute is not used for normal startup.
 
 ## 6. Recommended initial automated checks
 

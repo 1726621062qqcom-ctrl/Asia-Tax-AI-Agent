@@ -38,6 +38,7 @@ def extract(doc, text):
 
 
 if __name__ == '__main__':
+    os.environ['FSIE_AGENT_PROVIDER'] = 'legacy'
     app.dependency_overrides[auth.optional_user] = fixture_user
     auth.settings = lambda: auth.AuthSettings(supabase_url='https://fixture.supabase.co', publishable_key='fixture')
     with TemporaryDirectory(prefix='asiatax-browser-') as directory:

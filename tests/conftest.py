@@ -13,3 +13,5 @@ if str(ROOT) not in sys.path:
 def isolated_agent_logs(monkeypatch):
     # Offline tests never mix their diagnostics into the developer's real runs.
     monkeypatch.setenv('FSIE_AGENT_LOG_DIR', 'off')
+    # Unit API tests use injected providers, not a live library subprocess.
+    monkeypatch.setenv('FSIE_AGENT_PROVIDER', 'legacy')

@@ -18,7 +18,27 @@ import traceback
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Asia Tax AI Agent — HK FSIE L0", version="0.1.0")
+from contextlib import asynccontextmanager
+from packages.runtime import application_runtime
+
+
+@asynccontextmanager
+async def lifespan(app):
+    with application_runtime() as runtime:
+        app.state.runtime = runtime
+        try:
+            yield
+        finally:
+            # Cached clients must not retain the temporary knowledge endpoint.
+            from apps.api.chat import get_service, get_provider
+            if get_service.cache_info().currsize:
+                get_service().store.engine.dispose()
+            get_service.cache_clear()
+            get_provider.cache_clear()
+            app.state.runtime = None
+
+
+app = FastAPI(lifespan=lifespan, title="Asia Tax AI Agent — HK FSIE L0", version="0.1.0")
 from apps.api.auth import router as auth_router
 app.include_router(auth_router)
 app.include_router(router)
@@ -47,12 +67,17 @@ async def private_responses(request: Request, call_next):
 
 
 @app.get("/health")
-def health() -> dict[str, str]:
+def health():
     result = {"status": "ok", "release_level": "L0"}
     # Public Git revision only; never expose the rest of the runtime environment.
     revision = os.environ.get("RENDER_GIT_COMMIT", "")
     if re.fullmatch(r"[0-9a-f]{40}", revision):
         result["revision"] = revision
+    runtime = getattr(app.state, 'runtime', None)
+    if runtime is not None:
+        result['runtime'] = runtime.public()
+        if runtime.provider == 'combined' and not result['runtime']['knowledge_ready']:
+            return JSONResponse({**result, 'status': 'unavailable'}, status_code=503)
     return result
 
 

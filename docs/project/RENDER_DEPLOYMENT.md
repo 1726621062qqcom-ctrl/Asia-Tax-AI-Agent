@@ -18,7 +18,15 @@ GitHub 来源使用 Render App 授权的 `ZhihongWu-dev/Asia-Tax-AI-Agent`，而
 ## 配置与边界
 
 密钥和数据库连接在 Render Environment 中维护；不要提交 .env。
-当前发布包含 React 界面和现有聊天服务。完整 Li 结构计算组件尚未接通云端；自动部署配置不代表该功能已经完成。
+启动入口已统一：本地 `python scripts/run_chat.py`、兼容入口 `python -m scripts.run_combined`、Render 的 uvicorn 命令均进入同一 API 生命周期。默认配置在 `config/runtime.json`：hybrid + dynamic tools + combined。Render 构建时安装固定版本 Li 依赖；本地首次运行先执行 `python scripts/install_li_release.py`。
+
+配置优先级：进程环境变量 > 本地 .env > config/runtime.json。认证地址、HTTPS cookie、端口因环境而异，业务开关默认一致。combined 模式自动启动仅监听本机的只读资料服务、生成临时令牌，并在退出时回收；资料缺失或校验失败会阻止启动，不会悄悄切回旧模式。
+
+`/health` 返回提交号和实际业务开关，不返回密钥或资料服务令牌。资料子进程退出时健康检查返回 503。内部知识 API 使用随机本机端口，不需要公开 8010。
+
+接通组件不代表全部场景已完成业务验收。现有 CNY 限制、未解决的引用和专业复核要求继续有效。
+macOS 如需系统证书，可用 `python scripts/install_li_release.py --system-trust`；项目的 macOS 依赖已包含 truststore。
+
 历史 deploy/taxrora-current-ui 和 deploy/taxrora-free-demo 分支不再是线上发布来源。
 
 ## 回滚

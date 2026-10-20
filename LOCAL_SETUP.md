@@ -1,3 +1,5 @@
+> 当前启动方式（2026-10-20）：先安装固定依赖 `python scripts/install_li_release.py`，再运行 `python scripts/run_chat.py`。本地和 Render 均读取 `config/runtime.json`，由 API 自动管理资料服务。以下日期记录中的本地开关状态是历史验收记录，不代表当前机器配置。以 `/health` 的 runtime 字段为准。详见 [部署说明](docs/project/RENDER_DEPLOYMENT.md)。
+
 # 本地测试启动说明
 
 配置日期：2026-10-16。
