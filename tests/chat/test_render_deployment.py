@@ -30,3 +30,15 @@ def test_render_hostname_cannot_supply_wildcard(monkeypatch):
     finally:
         monkeypatch.delenv("RENDER_EXTERNAL_HOSTNAME")
         importlib.reload(main)
+
+
+@pytest.mark.parametrize("revision", ["a" * 40, "", "invalid-runtime-value"])
+def test_health_exposes_only_valid_public_revision(monkeypatch, revision):
+    monkeypatch.setenv("RENDER_GIT_COMMIT", revision)
+    with TestClient(main.app) as client:
+        data = client.get("/health").json()
+    assert data["status"] == "ok"
+    if revision == "a" * 40:
+        assert data["revision"] == revision
+    else:
+        assert "revision" not in data

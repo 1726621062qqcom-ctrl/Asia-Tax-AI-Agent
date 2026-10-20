@@ -48,7 +48,12 @@ async def private_responses(request: Request, call_next):
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok", "release_level": "L0"}
+    result = {"status": "ok", "release_level": "L0"}
+    # Public Git revision only; never expose the rest of the runtime environment.
+    revision = os.environ.get("RENDER_GIT_COMMIT", "")
+    if re.fullmatch(r"[0-9a-f]{40}", revision):
+        result["revision"] = revision
+    return result
 
 
 frontend = Path(__file__).resolve().parents[1] / "web" / "dist"

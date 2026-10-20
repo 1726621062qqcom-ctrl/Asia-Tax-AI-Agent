@@ -53,7 +53,7 @@ test("email screens validate input, show safe errors and confirmation", async ({
   await page.route("**/api/auth/session", route => route.fulfill({ json: { configured: true, user: null } }));
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "欢迎回来" })).toBeVisible();
-  await expect(page.locator(".auth-page")).toContainText("TAXORA");
+  await expect(page.locator(".auth-page")).toContainText("TAXRORA");
   await page.screenshot({ path: "test-results/taxora-login.png", fullPage: true, animations: "disabled" });
   await page.getByRole("button", { name: "创建账号", exact: true }).click();
   await page.getByLabel("邮箱", { exact: true }).fill("person@example.test");

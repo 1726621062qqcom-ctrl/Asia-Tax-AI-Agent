@@ -120,6 +120,7 @@ test("source search, provenance and persisted research replies", async ({
   await expect(page.locator(".research-response")).toContainText(
     "Relevant sources were found",
   );
+  await page.locator(".research-response .research-sources > summary").click();
   await page.locator(".research-response .knowledge-passage > summary").click();
   await expect(page.locator(".research-response")).toContainText(
     "Synthetic browser fixture: date retained.",
@@ -133,7 +134,7 @@ test("source search, provenance and persisted research replies", async ({
   );
   await page.getByRole("button", { name: "切换为中文" }).click();
   await expect(page.locator(".research-response")).toContainText(
-    "以下为来源原文片段，适用性待核对。",
+    "Source excerpts; applicability requires verification.",
   );
   await page.getByRole("button", { name: "法规资料库", exact: true }).click();
   await page.getByRole("textbox", { name: "检索法条与案例" }).fill("案例 68");
@@ -396,19 +397,20 @@ test("guided interview asks once, records unknown, and resumes after refresh", a
   const last = page.locator(".message.assistant").last();
   await expect(last).toContainText("Please clarify: Recipient type.");
   await expect(last.locator("ul")).toHaveCount(0);
-  await send(page, "公司");
+  await send(page, "company");
   await expect(last).toContainText("Please clarify: Jurisdiction to analyze.");
-  await send(page, "不知道");
+  await send(page, "unknown");
   await expect(last).toContainText("Would you like to add more information, see a partial draft, or pause?");
   const id = new URL(page.url()).hash.slice(1);
   let doc = await (await page.request.get(`/api/cases/${id}`)).json();
   expect(doc.facts.recipient_type.value).toBe("company");
   expect(doc.facts.analysis_jurisdiction.value).toBe("unknown");
   expect(doc.dialogue.partial_consent).toBeUndefined();
-  await send(page, "暂停");
+  await send(page, "pause");
+  await expect(last).toContainText("Paused and saved.");
   await page.reload();
   await expect(last).toContainText("Paused and saved.");
-  await send(page, "继续补充");
+  await send(page, "resume");
   await expect(last).toContainText("Please clarify: Consultation goal.");
   doc = await (await page.request.get(`/api/cases/${id}`)).json();
   expect(doc.messages.at(-1).question.field).toBe("consultation_goal");

@@ -142,8 +142,8 @@ def test_english_locale_guides_chat_and_preserves_source_quotes(chat):
     bundle = retrieve(MockKnowledgeProvider('MOCK-01'), request(), CONTEXT)
     answer = compose_answer(bundle, locale='en')
     assert 'Conditions:' in answer['text']
-    assert 'Open the source cards' in answer['text']
-    assert answer['claims'][0]['text'] not in answer['text']
+    assert 'Source excerpt [1]:' in answer['text']
+    assert answer['claims'][0]['text'] in answer['text']
     validate_answer(answer, bundle)
 
 
