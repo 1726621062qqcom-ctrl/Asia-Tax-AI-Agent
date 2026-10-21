@@ -18,6 +18,9 @@ test("markdown and copy are safe and history can be renamed archived and restore
   await start(page); await send(page, "MARKDOWN_TEST");
   await expect(page.getByRole("heading", { name: "Summary", exact: true })).toBeVisible();
   await expect(page.locator(".answer-table td")).toHaveCount(2);
+  await expect(page.getByRole("heading", { name: "3. 下一步：请确认", exact: true })).toBeVisible();
+  await expect(page.locator(".markdown-answer blockquote")).toHaveText("分得利润是否在内地再投资");
+  await expect(page.locator(".markdown-answer blockquote")).toHaveCSS("background-color", "rgb(232, 240, 229)");
   await expect(page.locator('.markdown-answer script, .markdown-answer a[href^="javascript:"]')).toHaveCount(0);
   await page.getByRole("button", { name: "Copy answer", exact: true }).hover();
   await expect(page.getByRole("tooltip")).toHaveText("Copy answer");

@@ -61,7 +61,7 @@ if __name__ == '__main__':
                 time.sleep(3)
                 return {'intent': 'chat', 'reply': 'First live chunk and final chunk', 'facts': {}, 'query': ''}
             if text == 'MARKDOWN_TEST':
-                return {'intent': 'chat', 'reply': '## Summary\n\n- First item\n- Second item\n\n| Item | Value |\n| --- | --- |\n| Test | 100 |\n\n<script>alert(1)</script>\n\n[Unsafe](javascript:alert(1))', 'facts': {}, 'query': ''}
+                return {'intent': 'chat', 'reply': '## Summary\n\n- First item\n- Second item\n\n### 3. 下一步：请确认\n\n> 分得利润是否在内地再投资\n\n请直接在聊天框回答以上问题。\n\n| Item | Value |\n| --- | --- |\n| Test | 100 |\n\n<script>alert(1)</script>\n\n[Unsafe](javascript:alert(1))', 'facts': {}, 'query': ''}
             if text == '你好':
                 return {'intent': 'chat', 'reply': '你好！今天想聊些什么？', 'facts': {}, 'query': ''}
             if text == '用英文再说一遍':

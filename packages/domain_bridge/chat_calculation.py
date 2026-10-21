@@ -146,23 +146,24 @@ def summary(result, english=False):
         return ('This engine currently calculates in CNY only. No currency conversion or tax calculation was performed.' if english else '当前计算引擎只支持人民币（CNY）。本次没有换汇，也没有计算税额。')
     if result['status'] == 'blocked':
         return ('The engine could not calculate this structure. ' if english else '本次结构暂时无法计算。') + result.get('note', '')
-    lines = [('**Tax estimate**' if english else '**税额试算结果**'),
+    lines = [('### 1. Tax estimate' if english else '### 1. 税额试算结果'),
              (f"Tax range within this model: **{bound('lower')}–{bound('upper')} {result.get('currency', 'CNY')}**."
               if english else f"本模型范围内的税额区间：**{bound('lower')}–{bound('upper')} {result.get('currency', 'CNY')}**。"),
              ('This is a conditional range for the saved group structure, not a final tax payable figure.' if english else
-              '这是已保存集团结构在当前规则范围内的条件区间，不是已经确定的最终应缴税额。')]
+              '这只是当前条件下的试算区间，最终税额还需结合待确认信息和专业复核。'),
+             ('### 2. Calculation basis and limitations' if english else '### 2. 计算依据与待复核事项')]
     for flow in (result.get('structure') or {}).get('flows', []):
         locations = {e[0]: e[1] for e in (result.get('structure') or {}).get('entities', [])}
         names = {'CN': '中国内地公司', 'HK': '香港公司', 'SG': '新加坡公司'} if not english else {'CN': 'Mainland China company', 'HK': 'Hong Kong company', 'SG': 'Singapore company'}
         payer = names.get(locations.get(flow[2]), flow[2])
         recipient = names.get(locations.get(flow[3]), flow[3])
         income = ('股息' if not english else 'dividend') if flow[1] == 'DIVIDEND' else flow[1]
-        lines.append(f"{payer} → {recipient}：{income} {flow[4]:,.2f} {result.get('currency', 'CNY')} ({flow[5]})")
+        lines.append(f"- {payer} → {recipient}：{income} {flow[4]:,.2f} {result.get('currency', 'CNY')} ({flow[5]})")
     if result.get('unmodelled'):
-        lines.append('Some matters are outside the model and need review.' if english else '另有引擎尚未覆盖的事项，需要单独复核。')
+        lines.append('- Some matters are outside the model and need review.' if english else '- 另有引擎尚未覆盖的事项，需要单独复核。')
     professional = sum(q['kind'] in ('ruling', 'library') for q in result.get('questions', []))
     if professional:
-        lines.append(f'{professional} items need professional review.' if english else f'另有 {professional} 项需要专业判断或资料复核，不能由聊天自动批准。')
+        lines.append(f'- {professional} items need professional review.' if english else f'- 另有 {professional} 项需要专业判断或资料复核，不能由聊天自动批准。')
     return '\n\n'.join(lines)
 
 
@@ -318,8 +319,11 @@ def prepare(workflow, graph):
         reply = summary(result, english)
         pending = current_question(doc)
         if pending:
-            reply += '\n\n' + ('**Next question:** ' if english else '**下一项需要确认：**') + re.sub(r'[（(]' + re.escape(pending['key']) + r'[）)]', '', pending['prompt']).strip()
-            reply += '\n' + ('Reply here to continue the calculation.' if english else '直接在聊天框回答即可继续计算。')
+            question = re.sub(r'[（(]' + re.escape(pending['key']) + r'[）)]', '', pending['prompt']).strip()
+            question = re.sub(r'^请提供[：:]\s*', '', question)
+            reply += '\n\n' + ('### 3. Next step — please confirm' if english else '### 3. 下一步：请确认')
+            reply += '\n\n> ' + question.replace('\n', '\n> ')
+            reply += '\n\n' + ('Reply to this question in the chat to continue the calculation.' if english else '请直接在聊天框回答以上问题，我会根据补充信息继续计算。')
     meta = {**graph['workflow'], 'effective_task': 'calculation', 'status': status,
             'reason_code': 'calculation_result' if result else 'calculation_input_required',
             'tool_calls': tool_calls, 'budget': workflow.budget.snapshot()}

@@ -55,7 +55,12 @@ def test_real_engine_runs_from_chat_and_duplicate_does_not_recalculate(service, 
     assert result['domain_outcome']['mode'] == 'assess_current'
     assert result['domain_case']['event']['dividend'] == 1000000
     assert result['domain_case']['holds'][0]['ratio'] == 100
-    assert '税额区间' in result['messages'][-1]['text']
+    reply = result['messages'][-1]['text']
+    assert '税额区间' in reply
+    assert '### 1. 税额试算结果' in reply
+    assert '### 2. 计算依据与待复核事项' in reply
+    assert '### 3. 下一步：请确认\n\n> ' in reply
+    assert '**下一项' not in reply
     assert result['workflow']['tool_calls'][0]['tool'] == 'calculate_tax'
     assert result['domain_confirmation'] is None
     assert all(r['confirmed_at'] is None for r in result['canonical_fact_records'].values())
