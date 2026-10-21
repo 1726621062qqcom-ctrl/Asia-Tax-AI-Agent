@@ -43,7 +43,7 @@ def test_saved_case_planner_question_answer_and_conflict(real_release, tmp_path)
     service = ChatService(store)
     chat_app.dependency_overrides[optional_user] = lambda: USER
     chat_app.dependency_overrides[get_service] = lambda: service
-    source = json.loads((RELEASE / 'tax_graph/examples/meridian.json').read_text(encoding='utf-8'))
+    source = json.loads((Path(__file__).resolve().parents[1] / 'fixtures/domain/meridian.json').read_text(encoding='utf-8'))
     source['currency'] = 'CNY'
     source['notes'] = ['Synthetic CNY variant for engineering tests; not the original SGD case.']
     try:
@@ -66,7 +66,7 @@ def test_saved_case_planner_question_answer_and_conflict(real_release, tmp_path)
             assert planned.status_code == 200
             doc = planned.json()
             assert doc['domain_outcome']['status'] == 'needs_input'
-            assert doc['domain_outcome']['release'].startswith('771e452')
+            assert doc['domain_outcome']['release'] == PINNED_COMMIT
             assert doc['domain_outcome']['input_hash']
             question = doc['domain_outcome']['questions'][0]
             assert question['kind'] in ('data', 'blocking', 'joint')

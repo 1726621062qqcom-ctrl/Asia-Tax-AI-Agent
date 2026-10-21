@@ -81,7 +81,7 @@ npm --prefix apps/web run build
 cp .env.example .env
 ```
 
-The installer downloads code/CSV files and the actual LFS SQLite database from GitHub at pinned commit `771e4524961bcc36718db1c9331e7a5f4cda0ce7`, validates them, and installs them atomically into the ignored directory `data/tax_engine/releases/<commit>/`. It does not automatically follow the latest HEAD of the tax engine branch. If local Python lacks CA certificates, install `truststore` and use `python scripts/install_tax_engine_release.py --system-trust`, keeping TLS verification enabled. In network-restricted environments, use a complete snapshot already obtained:
+The installer downloads code/CSV files and the actual LFS SQLite database from GitHub using source commit `c5d6a1d4fb23c2ee57dbc0afee108e834569ecc5` and data commit `9720c08d55f7b7a3a8f35688e21f342e6ddf7f59`, validates them, and installs them atomically into the ignored directory `data/tax_engine/releases/<commit>/`. It does not automatically follow the latest HEAD of the tax engine branch. If local Python lacks CA certificates, install `truststore` and use `python scripts/install_tax_engine_release.py --system-trust`, keeping TLS verification enabled. In network-restricted environments, use a complete snapshot already obtained:
 
 ```sh
 python scripts/install_tax_engine_release.py --from-directory /absolute/path/to/tax-engine-release
@@ -141,7 +141,7 @@ npm --prefix apps/web run build
 cd apps/web
 npx playwright install chromium
 FSIE_TEST_PYTHON="../../.venv/bin/python" \
-FSIE_TAX_ENGINE_RELEASE_DIR="$(pwd)/../../data/tax_engine/releases/771e4524961bcc36718db1c9331e7a5f4cda0ce7" \
+FSIE_TAX_ENGINE_RELEASE_DIR="$(pwd)/../../data/tax_engine/releases/c5d6a1d4fb23c2ee57dbc0afee108e834569ecc5" \
 npm test -- --workers=1
 ```
 

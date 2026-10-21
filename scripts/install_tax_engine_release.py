@@ -10,7 +10,7 @@ import urllib.request
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from packages.domain_bridge.bridge import PINNED_COMMIT, PINNED_DB_SHA256, PINNED_SOURCE_SHA256, verify_release
+from packages.domain_bridge.bridge import PINNED_COMMIT, PINNED_DATA_COMMIT, PINNED_DB_SHA256, PINNED_SOURCE_SHA256, verify_release
 
 
 def selected(path):
@@ -59,21 +59,24 @@ def main(argv=None):
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(path, destination)
         else:
-            archive = work / 'source.tar.gz'
-            download(f'https://codeload.github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/tar.gz/{PINNED_COMMIT}', archive, 300_000_000)
-            with tarfile.open(archive) as tar:
-                for member in tar:
-                    relative = Path(*Path(member.name).parts[1:])
-                    if '..' in relative.parts or relative.is_absolute() or not member.isfile() or not selected(relative):
-                        continue
-                    destination = release / relative
-                    destination.parent.mkdir(parents=True, exist_ok=True)
-                    with tar.extractfile(member) as origin, destination.open('wb') as output:
-                        shutil.copyfileobj(origin, output)
-            download(f'https://media.githubusercontent.com/media/ZhihongWu-dev/Asia-Tax-AI-Agent/{PINNED_COMMIT}/official/official.sqlite',
-                     release / 'official/official.sqlite', 260_000_000)
+            # Upstream source snapshot omits official data. Pin both inputs independently.
+            for section, commit in (('tax_graph', PINNED_COMMIT), ('official', PINNED_DATA_COMMIT)):
+                archive = work / (section + '.tar.gz')
+                download(f'https://codeload.github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/tar.gz/{commit}', archive, 400_000_000)
+                with tarfile.open(archive) as tar:
+                    for member in tar:
+                        relative = Path(*Path(member.name).parts[1:])
+                        if ('..' in relative.parts or relative.is_absolute() or not member.isfile()
+                                or not relative.parts or relative.parts[0] != section or not selected(relative)):
+                            continue
+                        destination = release / relative
+                        destination.parent.mkdir(parents=True, exist_ok=True)
+                        with tar.extractfile(member) as origin, destination.open('wb') as output:
+                            shutil.copyfileobj(origin, output)
+            download(f'https://media.githubusercontent.com/media/ZhihongWu-dev/Asia-Tax-AI-Agent/{PINNED_DATA_COMMIT}/official/official.sqlite',
+                     release / 'official/official.sqlite', 350_000_000)
         verify_release(release)
-        manifest = {'release': PINNED_COMMIT, 'database_sha256': PINNED_DB_SHA256,
+        manifest = {'release': PINNED_COMMIT, 'data_commit': PINNED_DATA_COMMIT, 'database_sha256': PINNED_DB_SHA256,
                     'source_sha256': PINNED_SOURCE_SHA256, 'format': 'tax-engine-release-v1'}
         (release / 'release.json').write_text(json.dumps(manifest, indent=2) + '\n')
         release.rename(target)

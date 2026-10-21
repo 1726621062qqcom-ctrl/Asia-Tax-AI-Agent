@@ -14,9 +14,10 @@ from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[2]
-PINNED_DB_SHA256 = '2756d2862330cb746d4103f0e690182fdc9fe7b2436a4ac738b156416aeca143'
-PINNED_SOURCE_SHA256 = 'd4c5495302fc9c755eb750d70fc181dc99f58e6905a79709e93845ea7b5d37e9'
-PINNED_COMMIT = '771e4524961bcc36718db1c9331e7a5f4cda0ce7'
+PINNED_DB_SHA256 = 'e9f2ccee521a330b8f9dcb1fe2138d559a71b45ae4824324504422efb518e798'
+PINNED_SOURCE_SHA256 = '3c80dd92b0da3155653ee59bbe8ba569fc14ddd1c330f08fc14550784f70efcc'
+PINNED_COMMIT = 'c5d6a1d4fb23c2ee57dbc0afee108e834569ecc5'
+PINNED_DATA_COMMIT = '9720c08d55f7b7a3a8f35688e21f342e6ddf7f59'
 
 
 class DomainError(Exception):

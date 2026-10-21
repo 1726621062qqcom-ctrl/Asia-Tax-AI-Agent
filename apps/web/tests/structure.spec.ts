@@ -73,7 +73,7 @@ test("structure panel saves a tax engine case, runs it, and restores the result"
   const id = page.url().split("#")[1];
   const saved = await (await page.request.get(`/api/cases/${id}`)).json();
   expect(saved.domain_case.roles.OP.loc).toBe("CN");
-  expect(saved.domain_outcome.release).toMatch(/^771e452/);
+  expect(saved.domain_outcome.release).toBe("c5d6a1d4fb23c2ee57dbc0afee108e834569ecc5");
   await page.reload();
   await page.getByRole("button", { name: "结构分析", exact: true }).click();
   await expect(page.getByRole("region", { name: "结构分析结果" })).toContainText("候选结构");

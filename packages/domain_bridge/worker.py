@@ -46,7 +46,7 @@ def _json_safe(value):
 
 def _question(q):
     value = q.value or ''
-    kind = 'boolean' if '是/否' in value else 'date' if '日期' in value else 'number' if any(x in value for x in ('金额', '数', '比例', '比值', '%', '率', '月', '天')) else 'text'
+    kind = 'boolean' if any(x in value.lower() for x in ('是/否', 'yes/no')) else 'date' if any(x in value.lower() for x in ('日期', 'date')) else 'number' if any(x in value.lower() for x in ('金额', '数', '比例', '比值', '%', '率', '月', '天', 'amount', 'number', 'ratio', 'rate', 'months', 'days', 'integer')) else 'text'
     return {'key': q.key, 'kind': q.kind, 'region': sorted(q.region), 'prompt': q.prompt,
             'why': q.why, 'impact': q.impact, 'source_hint': q.source_hint, 'forms': q.forms,
             'answer_schema': {'type': 'action' if q.kind == 'action' else kind, 'hint': value},
@@ -189,13 +189,18 @@ def main():
         sys.stdout.write(json.dumps(_json_safe(_attach_legal_refs(output)), ensure_ascii=False, allow_nan=False))
         return
     result = plan(template, event, case, answers,
-                  today=date.fromisoformat(request['today']))
+                  today=date.fromisoformat(request['today']), scope='all')
     if result.questions:
         output = {'status': 'needs_input', 'questions': [_question(q) for q in result.questions[:100]], 'question_count': len(result.questions),
                   'candidate_count': len(result.evaluations), 'note': result.note}
     elif result.plan is None:
         output = {'status': 'blocked', 'questions': [], 'candidate_count': len(result.evaluations),
                   'note': result.note}
+    elif result.plan.get('strategies'):
+        # Do not flatten mutually conditional strategies into a single approved answer.
+        output = {'status': 'blocked', 'questions': [], 'candidate_count': len(result.evaluations),
+                  'strategies': result.plan['strategies'], 'scope': result.scope,
+                  'note': '计算产生多个依赖专业判断的条件方案，需要逐项复核；当前聊天界面暂不将其合并为一个确定结论。'}
     else:
         p = result.plan
         output = {'status': 'ready', 'questions': [], 'candidate_count': len(result.evaluations),

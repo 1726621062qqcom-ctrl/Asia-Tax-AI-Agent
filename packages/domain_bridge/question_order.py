@@ -181,6 +181,13 @@ def prepare_questions(result, doc):
         q['interview_status'] = interview_status(q, doc, parameters)
         meta = CATALOG.get(parts(q['key'])[2])
         if meta:
+            # Keep upstream English and our reviewed Chinese labels separate.
+            label = _parent(q['key'], q)
+            q['prompt_en'] = q.get('prompt_en') or (label['prompt_en'] if label else meta['en'])
+            if label:
+                prefix = {'action': '请确认是否能够完成：', 'ruling': '请由专业人员核实：'}.get(q['kind'], '请确认：')
+                q['prompt'] = prefix + label['prompt']
+                q['source_hint'] = meta['source_zh']
             zh, en = FAMILY_NAMES[meta['family']]
             plan = (doc.get('domain_workflow') or {}).get('mode') == 'plan_structure'
             q['context_zh'] = ('为比较候选方案，需核对' if plan else '为核对') + zh + '；这项提问不代表已认定相关安排或优惠适用。'
