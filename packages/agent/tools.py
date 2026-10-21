@@ -3,9 +3,10 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 ToolName = Literal['finish', 'read_case_facts', 'check_fact_gaps', 'search_law',
-                   'search_guidance', 'search_rulings', 'search_cases', 'prepare_analysis']
+                   'search_guidance', 'search_rulings', 'search_cases', 'prepare_analysis', 'calculate_tax']
 SEARCH_KINDS = {'search_law': 'law', 'search_guidance': 'guidance', 'search_rulings': 'ruling'}
 DESCRIPTIONS = {
+    'calculate_tax': '用已核对类型的结构化案情调用Python税务引擎，返回条件税额区间及缺失信息。无需query，不接收税率、公式或权限。当前任务明确计算且资料齐全时调用。',
     'read_case_facts': '只读整理当前授权对话中的用户陈述；case_state已含字段状态，仅需要详细整理时调用，不确认事实。',
     'check_fact_gaps': '只读检查当前问题相关事实缺口，区分结论阻断项和可稍后补充项，不批准部分分析。',
     'search_law': '查询固定版本官方库的香港法条；只返回证据，保留地区、日期、编号，不推进访谈。',

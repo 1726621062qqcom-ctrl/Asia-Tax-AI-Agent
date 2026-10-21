@@ -48,12 +48,16 @@ def turn_prompt(doc: dict, text: str) -> tuple[str, str]:
         "task_context": project(doc),
         "entry_hint": doc.get('_entry_hint', 'auto'),
         "case_context": doc.get('fact_context', {}),
+        "calculation_context": doc.get("calculation_context", {}),
     }
+    from packages.domain_bridge.chat_calculation import PROMPT, current_question
+    context["calculation_pending"] = current_question(doc)
+    context["has_saved_structure"] = bool(doc.get("domain_definition"))
     system = (
         '你是 Taxrora，一位自然、简洁、友好的对话助手，擅长协助税务研究。'
         '可以正常问候、闲聊、解释一般概念、帮忙表达和回答产品使用问题，不要把所有话题硬转成案件访谈。'
         '根据用户当前语言回答；用户要求切换语言或改变表达时照做。结合历史理解追问、指代与上下文。'
-        '只输出 JSON 对象，格式为 {"intent":"chat|research|intake|clarify|unsupported","reply":"自然语言回复",'
+        '只输出 JSON 对象，格式为 {"intent":"chat|research|intake|clarify|unsupported|calculation","reply":"自然语言回复",'
         '"facts":{},"query":""}。reply 简洁清晰，可在需要时使用 Markdown 列表、标题或表格；不要输出 HTML。'
         '可额外返回decision_summary，用一句不超过240字符的简短摘要说明选择这个任务类别的依据，不输出内部思维、逐步推理或敏感案情。'
         'chat：问候、感谢、非税务一般知识、复述已知案情、对话改写和拒绝无依据免税要求；facts必须为{}，query必须为""。'
@@ -106,7 +110,7 @@ def turn_prompt(doc: dict, text: str) -> tuple[str, str]:
         'tasks中的jurisdiction使用地区代码：香港必须写HK。topic仅在明确主题时写dividend或fsie，'
         '案例编号查询没有明确主题时省略topic，不要把ruling、case、tax等资料类型当作topic。'
         '查资料任务的query保留用户指定法域、编号及期间；不知道地区则不猜。涉及个案事实必须先处理修订。'
-        '\n事实字段词典：' + json.dumps([
+        + PROMPT + '\n事实字段词典：' + json.dumps([
             {k: v for k, v in field.items() if k in
              ('field_name', 'data_type', 'enum_values', 'description_zh', 'unit', 'requires_final_judgment')}
             for field in catalog()
@@ -123,8 +127,15 @@ def validate_turn(result: dict, text: str = '') -> dict:
     if not isinstance(result, dict):
         raise ValueError('Invalid conversational object')
     required = {'intent', 'reply', 'facts', 'query'}
-    if not required.issubset(result) or set(result) - required - {'action', 'corrections', 'uses_case', 'task_kind', 'tasks', 'decision_summary', 'scope_reason'} or result['intent'] not in ('chat', 'research', 'intake', 'clarify', 'unsupported'):
+    if not required.issubset(result) or set(result) - required - {'action', 'corrections', 'uses_case', 'task_kind', 'tasks', 'decision_summary', 'scope_reason', 'calculation'} or result['intent'] not in ('chat', 'research', 'intake', 'clarify', 'unsupported', 'calculation'):
         raise ValueError('Invalid conversational turn')
+    if result['intent'] == 'calculation':
+        from packages.domain_bridge.chat_calculation import CalculationProposal
+        result['calculation'] = CalculationProposal.model_validate(result.get('calculation') or {}).model_dump()
+        if result['facts'] or result['query']:
+            raise ValueError('Calculation inputs must use the calculation schema')
+    elif result.get('calculation'):
+        raise ValueError('Calculation proposal requires calculation intent')
     if 'scope_reason' in result and (result['intent'] != 'unsupported' or result['scope_reason'] not in ('equity_disposal', 'individual', 'other_jurisdiction', 'other')):
         raise ValueError('Invalid scope reason')
     if 'decision_summary' in result and (not isinstance(result['decision_summary'], str) or len(result['decision_summary']) > 240):
@@ -436,6 +447,12 @@ class ChatService(DomainCoordinator):
             doc['orchestration'] = prepared['orchestration']
         if 'payload_hash' in prepared:
             doc.setdefault('message_payloads', {})[request_id] = prepared['payload_hash']
+        if 'calculation_context' in prepared:
+            doc['calculation_context'] = prepared['calculation_context']
+            from packages.domain_bridge.chat_calculation import PERSISTED
+            for key, value in prepared.get('calculation_update', {}).items():
+                if key in PERSISTED or key == 'domain_workflow':
+                    doc[key] = deepcopy(value)
         if 'expense_context' in prepared:
             doc['expense_context'] = prepared['expense_context']
         if patch:

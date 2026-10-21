@@ -24,6 +24,8 @@ class HybridState(TurnState, total=False):
     rewrite_count: int
     answers: list
     research_results: list
+    calculation_context: dict
+    calculation_update: dict
     research_only: bool
 
 
@@ -86,7 +88,9 @@ class HybridWorkflow(TurnWorkflow):
         parent.add_node('tool_harness', self.timed('tool_harness', self.run_tools))
         parent.add_node('validate', self.timed('validate', self.validate))
         parent.add_edge(START, 'route')
-        parent.add_edge('route', 'facts')
+        parent.add_node('calculation', self.timed('calculation', self.calculate))
+        parent.add_conditional_edges('route', lambda s: 'calculation' if s['turn']['intent'] == 'calculation' else 'facts')
+        parent.add_edge('calculation', END)
         parent.add_conditional_edges('facts', self.path)
         for kind in ('consultation', 'fact_intake', 'reference_lookup'):
             parent.add_edge(kind, 'observe')
@@ -159,7 +163,7 @@ class HybridWorkflow(TurnWorkflow):
         from packages.chat.service import plan_turn, validate_turn, WorkflowError
         doc = deepcopy(state['doc'])
         doc['_entry_hint'] = state['entry_hint']
-        parsed = dialogue.deterministic_turn(doc, state['text'])
+        parsed = None if doc.get('calculation_context', {}).get('active') else dialogue.deterministic_turn(doc, state['text'])
         pending = doc.get('dialogue', {}).get('pending')
         if pending and pending['id'].startswith('hybrid:reference:'):
             # Unknown/pause/resume controls belong to the source query, not a
@@ -198,6 +202,8 @@ class HybridWorkflow(TurnWorkflow):
             parsed = validate_turn(parsed)
         except (ValueError, TypeError, KeyError):
             raise WorkflowError('model_failed') from None
+        if parsed['intent'] == 'calculation':
+            return {'turn': parsed, 'research': None, 'answer': None, 'workflow': state['workflow']}
         from packages.agent.research_context import explanatory_request
         if (parsed['intent'] == 'intake' and parsed.get('action', 'continue') == 'continue'
                 and explanatory_request(state['text']) and not requested_analysis(state['text'])):
@@ -248,6 +254,10 @@ class HybridWorkflow(TurnWorkflow):
         meta.update(entry_hint=state['entry_hint'], effective_task=job['kind'], dynamic_planner=self.dynamic)
         return {'turn': parsed, 'research': None, 'answer': None, 'orchestration': orchestration,
                 'job': job, 'workflow': meta}
+
+    def calculate(self, state):
+        from packages.domain_bridge.chat_calculation import prepare
+        return prepare(self, state)
 
     def facts(self, state):
         turn = state['turn']
