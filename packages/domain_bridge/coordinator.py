@@ -8,6 +8,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from packages.domain_bridge import state
+from packages.domain_bridge.question_order import eligible, next_question
 from packages.domain_bridge.bridge import DomainCase, DomainError, run_plan, run_domain
 from packages.chat.store import now
 
@@ -90,8 +91,7 @@ class DomainCoordinator:
             question['id'] = 'domain:' + state.digest([result['input_hash'], question['kind'], question['key']])[:24]
             question['based_on_revision'] = doc['revision'] + 1
             question['input_hash'] = result['input_hash']
-        pending = next((q for q in result['questions'] if q['kind'] in ('data', 'blocking', 'joint', 'action')
-                        and doc.get('domain_deferred', {}).get(q['key']) != result['facts_hash']), None)
+        pending = next_question(result['questions'], doc, result['facts_hash'])
         workflow.update(status='active', pending_question_id=pending['id'] if pending else None)
         doc['domain_workflow'] = workflow
         doc['domain_today'] = today
@@ -154,14 +154,13 @@ class DomainCoordinator:
         if prior.get('stale') or prior.get('facts_hash') != self.domain_fingerprint(doc):
             error('question_changed')
         question = next((q for q in prior.get('questions', []) if q['key'] == key and q['kind'] == kind), None)
-        if not question or (question_id and question['id'] != question_id):
+        if not question or not eligible(question, doc) or (question_id and question['id'] != question_id):
             error('question_changed')
         if kind not in ('data', 'blocking', 'joint', 'action'):
             error('domain_answer_restricted')
         if disposition == 'defer':
             doc.setdefault('domain_deferred', {})[key] = prior['facts_hash']
-            pending = next((q for q in prior['questions'] if q['kind'] in ('data', 'blocking', 'joint', 'action')
-                            and doc['domain_deferred'].get(q['key']) != prior['facts_hash']), None)
+            pending = next_question(prior['questions'], doc, prior['facts_hash'])
             doc['domain_workflow']['pending_question_id'] = pending['id'] if pending else None
             return self.finish(owner, doc, revision, request_id)
         schema = question.get('answer_schema', {}).get('type', 'text')

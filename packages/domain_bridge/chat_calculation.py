@@ -321,6 +321,10 @@ def prepare(workflow, graph):
         if pending:
             question = re.sub(r'[（(]' + re.escape(pending['key']) + r'[）)]', '', pending['prompt']).strip()
             question = re.sub(r'^请提供[：:]\s*', '', question)
+            if pending['key'].endswith('.reinvested_in_cn'):
+                question = ('Are these dividends already being, or planned to be, reinvested in mainland China? '
+                            'If not, answer no; the reinvestment details will be skipped.' if english else
+                            '这笔股息是否已用于或计划用于中国内地再投资？如果没有，请回答“没有”，后续会跳过再投资相关细节。')
             reply += '\n\n' + ('### 3. Next step — please confirm' if english else '### 3. 下一步：请确认')
             reply += '\n\n> ' + question.replace('\n', '\n> ')
             reply += '\n\n' + ('Reply to this question in the chat to continue the calculation.' if english else '请直接在聊天框回答以上问题，我会根据补充信息继续计算。')

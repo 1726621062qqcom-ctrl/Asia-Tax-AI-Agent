@@ -282,3 +282,17 @@ def test_existing_case_facts_are_reused_but_legal_jurisdiction_is_not_recipient_
 def test_two_companies_do_not_imply_multiple_transactions(service, engine):
     result = send(service, service.store.create(OWNER), TEXT + '以上两家公司只有这一笔股息。')
     assert len(result['integration_runs']) == 1
+
+@pytest.mark.parametrize('value,raw', [(False, '否'), ('unknown', '未知'), (True, '是')])
+def test_reinvestment_followups_require_explicit_applicability(service, engine, value, raw):
+    from packages.domain_bridge.chat_calculation import current_question
+    from packages.domain_bridge.question_order import REINVESTMENT_DETAILS
+    first = send(service, service.store.create(OWNER))
+    assert current_question(first)['key'] == 'flow:up1.reinvested_in_cn'
+    service.turner = lambda *_: turn(action='answer', answer={'value': value, 'quote': raw})
+    second = send(service, first, raw)
+    assert second['canonical_fact_records']['flow:up1.reinvested_in_cn']['value'] == value
+    pending = current_question(second)
+    if value is not True and pending:
+        assert pending['key'].rsplit('.', 1)[-1] not in REINVESTMENT_DETAILS
+    assert len(second['integration_runs']) == 2

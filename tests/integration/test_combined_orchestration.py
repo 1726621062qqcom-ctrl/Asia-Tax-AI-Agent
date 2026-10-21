@@ -174,8 +174,13 @@ def test_real_two_rounds_planner_persist_and_reload(service, real_release):
     assert len(doc['integration_runs']) == 3
     assert service.store.get(OWNER, doc['id'])['canonical_fact_records'] == doc['canonical_fact_records']
     assert sum(r['status'] == 'unknown' for r in doc['canonical_fact_records'].values()) == 2
-    assert doc['domain_outcome']['status'] == 'blocked'
-    assert 'unbounded' in doc['domain_outcome']['note']
+    # Prerequisite-first questions can leave other answerable facts pending.
+    # Unknown answers must never turn an incomplete case into a ready result.
+    assert doc['domain_outcome']['status'] in ('needs_input', 'blocked')
+    if doc['domain_outcome']['status'] == 'blocked':
+        assert 'unbounded' in doc['domain_outcome']['note']
+    else:
+        assert doc['domain_workflow']['pending_question_id'] is not None
 
 
 def test_currency_missing_rejected_non_cny_explicitly_unsupported(service):
