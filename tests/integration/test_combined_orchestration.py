@@ -43,7 +43,7 @@ def setup(service, mode='assess_current', bindings=None, doc=None):
 
 def result(doc):
     return {'status': 'needs_input', 'release': '771e452', 'input_hash': state.digest(doc), 'mode': 'assess_current',
-            'currency': 'CNY', 'candidate_count': 1, 'questions': [{'kind': 'data', 'key': 'OP.group_rev',
+            'currency': 'CNY', 'candidate_count': 1, 'questions': [{'kind': 'data', 'key': 'group.group_revenue_eur',
             'prompt': '集团收入？', 'answer_schema': {'type': 'number'}, 'region': ['CN']}], 'citations': []}
 
 
@@ -66,7 +66,7 @@ def test_v1_migration_and_entity_binding_roundtrip(service):
     changed = deepcopy(doc['domain_case']); changed['event']['dividend'] = 3000000
     doc = service.domain_setup(OWNER, doc['id'], doc['revision'], rid(), changed, True, 'assess_current', bindings)
     assert doc['facts']['dividend_amount']['value'] == 3000000
-    assert doc['domain_answers']['data'].get('OP.group_rev') is None
+    assert doc['domain_answers']['data'].get('group.group_revenue_eur') is None
 
 
 def test_unknown_false_and_separate_entities():
@@ -106,7 +106,7 @@ def test_worker_failure_never_commits_answer(service, code):
             service.domain_answer(OWNER, doc['id'], doc['revision'], rid(), q['key'], q['kind'], '123', q['id'])
     assert exc.value.code == code
     saved = service.store.get(OWNER, doc['id'])
-    assert saved['revision'] == doc['revision'] and 'OP.group_rev' not in saved['canonical_fact_records']
+    assert saved['revision'] == doc['revision'] and 'group.group_revenue_eur' not in saved['canonical_fact_records']
 
 
 def test_defer_pause_and_stale_question(service):
@@ -126,7 +126,7 @@ def test_chat_answer_and_retry_share_transaction(service):
         updated = service.message(OWNER, doc['id'], doc['revision'], request, '结构答复：123', True, reply_to_question_id=q['id'])
     replay = service.message(OWNER, doc['id'], doc['revision'], request, '结构答复：123', True, reply_to_question_id=q['id'])
     assert replay == updated
-    assert updated['canonical_fact_records']['OP.group_rev']['value'] == 123
+    assert updated['canonical_fact_records']['group.group_revenue_eur']['value'] == 123
     assert sum(m.get('text') == '结构答复：123' for m in updated['messages']) == 1
     with pytest.raises(WorkflowError) as exc:
         service.message(OWNER, doc['id'], doc['revision'], request, '结构答复：124', True, reply_to_question_id=q['id'])
@@ -180,7 +180,7 @@ def test_real_two_rounds_planner_persist_and_reload(service, real_release):
     if doc['domain_outcome']['status'] == 'blocked':
         assert 'unbounded' in doc['domain_outcome']['note']
     else:
-        assert doc['domain_workflow']['pending_question_id'] is not None
+        assert doc['domain_workflow']['pending_question_id'] is not None or doc['domain_outcome']['interview_counts']['waiting'] > 0
 
 
 def test_currency_missing_rejected_non_cny_explicitly_unsupported(service):
@@ -202,3 +202,28 @@ def test_fact_change_revokes_professional_answers(service):
     doc = service.edit(OWNER, doc['id'], raw['revision'], rid(), {'dividend_amount': 100})
     assert doc['domain_answers']['rulings'] == {}
     assert doc['domain_professional_history'][0]['stale']
+
+
+@pytest.mark.parametrize('answer, expected', [('true', 'ready'), ('false', 'not_applicable'), ('unknown', 'waiting')])
+def test_event_prerequisite_roundtrip_persists_without_inventing_tax_facts(service, answer, expected):
+    doc = setup(service)
+    output = {**result(doc), 'questions': [{'key': 'flow:up1.tax_paid_on', 'kind': 'data', 'prompt': '税款缴纳日',
+              'region': ['CN'], 'answer_schema': {'type': 'date'}}]}
+    with patch('packages.domain_bridge.coordinator.run_domain', return_value=deepcopy(output)):
+        doc = service.domain_plan(OWNER, doc['id'], doc['revision'], rid())
+    questions = doc['domain_outcome']['questions']
+    parent = next(q for q in questions if q['id'] == doc['domain_workflow']['pending_question_id'])
+    assert parent['key'] == 'interview:flow:up1.tax_paid'
+    with pytest.raises(WorkflowError) as exc:
+        service.domain_answer(OWNER, doc['id'], doc['revision'], rid(), 'flow:up1.tax_paid_on', 'data', '2026-01-01')
+    assert exc.value.code == 'question_changed'
+    with patch('packages.domain_bridge.coordinator.run_domain', return_value=deepcopy(output)):
+        doc = service.domain_answer(OWNER, doc['id'], doc['revision'], rid(), parent['key'], 'data', answer)
+    stored = service.store.get(OWNER, doc['id'])
+    child = next(q for q in stored['domain_outcome']['questions'] if q['key'] == 'flow:up1.tax_paid_on')
+    assert child['interview_status'] == expected
+    assert 'flow:up1.tax_paid_on' not in stored['canonical_fact_records']
+    assert not any(k.startswith('interview:') for k in state.answers(stored)['data'])
+    assert stored['domain_interview'][parent['key']]['value'] == {'true': True, 'false': False, 'unknown': 'unknown'}[answer]
+    if answer != 'true':
+        assert stored['domain_workflow']['pending_question_id'] is None
