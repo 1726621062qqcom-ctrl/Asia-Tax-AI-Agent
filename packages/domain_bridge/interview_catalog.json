@@ -1566,5 +1566,552 @@
     "hint": "金额",
     "source_zh": "交易资料",
     "source_en": "Transaction records"
+  },
+  "arms_length_value": {
+    "family": "pricing",
+    "zh": "这笔交易的独立交易金额",
+    "en": "arm's-length amount of this transaction (equity: comparable uncontrolled price or appraised value; interest, royalties, service fees: comparable uncontrolled price or median of the comparable range; Singapore s10L assets: open market value)",
+    "source_zh": "资产评估、可比交易或同期资料",
+    "source_en": "asset appraisal report, comparable transactions, contemporaneous documentation",
+    "hint": "金额",
+    "upstream_type": "amount"
+  },
+  "parties_related": {
+    "family": "ownership",
+    "zh": "交易双方是否存在关联关系",
+    "en": "whether the two parties are related (relatedness the holding graph cannot derive, such as control by the same individual, borrowing, dependence on licensed rights, purchases and sales, or board control; once stated it applies in all three jurisdictions)",
+    "source_zh": "股权结构及关联关系说明",
+    "source_en": "shareholding structure chart, statement of the actual controller, related-party return",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "cn_related": {
+    "family": "ownership",
+    "zh": "交易双方是否符合内地关联关系条件",
+    "en": "whether the two parties are related in the Mainland sense (25% shareholding, decision D40)",
+    "source_zh": "股权结构",
+    "source_en": "shareholding structure",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "hk_associated": {
+    "family": "ownership",
+    "zh": "交易双方是否符合香港关联关系条件",
+    "en": "whether the two parties meet the Hong Kong association condition (control, decision D40)",
+    "source_zh": "股权结构",
+    "source_en": "shareholding structure",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "sg_related": {
+    "family": "ownership",
+    "zh": "交易双方是否符合新加坡关联关系条件",
+    "en": "whether the two parties are related in the Singapore sense (control, decision D40)",
+    "source_zh": "股权结构",
+    "source_en": "shareholding structure",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "arms_length_low": {
+    "family": "pricing",
+    "zh": "独立交易金额区间的下限",
+    "en": "lower bound of the arm's-length range (for this amount)",
+    "source_zh": "可比交易或转让定价报告",
+    "source_en": "contemporaneous documentation, transfer pricing report",
+    "hint": "金额",
+    "upstream_type": "amount"
+  },
+  "corresponding_adjustment_granted": {
+    "family": "procedure",
+    "zh": "另一方所在地区是否已批准相应纳税调整",
+    "en": "whether the payer's jurisdiction has made a corresponding adjustment to its deduction under Article 9(2) of the treaty (decision D41)",
+    "source_zh": "调整通知或协商结果",
+    "source_en": "MAP outcome, adjustment notice",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "s10l_open_market_applied": {
+    "family": "procedure",
+    "zh": "新加坡税务机关是否已按公开市场价值核定该收益",
+    "en": "whether IRAS computes the remitted gain at open market value under s10L(10) (decision D41)",
+    "source_zh": "评税通知",
+    "source_en": "notice of assessment",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "parties_treaty": {
+    "family": "treaty",
+    "zh": "交易双方适用的税收协定",
+    "en": "the treaty between the payer's and the payee's jurisdictions (arrangement, treaty or none)",
+    "source_zh": "根据交易双方地区计算",
+    "source_en": "—",
+    "hint": "文本",
+    "upstream_type": "derived",
+    "handling": "derived"
+  },
+  "operating_costs": {
+    "family": "goods",
+    "zh": "贸易公司转售货物产生的自身经营费用",
+    "en": "the trading company's own costs of reselling the goods (staff, premises, etc.; decision D42)",
+    "source_zh": "管理账目及费用明细",
+    "source_en": "management accounts, expense breakdown",
+    "hint": "金额",
+    "upstream_type": "amount"
+  },
+  "purchase_effected_in_hk": {
+    "family": "goods",
+    "zh": "采购合同是否在香港达成",
+    "en": "whether the Hong Kong trading company's purchase contract was effected in Hong Kong (DIPN 21 para. 23)",
+    "source_zh": "合同及业务往来记录",
+    "source_en": "purchase contract, correspondence, travel records",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "sale_effected_in_hk": {
+    "family": "goods",
+    "zh": "销售合同是否在香港达成",
+    "en": "whether the Hong Kong trading company's sales contract was effected in Hong Kong (DIPN 21 para. 23)",
+    "source_zh": "合同及业务往来记录",
+    "source_en": "sales contract, correspondence, travel records",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "trading_resale": {
+    "family": "goods",
+    "zh": "这笔交易是否属于购入货物后的转售",
+    "en": "whether this flow is the trading company's resale of the goods it bought (decision D42)",
+    "source_zh": "根据交易结构计算",
+    "source_en": "—",
+    "hint": "文本",
+    "upstream_type": "derived",
+    "handling": "derived"
+  },
+  "delivered_to": {
+    "family": "goods",
+    "zh": "货物交付地",
+    "en": "place of delivery of the goods (jurisdiction code: CN, HK, SG or OTHER; decision D43)",
+    "source_zh": "合同、提单及报关单",
+    "source_en": "contract delivery terms, bill of lading, customs declaration",
+    "hint": "文本",
+    "upstream_type": "jurisdiction code"
+  },
+  "shipped_from": {
+    "family": "goods",
+    "zh": "货物发货地",
+    "en": "place of shipment of the goods (jurisdiction code; decision D43)",
+    "source_zh": "提单及报关单",
+    "source_en": "bill of lading, customs declaration",
+    "hint": "文本",
+    "upstream_type": "jurisdiction code"
+  },
+  "routed_via_trader": {
+    "family": "goods",
+    "zh": "货物是否实际经过贸易公司处理",
+    "en": "whether the trading company actually handles the goods (otherwise the manufacturer ships directly to the customer; decision D43)",
+    "source_zh": "物流及仓储记录",
+    "source_en": "logistics documents, warehousing contract",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "goods_vat_rate": {
+    "family": "goods",
+    "zh": "这批货物适用的增值税税率",
+    "en": "the VAT rate applicable to the goods (VAT Law Article 10: 13% or 9%)",
+    "source_zh": "商品编码及发票",
+    "source_en": "commodity code, VAT invoice",
+    "hint": "%",
+    "upstream_type": "%"
+  },
+  "export_refund_rate": {
+    "family": "goods",
+    "zh": "这批出口货物适用的退税率",
+    "en": "the export VAT refund rate for the goods (export refund rate database; decision D43)",
+    "source_zh": "商品编码及退税率资料",
+    "source_en": "export refund rate database, commodity code",
+    "hint": "%",
+    "upstream_type": "%"
+  },
+  "export_duty_rate": {
+    "family": "goods",
+    "zh": "这批出口货物适用的关税税率",
+    "en": "the export duty rate for the goods (Customs Import and Export Tariff; decision D43)",
+    "source_zh": "商品编码及税则",
+    "source_en": "Customs Import and Export Tariff, commodity code",
+    "hint": "%",
+    "upstream_type": "%"
+  },
+  "import_duty_rate": {
+    "family": "goods",
+    "zh": "这批进口货物在进口地适用的关税税率",
+    "en": "the import duty rate for the goods in the place of import (Customs Import and Export Tariff; decision D43)",
+    "source_zh": "商品编码、税则及原产地证明",
+    "source_en": "Customs Import and Export Tariff, commodity code, certificate of origin",
+    "hint": "%",
+    "upstream_type": "%"
+  },
+  "hk_cost_basis": {
+    "family": "share_transfer",
+    "zh": "香港规则下的承接计税成本",
+    "en": "cost under the Hong Kong FSIE regime (the seller's cost carried over after intra-group transfer relief; decision D44)",
+    "source_zh": "根据原始取得成本及集团转让记录计算",
+    "source_en": "—",
+    "hint": "文本",
+    "upstream_type": "derived",
+    "handling": "derived"
+  },
+  "hk_holding_months": {
+    "family": "ownership",
+    "zh": "香港规则下承接计算的持有月数",
+    "en": "holding months counted for the Hong Kong participation requirement (after relief, from the seller's acquisition date; decision D44)",
+    "source_zh": "根据取得及转让日期计算",
+    "source_en": "—",
+    "hint": "文本",
+    "upstream_type": "derived",
+    "handling": "derived"
+  },
+  "sg_group_ratio": {
+    "family": "ownership",
+    "zh": "新加坡规则下的集团合计持股比例",
+    "en": "aggregate holding of the seller and its group companies at the start of the period under Singapore s. 13W(1B) (decision D45)",
+    "source_zh": "根据集团持股结构计算",
+    "source_en": "—",
+    "hint": "文本",
+    "upstream_type": "derived",
+    "handling": "derived"
+  },
+  "capitalised": {
+    "family": "reinvestment",
+    "zh": "这次股息是否以转增股本方式分配",
+    "en": "whether this dividend is a capitalisation (reserves or undistributed profits converted into share capital; decision D46)",
+    "source_zh": "股东决议",
+    "source_en": "shareholders' resolution",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "capitalised_from": {
+    "family": "reinvestment",
+    "zh": "转增股本使用的是留存收益还是股本溢价",
+    "en": "source of the capitalisation: retained earnings, or capital reserve formed from share premium (decision D46)",
+    "source_zh": "资产负债表及股东决议",
+    "source_en": "balance sheet, shareholders' resolution",
+    "hint": "文本",
+    "upstream_type": "enum"
+  },
+  "reinvested_into": {
+    "family": "reinvestment",
+    "zh": "这笔再投资投入了哪家企业",
+    "en": "the investee enterprise of the reinvestment (decision D46)",
+    "source_zh": "增资或收购文件",
+    "source_en": "capital increase or acquisition documents",
+    "hint": "文本",
+    "upstream_type": "entity"
+  },
+  "reinvestment_withdrawn": {
+    "family": "reinvestment",
+    "zh": "这笔再投资是否已经被收回",
+    "en": "whether the investor has withdrawn the reinvestment that enjoyed the tax deferral (decision D46)",
+    "source_zh": "转让、回购或清算文件",
+    "source_en": "transfer, buy-back or liquidation documents",
+    "hint": "是/否",
+    "upstream_type": "derived or yes/no"
+  },
+  "reinvestment_withdrawn_on": {
+    "family": "reinvestment",
+    "zh": "收回这笔再投资并收到款项的日期",
+    "en": "date the reinvestment was withdrawn and the proceeds received (decision D46)",
+    "source_zh": "转让、回购或清算收款记录",
+    "source_en": "—",
+    "hint": "文本",
+    "upstream_type": "derived"
+  },
+  "branch_profit_cn": {
+    "family": "branch",
+    "zh": "内地分支机构当年利润",
+    "en": "profit of the branch in the Mainland for the year (decision D47; _hk, _sg likewise)",
+    "source_zh": "分支机构账目",
+    "source_en": "branch books",
+    "hint": "金额",
+    "upstream_type": "amount"
+  },
+  "branch_period_end_cn": {
+    "family": "branch",
+    "zh": "内地分支机构会计年度截止日",
+    "en": "year-end date of the branch in the Mainland (decision D47; _hk, _sg likewise)",
+    "source_zh": "分支机构账目",
+    "source_en": "branch books",
+    "hint": "日期",
+    "upstream_type": "date"
+  },
+  "branch_receipt_cn": {
+    "family": "branch",
+    "zh": "内地分支机构利润的汇回方式",
+    "en": "whether the profit of the branch in the Mainland is remitted back (Singapore head office; decision D47; _hk, _sg likewise)",
+    "source_zh": "汇款记录",
+    "source_en": "remittance records",
+    "hint": "文本",
+    "upstream_type": "enum"
+  },
+  "branch_taxed_cn": {
+    "family": "branch",
+    "zh": "内地分支机构利润是否已在当地纳税",
+    "en": "whether the profit of the branch in the Mainland has been taxed locally (decision D47; _hk, _sg likewise)",
+    "source_zh": "当地纳税申报表",
+    "source_en": "local tax return",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "property_loc": {
+    "family": "property",
+    "zh": "不动产所在地区",
+    "en": "jurisdiction where the immovable property is located (decision D48)",
+    "source_zh": "产权证明",
+    "source_en": "title certificate",
+    "hint": "文本",
+    "upstream_type": "jurisdiction code"
+  },
+  "property_use": {
+    "family": "property",
+    "zh": "不动产用途：住宅、非住宅或工业",
+    "en": "use of the immovable property: residential / non_residential / industrial (decision D48)",
+    "source_zh": "用途证明",
+    "source_en": "certificate of planning use",
+    "hint": "文本",
+    "upstream_type": "enum"
+  },
+  "acquired_on": {
+    "family": "property",
+    "zh": "取得这项不动产的日期",
+    "en": "date the seller acquired the immovable property (decision D48)",
+    "source_zh": "购入合同",
+    "source_en": "purchase contract",
+    "hint": "日期",
+    "upstream_type": "date"
+  },
+  "acquisition_price": {
+    "family": "property",
+    "zh": "取得这项不动产时的价格",
+    "en": "purchase invoice amount or the price set at acquisition (decision D48)",
+    "source_zh": "购入发票或合同",
+    "source_en": "purchase invoice",
+    "hint": "金额",
+    "upstream_type": "amount"
+  },
+  "self_built": {
+    "family": "property",
+    "zh": "这项不动产是否为自建",
+    "en": "whether self-built (decision D48)",
+    "source_zh": "建设资料",
+    "source_en": "construction documents",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "lat_appraised_value": {
+    "family": "property",
+    "zh": "旧房评估价值与取得土地使用权金额",
+    "en": "appraised value of the old building plus the amount paid to acquire the land use right (decision D48)",
+    "source_zh": "评估报告",
+    "source_en": "appraisal report",
+    "hint": "金额",
+    "upstream_type": "amount"
+  },
+  "deed_paid_on_acquisition": {
+    "family": "property",
+    "zh": "取得这项不动产时已缴纳的契税",
+    "en": "deed tax paid on acquisition (decision D48)",
+    "source_zh": "契税完税证明",
+    "source_en": "deed tax payment certificate",
+    "hint": "金额",
+    "upstream_type": "amount"
+  },
+  "deed_tax_rate": {
+    "family": "property",
+    "zh": "不动产所在地适用的契税税率",
+    "en": "deed tax rate of the province where the property is located (decision D48)",
+    "source_zh": "当地税率规定",
+    "source_en": "provincial decision",
+    "hint": "%",
+    "upstream_type": "%"
+  },
+  "vat_simplified_elected": {
+    "family": "property",
+    "zh": "是否选择适用不动产增值税简易计税方式",
+    "en": "whether the 5% simplified VAT method is elected (acquired before 2016-05-01; decision D48)",
+    "source_zh": "增值税申报表",
+    "source_en": "VAT return",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "stamp_borne_by": {
+    "family": "property",
+    "zh": "合同约定由付款方还是收款方承担印花税",
+    "en": "who bears the Hong Kong ad valorem stamp duty: payer / payee (decision D48)",
+    "source_zh": "买卖合同",
+    "source_en": "sale and purchase agreement",
+    "hint": "文本",
+    "upstream_type": "enum"
+  },
+  "ucmt_location": {
+    "family": "vat",
+    "zh": "纳税人所在地：市区、县镇或其他",
+    "en": "location of the taxpayer: urban / county / other (urban construction and maintenance tax; decision D48)",
+    "source_zh": "营业执照及登记地址",
+    "source_en": "business licence, registered address",
+    "hint": "文本",
+    "upstream_type": "enum"
+  },
+  "gst_registered": {
+    "family": "vat",
+    "zh": "新加坡卖方是否已登记消费税",
+    "en": "whether the Singapore seller is GST-registered (decision D48)",
+    "source_zh": "消费税登记资料",
+    "source_en": "GST registration",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "property_developer": {
+    "family": "property",
+    "zh": "卖方是否为房地产开发企业",
+    "en": "whether a real estate developer (if so, outside the model; decision D48)",
+    "source_zh": "营业执照",
+    "source_en": "business licence",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "lease_term_months": {
+    "family": "property",
+    "zh": "租约期限（月）",
+    "en": "lease term (months; decision D49)",
+    "source_zh": "租赁合同",
+    "source_en": "lease contract",
+    "hint": "月数",
+    "upstream_type": "months"
+  },
+  "lease_start": {
+    "family": "property",
+    "zh": "租约开始日期",
+    "en": "lease start date (decision D49)",
+    "source_zh": "租赁合同",
+    "source_en": "lease contract",
+    "hint": "日期",
+    "upstream_type": "date"
+  },
+  "property_tax_area": {
+    "family": "property",
+    "zh": "不动产是否位于内地房产税征税区域",
+    "en": "whether the Mainland property is in a city, county town, designated town or industrial and mining area (decision D49)",
+    "source_zh": "产权及地址资料",
+    "source_en": "property ownership certificate",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "annual_value": {
+    "family": "property",
+    "zh": "新加坡不动产的年度评估价值",
+    "en": "annual value of the Singapore property (decision D49)",
+    "source_zh": "税务机关估值通知",
+    "source_en": "IRAS valuation notice",
+    "hint": "金额",
+    "upstream_type": "amount"
+  },
+  "declared_on": {
+    "family": "core",
+    "zh": "本次股息分配或转增股本的决议日期",
+    "en": "date the investee resolved the profit distribution (or capitalisation), which fixes the year a Mainland dividend belongs to (decision D50)",
+    "source_zh": "股东决议",
+    "source_en": "shareholders' resolution",
+    "hint": "日期",
+    "upstream_type": "date"
+  },
+  "taxable_income_other": {
+    "family": "losses",
+    "zh": "本案交易以外的年度应税所得（亏损可为负数）",
+    "en": "annual taxable income outside the case's flows (may be negative: the company's own loss; decision D51)",
+    "source_zh": "年度纳税申报表",
+    "source_en": "annual tax return",
+    "hint": "金额",
+    "upstream_type": "amount (per year)"
+  },
+  "loss_brought_forward": {
+    "family": "losses",
+    "zh": "以前年度尚未抵扣的亏损明细",
+    "en": "losses not yet offset at the start of the model's first year, by year incurred (decision D51)",
+    "source_zh": "亏损结转明细表",
+    "source_en": "Form A106000 (弥补亏损明细表); Hong Kong and Singapore loss carry-forward records",
+    "hint": "文本",
+    "upstream_type": "[[year, amount, type code]]",
+    "handling": "structured_review"
+  },
+  "cn_loss_type": {
+    "family": "losses",
+    "zh": "内地亏损结转企业类型代码",
+    "en": "Mainland loss carry-forward enterprise type code (100 general, 200 high-tech, 300 technology SME, 400 integrated circuit, 500 pandemic-hit industry, 600 film; decision D51)",
+    "source_zh": "亏损弥补明细表",
+    "source_en": "Form A106000 column 7",
+    "hint": "文本",
+    "upstream_type": "code (may be per year)",
+    "handling": "structured_review"
+  },
+  "cn_foreign_loss_offset": {
+    "family": "losses",
+    "zh": "是否选择以境外所得抵扣境内亏损",
+    "en": "whether foreign income is elected to offset domestic losses (decision D51)",
+    "source_zh": "纳税申报表",
+    "source_en": "Form A100000 line 23, Form A108000 column 6",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "cn_branch_actual_loss": {
+    "family": "losses",
+    "zh": "多个境外分支机构实际亏损的分配是否已核实",
+    "en": "allocation of the actual loss when branches in several countries make losses in the same year and the enterprise's total is negative (judgement; decision D51)",
+    "source_zh": "境外亏损弥补明细表",
+    "source_en": "Form A108020",
+    "hint": "文本",
+    "upstream_type": "judgement"
+  },
+  "hk_loss_change_dominant_purpose": {
+    "family": "losses",
+    "zh": "股权变更是否主要为了利用亏损",
+    "en": "whether the sole or dominant purpose of the change in shareholding is to utilise the loss (s. 61B, judgement; decision D51)",
+    "source_zh": "交易文件及专业复核",
+    "source_en": "transaction documents",
+    "hint": "文本",
+    "upstream_type": "judgement"
+  },
+  "sg_loss_shareholders_same": {
+    "family": "losses",
+    "zh": "亏损年度末与本期初的股东是否符合连续持有条件",
+    "en": "whether the shareholders at the end of the loss year are substantially the same as at the start of the model's first year (s. 37(14), 50%; decision D51)",
+    "source_zh": "股东名册",
+    "source_en": "register of members",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "sg_loss_continuity_waived": {
+    "family": "losses",
+    "zh": "是否已获准豁免股东连续持有要求",
+    "en": "whether the Minister has waived the shareholding continuity requirement (s. 37(16); decision D51)",
+    "source_zh": "豁免批准文件",
+    "source_en": "waiver letter",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "sg_loss_same_trade": {
+    "family": "losses",
+    "zh": "抵扣亏损的利润是否来自原来产生亏损的同一业务",
+    "en": "after the waiver, whether the profits offset come from the same trade that produced the loss (s. 37(17)(a); decision D51)",
+    "source_zh": "经营记录",
+    "source_en": "business records",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
+  },
+  "sg_group_relief_elected": {
+    "family": "losses",
+    "zh": "是否作出集团亏损减免选择",
+    "en": "whether the group relief election is made (s. 37B(11); decision D51)",
+    "source_zh": "集团减免申报表",
+    "source_en": "group relief form in Form C",
+    "hint": "是/否",
+    "upstream_type": "yes/no"
   }
 }

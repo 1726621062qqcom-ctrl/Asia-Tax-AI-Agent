@@ -122,8 +122,9 @@ def current_question(doc):
         return None
     if outcome.get('facts_hash') != DomainCoordinator.domain_fingerprint(doc):
         return None
+    from packages.domain_bridge.question_order import eligible
     qid = (doc.get('domain_workflow') or {}).get('pending_question_id')
-    return next((q for q in outcome.get('questions', []) if q['id'] == qid), None)
+    return next((q for q in outcome.get('questions', []) if q['id'] == qid and eligible(q, doc)), None)
 
 
 class DraftCoordinator(DomainCoordinator):

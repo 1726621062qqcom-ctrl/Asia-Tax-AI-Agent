@@ -185,13 +185,14 @@ export default function StructurePanel({ current, onUpdate }: Props) {
       {question && !outcome.stale && current.domain_workflow?.status !== "paused" && <div className="structure-question">
         <strong>{questionText(question, locale)}</strong>
         {(question.context_zh || question.context_en) && <p>{locale === "en" ? question.context_en : question.context_zh}</p>}<p>{say("答案类型：", "Answer type: ")}{engineText(question.answer_schema?.hint || question.answer_schema?.type, locale)} · {question.region.map(r => engineText(r, locale)).join(" / ")}</p>
-        {question.source_hint && <p>{say("建议材料：", "Suggested source: ")}{engineText(question.source_hint, locale)}</p>}
+        {question.source_hint && <p>{say("建议材料：", "Suggested source: ")}{locale === "en" && question.source_hint_en ? question.source_hint_en : engineText(question.source_hint, locale)}</p>}
         {["action", "boolean"].includes(question.answer_schema?.type || "") ? <select aria-label={say("结构问题答案", "Structure question answer")} value={value} onChange={e => setValue(e.target.value)}><option value="">{say("请选择", "Select")}</option><option value={question.kind === "action" ? "yes" : "true"}>{say("是", "Yes")}</option><option value={question.kind === "action" ? "no" : "false"}>{say("否", "No")}</option></select> :
           <input aria-label={say("结构问题答案", "Structure question answer")} value={value} onChange={e => setValue(e.target.value)} />}
         <div className="structure-actions"><button className="primary-button" disabled={busy} onClick={() => void answer(question)}>{say("提交并重新计算", "Submit and recalculate")}</button>
           <button disabled={busy} onClick={() => void answer(question, "defer", "")}>{say("暂缓此题", "Defer question")}</button>
           {question.kind !== "action" && <button disabled={busy} onClick={() => void answer(question, "answer", "unknown")}>{say("事实未知", "Fact unknown")}</button>}</div>
       </div>}
+      {outcome.questions.some(q => q.interview_status === "needs_policy_review") && <details><summary>{say("需要人工核对的计算输入", "Calculation inputs requiring review")}</summary><ul>{outcome.questions.filter(q => q.interview_status === "needs_policy_review").map(q => <li key={q.id}>{questionText(q, locale)} — {locale === "en" ? (q.review_reason_en || "The prerequisite policy for this input needs review.") : (q.review_reason || "此项输入的前提条件需要复核，暂不自动提问。")}</li>)}</ul></details>}
       <details><summary>{say("全部待补项", "All open items")} ({activeQuestions.length})</summary><ul>{activeQuestions.map(q => <li key={q.id}>[{engineText(q.kind, locale)}] {questionText(q, locale)}</li>)}</ul></details>
       {withheldCount > 0 && <p role="status">{say(`另有 ${withheldCount} 项因前提未确认、不适用或需要复核而暂不追问；缺口仍保留在试算中。`, `${withheldCount} items await prerequisites, do not apply, or require review. Unresolved gaps remain in the estimate.`)}</p>}
       {professional.length > 0 && <p>{say(`另有 ${professional.length} 项专业判断或资料维护问题，已保留给有权限的复核者。`, `${professional.length} professional or source-maintenance questions are reserved for authorized reviewers.`)}</p>}

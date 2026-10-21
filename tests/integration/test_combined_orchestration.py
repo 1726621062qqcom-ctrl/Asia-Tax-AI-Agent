@@ -202,3 +202,28 @@ def test_fact_change_revokes_professional_answers(service):
     doc = service.edit(OWNER, doc['id'], raw['revision'], rid(), {'dividend_amount': 100})
     assert doc['domain_answers']['rulings'] == {}
     assert doc['domain_professional_history'][0]['stale']
+
+
+@pytest.mark.parametrize('answer, expected', [('true', 'ready'), ('false', 'not_applicable'), ('unknown', 'waiting')])
+def test_event_prerequisite_roundtrip_persists_without_inventing_tax_facts(service, answer, expected):
+    doc = setup(service)
+    output = {**result(doc), 'questions': [{'key': 'flow:up1.tax_paid_on', 'kind': 'data', 'prompt': '税款缴纳日',
+              'region': ['CN'], 'answer_schema': {'type': 'date'}}]}
+    with patch('packages.domain_bridge.coordinator.run_domain', return_value=deepcopy(output)):
+        doc = service.domain_plan(OWNER, doc['id'], doc['revision'], rid())
+    questions = doc['domain_outcome']['questions']
+    parent = next(q for q in questions if q['id'] == doc['domain_workflow']['pending_question_id'])
+    assert parent['key'] == 'interview:flow:up1.tax_paid'
+    with pytest.raises(WorkflowError) as exc:
+        service.domain_answer(OWNER, doc['id'], doc['revision'], rid(), 'flow:up1.tax_paid_on', 'data', '2026-01-01')
+    assert exc.value.code == 'question_changed'
+    with patch('packages.domain_bridge.coordinator.run_domain', return_value=deepcopy(output)):
+        doc = service.domain_answer(OWNER, doc['id'], doc['revision'], rid(), parent['key'], 'data', answer)
+    stored = service.store.get(OWNER, doc['id'])
+    child = next(q for q in stored['domain_outcome']['questions'] if q['key'] == 'flow:up1.tax_paid_on')
+    assert child['interview_status'] == expected
+    assert 'flow:up1.tax_paid_on' not in stored['canonical_fact_records']
+    assert not any(k.startswith('interview:') for k in state.answers(stored)['data'])
+    assert stored['domain_interview'][parent['key']]['value'] == {'true': True, 'false': False, 'unknown': 'unknown'}[answer]
+    if answer != 'true':
+        assert stored['domain_workflow']['pending_question_id'] is None

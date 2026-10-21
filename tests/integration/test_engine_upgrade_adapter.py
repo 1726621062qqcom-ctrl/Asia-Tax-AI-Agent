@@ -18,6 +18,6 @@ def test_upstream_english_question_has_separate_chinese_label():
     assert result['upper'] == 165000
 
 def test_new_unreviewed_fields_cannot_be_asked_automatically():
-    result = {'questions': [{'key': 'flow:up1.reinvestment_withdrawn', 'kind': 'data', 'prompt': 'Withdrawal?'}]}
+    result = {'questions': [{'key': 'flow:up1.future_unreviewed_field', 'kind': 'data', 'prompt': 'Withdrawal?'}]}
     prepare_questions(result, {})
     assert result['questions'][0]['interview_status'] == 'needs_policy_review'

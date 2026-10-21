@@ -5,12 +5,13 @@ existence/scope dependencies below gate questions; other active engine questions
 remain available and carry a neutral explanation of why they are being asked.
 """
 from copy import deepcopy
+from hashlib import sha256
 import json
 from pathlib import Path
 import re
 
 CATALOG = json.loads(Path(__file__).with_name('interview_catalog.json').read_text())
-POLICY_VERSION = 'interview-2026-10-21-v2'
+POLICY_VERSION = 'interview-2026-10-21-v3'
 REINVESTMENT_DETAILS = frozenset({'reinvestment_from_distributed_profit', 'reinvestment_form',
                                 'direct_payment', 'investee_encouraged_industry', 'planned_holding_months'})
 PILLAR_FIELDS = {f for f, v in CATALOG.items() if v['family'] == 'pillar_two'} - {'group_revenue_eur'}
@@ -27,13 +28,33 @@ EVENT_GATES = {
     'tp_adjustment_paid_on': ('tp_adjustment_paid', '转让定价调整的税款是否已经实际缴纳？', 'Has the tax arising from the transfer-pricing adjustment actually been paid?'),
     'pboc_benchmark_rate': ('tp_adjusted', '这笔事项是否已发生转让定价调整？', 'Has a transfer-pricing adjustment been made for this matter?'),
 }
+# These existence checks are interview-only and do not invent tax facts.
+EVENT_GATES.update({
+    'clawback_event_within_2y': ('transfer_relief', '这笔交易是否涉及已申请或计划申请的集团内部转让减免安排？', 'Does this transaction involve claimed or planned intra-group transfer relief?'),
+    'prior_map_outcome': ('prior_map', '这笔事项以前是否经过税务机关相互协商？', 'Has this matter previously been through a mutual agreement procedure?'),
+    'corresponding_adjustment_granted': ('tp_adjusted', '这笔事项是否已发生转让定价调整？', 'Has a transfer-pricing adjustment been made for this matter?'),
+    's10l_open_market_applied': ('assessment_received', '是否已收到这笔事项的评税或核定通知？', 'Have you received an assessment notice for this matter?'),
+    'date_of_payment': ('payment_made', '这笔款项是否已经实际支付？', 'Has this payment actually been made?'),
+})
+LOSS_DETAILS = {'loss_brought_forward', 'cn_loss_type', 'cn_foreign_loss_offset', 'cn_branch_actual_loss',
+                'hk_loss_change_dominant_purpose', 'sg_loss_shareholders_same', 'sg_loss_continuity_waived',
+                'sg_loss_same_trade', 'sg_group_relief_elected'}
+for field in LOSS_DETAILS:
+    EVENT_GATES[field] = ('losses_exist', '这家公司是否有本次需要核对或抵扣的亏损？', 'Does this company have losses to review or offset in this case?')
+# A notification of paid adjustment tax must not presuppose an adjustment itself.
+EVENT_PARENTS = {'tp_adjustment_paid': 'tp_adjusted'}
 # Same-object dependencies. No answers from another flow/entity can unlock them.
 GATES = {f: ('reinvested_in_cn', True) for f in REINVESTMENT_DETAILS}
 GATES.update({
+    'reinvested_into': ('reinvested_in_cn', True),
+    'reinvestment_withdrawn': ('reinvested_in_cn', True),
+    'reinvestment_withdrawn_on': ('reinvestment_withdrawn', True),
+    'capitalised_from': ('capitalised', True),
+    'sg_loss_same_trade': ('sg_loss_continuity_waived', True),
+    'sg_loss_continuity_waived': ('sg_loss_shareholders_same', False),
     'foreign_tax_rate': ('foreign_taxed', True),
     'underlying_tax_share': ('underlying_profits_taxed', True),
     'gst_recovery_ratio': ('gst_input_fully_recoverable', False),
-    'clawback_event_within_2y': ('stamp_relief_claimed', True),
     'asset_disposed_within_2y': ('stamp_relief_claimed', True),
     'government_exempt_condition_met': ('payee_is_government', True),
     'registration_filing_compliant': ('pure_equity_holding', True),
@@ -45,6 +66,10 @@ GATES.update({
     'no_reasonable_commercial_purpose': ('indirect_cn_target', True),
 })
 FAMILY_NAMES = {
+    'goods': ('货物买卖及运输', 'goods transactions and shipping'),
+    'property': ('不动产交易或租赁', 'property transactions or leases'),
+    'branch': ('分支机构经营情况', 'branch operations'),
+    'losses': ('亏损及抵扣条件', 'losses and relief conditions'),
     'reinvestment': ('再投资安排', 'reinvestment arrangements'),
     'foreign_tax': ('境外所得及已缴税款', 'foreign income and taxes paid'),
     'substance': ('收款及经营活动', 'receipt and business activities'),
@@ -66,32 +91,45 @@ def parts(key):
     scope, _, raw = key.rpartition('.')
     raw = raw.split(':', 1)[0]  # action predicates are not different fields
     field = raw if raw in CATALOG else re.sub(r'_(?:cn|hk|sg|\d{4})$', '', raw)
+    if raw.startswith('branch_') and raw.endswith(('_hk', '_sg')) and field + '_cn' in CATALOG:
+        field += '_cn'
     return scope, raw, field
+
+
+def interview_context(doc):
+    core = {k: r for k, r in doc.get('canonical_fact_records', {}).items()
+            if k.startswith(('event.', 'hold:', 'case.')) or k.endswith('.loc')}
+    return sha256(json.dumps([doc.get('domain_definition'), core], sort_keys=True, default=str).encode()).hexdigest()
 
 
 def _value(doc, key):
     if key.startswith('interview:'):
-        return doc.get('domain_interview', {}).get(key, {}).get('value')
-    # In comparison mode a feasible planned action can unlock planned details,
-    # but it must never become an observation in an existing/paid case.
-    if (doc.get('domain_workflow') or {}).get('mode') == 'plan_structure':
-        actions = (doc.get('domain_answers') or {}).get('actions', {})
-        for predicate, truth in (('is_true', True), ('is_false', False)):
-            answer = actions.get(key + ':' + predicate)
-            if answer in ('yes', 'no'):
-                return truth if answer == 'yes' else not truth
+        record = doc.get('domain_interview', {}).get(key, {})
+        if record.get('context') is not None and record['context'] != interview_context(doc):
+            return None
+        return record.get('value')
     record = doc.get('canonical_fact_records', {}).get(key)
     if record is not None:
         if record.get('status') == 'unknown':
             return 'unknown'
-        return record.get('value') if record.get('status') not in ('unknown', 'conflict', 'deferred') else None
+        return record.get('value') if record.get('status') not in ('conflict', 'deferred') else None
+    # Planned feasibility cannot override an explicit conflicting observation.
+    if (doc.get('domain_workflow') or {}).get('mode') == 'plan_structure':
+        actions = (doc.get('domain_answers') or {}).get('actions', {})
+        values = [truth if actions[key + ':' + predicate] == 'yes' else not truth
+                  for predicate, truth in (('is_true', True), ('is_false', False))
+                  if actions.get(key + ':' + predicate) in ('yes', 'no')]
+        if values:
+            return values[0] if all(v is values[0] for v in values) else None
     if key.startswith('group.'):
         field = key.partition('.')[2]
         # Mirror group propagation, but conservatively withhold conflicting values.
         members = (doc.get('domain_case') or {}).get('members') or list((doc.get('domain_case') or {}).get('roles', {}))
-        vals = [r.get('value') for k, r in doc.get('canonical_fact_records', {}).items()
-                if k.partition('.')[0] in members and k.endswith('.' + field)
-                and r.get('status') not in ('unknown', 'conflict', 'deferred')]
+        records = [r for k, r in doc.get('canonical_fact_records', {}).items()
+                   if k.partition('.')[0] in members and k.endswith('.' + field)]
+        if any(r.get('status') in ('unknown', 'conflict', 'deferred') for r in records):
+            return None
+        vals = [r.get('value') for r in records]
         return vals[0] if vals and all(type(v) is type(vals[0]) and v == vals[0] for v in vals) else None
     return None
 
@@ -99,7 +137,8 @@ def _value(doc, key):
 def requirements(question, doc, parameters=None):
     scope, raw, field = parts(question['key'])
     if question['key'].startswith('interview:'):
-        return question.get('requirements', [])
+        parent = EVENT_PARENTS.get(raw)
+        return ([{'key': scope + '.' + parent, 'op': 'eq', 'value': True}] if parent else [])
     reqs = []
     if field in GATES:
         parent, expected = GATES[field]
@@ -108,9 +147,19 @@ def requirements(question, doc, parameters=None):
         threshold = (parameters or (doc.get('domain_outcome') or {}).get('interview_parameters') or {}).get('pillar_revenue_min')
         reqs.append({'key': 'group.group_revenue_eur', 'op': 'ge', 'value': threshold})
         if field in ('p2_cbcr_revenue', 'p2_cbcr_pbt', 'p2_cbcr_simplified_taxes'):
-            suffix = raw[len(field):]
+            suffix = ('_' + raw.rsplit('_', 1)[-1]) if field.startswith('branch_') else raw[len(field):]
             reqs.append({'key': scope + '.p2_qualified_cbcr' + suffix, 'op': 'eq', 'value': True})
-    if field in EVENT_GATES:
+    if field == 'clawback_event_within_2y':
+        # This field is shared by stamp relief AND HK income relief. Never gate
+        # the income-rule question on an unrelated stamp-duty election.
+        why = question.get('why', [])
+        if why and all('.stamp.' in rule for rule in why):
+            reqs.append({'key': scope + '.stamp_relief_claimed', 'op': 'eq', 'value': True})
+    if field.startswith('branch_'):
+        jurisdiction = raw.rsplit('_', 1)[-1]
+        reqs.append({'key': 'interview:' + scope + '.branch_exists_' + jurisdiction, 'op': 'eq', 'value': True})
+    stamp_only = field == 'clawback_event_within_2y' and question.get('why') and all('.stamp.' in r for r in question['why'])
+    if field in EVENT_GATES and not stamp_only:
         event, _, _ = EVENT_GATES[field]
         reqs.append({'key': 'interview:' + scope + '.' + event, 'op': 'eq', 'value': True})
     return reqs
@@ -131,12 +180,29 @@ def requirement_state(req, doc):
     return 'ready' if passed else 'not_applicable'
 
 
-def interview_status(question, doc, parameters=None):
-    field = parts(question['key'])[2]
-    if not question['key'].startswith(('interview:', 'calendar:')) and field not in CATALOG:
+def interview_status(question, doc, parameters=None, _seen=None):
+    key = question['key']
+    seen = set(_seen or ())
+    if key in seen:
         return 'needs_policy_review'
-    states = [requirement_state(r, doc) for r in requirements(question, doc, parameters)]
-    return 'not_applicable' if 'not_applicable' in states else 'waiting' if 'waiting' in states else 'ready'
+    seen.add(key)
+    field = parts(key)[2]
+    meta = CATALOG.get(field)
+    if not key.startswith(('interview:', 'calendar:')) and not meta:
+        return 'needs_policy_review'
+    states = []
+    for req in requirements(question, doc, parameters):
+        states.append(requirement_state(req, doc))
+        states.append(interview_status({'key': req['key'], 'kind': 'data'}, doc, parameters, seen))
+    if 'not_applicable' in states:
+        return 'not_applicable'
+    if 'needs_policy_review' in states:
+        return 'needs_policy_review'
+    if 'waiting' in states:
+        return 'waiting'
+    if meta and meta.get('handling') in ('derived', 'structured_review'):
+        return 'needs_policy_review'
+    return 'ready'
 
 
 def eligible(question, doc):
@@ -146,17 +212,25 @@ def eligible(question, doc):
 def _parent(key, child):
     _, raw, field = parts(key)
     if key.startswith('interview:'):
-        event = next(v for v in EVENT_GATES.values() if v[0] == raw)
-        zh, en, hint, source = event[1], event[2], '是/否', ''
+        if raw.startswith('branch_exists_'):
+            region = {'cn': ('内地', 'Mainland China'), 'hk': ('香港', 'Hong Kong'), 'sg': ('新加坡', 'Singapore')}[raw.rsplit('_', 1)[-1]]
+            zh, en = '这家公司是否在' + region[0] + '设有分支机构？', 'Does this company have a branch in ' + region[1] + '?'
+        else:
+            event = next(v for v in EVENT_GATES.values() if v[0] == raw)
+            zh, en = event[1], event[2]
+        hint, source = '是/否', ''
     else:
         meta = CATALOG.get(field)
         if not meta:
             return None
         zh, en, hint, source = meta['zh'], meta['en'], meta['hint'], meta['source_zh']
-        suffix = raw[len(field):]
+        suffix = ('_' + raw.rsplit('_', 1)[-1]) if field.startswith('branch_') else raw[len(field):]
         region = {'_cn': ('中国内地', 'Mainland China'), '_hk': ('香港', 'Hong Kong'), '_sg': ('新加坡', 'Singapore')}.get(suffix)
         if region:
-            zh, en = region[0] + '：' + zh, region[1] + ': ' + en
+            if field.startswith('branch_'):
+                zh, en = zh.replace('内地', region[0]), en.replace('the Mainland', region[1])
+            else:
+                zh, en = region[0] + '：' + zh, region[1] + ': ' + en
     kind = 'boolean' if hint == '是/否' else 'number' if hint in ('金额', '%', '数值', '比率', '月数', '天数', '比值') else 'date' if hint == '日期' else 'text'
     return {'key': key, 'kind': 'data', 'prompt': zh, 'prompt_en': en, 'region': child.get('region', []),
             'source_hint': source, 'answer_schema': {'type': kind, 'hint': hint}, 'why': child.get('why', []),
@@ -167,18 +241,37 @@ def prepare_questions(result, doc):
     """Preserve raw engine needs and bounds; add only interview prerequisites."""
     parameters = result.get('interview_parameters', {})
     questions = deepcopy(result.get('questions', []))
-    by_key = {q['key']: q for q in questions}
-    for q in questions:  # append recursively; dependency cycles are checked by tests
+    # Traverse prerequisite ancestry even when an intermediate answer already
+    # exists; it must not bypass an unanswered root. Avoid duplicating action keys.
+    def base_key(key):
+        scope, raw, _ = parts(key)
+        return scope + '.' + raw
+    by_key = {base_key(q['key']): q for q in questions}
+    queue = list(questions)
+    visited = set()
+    while queue:
+        q = queue.pop(0)
+        if q['key'] in visited or interview_status(q, doc, parameters) == 'not_applicable':
+            continue
+        visited.add(q['key'])
         for req in requirements(q, doc, parameters):
-            if req['key'] in by_key or _value(doc, req['key']) is not None:
-                continue
             parent = _parent(req['key'], q)
-            if parent:
-                by_key[parent['key']] = parent
+            if not parent:
+                continue
+            queue.append(parent)
+            if base_key(parent['key']) not in by_key and _value(doc, req['key']) is None:
+                by_key[base_key(parent['key'])] = parent
                 questions.append(parent)
     for q in questions:
         q['requirements'] = requirements(q, doc, parameters)
         q['interview_status'] = interview_status(q, doc, parameters)
+        meta = CATALOG.get(parts(q['key'])[2], {})
+        if meta.get('handling') == 'derived':
+            q['review_reason_en'] = 'This value must be derived from the transaction and source facts, not confirmed directly.'
+            q['review_reason'] = '此项由交易结构和原始事实计算，不能让用户直接确认计算值。'
+        elif meta.get('handling') == 'structured_review':
+            q['review_reason_en'] = 'Year-by-year structured records require review; a single sentence or number is insufficient.'
+            q['review_reason'] = '此项需要按年度核对结构化明细，不能用一句话或单个数字代替。'
         meta = CATALOG.get(parts(q['key'])[2])
         if meta:
             # Keep upstream English and our reviewed Chinese labels separate.
@@ -188,6 +281,7 @@ def prepare_questions(result, doc):
                 prefix = {'action': '请确认是否能够完成：', 'ruling': '请由专业人员核实：'}.get(q['kind'], '请确认：')
                 q['prompt'] = prefix + label['prompt']
                 q['source_hint'] = meta['source_zh']
+                q['source_hint_en'] = meta['source_en']
             zh, en = FAMILY_NAMES[meta['family']]
             plan = (doc.get('domain_workflow') or {}).get('mode') == 'plan_structure'
             q['context_zh'] = ('为比较候选方案，需核对' if plan else '为核对') + zh + '；这项提问不代表已认定相关安排或优惠适用。'

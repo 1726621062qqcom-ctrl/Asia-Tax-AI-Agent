@@ -8,7 +8,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from packages.domain_bridge import state
-from packages.domain_bridge.question_order import eligible, next_question, prepare_questions
+from packages.domain_bridge.question_order import eligible, next_question, prepare_questions, interview_context, POLICY_VERSION
 from packages.domain_bridge.bridge import DomainCase, DomainError, run_plan, run_domain
 from packages.chat.store import now
 
@@ -119,7 +119,7 @@ class DomainCoordinator:
 
     @staticmethod
     def domain_fingerprint(doc):
-        return state.digest([state.project_case(doc), state.answers(doc),
+        return state.digest([POLICY_VERSION, state.project_case(doc), state.answers(doc),
                              (doc.get('domain_workflow') or {}).get('mode', 'plan_structure'), doc.get('domain_interview', {})])
 
     @bounded
@@ -196,7 +196,7 @@ class DomainCoordinator:
                 error('invalid_domain_answer')
         invalidate(doc, clear_domain_actions=kind != 'action', clear_domain_professional=kind != 'action')
         if key.startswith('interview:'):
-            doc.setdefault('domain_interview', {})[key] = {'value': value, 'source': source, 'revision': doc['revision'] + 1}
+            doc.setdefault('domain_interview', {})[key] = {'value': value, 'source': source, 'revision': doc['revision'] + 1, 'context': interview_context(doc)}
         elif kind == 'action':
             doc['domain_answers']['actions'][key] = value
         else:
