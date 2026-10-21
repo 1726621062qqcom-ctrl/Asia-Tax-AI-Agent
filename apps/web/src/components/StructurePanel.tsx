@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../api";
 import type { Case, DomainQuestion } from "../workspace";
+import { engineText, questionText } from "../engine-language";
 import { OutcomeView } from "./DomainResult";
 import { useLocale } from "../locale";
 import "./structure-panel.css";
@@ -173,24 +174,24 @@ export default function StructurePanel({ current, onUpdate }: Props) {
     {Object.keys(bindings).length > 0 && <details><summary>{say("确认事实归属后，这些字段将在两边同步", "These fields synchronize after their ownership is confirmed")}</summary><ul>{Object.entries(bindings).map(([f, a]) => <li key={f}>{f} → {a}</li>)}</ul></details>}
     <label className="structure-consent"><input type="checkbox" checked={approved} onChange={e => setApproved(e.target.checked)} />{say("本次仅提交合成研究资料，不含真实客户或个人信息。", "Submit synthetic research data only, without real client or personal information.")}</label>
     <button className="primary-button" onClick={() => void save()} disabled={busy || !draft}>{say("保存结构案情", "Save structure facts")}</button>
-    {current.domain_case && <div className="structure-actions"><button disabled={busy || !ready} onClick={() => void run(() => api.domainPlan(current, crypto.randomUUID()))}>{say("运行结构规划", "Run structure analysis")}</button>
+    {current.domain_case && <div className="structure-actions"><button className="structure-run" disabled={busy || !ready} onClick={() => void run(() => api.domainPlan(current, crypto.randomUUID()))}>{say("运行结构规划", "Run structure analysis")}</button>
       <button disabled={busy} onClick={() => void run(() => api.domainControl(current, current.domain_workflow?.status === "paused" ? "resume" : "pause"))}>{current.domain_workflow?.status === "paused" ? say("恢复结构分析", "Resume analysis") : say("暂停结构分析", "Pause analysis")}</button></div>}
     {error && <p role="alert" className="request-error">{error}</p>}
     {outcome && <section aria-label={say("结构分析结果", "Structure analysis result")} className="structure-result">
       {outcome.stale && <p role="status">{say("事实已变化，旧结果与问题已过期；请重新运行。", "Facts have changed. Previous results and questions are out of date; run the analysis again.")}</p>}
       <OutcomeView outcome={outcome} />
       {question && !outcome.stale && current.domain_workflow?.status !== "paused" && <div className="structure-question">
-        <strong>{question.prompt}</strong><p>{say("答案类型：", "Answer type: ")}{question.answer_schema?.hint || question.answer_schema?.type} · {question.region.join(" / ")}</p>
-        {question.source_hint && <p>{say("建议材料：", "Suggested source: ")}{question.source_hint}</p>}
+        <strong>{questionText(question, locale)}</strong><p>{say("答案类型：", "Answer type: ")}{engineText(question.answer_schema?.hint || question.answer_schema?.type, locale)} · {question.region.map(r => engineText(r, locale)).join(" / ")}</p>
+        {question.source_hint && <p>{say("建议材料：", "Suggested source: ")}{engineText(question.source_hint, locale)}</p>}
         {["action", "boolean"].includes(question.answer_schema?.type || "") ? <select aria-label={say("结构问题答案", "Structure question answer")} value={value} onChange={e => setValue(e.target.value)}><option value="">{say("请选择", "Select")}</option><option value={question.kind === "action" ? "yes" : "true"}>{say("是", "Yes")}</option><option value={question.kind === "action" ? "no" : "false"}>{say("否", "No")}</option></select> :
           <input aria-label={say("结构问题答案", "Structure question answer")} value={value} onChange={e => setValue(e.target.value)} />}
-        <div className="structure-actions"><button disabled={busy} onClick={() => void answer(question)}>{say("提交并重新计算", "Submit and recalculate")}</button>
+        <div className="structure-actions"><button className="primary-button" disabled={busy} onClick={() => void answer(question)}>{say("提交并重新计算", "Submit and recalculate")}</button>
           <button disabled={busy} onClick={() => void answer(question, "defer", "")}>{say("暂缓此题", "Defer question")}</button>
           {question.kind !== "action" && <button disabled={busy} onClick={() => void answer(question, "answer", "unknown")}>{say("事实未知", "Fact unknown")}</button>}</div>
       </div>}
-      <details><summary>{say("全部待补项", "All open items")} ({outcome.question_count ?? outcome.questions.length})</summary><ul>{outcome.questions.map(q => <li key={q.id}>[{q.kind}] {q.key} · {q.prompt}</li>)}</ul></details>
+      <details><summary>{say("全部待补项", "All open items")} ({outcome.question_count ?? outcome.questions.length})</summary><ul>{outcome.questions.map(q => <li key={q.id}>[{engineText(q.kind, locale)}] {questionText(q, locale)}</li>)}</ul></details>
       {professional.length > 0 && <p>{say(`另有 ${professional.length} 项专业判断或资料维护问题，已保留给有权限的复核者。`, `${professional.length} professional or source-maintenance questions are reserved for authorized reviewers.`)}</p>}
-      {canReview && professional.map(q => <details key={q.id}><summary>{say("专业/资料维护：", "Professional/source review: ")}{q.prompt}</summary>
+      {canReview && professional.map(q => <details key={q.id}><summary>{say("专业/资料维护：", "Professional/source review: ")}{questionText(q, locale)}</summary>
         <label>{say("依据引用对象 JSON", "Source reference JSON")}<textarea aria-label={say("专业依据引用", "Professional source reference")} value={reference} onChange={e => setReference(e.target.value)} /></label>
         <label>{say("专业答复（裁量当前只接受有依据的有利判断 yes；日历填写日期数组）", "Professional answer (a favorable decision requires cited evidence; enter dates as an array)")}<input value={professionalValue} onChange={e => setProfessionalValue(e.target.value)} /></label>
         <button disabled={busy} onClick={() => { try { const ref = JSON.parse(reference); const answer = q.kind === "library" ? JSON.parse(professionalValue) : professionalValue;

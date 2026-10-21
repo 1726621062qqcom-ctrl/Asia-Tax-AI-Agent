@@ -6,6 +6,7 @@ import { LocaleProvider } from "./locale";
 import "./styles.css";
 import "./auth.css";
 import "./chat-polish.css";
+import "./button-theme.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
