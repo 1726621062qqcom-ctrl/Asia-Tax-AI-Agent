@@ -1,0 +1,605 @@
+{
+ "answers_file": "C:\\Coding\\Projects\\TUM\\project_study_self\\out\\ui_answers\\c207cbf2d6c7204d\\28eecfaa588d4035e123.json",
+ "questions": [],
+ "plan": {
+  "cand": {},
+  "guaranteed": 42500.0,
+  "best": 1250.0,
+  "structure": {
+   "entities": [
+    [
+     "MARLOW_CAPITAL_PTE_LTD",
+     "SG",
+     "existing"
+    ],
+    [
+     "MARLOW_HOLDINGS_LIMITED",
+     "HK",
+     "existing"
+    ]
+   ],
+   "holds": [
+    [
+     "MARLOW_HOLDINGS_LIMITED",
+     "MARLOW_CAPITAL_PTE_LTD",
+     100.0,
+     "stated by the case"
+    ]
+   ],
+   "flows": [
+    [
+     "payment_1",
+     "INTEREST",
+     "MARLOW_HOLDINGS_LIMITED",
+     "MARLOW_CAPITAL_PTE_LTD",
+     250000,
+     "2026-12-31"
+    ]
+   ]
+  },
+  "regions": [
+   {
+    "region": "HK",
+    "jurisdictions": [
+     "HK"
+    ],
+    "actions": [],
+    "guaranteed": [],
+    "best": [
+     [
+      "payment_1",
+      "HK",
+      "income",
+      "MARLOW_HOLDINGS_LIMITED",
+      -41250.0,
+      [
+       "hk.deduct.interest",
+       "hk.tp.corresponding",
+       "hk.tp.deduction_cap"
+      ],
+      true
+     ]
+    ],
+    "deadlines": [],
+    "conditions": [
+     [
+      "MARLOW_HOLDINGS_LIMITED.incurred_in_production_of_profits",
+      "whether the expense was incurred in the production of assessable profits",
+      "hk.deduct.interest",
+      0.0
+     ]
+    ]
+   },
+   {
+    "region": "SG",
+    "jurisdictions": [
+     "SG"
+    ],
+    "actions": [],
+    "guaranteed": [
+     [
+      "payment_1",
+      "SG",
+      "income",
+      "MARLOW_CAPITAL_PTE_LTD",
+      42500.0,
+      [
+       "sg.ftc.unilateral",
+       "sg.onshore.charge",
+       "sg.tp.income_uplift"
+      ],
+      true
+     ]
+    ],
+    "best": [
+     [
+      "payment_1",
+      "SG",
+      "income",
+      "MARLOW_CAPITAL_PTE_LTD",
+      42500.0,
+      [
+       "sg.fsie.charge",
+       "sg.ftc.unilateral",
+       "sg.tp.income_uplift"
+      ],
+      true
+     ]
+    ],
+    "deadlines": [],
+    "conditions": []
+   }
+  ],
+  "totals": {
+   "SG": [
+    42500.0,
+    42500.0
+   ],
+   "HK": [
+    0,
+    -41250.0
+   ]
+  },
+  "present": null,
+  "runner_up": null,
+  "ties": [],
+  "data_used": [
+   [
+    "group.group_revenue_eur",
+    20000000,
+    "Marlow Holdings consolidated accounts 2025"
+   ],
+   [
+    "MARLOW_HOLDINGS_LIMITED.taxable_income_other",
+    "unknown",
+    ""
+   ],
+   [
+    "MARLOW_CAPITAL_PTE_LTD.ftc_pooling_election",
+    "unknown",
+    ""
+   ],
+   [
+    "flow:payment_1.foreign_headline_rate",
+    "unknown",
+    ""
+   ],
+   [
+    "flow:payment_1.foreign_taxed",
+    false,
+    "no Hong Kong tax was withheld (loan agreement; bank advice)"
+   ],
+   [
+    "flow:payment_1.receipt_kind",
+    "REMITTED",
+    "loan agreement: paid to the Lender's bank account in Singapore"
+   ]
+  ],
+  "claims": [],
+  "unmodelled": [],
+  "scope": {
+   "policy": "income_only",
+   "excluded": []
+  },
+  "strategies": [
+   {
+    "assumes_favourable": [],
+    "cand": {},
+    "guaranteed": 42500.0,
+    "best": 1250.0,
+    "id": 1,
+    "baseline": true,
+    "labels": {},
+    "reasons": {},
+    "fallback": null,
+    "plan": {
+     "cand": {},
+     "guaranteed": 42500.0,
+     "best": 1250.0,
+     "structure": {
+      "entities": [
+       [
+        "MARLOW_CAPITAL_PTE_LTD",
+        "SG",
+        "existing"
+       ],
+       [
+        "MARLOW_HOLDINGS_LIMITED",
+        "HK",
+        "existing"
+       ]
+      ],
+      "holds": [
+       [
+        "MARLOW_HOLDINGS_LIMITED",
+        "MARLOW_CAPITAL_PTE_LTD",
+        100.0,
+        "stated by the case"
+       ]
+      ],
+      "flows": [
+       [
+        "payment_1",
+        "INTEREST",
+        "MARLOW_HOLDINGS_LIMITED",
+        "MARLOW_CAPITAL_PTE_LTD",
+        250000,
+        "2026-12-31"
+       ]
+      ]
+     },
+     "regions": [
+      {
+       "region": "HK",
+       "jurisdictions": [
+        "HK"
+       ],
+       "actions": [],
+       "guaranteed": [],
+       "best": [
+        [
+         "payment_1",
+         "HK",
+         "income",
+         "MARLOW_HOLDINGS_LIMITED",
+         -41250.0,
+         [
+          "hk.deduct.interest",
+          "hk.tp.corresponding",
+          "hk.tp.deduction_cap"
+         ],
+         true
+        ]
+       ],
+       "deadlines": [],
+       "conditions": [
+        [
+         "MARLOW_HOLDINGS_LIMITED.incurred_in_production_of_profits",
+         "whether the expense was incurred in the production of assessable profits",
+         "hk.deduct.interest",
+         0.0
+        ]
+       ]
+      },
+      {
+       "region": "SG",
+       "jurisdictions": [
+        "SG"
+       ],
+       "actions": [],
+       "guaranteed": [
+        [
+         "payment_1",
+         "SG",
+         "income",
+         "MARLOW_CAPITAL_PTE_LTD",
+         42500.0,
+         [
+          "sg.ftc.unilateral",
+          "sg.onshore.charge",
+          "sg.tp.income_uplift"
+         ],
+         true
+        ]
+       ],
+       "best": [
+        [
+         "payment_1",
+         "SG",
+         "income",
+         "MARLOW_CAPITAL_PTE_LTD",
+         42500.0,
+         [
+          "sg.fsie.charge",
+          "sg.ftc.unilateral",
+          "sg.tp.income_uplift"
+         ],
+         true
+        ]
+       ],
+       "deadlines": [],
+       "conditions": []
+      }
+     ],
+     "totals": {
+      "SG": [
+       42500.0,
+       42500.0
+      ],
+      "HK": [
+       0,
+       -41250.0
+      ]
+     },
+     "data_used": [
+      [
+       "group.group_revenue_eur",
+       20000000,
+       "Marlow Holdings consolidated accounts 2025"
+      ],
+      [
+       "MARLOW_HOLDINGS_LIMITED.taxable_income_other",
+       "unknown",
+       ""
+      ],
+      [
+       "MARLOW_CAPITAL_PTE_LTD.ftc_pooling_election",
+       "unknown",
+       ""
+      ],
+      [
+       "flow:payment_1.foreign_headline_rate",
+       "unknown",
+       ""
+      ],
+      [
+       "flow:payment_1.foreign_taxed",
+       false,
+       "no Hong Kong tax was withheld (loan agreement; bank advice)"
+      ],
+      [
+       "flow:payment_1.receipt_kind",
+       "REMITTED",
+       "loan agreement: paid to the Lender's bank account in Singapore"
+      ]
+     ],
+     "claims": [],
+     "rulings_declared": {},
+     "notes": [],
+     "execution": {
+      "version": 2,
+      "title": "Implementation plan",
+      "status": "conditional",
+      "objective": "Settle the tax on SGD 250,000.00 interest from Marlow Holdings Limited to Marlow Capital Pte. Ltd. at the lowest amount the facts support.",
+      "recommended_course": "Settle the tax on SGD 250,000.00 interest from Marlow Holdings Limited to Marlow Capital Pte. Ltd. at the lowest amount the facts support. Conservative tax: SGD 42,500.00 (Singapore income tax SGD 42,500.00).",
+      "course_parts": {
+       "objective": "Settle the tax on SGD 250,000.00 interest from Marlow Holdings Limited to Marlow Capital Pte. Ltd. at the lowest amount the facts support.",
+       "conservative": " Conservative tax: SGD 42,500.00 (Singapore income tax SGD 42,500.00).",
+       "fall": " It can fall to SGD 1,250.00 if the favourable treatment is supported on: the open treatments.",
+       "start": ""
+      },
+      "tax_position": [
+       {
+        "jurisdiction": "HK",
+        "label": "Hong Kong",
+        "conservative": 0,
+        "favourable": -41250.0,
+        "items": ""
+       },
+       {
+        "jurisdiction": "SG",
+        "label": "Singapore",
+        "conservative": 42500.0,
+        "favourable": 42500.0,
+        "items": "Singapore income tax SGD 42,500.00"
+       }
+      ],
+      "levers": [
+       {
+        "condition": "whether the expense was incurred in the production of assessable profits",
+        "impact": 0.0,
+        "jurisdictions": [
+         "HK"
+        ],
+        "alone": false
+       }
+      ],
+      "phases": [
+       {
+        "id": "facts",
+        "title": "Establish the facts behind each payment",
+        "steps": [
+         "step-1",
+         "step-2"
+        ]
+       },
+       {
+        "id": "decide",
+        "title": "Settle the treatments that move the tax",
+        "steps": [
+         "step-3"
+        ]
+       },
+       {
+        "id": "comply",
+        "title": "File, pay and reconcile",
+        "steps": [
+         "step-4",
+         "step-5"
+        ]
+       },
+       {
+        "id": "close",
+        "title": "Record and close",
+        "steps": [
+         "step-6"
+        ]
+       }
+      ],
+      "treatment_paths": [
+       {
+        "title": "This strategy's path",
+        "amount": 42500.0,
+        "when": "The guaranteed tax of this strategy, with its rulings taken as the list says. Verify the liability and actual payments before filing.",
+        "steps": [
+         "step-1",
+         "step-2",
+         "step-3",
+         "step-4",
+         "step-5"
+        ]
+       }
+      ],
+      "summary": "Complete the tax treatment and compliance work for the recorded transactions.",
+      "comparison": "The recorded arrangement is retained. Alternative structures were not compared; this plan implements and resolves the entered transactions. Scope: income tax only; VAT, GST, stamp duty, customs duty and property taxes are not assessed. This window shows strategy #1 of the list; the other strategies are the alternatives.",
+      "candidate_count": 1,
+      "as_at": "2026-10-20",
+      "currency": "SGD",
+      "next_action": "step-1",
+      "known_facts": [],
+      "steps": [
+       {
+        "id": "step-1",
+        "kind": "evidence",
+        "phase": "facts",
+        "title": "Prepare the financing and interest file",
+        "why": "The conservative tax on this payment is Singapore income tax SGD 42,500.00; every later step relies on these facts.",
+        "owner": "Marlow Capital Pte. Ltd. finance, with Marlow Holdings Limited finance",
+        "action": "Marlow Holdings Limited pays Marlow Capital Pte. Ltd. SGD 250,000.00 for interest on 2026-12-31. Match the interest to the borrowing period, loan purpose, rate and contractual allocation of withholding tax.",
+        "documents": [
+         "Loan agreement and interest schedule",
+         "Use of funds and lender details",
+         "Interest benchmark and related-party pricing support"
+        ],
+        "completion": "A reconciled transaction workpaper with the supporting documents and a named reviewer.",
+        "status": "todo",
+        "flows": [
+         "payment_1"
+        ],
+        "basis": [],
+        "due": "",
+        "depends_on": []
+       },
+       {
+        "id": "step-2",
+        "kind": "missing_evidence",
+        "phase": "facts",
+        "title": "Obtain the facts answered Unknown",
+        "why": "Unknown facts are taken at their least favourable value, so they hold the conservative estimate up until a supported answer replaces them.",
+        "owner": "Assessment owner's tax lead",
+        "action": "Obtain supporting records for: annual taxable income outside the case's flows (may be negative: the company's own loss; decision D51); whether the Singapore foreign tax credit pooling election is made; the source jurisdiction's statutory corporate income tax rate for resident enterprises; not a withholding, treaty or non-resident rate. Until supported answers are entered and reassessed, keep these facts Unknown and retain the conservative treatment.",
+        "documents": [
+         "annual tax return",
+         "Singapore tax return",
+         "source jurisdiction's tax law"
+        ],
+        "completion": "Each available fact has a reviewed source and the assessment is rerun; unavailable facts remain explicitly Unknown.",
+        "status": "conditional",
+        "flows": [],
+        "basis": [],
+        "due": "",
+        "depends_on": [
+         "step-1"
+        ]
+       },
+       {
+        "id": "step-3",
+        "kind": "condition",
+        "phase": "decide",
+        "title": "Resolve the outstanding tax treatment",
+        "why": "Decides whether the expense was incurred in the production of assessable profits. On its own it does not lower the conservative estimate; it matters together with the other open treatments.",
+        "owner": "Marlow Holdings Limited tax lead and tax adviser",
+        "action": "Prepare a supported position on: whether the expense was incurred in the production of assessable profits. Record the conclusion and any authority response.",
+        "documents": [
+         "evidence of the purpose of the expense",
+         "Written treatment analysis and any relevant authority correspondence"
+        ],
+        "completion": "A reviewed treatment memo with evidence; any required authority acceptance is recorded separately.",
+        "status": "conditional",
+        "flows": [
+         "payment_1"
+        ],
+        "basis": [
+         "hk.deduct.interest"
+        ],
+        "due": "",
+        "depends_on": [
+         "step-1"
+        ]
+       },
+       {
+        "id": "step-4",
+        "kind": "reconciliation",
+        "phase": "comply",
+        "title": "Confirm the Hong Kong position",
+        "why": "No Hong Kong tax on the conservative basis. If the open treatments are supported, SGD -41,250.00 arises here (Hong Kong income tax SGD -41,250.00).",
+        "owner": "Marlow Holdings Limited finance and local tax adviser",
+        "action": "Reconcile the transaction income, costs, taxes and any credit with the local accounts and actual payment evidence. Use the conservative position for unresolved treatment; verify credit entitlement separately from proof that tax was paid.",
+        "documents": [
+         "Transaction tax workpaper and local return",
+         "Income and expense ledger",
+         "Foreign tax assessment and receipts, if a credit is claimed"
+        ],
+        "completion": "The local return position, reserve and any permitted credit are approved by the responsible reviewer.",
+        "status": "todo",
+        "flows": [
+         "payment_1"
+        ],
+        "basis": [
+         "hk.deduct.interest",
+         "hk.tp.corresponding",
+         "hk.tp.deduction_cap"
+        ],
+        "due": "",
+        "depends_on": [
+         "step-1",
+         "step-3"
+        ]
+       },
+       {
+        "id": "step-5",
+        "kind": "reconciliation",
+        "phase": "comply",
+        "title": "Settle the Singapore tax: SGD 42,500.00",
+        "why": "Conservative Singapore tax: Singapore income tax SGD 42,500.00.",
+        "owner": "Marlow Capital Pte. Ltd. finance and local tax adviser",
+        "action": "Reconcile the transaction income, costs, taxes and any credit with the local accounts and actual payment evidence. Use the conservative position for unresolved treatment; verify credit entitlement separately from proof that tax was paid.",
+        "documents": [
+         "Transaction tax workpaper and local return",
+         "Income and expense ledger",
+         "Foreign tax assessment and receipts, if a credit is claimed"
+        ],
+        "completion": "The local return position, reserve and any permitted credit are approved by the responsible reviewer.",
+        "status": "todo",
+        "flows": [
+         "payment_1"
+        ],
+        "basis": [
+         "sg.fsie.charge",
+         "sg.ftc.unilateral",
+         "sg.onshore.charge",
+         "sg.tp.income_uplift"
+        ],
+        "due": "",
+        "depends_on": [
+         "step-1",
+         "step-3"
+        ]
+       },
+       {
+        "id": "step-6",
+        "kind": "signoff",
+        "phase": "close",
+        "title": "Approve the workpack and keep the audit trail",
+        "why": "Closes the plan: who decided what, on which evidence, and what remains open.",
+        "owner": "Assessment owner's finance lead",
+        "action": "Assign each work item, review the conditional decisions and reserve, and retain contracts, computations, approvals and submission receipts. Rerun the assessment when a material fact or treatment changes.",
+        "documents": [
+         "Reviewed transaction workpapers",
+         "Signed decision log",
+         "Filing acknowledgements and payment receipts, where applicable"
+        ],
+        "completion": "The responsible reviewer signs the workpack; unresolved treatments and remaining actions are explicitly recorded.",
+        "status": "todo",
+        "flows": [],
+        "basis": [],
+        "due": "",
+        "depends_on": [
+         "step-4",
+         "step-5"
+        ]
+       }
+      ],
+      "decision_paths": [
+       {
+        "step": "step-3",
+        "condition": "whether the expense was incurred in the production of assessable profits",
+        "impact": 0.0,
+        "basis": [
+         "hk.deduct.interest"
+        ],
+        "if_supported": "Record the conclusion and reassess; on its own this does not change the conservative estimate.",
+        "otherwise": "Keep the conservative treatment and its reserve; do not record an unapproved saving."
+       }
+      ],
+      "exclusions": [],
+      "completion_note": "Ready for review means the workpack is generated. It does not mean documents have been approved, filings submitted, taxes paid or authority acceptance obtained.",
+      "strategy": {
+       "id": 1,
+       "guaranteed": 42500.0,
+       "assumes_favourable": [],
+       "labels": {},
+       "fallback": null,
+       "fallback_guaranteed": null
+      }
+     },
+     "strategies": []
+    }
+   }
+  ],
+  "rulings_declared": {},
+  "notes": [],
+  "execution": null
+ },
+ "note": ""
+}

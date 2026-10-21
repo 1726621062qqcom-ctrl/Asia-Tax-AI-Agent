@@ -13,7 +13,12 @@ import traceback
 from pathlib import Path
 
 from .run import load_case
-from .ex_ante import ex_ante
+from .ex_ante import ex_ante as _ex_ante_lib
+from .scope import ALL as _SCOPE_ALL
+
+
+def ex_ante(*a, **k):
+    return _ex_ante_lib(*a, scope=_SCOPE_ALL, **k)        # the whole library, as the battery files were generated
 
 DIR = Path("cases/battery")
 

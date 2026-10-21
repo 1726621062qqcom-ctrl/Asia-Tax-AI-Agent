@@ -280,11 +280,14 @@ REGISTRY = [
     module_check("B-extract", "B", "invariant", "check_extract", ALL),
     module_check("B-pipeline", "B", "invariant", "check_pipeline", (MID, FULL), note="端到端.md: scripted model, register off, gates, resume, case check, planning"),
     module_check("B-ui", "B", "invariant", "check_ui", ALL, note="界面.md: routes of the local page, path restrictions, review and answer write-back"),
+    module_check("B-income-only", "B", "statute", "check_income_only", ALL,
+                 note="scope.py (decision D52): the income-only table against the law and the library; intake, planner, CLI and page refuse what attracts another levy"),
     module_check("B-precedent", "B", "derived", "check_precedent", ALL),
     module_check("grounding-selfcheck", "grounding", "invariant", "verify.check_grounding", ALL, items=True),
-    Check("grounding-gold", "grounding", "official", (MID, FULL), grounding_gold, group="grounding"),
+    # parked 2026-10-20: the scripted scenarios and the K4 cases are share transfers, royalties and services, outside the income-only scope (scope.py)
+    Check("grounding-gold", "grounding", "official", (), grounding_gold, group="grounding"),
     Check("grounding-casecheck", "grounding", "invariant", (MID, FULL), casecheck_real, group="grounding"),
-    Check("grounding-real", "grounding", "official", (FULL,), grounding_real, group="grounding"),
+    Check("grounding-real", "grounding", "official", (), grounding_real, group="grounding"),
     # the tests of the tests: seeded faults the C-layer checks must notice
     module_check("C-selfcheck", "C", "invariant", "verify.check_stability", (FULL,), items=True, group="selfcheck",
                  note="seeded order / hash-seed / cache / random instabilities are detected and classified"),

@@ -123,6 +123,8 @@ def st_intake(ctx: Ctx) -> str:
     template, case, event, subject, ticks, notes = load_case(ctx.case)
     g = template.build(event, case.present, case)
     validate_core(g)                                                   # Reject -> the stage fails with the reason
+    from . import scope as scope_mod
+    scope_mod.check(g, names=ctx.case_json.get("names"))              # decision D52: OutOfScope names the flows and the levies
     ctx.docs = find_docs(ctx.case_json, ctx.opts.get("docs"))
     names = ctx.case_json.get("names") or {}
     info = {"case_id": ctx.case_id, "kind": ctx.case_json.get("kind"), "template": template.name, "subject": subject,
@@ -131,6 +133,8 @@ def st_intake(ctx: Ctx) -> str:
             "answers": str(ctx.opts.get("answers") or ctx.case.with_suffix("").as_posix() + ".answers.json")}
     _dump(ctx.art("intake.json"), info)
     ctx.row("intake.core", "pass", measured="%d roles, %d flows" % (len(g.entities), len(g.flows)))
+    ctx.row("intake.scope", "pass", measured="income tax only: %d flows admitted" % len(g.flows),
+            expected="no flow attracts VAT, GST, stamp duty, customs duty or a property tax (decision D52)", evidence="tax_graph/scope.py")
     ctx.row("intake.docs", "pass" if ctx.docs else "warn", measured=", ".join(ctx.docs) or "none", expected="documents for the sources the provenance names",
             evidence="without documents the extraction only checks the registers and the relations; everything else is listed for a person")
     ctx.row("intake.names", "pass" if names else "warn", measured="%d roles named" % len(names), expected="names for every role",
@@ -352,6 +356,7 @@ def plan_json(p):
         return o
     out = dict(p)
     out["regions"] = [{"region": region_name(rg), "jurisdictions": sorted(rg), **d} for rg, d in (p.get("regions") or {}).items()]
+    out["strategies"] = [dict(s, plan=plan_json(s["plan"])) if s.get("plan") else s for s in (p.get("strategies") or [])]
     return json.loads(json.dumps(keys(out), default=_plain))
 
 

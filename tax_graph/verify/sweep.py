@@ -84,7 +84,7 @@ def run(path, scales):
             else:
                 open_ = [e for e in o.evaluations if not e.excluded]
                 best, mode = (min(open_, key=_key) if open_ else None), "question sheet"
-            present = next((e for e in o.evaluations if all(e.cand.get(x) == y for x, y in case.present.items() if x in e.cand)), None)
+            present = next((e for e in o.evaluations if not e.excluded and all(e.cand.get(x) == y for x, y in case.present.items() if x in e.cand)), None)
             rows.append({"scale": k, "mode": mode, "cand": best.cand if best else None,
                          "hi": round(best.b.hi, 2) if best else None, "lo": round(best.b.lo, 2) if best else None,
                          "present_hi": round(present.b.hi, 2) if present else None,

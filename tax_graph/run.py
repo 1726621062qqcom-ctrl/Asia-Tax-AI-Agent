@@ -17,7 +17,9 @@ from pathlib import Path
 
 from .claims import Claim
 from .data.domain import Event
+from .engine import Reject
 from .ex_ante import ex_ante, finalize
+from . import scope as scope_mod
 from .fields import missing_fields
 from .model import HoldEdge
 from .scenarios import GROUP, TEMPLATES, Case, RoleFacts, template_of
@@ -62,6 +64,10 @@ def render(template, case, event, subject, out, finalized=None, notes=()):
     L = []
     w = L.append
     w("# Result: template %s, subject %s, event %s" % (template.name, subject, {k: (v.isoformat() if isinstance(v, date) else v) for k, v in event.__dict__.items() if v not in (None, 1, False)}))
+    if getattr(out, "out_of_scope", None):
+        w("")
+        w("Scope: income tax only; %d candidate structures not compared: %s" % (
+          len(out.out_of_scope), scope_mod.compact([x.json(case.names) for _, bad in out.out_of_scope for x in bad])))
     if notes:
         w("")
         w("Assumptions / gaps noted in the case file:")
@@ -143,7 +149,11 @@ def main(argv):
         sys.stdout.buffer.write(("\n[written to %s; answers read from %s]\n" % (dst, ans_path)).encode("utf-8"))
         return 0
     template, case, event, subject, ticks, notes = load_case(path)
-    out = ex_ante(template, event, case, ticks=ticks or None, subject=subject)
+    try:
+        out = ex_ante(template, event, case, ticks=ticks or None, subject=subject)
+    except Reject as e:                                        # the core is incomplete, or the case is outside the scope (decision D52)
+        sys.stdout.buffer.write(("not run: %s\n" % e).encode("utf-8"))
+        return 2
     fin = finalize(template, event, case, out.table, ticks, subject=subject) if ticks else None
     text = render(template, case, event, subject, out, fin, notes)
     dst = Path("out") / (Path(path).stem + ".table.md")

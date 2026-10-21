@@ -1,12 +1,3 @@
-# Question sheet: meridian (template inbound_services)
+# No plan: meridian
 
-No plan can be given yet: the data or confirmations below would change the chosen plan or its guaranteed tax. Answer only these; where you cannot, enter unknown (taken at its worst, never filled in).
-Write the answers into `<case>.answers.json`: data (a value or {"value", "source"}), actions (yes / no / unknown), rulings (yes / no / unknown), library.
-
-## SG
-
-| Kind | Address | Question | Value | Usual source | Impact |
-|---|---|---|---|---|---|
-| required (tax unbounded without it) | `SERVICER.globe_income` | Please provide: the constituent entity's GloBE income in the Pillar Two sense (dividends and gains on disposal of holdings of 10% or more are generally excluded) (SERVICER.globe_income) | amount | group Pillar Two computation workpapers | unbounded |
-
-1 candidate structures; 1 of them need the required data above before they can be computed.
+No plan can be given: outside the scope of this program (income tax only, decision D52): fee (service fee from CLIENT to SERVICER) attracts VAT in Mainland China: a service or intangible sold in the Mainland (consumed there, or sold by a Mainland seller) is a taxable transaction, taxed at 6% (增值税法 第三条、第四条、第十条); fee (service fee from CLIENT to SERVICER) attracts GST in Singapore: a supply of services by a Singapore supplier is standard-rated or zero-rated (GST Act s 8, s 21(3)); a service imported by a Singapore recipient is reverse-charged (s 14), at the rate of s 16

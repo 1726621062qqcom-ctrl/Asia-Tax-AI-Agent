@@ -31,6 +31,7 @@ from pathlib import Path
 
 from .data.domain import ADJUSTABLE
 from .engine import EX_ANTE, RULES, CaseCtx, Defect, Reject, bounds
+from . import scope as scope_mod
 from .ex_ante import ex_ante
 from .model import CN, HK, JURISDICTIONS, SG
 from .run import load_case
@@ -429,6 +430,18 @@ def make_composite(tname, locs):
     return name, case
 
 
+def in_scope(case_dict):
+    """Some candidate structure of the case is within the policy's scope (scope.py)."""
+    if not scope_mod.active():
+        return True
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        f = Path(td) / "c.json"
+        f.write_text(json.dumps(case_dict, ensure_ascii=False), encoding="utf-8")
+        template, case, event, subject, ticks, notes = load_case(f)
+    return any(not scope_mod.outside(template.build(event, a, case)) for a in template.candidates(event, case))
+
+
 def generate():
     DIR.mkdir(parents=True, exist_ok=True)
     for old in DIR.glob("*.json"):
@@ -436,6 +449,8 @@ def generate():
     n = 0
     for sk in skeletons():
         name, case = make_case(*sk)
+        if not in_scope(case):
+            continue
         (DIR / (name + ".json")).write_text(json.dumps(case, ensure_ascii=False, indent=1), encoding="utf-8")
         n += 1
         tname, locs, sparse, timing, years = sk
@@ -443,11 +458,15 @@ def generate():
             for variant in VARIANTS.get(tname, []):
                 vname, vcase = make_case(*sk)
                 vcase = apply_variant(vcase, variant)
+                if not in_scope(vcase):
+                    continue
                 (DIR / ("%s_%s.json" % (vname, variant[0]))).write_text(json.dumps(vcase, ensure_ascii=False, indent=1), encoding="utf-8")
                 n += 1
     for tname in COMPOSITES:
         for locs in COMPOSITE_PLACEMENTS:
             name, case = make_composite(tname, dict(locs))
+            if not in_scope(case):
+                continue
             (DIR / (name + ".json")).write_text(json.dumps(case, ensure_ascii=False, indent=1), encoding="utf-8")
             n += 1
     return n
@@ -467,6 +486,8 @@ def check_case(path, fired, pairs=None, summary=None):
     try:
         template, case, event, subject, ticks, notes = load_case(path)
         out = ex_ante(template, event, case, ticks=ticks or None, subject=subject)
+    except scope_mod.OutOfScope:
+        return None                                               # outside the income-only scope: skipped
     except (Defect, Reject) as e:
         return ["%s: %s" % (type(e).__name__, e)]
     except Exception as e:                                        # noqa: BLE001
@@ -795,11 +816,11 @@ def main(argv):
     if "--run-only" not in argv:
         n = generate()
         out.write("generated %d cases in %s\n" % (n, DIR))
-    fired, report, clean = set(), [], 0
+    fired, report, clean, skipped = set(), [], 0, 0
     pairs_by_case, summary = {}, {}
 
     def run(paths_):
-        nonlocal clean
+        nonlocal clean, skipped
         if jobs > 1:
             from multiprocessing import Pool
             with Pool(jobs) as pool:
@@ -810,7 +831,9 @@ def main(argv):
             fired.update(f_)
             pairs_by_case[stem] = pairs_
             summary.update(summary_)
-            if d:
+            if d is None:
+                skipped += 1
+            elif d:
                 report.append((stem, d))
             else:
                 clean += 1
@@ -829,7 +852,7 @@ def main(argv):
     paths = sorted(DIR.glob("*.json"))
     all_ids = [r.id for r in RULES if r.effect.name not in ("NOCHARGE", "SPLIT")]     # declarations have no effect to fire
     never = sorted(rid for rid in all_ids if rid not in fired and rid not in EXPECTED_SILENT)
-    lines = ["# Battery report", "", "cases: %d, clean: %d, with defects: %d" % (len(paths), clean, len(report)), "",
+    lines = ["# Battery report", "", "cases: %d, clean: %d, with defects: %d, outside the scope (skipped): %d" % (len(paths) - skipped, clean, len(report), skipped), "",
              "## defects"]
     for name, d in report:
         lines.append("- **%s**" % name)

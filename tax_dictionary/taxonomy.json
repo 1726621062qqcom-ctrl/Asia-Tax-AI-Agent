@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "jurisdictions": [
+    {"id": "CN", "name": "Mainland China", "name_zh": "中国内地", "currency": "CNY"},
+    {"id": "HK", "name": "Hong Kong", "name_zh": "香港", "currency": "HKD"},
+    {"id": "SG", "name": "Singapore", "name_zh": "新加坡", "currency": "SGD"}
+  ],
+  "subjects": [
+    {"id": "COMPANY", "name": "Company", "model_scope": "scenario_dependent"},
+    {"id": "INDIVIDUAL", "name": "Individual", "model_scope": "not_modelled"},
+    {"id": "PARTNERSHIP", "name": "Partnership", "model_scope": "not_modelled"},
+    {"id": "TRUST", "name": "Trust", "model_scope": "not_modelled"}
+  ],
+  "topics": [
+    {"id": "treaties", "family": "cross_border", "name": "Double tax agreements and arrangements", "name_zh": "避免双重征税协定、安排及议定书"},
+    {"id": "corporate_income", "family": "income_tax", "name": "Corporate income / profits tax", "name_zh": "企业所得税、利得税"},
+    {"id": "personal_income", "family": "income_tax", "name": "Personal income tax", "name_zh": "个人所得税"},
+    {"id": "inheritance_estate_gift", "family": "wealth_transfer", "name": "Inheritance, estate and gift taxation", "name_zh": "继承、遗产及赠与税"},
+    {"id": "exit_tax", "family": "mobility", "name": "Exit / migration taxation", "name_zh": "迁出税、移居退出税"},
+    {"id": "cfc", "family": "anti_avoidance", "name": "Controlled foreign companies", "name_zh": "受控外国企业"},
+    {"id": "withholding", "family": "cross_border", "name": "Withholding on dividends, interest, royalties and services", "name_zh": "股息、利息、特许权及服务费预提税"},
+    {"id": "foreign_income_credit", "family": "cross_border", "name": "Foreign income, exemptions and tax credits", "name_zh": "境外所得、免税及抵免"},
+    {"id": "capital_gains", "family": "income_tax", "name": "Share disposals and capital / revenue gains", "name_zh": "股权出售及资本、收益性质损益"},
+    {"id": "restructuring_distributions", "family": "corporate_transactions", "name": "Reorganisation, distributions and liquidation", "name_zh": "重组、利润分配、减资及清算"},
+    {"id": "residence_pe", "family": "cross_border", "name": "Tax residence, source and permanent establishments", "name_zh": "税收居民、所得来源及常设机构"},
+    {"id": "transfer_pricing", "family": "anti_avoidance", "name": "Transfer pricing and interest deduction limits", "name_zh": "转让定价及利息扣除限制"},
+    {"id": "anti_avoidance_substance", "family": "anti_avoidance", "name": "Anti-abuse, beneficial ownership and substance", "name_zh": "反滥用、受益所有人及经济实质"},
+    {"id": "intellectual_property", "family": "corporate_transactions", "name": "IP licensing, ownership transfers and allowances", "name_zh": "知识产权许可、转让及税收扣除"},
+    {"id": "vat_gst", "family": "indirect_tax", "name": "VAT / GST", "name_zh": "增值税、商品及服务税"},
+    {"id": "stamp_duty", "family": "transaction_tax", "name": "Stamp duties", "name_zh": "印花税"},
+    {"id": "property_taxes", "family": "property_tax", "name": "Property, rent, land appreciation and deed taxes", "name_zh": "房产、租赁、土地增值及契税"},
+    {"id": "surcharges", "family": "indirect_tax", "name": "VAT-related surcharges", "name_zh": "增值税相关附加"},
+    {"id": "customs", "family": "indirect_tax", "name": "Customs and cross-border goods", "name_zh": "关税及跨境货物"},
+    {"id": "pillar_two", "family": "international_minimum_tax", "name": "Pillar Two / minimum top-up taxes", "name_zh": "支柱二及最低补足税"},
+    {"id": "loss_relief", "family": "income_tax", "name": "Loss utilisation and group relief", "name_zh": "亏损利用及集团减免"},
+    {"id": "administration", "family": "procedure", "name": "Returns, payments, refunds, disputes and calendars", "name_zh": "申报、缴款、退税、争议及期限"},
+    {"id": "corporate_law", "family": "supporting_law", "name": "Corporate law and re-domiciliation procedures", "name_zh": "公司法及迁册程序"}
+  ],
+  "status_dimensions": {
+    "source_status": ["sources_indexed", "incidental_sources_only", "not_indexed"],
+    "structure_status": ["parameters_linked", "source_metadata_only", "not_structured"],
+    "model_status": ["rules_available", "not_modelled"],
+    "judgement_status": ["authority_or_facts_judgement_present", "no_discretion_flag_in_linked_rules", "not_assessed"],
+    "completeness_status": ["partial", "not_assessed"]
+  },
+  "boundaries": [
+    "A topic tag is a catalogue facet, not a legal finding that every provision belongs to that topic.",
+    "Documents, works, language versions, original fragments and assembled texts are counted separately.",
+    "No indexed rule is not the same as no tax. Only an explicitly sourced NOCHARGE rule states a modelled non-charge.",
+    "Share disposals and reorganisation are distinct from exit / migration taxation.",
+    "A limited shipping / air transport agreement is not a comprehensive income tax DTA.",
+    "Whole-statute collection can incidentally include personal tax provisions without enabling personal tax calculations.",
+    "The corpus keeps current / retained text rather than a complete historical statute archive; an earlier date can be NotCovered.",
+    "The dictionary is an editorial and derived layer; it does not alter or become part of the archived official text."
+  ]
+}

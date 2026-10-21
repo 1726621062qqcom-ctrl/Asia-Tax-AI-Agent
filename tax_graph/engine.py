@@ -531,7 +531,10 @@ SPLIT_FACT = "accumulated_profits_share"          # the holder's share of accumu
 
 
 def split_cost(graph, f):
-    """Cost the disposal part carries: the holding's cost (liquidation), or the share of it the withdrawn capital carries."""
+    """Cost the disposal part carries: as stated on the flow (the planner's answer to flow:<id>.gain.cost_basis lands on
+    the flow, flow_name), else the holding's cost (liquidation) or the share of it the withdrawn capital carries."""
+    if f.attrs.get("cost_basis") is not None:
+        return float(f.attrs["cost_basis"])
     h = graph.holding(f.payee, f.payer)
     if h is None or h.cost is None:
         return None

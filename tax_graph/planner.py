@@ -2,6 +2,9 @@
 
     plan(template, event, case, answers) -> Outcome(questions, plan)
 
+The plan is one when every ruling is answered yes or no; rulings answered "unknown" fork it into strategies (优化方案.md
+§6): the head holds the comparison, each strategy its own plan and workpack.
+
 Each round:
   1. every candidate structure is evaluated with the answers: data become facts of the case, confirmed actions and
      rulings become answers to the rules' conditions (addressed to a role or a flow, never to a field name at large);
@@ -36,6 +39,7 @@ from .rules.eval import SHARED_GROUPS
 from .rules.model import Discretion, Leaf, Not, And, Or, leaves
 from .rules.tri import DATA, DISCRETION, MISSING, PLAN, Need
 from .scenarios import NEW, same_settled
+from . import scope as scope_mod
 
 STEP_TEXT = {"ip_transfer": "IP transferred from %s to %s",       # decision D19: steps whose tax no rule computes
              # decision D30: a levy a group company bears on a flow dated before the law the library starts from
@@ -91,7 +95,7 @@ def _gloss(f):
 class Answers:
     data: Dict[str, object] = field(default_factory=dict)        # address -> value, {"value", "source"} or "unknown"
     actions: Dict[str, str] = field(default_factory=dict)        # address -> yes / no / unknown
-    rulings: Dict[str, str] = field(default_factory=dict)        # address -> yes / no / unknown
+    rulings: Dict[str, str] = field(default_factory=dict)        # address -> yes / no / unknown, or {"value", "reason"}
     library: Dict[str, object] = field(default_factory=dict)     # "calendar:SG:2028" -> answer
 
     @classmethod
@@ -110,6 +114,14 @@ class Answers:
 
     def answered(self, key):
         return key in self.data or key in self.actions or key in self.rulings or key in self.library
+
+    def ruling(self, key):
+        v = self.rulings.get(key)                     # "yes" / "no" / "unknown", or {"value", "reason"}
+        return v.get("value") if isinstance(v, dict) else v
+
+    def reason(self, key):
+        v = self.rulings.get(key)
+        return (v.get("reason") or "") if isinstance(v, dict) else ""
 
 
 def _conv(v):
@@ -179,6 +191,7 @@ class Evaluation:
     plan_keys: Dict[str, tuple]            # absolute PLAN key -> (group, need)
     blocking: Dict[str, tuple]             # absolute DATA key -> group
     excluded: str = ""                     # why this candidate cannot be planned (a blocking datum answered unknown)
+    out_of_scope: list = field(default_factory=list)   # decision D52: the levies beyond income tax this structure attracts
 
     @property
     def n_discretion(self):
@@ -191,6 +204,7 @@ class Outcome:
     plan: Optional[dict]
     evaluations: List[Evaluation]
     note: str = ""
+    scope: dict = field(default_factory=dict)          # decision D52: {policy, excluded: [{cand, why: [scope.Outside.json]}]}
 
 
 # ---------------------------------------------------------------- helpers
@@ -263,27 +277,80 @@ def _polarity(rule, key):
     return (not hits[0]) if hits else True
 
 
-def _ruling_ticks(answers, evaluations=None):
-    """Rulings answered "yes": the authority's favourable reading. Its tick value depends on the rule: a favourable
-    rule wants the judgement true, an unfavourable one (a denial, a charge) wants it false."""
+def _fav_value(key):
+    """The tick that gives the taxpayer the favourable reading of a judgement: a favourable rule wants it true, an
+    unfavourable one (a denial, a charge) wants it false; None when no rule reads it."""
+    field_ = key.split(".", 1)[1] if "." in key else key
+    if field_ in ("effective_management_in_cn", "cn_main_controlling_investor"):
+        return False                                    # not a Mainland resident by management
+    for r in RULES_BY_ID.values():
+        if r.cond is None:
+            continue
+        if any(isinstance(x, Discretion) and x.key == field_ for x in leaves(r.cond)):
+            return bool(r.favourable) == _polarity(r, field_)
+    return None
+
+
+def _ruling_ticks(answers):
+    """Rulings answered "yes" become ticks on the favourable side; "no" and "unknown" leave the judgement open."""
     out = {}
-    for key, v in answers.rulings.items():
-        if v != "yes":
+    for key in answers.rulings:
+        if answers.ruling(key) != "yes":
             continue
-        field_ = key.split(".", 1)[1] if "." in key else key
-        val = None
-        if field_ in ("effective_management_in_cn", "cn_main_controlling_investor"):
-            out[Need(DISCRETION, key)] = False          # the favourable reading: not a Mainland resident by management
-            continue
-        for r in RULES_BY_ID.values():
-            if r.cond is None:
-                continue
-            if any(isinstance(x, Discretion) and x.key == field_ for x in leaves(r.cond)):
-                pol = _polarity(r, field_)
-                val = (bool(r.favourable) == pol)
-                break
+        val = _fav_value(key)
         if val is not None:
             out[Need(DISCRETION, key)] = val
+    return out
+
+
+STRATEGY_MAX_KEYS = 6                                     # beyond this, only the baseline, each single ruling and all of them
+
+
+def _strategies(template, event, case, answers, P, evals, g0, scope):
+    """The rulings the client answered "unknown" fork the plan. Each combination of them taken favourable is a strategy:
+    the structure it leads to and its guaranteed tax, sorted by that tax; the last row (the baseline) takes every open
+    ruling against the taxpayer; each row names the strategy to fall back on when one of its rulings fails. The labels are
+    branch labels, not assumptions of the plan; a ruling resolved in practice is answered yes / no and the tree shrinks."""
+    live = [e for e in evals if not e.blocking and not e.excluded]
+    open_keys = sorted({_abs(n, grp, e.graph, e.b) for e in live for grp, ns in e.b.groups.items() for n in ns if n.source == DISCRETION}
+                       & {k for k in answers.rulings if answers.ruling(k) == "unknown"})
+    if not open_keys or not live:
+        return []
+    from itertools import combinations
+    if len(open_keys) <= STRATEGY_MAX_KEYS:
+        subsets = [set(c) for r in range(len(open_keys) + 1) for c in combinations(open_keys, r)]
+    else:
+        subsets = [set()] + [{k} for k in open_keys] + [set(open_keys)]
+    rows = {}
+    for s in subsets:
+        a2 = Answers(answers.data, answers.actions, dict(answers.rulings), answers.library)
+        for k in s:
+            a2.rulings[k] = "yes"
+        if not s:
+            found = list(live)                               # the baseline: the evaluations the plan already has
+        else:
+            found = []
+            for e in live:                                   # only structures that can be chosen at all
+                ev = evaluate(template, event, case, e.cand, a2, P, g0, scope=scope)
+                if ev is not None and not ev.blocking and not ev.excluded:
+                    found.append(ev)
+        if not found:
+            continue
+        b2 = min(found, key=_key)
+        key = (json.dumps(b2.cand, sort_keys=True, default=str), round(b2.b.hi, 2))
+        if key not in rows or len(s) < len(rows[key]["assumes_favourable"]):
+            rows[key] = {"assumes_favourable": sorted(s), "cand": dict(b2.cand), "guaranteed": round(b2.b.hi, 2), "best": round(b2.b.lo, 2),
+                         "_best": b2, "_evals": found, "_answers": a2}
+    out = sorted(rows.values(), key=lambda r: (r["guaranteed"], len(r["assumes_favourable"])))
+    for i, r in enumerate(out, 1):
+        r["id"] = i
+        r["baseline"] = not r["assumes_favourable"]
+        r["labels"] = {k: _gloss(_field_of(k)).get("gloss", _field_of(k)) for k in r["assumes_favourable"]}
+        r["reasons"] = {k: answers.reason(k) for k in r["assumes_favourable"] if answers.reason(k)}
+    for r in out:
+        mine = set(r["assumes_favourable"])
+        below = [x for x in out if x is not r and set(x["assumes_favourable"]) < mine]
+        r["fallback"] = min(below, key=lambda x: x["guaranteed"])["id"] if below else None
     return out
 
 
@@ -301,11 +368,19 @@ def _plan_value(key, ticks):
     return plan_favourable(_field_of(key), pred)
 
 
-def evaluate(template, event, case, a, answers, P, g0=None):
+def evaluate(template, event, case, a, answers, P, g0=None, scope=None):
     g = template.build(event, a, case)
     validate_core(g)
     if g0 is not None and not same_settled(g, g0, case.settled):
         return None
+    if scope_mod.active(scope):                             # decision D52: a structure that attracts another levy is not compared
+        bad = scope_mod.outside(g)
+        if bad:
+            ev = Evaluation(a, g, Bounds(float("-inf"), float("inf"), {}, {}, {}, {}), {}, {}, {})
+            ev.prereq, ev.joint = {}, {}
+            ev.excluded = scope_mod.reason(bad, case.names)
+            ev.out_of_scope = bad
+            return ev
     ticks = dict(_ruling_ticks(answers))
     for key, v in answers.actions.items():                  # "yes": the plan can take the favourable side
         fav = _plan_value(key, ticks)
@@ -482,7 +557,8 @@ def _published(gap, today):
 
 
 # ---------------------------------------------------------------- the plan
-def plan(template, event, case, answers=None, P=None, today=None) -> Outcome:
+def plan(template, event, case, answers=None, P=None, today=None, scope=None) -> Outcome:
+    """scope: None = the product's policy (scope.POLICY, income tax only); scope.ALL = the whole library (harnesses)."""
     answers = answers or Answers()
     P = P or Params()
     today = today or date.today()
@@ -490,11 +566,13 @@ def plan(template, event, case, answers=None, P=None, today=None) -> Outcome:
     g0 = template.build(event, case.present, case) if case.settled else None
     evals = []
     for a in template.candidates(event, case):
-        ev = evaluate(template, event, case, a, answers, P, g0)
+        ev = evaluate(template, event, case, a, answers, P, g0, scope=scope)
         if ev is not None:
             evals.append(ev)
     if not evals:
         return Outcome([], None, [], "No candidate structure keeps the flows whose tax has been settled.")
+    scope_info = {"policy": scope or scope_mod.POLICY,
+                  "excluded": [{"cand": dict(e.cand), "why": [x.json(case.names) for x in e.out_of_scope]} for e in evals if e.out_of_scope]}
     plannable = [e for e in evals if not e.blocking and not e.excluded]
     best = min(plannable, key=_key) if plannable else None
     contention = sorted([e for e in evals if not e.excluded and (best is None or e is best or e.b.lo < best.b.hi - EPS)],
@@ -557,11 +635,29 @@ def plan(template, event, case, answers=None, P=None, today=None) -> Outcome:
     questions = sorted(qs.values(), key=lambda q: (order_key(q.region), ["blocking", "joint", "data", "action", "ruling", "library"].index(q.kind),
                                                    -(q.impact or 0), q.key))
     if questions:
-        return Outcome(questions, None, evals)
+        return Outcome(questions, None, evals, scope=scope_info)
     if best is None:
         why = "; ".join(sorted({e.excluded for e in evals if e.excluded})) or "every candidate needs data that leaves a tax unbounded"
-        return Outcome([], None, evals, "No plan can be given: " + why)
-    return Outcome([], build_plan(best, evals, case, event, answers, P, today), evals)
+        return Outcome([], None, evals, "No plan can be given: " + why, scope=scope_info)
+    strategies = _strategies(template, event, case, answers, P, evals, g0, scope)
+    head = build_plan(best, evals, case, event, answers, P, today, scope_info, strategies)
+    if strategies:                                          # each strategy has its own plan and workpack; the head is the comparison only
+        from .execution import for_strategy
+        for s in strategies:
+            tag = {"id": s["id"], "guaranteed": s["guaranteed"], "assumes_favourable": s["assumes_favourable"], "labels": s["labels"],
+                   "fallback": s["fallback"], "fallback_guaranteed": next((x["guaranteed"] for x in strategies if x["id"] == s["fallback"]), None)}
+            if s["baseline"]:                                 # the baseline is the head's own plan: not built twice
+                s.pop("_best"), s.pop("_evals"), s.pop("_answers")
+                sp = dict(head)
+            else:
+                sp = build_plan(s.pop("_best"), s.pop("_evals"), case, event, s.pop("_answers"), P, today, scope_info)
+                sp["rulings_declared"] = head["rulings_declared"]   # declarations are the client's, not the branch labels
+            for k in ("present", "ties", "runner_up", "unmodelled", "scope", "strategies"):   # comparison-only: on the head
+                sp.pop(k, None)
+            sp["execution"] = for_strategy(sp["execution"], tag)
+            s["plan"] = sp
+        head["execution"] = None                               # the strategies carry the workpacks
+    return Outcome([], head, evals, scope=scope_info)
 
 
 ENUM_TEXT = {"REMITTED": "remitted in", "DEBT_SETTLED": "applied to settle debts of the local business", "MOVABLE_PROPERTY": "brought in as movable property purchased",
@@ -601,7 +697,9 @@ def _action_text(ak, grp, P, value=True):
     return "%s · %s%s" % (target, _gloss(f).get("gloss", f), thr)
 
 
-def build_plan(best, evals, case, event, answers, P, today):
+def build_plan(best, evals, case, event, answers, P, today, scope_info=None, strategies=None):
+    """The plan of one chosen evaluation. Called for the head (with the strategies list) and once per non-baseline
+    strategy with that strategy's answers; the head carries the comparison keys, a strategy only its own plan."""
     g, b = best.graph, best.b
     regions = {}
 
@@ -680,7 +778,7 @@ def build_plan(best, evals, case, event, answers, P, today):
             upside = round(b.hi - hi, 2) if hi is not None else None
             gl = _gloss(_field_of(key)).get("gloss", _field_of(key))
             bucket(_region_of_group(grp, g))["conditions"].append((key, gl, grp[0], upside))
-    present = next((e for e in evals if all(e.cand.get(k) == v for k, v in case.present.items())), None) if case.present else None
+    present = next((e for e in evals if not e.out_of_scope and all(e.cand.get(k) == v for k, v in case.present.items())), None) if case.present else None
     others = sorted([e for e in evals if e is not best and not e.blocking and not e.excluded], key=_key)
     unmodelled = sorted([(e.cand, "; ".join(_step_text(x) for x in e.graph.unmodelled), e.b.hi, e.b.lo)
                          for e in evals if e.graph.unmodelled and not e.blocking and e.b.hi < b.hi - EPS], key=lambda x: x[2])
@@ -701,7 +799,8 @@ def build_plan(best, evals, case, event, answers, P, today):
             "present": (present.cand, present.b.hi, present.b.lo) if present else None,
             "runner_up": (runner[0].cand, runner[0].b.hi, runner[0].b.lo) if runner else None,
             "ties": [(e.cand, e.b.hi, e.b.lo) for e in ties],
-            "data_used": data_used, "claims": claims_, "unmodelled": unmodelled,
+            "data_used": data_used, "claims": claims_, "unmodelled": unmodelled, "scope": scope_info or {}, "strategies": strategies or [],
+            "rulings_declared": {k: {"value": answers.ruling(k), "reason": answers.reason(k)} for k in answers.rulings if answers.ruling(k) in ("yes", "no")},
             "notes": (["A newly established company (if any) is taken, by the plan's design, to have only the flows listed; rerun if it is to have other business."]
                       if any(e.attrs.get("created_by_plan") for e in g.entities.values()) else [])
             + ["Flow %s (%s) predates the commencement of %s (%s): its %s is borne by %s outside the group; the library has no earlier rules, so it is not computed and does not affect the group's tax (decision D30)."
@@ -714,6 +813,23 @@ def build_plan(best, evals, case, event, answers, P, today):
 
 
 # ---------------------------------------------------------------- rendering
+def answers_ruling(p, k):
+    return p.get("rulings_declared", {}).get(k, {})
+
+
+def scope_text(scope_info):
+    """One line for the reports: the policy, and the candidate structures it left out (decision D52)."""
+    s = scope_info or {}
+    if s.get("policy") != scope_mod.INCOME_ONLY:
+        return ""
+    line = ("**Scope**: income tax only. VAT, GST, stamp duty, customs duty, land appreciation tax, deed tax and property tax are not "
+            "assessed; a case or a structure that attracts one of them is not handled.")
+    ex = s.get("excluded") or []
+    if ex:
+        line += " %d candidate structure%s not compared for that reason: %s." % (len(ex), "" if len(ex) == 1 else "s", scope_mod.compact([w for e in ex for w in e["why"]]))
+    return line
+
+
 def render(template, event, outcome, case_name=""):
     L = []
     w = L.append
@@ -722,6 +838,9 @@ def render(template, event, outcome, case_name=""):
         w("")
         w("No plan can be given yet: the data or confirmations below would change the chosen plan or its guaranteed tax. Answer only these; where you cannot, enter unknown (taken at its worst, never filled in).")
         w("Write the answers into `<case>.answers.json`: data (a value or {\"value\", \"source\"}), actions (yes / no / unknown), rulings (yes / no / unknown), library.")
+        if scope_text(outcome.scope):
+            w("")
+            w(scope_text(outcome.scope))
         cur = None
         for q in outcome.questions:
             if q.region != cur:
@@ -748,8 +867,38 @@ def render(template, event, outcome, case_name=""):
     w("# Plan: %s (template %s)" % (case_name, template.name))
     w("")
     w("**Structure**: %s" % (", ".join("%s=%s" % kv for kv in p["cand"].items()) or "the only structure"))
+    if scope_text(p.get("scope")):
+        w("")
+        w(scope_text(p.get("scope")))
+    declared = [(k, answers_ruling(p, k)) for k in sorted(p.get("rulings_declared", {}))]
+    if declared:
+        w("")
+        w("**Rulings declared by the client** (not computed by the program; each with the basis given): " + "; ".join(
+            "%s = %s (%s)" % (k, v["value"], v.get("reason") or "no basis given") for k, v in declared) + ".")
+    if p.get("strategies"):
+        w("")
+        w("## Strategies")
+        w("")
+        w("The rulings answered \"unknown\" fork the plan. Sorted by guaranteed tax, lowest first; the last row (baseline) takes every open ruling against the taxpayer. "
+          "A row's rulings are branch labels, not assumptions: resolve one in practice, answer yes / no, and reassess; if it fails, use the fallback row.")
+        w("")
+        w("| # | Guaranteed | Best case | Structure | Rulings taken as favourable on this path | Fallback |")
+        w("|---|---|---|---|---|---|")
+        for s in p["strategies"]:
+            taken = "; ".join("%s (`%s`)%s" % (s["labels"].get(k, k), k, (" — client: " + s["reasons"][k]) if k in s.get("reasons", {}) else "")
+                              for k in s["assumes_favourable"]) or "none (baseline)"
+            w("| %d | %.2f | %.2f | %s | %s | %s |" % (s["id"], s["guaranteed"], s["best"], ", ".join("%s=%s" % kv for kv in s["cand"].items()) or "the only structure",
+                                                  taken, ("#%d" % s["fallback"]) if s.get("fallback") else "—"))
+        from .execution import render_execution
+        for s in p["strategies"]:
+            if s.get("plan"):
+                w("")
+                w("### Strategy #%d: guaranteed %.2f%s" % (s["id"], s["guaranteed"], " (baseline)" if s.get("baseline") else ""))
+                w("")
+                w(render_execution(s["plan"]["execution"]).replace("## Implementation plan", "#### Implementation plan", 1).replace("\n#### ", "\n###### ").replace("\n### ", "\n##### "))
     w("")
-    w("**Guaranteed tax** (every discretion item unfavourable, unknown data unfavourable): %.2f; **best case** (every discretion item favourable): %.2f." % (p["guaranteed"], p["best"]))
+    w("**Guaranteed tax%s** (every discretion item unfavourable, unknown data unfavourable): %.2f; **best case** (every discretion item favourable): %.2f." % (
+        " of the baseline" if p.get("strategies") else "", p["guaranteed"], p["best"]))
     if p["present"]:
         w("")
         w("**Present structure**: guaranteed %.2f / best %.2f." % (p["present"][1], p["present"][2]))

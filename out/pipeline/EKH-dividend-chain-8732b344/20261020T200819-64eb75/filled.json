@@ -1,0 +1,200 @@
+{
+ "case_id": "EKH dividend chain",
+ "kind": "K6",
+ "template": "recorded",
+ "subject": "GROUP",
+ "currency": "CNY",
+ "roles": {
+  "SHANGHAI_ANXIN_RONG_CHEN": {
+   "loc": "CN",
+   "attrs": {},
+   "type": "COMPANY"
+  },
+  "BEST_CHINA_DEVELOPMENT_L": {
+   "loc": "HK",
+   "attrs": {},
+   "type": "COMPANY"
+  },
+  "EKH_LIMITED": {
+   "loc": "SG",
+   "attrs": {},
+   "type": "COMPANY"
+  }
+ },
+ "names": {
+  "SHANGHAI_ANXIN_RONG_CHEN": "Shanghai Anxin Rong Cheng Container Logistics Co., Ltd.",
+  "BEST_CHINA_DEVELOPMENT_L": "Best China Development Limited",
+  "EKH_LIMITED": "EKH Limited"
+ },
+ "members": [
+  "SHANGHAI_ANXIN_RONG_CHEN",
+  "BEST_CHINA_DEVELOPMENT_L",
+  "EKH_LIMITED"
+ ],
+ "holds": [
+  {
+   "holder": "BEST_CHINA_DEVELOPMENT_L",
+   "held": "SHANGHAI_ANXIN_RONG_CHEN",
+   "ratio": 100,
+   "since": "2019-03-12"
+  },
+  {
+   "holder": "EKH_LIMITED",
+   "held": "BEST_CHINA_DEVELOPMENT_L",
+   "ratio": 100
+  }
+ ],
+ "transactions": {
+  "payment_1": {
+   "payer": "SHANGHAI_ANXIN_RONG_CHEN",
+   "payee": "BEST_CHINA_DEVELOPMENT_L",
+   "income": "DIVIDEND",
+   "amount": 2000000,
+   "on": "2026-06-30"
+  },
+  "payment_2": {
+   "payer": "BEST_CHINA_DEVELOPMENT_L",
+   "payee": "EKH_LIMITED",
+   "income": "DIVIDEND",
+   "amount": 2000000,
+   "on": "2026-07-15"
+  }
+ },
+ "flows": {
+  "payment_1": {
+   "payable_on": "2026-06-30",
+   "tax_paid_or_secured": true
+  }
+ },
+ "present": {},
+ "settled": {
+  "payment_1": {
+   "CN": 100000
+  }
+ },
+ "event": {
+  "on": "2026-06-30",
+  "as_at": "2026-10-20",
+  "years": 1
+ },
+ "documents": [
+  "cases/ui_materials/94b4e2d359403951/client_description-8a9715dee41b.txt"
+ ],
+ "notes": [
+  "Assessment of the recorded companies and dated transactions; no alternative structure is inferred.",
+  "2 fields read by qwen3.8-flash from client_description-8a9715dee41b (2026-10-20, prompt 2026-10-15-en); quotes verified verbatim, numbers and dates parsed by the program from the quote; 0 conflicts and 0 constraint violations left unfilled; a person must review before use, then run tax_graph.verify.casecheck."
+ ],
+ "provenance": {
+  "roles.SHANGHAI_ANXIN_RONG_CHEN.loc": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "Shanghai Anxin Rong Cheng Container Logistics Co., Ltd. is incorporated in Shanghai, Mainland China."
+  },
+  "roles.BEST_CHINA_DEVELOPMENT_L.loc": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "It is wholly owned by Best China Development Limited, a Hong Kong company"
+  },
+  "roles.EKH_LIMITED.loc": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "Best China is 100% held by EKH Limited, which is incorporated in Singapore."
+  },
+  "holds.BEST_CHINA_DEVELOPMENT_L>SHANGHAI_ANXIN_RONG_CHEN.ratio": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "It is wholly owned by Best China Development Limited, a Hong Kong company, since 12 March 2019."
+  },
+  "holds.BEST_CHINA_DEVELOPMENT_L>SHANGHAI_ANXIN_RONG_CHEN.since": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "It is wholly owned by Best China Development Limited, a Hong Kong company, since 12 March 2019."
+  },
+  "holds.EKH_LIMITED>BEST_CHINA_DEVELOPMENT_L.ratio": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "Best China is 100% held by EKH Limited, which is incorporated in Singapore."
+  },
+  "event.on": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": ""
+  },
+  "event.as_at": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": ""
+  },
+  "event.years": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": ""
+  },
+  "settled.payment_1.CN": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "On 30 June 2026 Shanghai Anxin declared and paid a dividend of CNY 2,000,000 to Best China"
+  },
+  "transactions.payment_1.payer": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "On 30 June 2026 Shanghai Anxin declared and paid a dividend of CNY 2,000,000 to Best China"
+  },
+  "transactions.payment_1.payee": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "On 30 June 2026 Shanghai Anxin declared and paid a dividend of CNY 2,000,000 to Best China"
+  },
+  "transactions.payment_1.income": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "On 30 June 2026 Shanghai Anxin declared and paid a dividend of CNY 2,000,000 to Best China"
+  },
+  "transactions.payment_1.amount": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "On 30 June 2026 Shanghai Anxin declared and paid a dividend of CNY 2,000,000 to Best China"
+  },
+  "transactions.payment_1.on": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "On 30 June 2026 Shanghai Anxin declared and paid a dividend of CNY 2,000,000 to Best China"
+  },
+  "transactions.payment_2.payer": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "Best China paid a dividend of CNY 2,000,000 on to EKH on 15 July 2026."
+  },
+  "transactions.payment_2.payee": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "Best China paid a dividend of CNY 2,000,000 on to EKH on 15 July 2026."
+  },
+  "transactions.payment_2.income": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "Best China paid a dividend of CNY 2,000,000 on to EKH on 15 July 2026."
+  },
+  "transactions.payment_2.amount": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "Best China paid a dividend of CNY 2,000,000 on to EKH on 15 July 2026."
+  },
+  "transactions.payment_2.on": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "Best China paid a dividend of CNY 2,000,000 on to EKH on 15 July 2026."
+  },
+  "flows.payment_1.payable_on": {
+   "kind": "disclosed",
+   "source": "client_description-8a9715dee41b",
+   "quote": "On 30 June 2026 Shanghai Anxin declared and paid a dividend of CNY 2,000,000 to Best China"
+  },
+  "flows.payment_1.tax_paid_or_secured": {
+   "kind": "disclosed",
+   "source": "client_description-8a9715dee41b",
+   "quote": "Mainland withholding tax of CNY 100,000 was paid on the first dividend."
+  }
+ },
+ "description": "Shanghai Anxin Rong Cheng Container Logistics Co., Ltd. is incorporated in Shanghai, Mainland China. It is wholly owned by Best China Development Limited, a Hong Kong company, since 12 March 2019. Best China is 100% held by EKH Limited, which is incorporated in Singapore. On 30 June 2026 Shanghai Anxin declared and paid a dividend of CNY 2,000,000 to Best China; Best China paid a dividend of CNY 2,000,000 on to EKH on 15 July 2026. Mainland withholding tax of CNY 100,000 was paid on the first dividend. EKH also charged Shanghai Anxin a management fee of CNY 300,000 in 2026. We have the board resolutions, the dividend vouchers and the 2025 audited accounts of each company. Please assess as at 20 October 2026, all amounts in CNY."
+}

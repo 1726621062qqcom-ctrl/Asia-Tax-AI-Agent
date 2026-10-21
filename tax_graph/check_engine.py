@@ -14,7 +14,12 @@ from .cases import BASE_A, CASE_A, CASE_A_PAID, EVENT_A, EVENT_A_PAID, SCENARIOS
 from .claims import _tax
 from .engine import RULES, CaseCtx, EX_POST, bounds
 from .model import HoldEdge
-from .ex_ante import ex_ante
+from .ex_ante import ex_ante as _ex_ante_lib
+from .scope import ALL as _SCOPE_ALL
+
+
+def ex_ante(*a, **k):
+    return _ex_ante_lib(*a, scope=_SCOPE_ALL, **k)        # engine mechanics on the whole library
 from .ex_post import ex_post
 from .scenarios import GROUP, HOLD, HOLDING, OP, TEMPLATES, ULT, views
 

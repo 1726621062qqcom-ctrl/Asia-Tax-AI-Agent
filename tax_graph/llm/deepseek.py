@@ -129,3 +129,74 @@ class DeepSeek:
                 self.usage["retries"] += 1
                 time.sleep(5 * (attempt + 1))
         raise RuntimeError("DeepSeek: %s after %d attempts" % (last, self.retries + 1))
+
+    def chat(self, messages, tools=None, on_delta=None, max_tokens=None):
+        """A chat turn with the provider's own function calling (OpenAI shape): returns {"content", "tool_calls":
+        [{"id", "name", "arguments"}], "usage"}. With on_delta the reply streams and on_delta(text) receives each piece
+        of content as it arrives. Not cached (a conversation is not a fixed prompt)."""
+        body = {"model": self.model, "messages": messages, "max_tokens": max_tokens or self.max_tokens, "stream": bool(on_delta)}
+        if self.temperature is not None:
+            body["temperature"] = self.temperature
+        if self.qwen:
+            body["enable_thinking"] = False
+        if tools:
+            body["tools"] = tools
+            body["tool_choice"] = "auto"
+        data = json.dumps(body).encode("utf-8")
+        last = None
+        for attempt in range(self.retries + 1):
+            t0 = time.time()
+            try:
+                req = urllib.request.Request(self.api, data=data, headers={"Authorization": "Bearer " + self._key, "Content-Type": "application/json",
+                                                                          "Accept": "text/event-stream" if on_delta else "application/json"})
+                with urllib.request.urlopen(req, timeout=self.timeout, context=self._ctx) as r:
+                    if not on_delta:
+                        d = json.loads(r.read().decode("utf-8"))
+                        msg = d["choices"][0]["message"]
+                        calls = [{"id": c.get("id") or "", "name": c["function"]["name"], "arguments": c["function"].get("arguments") or "{}"} for c in (msg.get("tool_calls") or [])]
+                        out = {"content": msg.get("content") or "", "tool_calls": calls, "usage": d.get("usage", {})}
+                    else:
+                        content, calls, usage = [], {}, {}
+                        for raw in r:
+                            line = raw.decode("utf-8", "replace").strip()
+                            if not line.startswith("data:"):
+                                continue
+                            payload = line[5:].strip()
+                            if payload == "[DONE]":
+                                break
+                            try:
+                                d = json.loads(payload)
+                            except ValueError:
+                                continue
+                            if d.get("usage"):
+                                usage = d["usage"]
+                            for ch in d.get("choices") or []:
+                                delta = ch.get("delta") or {}
+                                if delta.get("content"):
+                                    content.append(delta["content"])
+                                    on_delta(delta["content"])
+                                for tc in delta.get("tool_calls") or []:
+                                    i = tc.get("index", 0)
+                                    slot = calls.setdefault(i, {"id": "", "name": "", "arguments": ""})
+                                    slot["id"] = tc.get("id") or slot["id"]
+                                    fn = tc.get("function") or {}
+                                    slot["name"] = fn.get("name") or slot["name"]
+                                    slot["arguments"] += fn.get("arguments") or ""
+                        out = {"content": "".join(content), "tool_calls": [calls[i] for i in sorted(calls)], "usage": usage}
+                u = out["usage"] or {}
+                self.usage["calls"] += 1
+                self.usage["prompt_tokens"] += u.get("prompt_tokens", 0)
+                self.usage["completion_tokens"] += u.get("completion_tokens", 0)
+                self.usage["seconds"] += time.time() - t0
+                return out
+            except urllib.error.HTTPError as e:
+                detail = e.read()[:300].decode("utf-8", "replace")
+                if e.code < 500 and e.code != 429:
+                    raise RuntimeError("%s HTTP %d: %s" % (self.model, e.code, detail))
+                last = "HTTP %d: %s" % (e.code, detail)
+            except (urllib.error.URLError, OSError, ValueError, KeyError, IndexError) as e:
+                last = "%s: %s" % (type(e).__name__, e)
+            if attempt < self.retries:
+                self.usage["retries"] += 1
+                time.sleep(5 * (attempt + 1))
+        raise RuntimeError("%s: %s after %d attempts" % (self.model, last, self.retries + 1))

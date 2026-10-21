@@ -1,24 +1,20 @@
-# 问题单：K3-shein-2026（模板 holding）
+# Question sheet: K3-shein-2026 (template holding)
 
-方案尚不能给出：下列数据或确认会改变所选方案或其保证税额。只需答这些；答不上请填 unknown（按最不利处理，不会补值）。
-答复写进 `<案例名>.answers.json`：data（数值或 {"value", "source"}）、actions（yes / no / unknown）、rulings（yes / no / unknown）、library。
+No plan can be given yet: the data or confirmations below would change the chosen plan or its guaranteed tax. Answer only these; where you cannot, enter unknown (taken at its worst, never filled in).
+Write the answers into `<case>.answers.json`: data (a value or {"value", "source"}), actions (yes / no / unknown), rulings (yes / no / unknown), library.
+
+**Scope**: income tax only (decision D52). VAT, GST, stamp duty, customs duty, land appreciation tax, deed tax and property tax are not assessed; a case or a structure that attracts one of them is not handled. 14 candidate structures not compared for that reason: reorg (share transfer from HOLD to Roadget Business Pte. Ltd. / Roadget) attracts stamp duty in Hong Kong: a sale or purchase of Hong Kong stock is stamped under Head 2 of the First Schedule on each party (Cap. 117 s 4, s 19, Sch 1); reorg (share transfer from HOLD to Roadget Business Pte. Ltd. / Roadget) attracts stamp duty in Mainland China: a share transfer instrument executed in the Mainland, or executed abroad and used there, is a 产权转移书据 stamped at 0.05% of the price on each party (印花税法 第一条、第二条; 税目税率表); reorg (share transfer from HOLD to Roadget Business Pte. Ltd. / Roadget) attracts stamp duty in Singapore: a conveyance, assignment or transfer on sale of any stock or shares is stamped at 0.2% of the consideration (Stamp Duties Act First Schedule Article 3(c)); up1 (interest from Guangzhou Shein International Import & Export Co., Ltd. / Guangzhou Shein to HOLD) attracts VAT in Mainland China: a loan is a financial service; interest is the price of a service sold in the Mainland, taxed at 6% (增值税法 第三条、第四条、第十条); up1 (interest from Guangzhou Shein International Import & Export Co., Ltd. / Guangzhou Shein to Roadget Business Pte. Ltd. / Roadget) attracts VAT in Mainland China: a loan is a financial service; interest is the price of a service sold in the Mainland, taxed at 6% (增值税法 第三条、第四条、第十条).
 
 ## CN
 
-| 类型 | 地址 | 问题 | 取值 | 常见出处 | 影响 |
+| Kind | Address | Question | Value | Usual source | Impact |
 |---|---|---|---|---|---|
-| 必答（缺则税额无界） | `OP.globe_income` | 请提供：支柱二意义下该成员实体的GloBE所得（股息和持股10%以上股权处置利得一般不计入）（OP.globe_income） | 金额 | 集团支柱二计算底稿 | 无界 |
+| required (tax unbounded without it) | `OP.globe_income` | Please provide: the constituent entity's GloBE income in the Pillar Two sense (dividends and gains on disposal of holdings of 10% or more are generally excluded) (OP.globe_income) | amount | group Pillar Two computation workpapers | unbounded |
 
 ## SG
 
-| 类型 | 地址 | 问题 | 取值 | 常见出处 | 影响 |
+| Kind | Address | Question | Value | Usual source | Impact |
 |---|---|---|---|---|---|
-| 必答（缺则税额无界） | `ULT.globe_income` | 请提供：支柱二意义下该成员实体的GloBE所得（股息和持股10%以上股权处置利得一般不计入）（ULT.globe_income） | 金额 | 集团支柱二计算底稿 | 无界 |
+| required (tax unbounded without it) | `ULT.globe_income` | Please provide: the constituent entity's GloBE income in the Pillar Two sense (dividends and gains on disposal of holdings of 10% or more are generally excluded) (ULT.globe_income) | amount | group Pillar Two computation workpapers | unbounded |
 
-## CN∩HK∩SG
-
-| 类型 | 地址 | 问题 | 取值 | 常见出处 | 影响 |
-|---|---|---|---|---|---|
-| 必答（缺则税额无界） | `flow:reorg.amount` | 请提供：重组步骤的对价：ULT 把所持 OP 股权转给新控股公司的价格（按转让日市场价值）（flow:reorg.amount） | 金额 | 评估报告或股权转让协议；表单：cn.sta.2019-35.a01 · 14.享受协定待遇所得金额；cn.sta.2019-16.a08 · 合同总金额；cn.sta.2019-16.a08 · 本次申报收入 人民币金额 | 无界 |
-
-候选结构 16 个；其中需要上面必答数据才能计算的 16 个。
+16 candidate structures; 2 of them need the required data above before they can be computed.

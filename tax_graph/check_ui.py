@@ -222,11 +222,11 @@ def main():
             del server.JOBS[launched["dir"]]
         from .ui.intake import build_recorded_case, collection_preview
         recorded_body = {"case_id": "Recorded test", "currency": "CNY", "as_at": "2026-10-15", "source": "Fictional test record",
-            "companies": [{"id": "COMPANY_A", "name": "SG provider", "loc": "SG", "member": True},
-                          {"id": "COMPANY_B", "name": "CN client", "loc": "CN", "member": False},
+            "companies": [{"id": "COMPANY_A", "name": "SG lender", "loc": "SG", "member": True},
+                          {"id": "COMPANY_B", "name": "HK borrower", "loc": "HK", "member": False},
                           {"id": "COMPANY_C", "name": "HK parent", "loc": "HK", "member": True}],
             "ownership": [{"holder": "COMPANY_C", "held": "COMPANY_A", "ratio": 100}],
-            "transactions": [{"id": "fee_one", "income": "SERVICE_FEE", "payer": "COMPANY_B", "payee": "COMPANY_A", "amount": 1000000, "on": "2026-10-15", "paid": {"CN": 10000}},
+            "transactions": [{"id": "fee_one", "income": "INTEREST", "payer": "COMPANY_B", "payee": "COMPANY_A", "amount": 1000000, "on": "2026-10-15", "paid": {"SG": 10000}},
                              {"id": "dividend_two", "income": "DIVIDEND", "payer": "COMPANY_A", "payee": "COMPANY_C", "amount": 200000, "on": "2026-12-15"}]}
         recorded = build_recorded_case(recorded_body)
         recorded_path = test_case.with_name("recorded.json")
@@ -236,7 +236,16 @@ def main():
         graph = t.build(ev, {}, ca)
         check(len(graph.flows) == 2 and graph.flows[1].on.isoformat() == "2026-12-15" and graph.members == {"COMPANY_A", "COMPANY_C"}, "recorded intake preserves multiple companies, payment dates and assessment membership")
         _, errors, _, _ = check_case(recorded_path, [])
-        check(not errors and recorded["settled"]["fee_one"]["CN"] == 10000, "recorded transactions and paid tax pass provenance validation")
+        check(not errors and recorded["settled"]["fee_one"]["SG"] == 10000, "recorded transactions and paid tax pass provenance validation")
+        out_body = json.loads(json.dumps(recorded_body))                          # interest paid from the Mainland attracts VAT
+        out_body["companies"][1].update(loc="CN", name="CN borrower")
+        out_path = test_case.with_name("out-of-scope.json")
+        code, r = post("/api/case/save", {"path": str(out_path), "case": build_recorded_case(out_body)})
+        check(code == 400 and "income tax only" in r.get("error", "") and "VAT" in r.get("error", "") and not out_path.exists(),
+              "a recorded case that attracts VAT is refused at save with the scope message and nothing is written (decision D52)")
+        preview_out = collection_preview(out_body)
+        check(preview_out["outside"] and preview_out["outside"][0]["levy"] == "VAT" and not collection_preview(recorded_body)["outside"],
+              "the structure preview names the levy that puts a transaction outside the scope, and nothing for an admitted one")
         preview = collection_preview(recorded_body)
         check(preview["collection"] and preview["summary"]["transactions"] == 2, "collection requirements derive from the actual transaction graph")
         cyclic = json.loads(json.dumps(recorded_body))

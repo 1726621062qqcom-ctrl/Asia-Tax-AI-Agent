@@ -9,7 +9,10 @@ import io
 import sys
 
 from .flow_tax import RULES
-from .rules.compile import INCOMES, JURISDICTIONS, coverage
+from .rules.compile import INCOMES as ALL_INCOMES, JURISDICTIONS, coverage
+from . import scope
+
+INCOMES = tuple(i for i in ALL_INCOMES if i in scope.ADMITTED_KINDS) if scope.active() else ALL_INCOMES   # paused kinds are not reported
 
 
 def main():

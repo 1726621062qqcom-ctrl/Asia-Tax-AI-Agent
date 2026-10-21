@@ -34,8 +34,9 @@ def table(path, P):
     from .ex_ante import ex_ante
     from .rules.model import Effect
     from .run import load_case
+    from .scope import ALL
     template, case, event, subject, ticks, notes = load_case(path)
-    out = ex_ante(template, event, case, ticks=ticks or None, P=P, subject=subject)
+    out = ex_ante(template, event, case, ticks=ticks or None, P=P, subject=subject, scope=ALL)   # the whole library
     rows, fired = [], set()
     for r in out.table:
         pending = {g for g in r.b.groups}                         # (rule, flow) left open in this row

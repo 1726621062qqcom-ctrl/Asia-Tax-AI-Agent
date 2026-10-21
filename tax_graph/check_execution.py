@@ -1,6 +1,6 @@
 """Offline contracts for actionable workpacks, without a model or network."""
 import copy
-from .execution import TRANSACTIONS, build_execution, render_execution
+from .execution import TRANSACTIONS, build_execution, for_strategy, render_execution
 
 
 def main():
@@ -42,6 +42,11 @@ def main():
         prior.add(s["id"])
     check("SGD" in e["steps"][0]["action"] and "Client Seller" in e["steps"][0]["owner"], "amount currency and actual party names survive into the plan")
     check("## Implementation plan" in render_execution(e) and "Conditional decisions" in render_execution(e), "downloadable workpacks include ordered steps and conditional decisions")
+    st = for_strategy(e, {"id": 2, "guaranteed": 50000, "assumes_favourable": ["A.ppt"], "labels": {"A.ppt": "principal purpose test"}, "fallback": 3, "fallback_guaranteed": 60000})
+    check(len(st["treatment_paths"]) == 1 and "It can fall to" not in st["recommended_course"] and st["strategy"]["id"] == 2 and "strategy #3" in render_execution(st),
+          "a strategy's workpack keeps one path, no conditional sentence, and names its fallback")
+    check(len(for_strategy({k: v for k, v in e.items() if k != "course_parts"}, {"id": 1, "guaranteed": 1, "assumes_favourable": [], "labels": {}, "fallback": None, "fallback_guaranteed": None})["treatment_paths"]) == 1,
+          "a workpack regenerated without course parts is still reduced for a strategy")
     kinds = set()
     for income in TRANSACTIONS:
         p = copy.deepcopy(base)
@@ -70,6 +75,25 @@ def main():
     check(out["exclusions"] and not any(s["kind"] == "recovery" for s in out["steps"]), "closed settled items are explicitly excluded")
     p["regions"] = {frozenset({"CN"}): base["regions"][0]}
     check(build_execution(p, context)["steps"], "native and serialized region representations both produce a workpack")
+    # the plan states its aim and the reason for each step, in the order the work is done
+    e = build_execution(base, context, 1)
+    order = [ph for ph, _ in __import__("tax_graph.execution", fromlist=["PHASES"]).PHASES]
+    check([order.index(s["phase"]) for s in e["steps"]] == sorted(order.index(s["phase"]) for s in e["steps"]), "steps run phase by phase: structure, facts, treatments, filing, closing")
+    check(all(s.get("why") for s in e["steps"]), "every step states why it exists")
+    check(abs(sum(t["conservative"] for t in e["tax_position"]) - 50000) < 0.01 and "income tax" in e["tax_position"][0]["items"], "the tax position adds up to the conservative tax and names its items")
+    check("SGD 50,000.00" in e["recommended_course"] and "SGD 10,000.00" in e["recommended_course"] and "“Service classification”" in e["recommended_course"],
+          "the head of the plan says what it achieves: the conservative tax, the lower amount and the treatment it needs")
+    check([l["condition"] for l in e["levers"]][:1] == ["Service classification"] and e["levers"][0]["alone"] and not e["levers"][1]["alone"], "levers are ranked by what each is worth on its own")
+    cond = next(s for s in e["steps"] if s["kind"] == "condition" and "Treaty" in s["why"])
+    check("does not lower the conservative estimate" in cond["why"], "a treatment worth nothing on its own says so instead of implying a saving")
+    planning = copy.deepcopy(base)
+    planning["regions"][0]["actions"] = [("HOLD (SG) · new holding company established", "designed", 12000)]
+    planning["cand"] = {"HOLD": "SG"}
+    pe = build_execution(planning, dict(context, template="planning"), 4)
+    first_tx = next(i for i, s in enumerate(pe["steps"]) if s["kind"] == "evidence")
+    check(pe["steps"][0]["kind"] == "structure" and pe["steps"][0]["id"] in pe["steps"][first_tx]["depends_on"] and "SGD 12,000.00" in pe["steps"][0]["why"],
+          "in a planning case the structure comes first, the payments depend on it, and its value is stated")
+    check("lowest guaranteed tax among the 4 compared" in pe["objective"] and "HOLD = SG" in pe["objective"], "a planning objective names the chosen structure and how many were compared")
     print("%s execution checks passed" % count)
 
 

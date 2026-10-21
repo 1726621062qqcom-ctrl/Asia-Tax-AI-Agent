@@ -1,0 +1,124 @@
+{
+ "case_id": "Demo 1 - Singapore loan to Hong Kong",
+ "kind": "K6",
+ "template": "recorded",
+ "subject": "GROUP",
+ "currency": "SGD",
+ "roles": {
+  "MARLOW_CAPITAL_PTE_LTD": {
+   "loc": "SG",
+   "attrs": {},
+   "type": "COMPANY"
+  },
+  "MARLOW_HOLDINGS_LIMITED": {
+   "loc": "HK",
+   "attrs": {},
+   "type": "COMPANY"
+  }
+ },
+ "names": {
+  "MARLOW_CAPITAL_PTE_LTD": "Marlow Capital Pte. Ltd.",
+  "MARLOW_HOLDINGS_LIMITED": "Marlow Holdings Limited"
+ },
+ "members": [
+  "MARLOW_CAPITAL_PTE_LTD",
+  "MARLOW_HOLDINGS_LIMITED"
+ ],
+ "holds": [
+  {
+   "holder": "MARLOW_HOLDINGS_LIMITED",
+   "held": "MARLOW_CAPITAL_PTE_LTD",
+   "ratio": 100,
+   "since": "2020-05-02"
+  }
+ ],
+ "transactions": {
+  "payment_1": {
+   "payer": "MARLOW_HOLDINGS_LIMITED",
+   "payee": "MARLOW_CAPITAL_PTE_LTD",
+   "income": "INTEREST",
+   "amount": 250000,
+   "on": "2026-12-31"
+  }
+ },
+ "flows": {},
+ "present": {},
+ "settled": {},
+ "event": {
+  "on": "2026-12-31",
+  "as_at": "2026-10-20",
+  "years": 1
+ },
+ "documents": [
+  "cases/ui_materials/c207cbf2d6c7204d/demo_1_material-90be6c7132ab.txt"
+ ],
+ "notes": [
+  "Assessment of the recorded companies and dated transactions; no alternative structure is inferred.",
+  "0 fields read by qwen3.8-flash from demo_1_material-90be6c7132ab (2026-10-20, prompt 2026-10-15-en); quotes verified verbatim, numbers and dates parsed by the program from the quote; 0 conflicts and 0 constraint violations left unfilled; a person must review before use, then run tax_graph.verify.casecheck.",
+  "review: confirmed as read",
+  "reviewed by a person (2026-10-20, 0 items applied from review.json)"
+ ],
+ "provenance": {
+  "roles.MARLOW_CAPITAL_PTE_LTD.loc": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "Marlow Capital Pte. Ltd. is incorporated in Singapore."
+  },
+  "roles.MARLOW_HOLDINGS_LIMITED.loc": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "It is wholly owned by Marlow Holdings Limited, a Hong Kong company, since 2 May 2020."
+  },
+  "holds.MARLOW_HOLDINGS_LIMITED>MARLOW_CAPITAL_PTE_LTD.ratio": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "It is wholly owned by Marlow Holdings Limited, a Hong Kong company, since 2 May 2020."
+  },
+  "holds.MARLOW_HOLDINGS_LIMITED>MARLOW_CAPITAL_PTE_LTD.since": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "It is wholly owned by Marlow Holdings Limited, a Hong Kong company, since 2 May 2020."
+  },
+  "event.on": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": ""
+  },
+  "event.as_at": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": ""
+  },
+  "event.years": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": ""
+  },
+  "transactions.payment_1.payer": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "On 31 December 2026 Marlow Holdings pays SGD 250,000 interest to Marlow Capital."
+  },
+  "transactions.payment_1.payee": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "On 31 December 2026 Marlow Holdings pays SGD 250,000 interest to Marlow Capital."
+  },
+  "transactions.payment_1.income": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "On 31 December 2026 Marlow Holdings pays SGD 250,000 interest to Marlow Capital."
+  },
+  "transactions.payment_1.amount": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "On 31 December 2026 Marlow Holdings pays SGD 250,000 interest to Marlow Capital."
+  },
+  "transactions.payment_1.on": {
+   "kind": "reviewed",
+   "source": "Client's description (strategy mode), 2026-10-20",
+   "quote": "On 31 December 2026 Marlow Holdings pays SGD 250,000 interest to Marlow Capital."
+  }
+ },
+ "description": "Marlow Capital Pte. Ltd. is incorporated in Singapore. It is wholly owned by Marlow Holdings Limited, a Hong Kong company, since 2 May 2020. In 2025 Marlow Capital lent SGD 5,000,000 to Marlow Holdings at 5% a year under a written loan agreement dated 1 January 2025. On 31 December 2026 Marlow Holdings pays SGD 250,000 interest to Marlow Capital. No tax has been paid on the interest. We have the loan agreement, the board resolutions of both companies and the audited accounts for 2025. Please assess as at 20 October 2026; all amounts in SGD."
+}

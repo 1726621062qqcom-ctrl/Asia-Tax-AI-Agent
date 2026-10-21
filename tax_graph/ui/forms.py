@@ -5,15 +5,18 @@ from datetime import date
 from functools import lru_cache
 
 
+# income tax only (scope.py): three scenarios offered, the rest paused; each carries the hint of its transaction kind in schemas().
+TEMPLATE_KIND = {"holding": "DIVIDEND", "repatriation": "DIVIDEND", "ip": "ROYALTY", "services": "SERVICE_FEE", "inbound_services": "SERVICE_FEE",
+                 "financing": "INTEREST", "trading": "GOODS", "property": "PROPERTY_TRANSFER"}
 TEMPLATES = {
-    "holding": {"label": "Holding and share disposal", "roles": ["OP", "ULT"], "amounts": ["dividend", "exit"]},
+    "holding": {"label": "Holding structure and dividends", "roles": ["OP", "ULT"], "amounts": ["dividend"]},
     "repatriation": {"label": "Profit repatriation", "roles": ["OP", "ULT"], "amounts": ["dividend"]},
-    "ip": {"label": "Intellectual property", "roles": ["OP", "ULT"], "amounts": ["royalty"]},
-    "services": {"label": "Group services", "roles": ["OP", "ULT", "SERVICER"], "amounts": ["service_fee"]},
-    "inbound_services": {"label": "Services to an external client", "roles": ["SERVICER", "CLIENT"], "amounts": ["service_fee"]},
+    "ip": {"label": "Intellectual property", "roles": ["OP", "ULT"], "amounts": ["royalty"], "offered": False},
+    "services": {"label": "Group services", "roles": ["OP", "ULT", "SERVICER"], "amounts": ["service_fee"], "offered": False},
+    "inbound_services": {"label": "Services to an external client", "roles": ["SERVICER", "CLIENT"], "amounts": ["service_fee"], "offered": False},
     "financing": {"label": "External financing", "roles": ["OP", "ULT", "LENDER"], "amounts": ["interest"]},
-    "trading": {"label": "Goods trading", "roles": ["OP", "ULT", "CUSTOMER"], "amounts": ["goods_sale", "goods_supply"]},
-    "property": {"label": "Property sale or letting", "roles": ["OWNER", "ULT"], "amounts": ["property_sale", "property_rent"]},
+    "trading": {"label": "Goods trading", "roles": ["OP", "ULT", "CUSTOMER"], "amounts": ["goods_sale", "goods_supply"], "offered": False},
+    "property": {"label": "Property sale or letting", "roles": ["OWNER", "ULT"], "amounts": ["property_sale", "property_rent"], "offered": False},
 }
 ROLE_LABELS = {"OP": "Operating company", "ULT": "Parent company", "HOLD": "Intermediate holding company", "BUYER": "Buyer",
                "IPCO": "IP company", "SERVICER": "Service provider", "CLIENT": "External client", "LENDER": "Lender",
@@ -42,7 +45,10 @@ def schemas():
     for name, row in fields.items():
         if name.endswith("_eur") and row["kind"] == "number":
             row["unit"] = "EUR"
-    return {"templates": TEMPLATES, "roles": ROLE_LABELS, "fields": fields, "option_labels": ENUM_LABELS}
+    from ..scope import kinds as scope_kinds
+    hints = scope_kinds()
+    templates = {k: dict(v, offered=v.get("offered", True), scope=hints[TEMPLATE_KIND[k]]["hint"]) for k, v in TEMPLATES.items()}
+    return {"templates": templates, "roles": ROLE_LABELS, "fields": fields, "option_labels": ENUM_LABELS}
 
 
 def field_schema(key, hint=""):
@@ -89,8 +95,11 @@ def validate_answers(answers, questions=None):
             raise ValueError("Invalid answer section")
         for key, item in rows.items():
             if section in ("actions", "rulings"):
-                if item not in ("yes", "no", "unknown"):
+                v = item.get("value") if isinstance(item, dict) else item
+                if v not in ("yes", "no", "unknown"):
                     raise ValueError("Choose Yes, No or Unknown")
+                if section == "rulings" and not (isinstance(item, dict) and str(item.get("reason") or "").strip()):   # a judgement is never programmed: the client states the basis
+                    raise ValueError("State the basis of each ruling answer (the ruling obtained, or why it is uncertain)")
             elif section == "data":
                 if item == "unknown":
                     continue
@@ -110,6 +119,8 @@ def build_case(body):
     template = body.get("template")
     if template not in TEMPLATES:
         raise ValueError("Choose a supported analysis type")
+    if not TEMPLATES[template].get("offered", True):
+        raise ValueError("This planning scenario is not offered: the program handles income tax only (decision D52), and %s" % schemas()["templates"][template]["scope"])
     case_id = str(body.get("case_id") or "").strip()
     if not case_id:
         raise ValueError("Enter a case name")

@@ -1,0 +1,887 @@
+{
+ "answers_file": "C:\\Coding\\Projects\\TUM\\project_study_self\\out\\ui_answers\\423957c357db6dcb\\6fe64a9d3e8c2a9de54b.json",
+ "questions": [],
+ "plan": {
+  "cand": {},
+  "guaranteed": 1100000.0,
+  "best": 0.0,
+  "structure": {
+   "entities": [
+    [
+     "JINHAI_INDUSTRIAL_CO_LTD",
+     "CN",
+     "existing"
+    ],
+    [
+     "JINHAI_ASIA_LIMITED",
+     "HK",
+     "existing"
+    ]
+   ],
+   "holds": [
+    [
+     "JINHAI_INDUSTRIAL_CO_LTD",
+     "JINHAI_ASIA_LIMITED",
+     100.0,
+     "stated by the case"
+    ]
+   ],
+   "flows": [
+    [
+     "payment_1",
+     "CAPITAL_REDUCTION",
+     "JINHAI_ASIA_LIMITED",
+     "JINHAI_INDUSTRIAL_CO_LTD",
+     3000000,
+     "2026-09-01"
+    ]
+   ]
+  },
+  "regions": [
+   {
+    "region": "CN",
+    "jurisdictions": [
+     "CN"
+    ],
+    "actions": [],
+    "guaranteed": [
+     [
+      "payment_1.div",
+      "CN",
+      "income",
+      "JINHAI_INDUSTRIAL_CO_LTD",
+      500000.0,
+      [
+       "cn.capital_reduction.split",
+       "cn.ftc.dividend_indirect",
+       "cn.resident.charge"
+      ],
+      true
+     ]
+    ],
+    "best": [],
+    "deadlines": [],
+    "conditions": [
+     [
+      "JINHAI_INDUSTRIAL_CO_LTD.retention_without_reasonable_business_need",
+      "whether the non-distribution of profits lacks a reasonable business need",
+      "cn.cfc.charge",
+      600000.0
+     ],
+     [
+      "JINHAI_INDUSTRIAL_CO_LTD.profits_not_mainly_active",
+      "whether the controlled foreign company's profits are mainly not active business income",
+      "cn.cfc.charge",
+      600000.0
+     ]
+    ]
+   },
+   {
+    "region": "CN∩HK",
+    "jurisdictions": [
+     "CN",
+     "HK"
+    ],
+    "actions": [],
+    "guaranteed": [
+     [
+      "cfc:JINHAI_ASIA_LIMITED>JINHAI_INDUSTRIAL_CO_LTD",
+      "CN",
+      "income",
+      "JINHAI_INDUSTRIAL_CO_LTD",
+      600000.0,
+      [
+       "cn.cfc.charge",
+       "cn.ftc.dividend_indirect"
+      ],
+      true
+     ]
+    ],
+    "best": [],
+    "deadlines": [],
+    "conditions": []
+   }
+  ],
+  "totals": {
+   "CN": [
+    500000.0,
+    0
+   ],
+   "CN∩HK": [
+    600000.0,
+    0
+   ]
+  },
+  "present": null,
+  "runner_up": null,
+  "ties": [],
+  "data_used": [
+   [
+    "group.group_revenue_eur",
+    15000000,
+    "Jinhai Industrial consolidated accounts 2025"
+   ],
+   [
+    "JINHAI_ASIA_LIMITED.after_tax_profit",
+    2400000,
+    "audited accounts 2025: retained profits HKD 2,400,000"
+   ],
+   [
+    "flow:payment_1.accumulated_profits_share",
+    2000000,
+    "special resolution: HKD 2,000,000 of retained profits returned"
+   ],
+   [
+    "JINHAI_ASIA_LIMITED.income_tax_other",
+    "unknown",
+    ""
+   ],
+   [
+    "flow:payment_1.gain.cost_basis",
+    1000000,
+    "half of the HKD 2,000,000 paid for the shares in 2018: the capital was reduced from HKD 2,000,000 to HKD 1,000,000"
+   ]
+  ],
+  "claims": [],
+  "unmodelled": [],
+  "scope": {
+   "policy": "income_only",
+   "excluded": []
+  },
+  "strategies": [
+   {
+    "assumes_favourable": [
+     "JINHAI_INDUSTRIAL_CO_LTD.profits_not_mainly_active"
+    ],
+    "cand": {},
+    "guaranteed": 500000.0,
+    "best": 0.0,
+    "id": 1,
+    "baseline": false,
+    "labels": {
+     "JINHAI_INDUSTRIAL_CO_LTD.profits_not_mainly_active": "whether the controlled foreign company's profits are mainly not active business income"
+    },
+    "reasons": {
+     "JINHAI_INDUSTRIAL_CO_LTD.profits_not_mainly_active": "no ruling applied for yet"
+    },
+    "fallback": 2,
+    "plan": {
+     "cand": {},
+     "guaranteed": 500000.0,
+     "best": 0.0,
+     "structure": {
+      "entities": [
+       [
+        "JINHAI_INDUSTRIAL_CO_LTD",
+        "CN",
+        "existing"
+       ],
+       [
+        "JINHAI_ASIA_LIMITED",
+        "HK",
+        "existing"
+       ]
+      ],
+      "holds": [
+       [
+        "JINHAI_INDUSTRIAL_CO_LTD",
+        "JINHAI_ASIA_LIMITED",
+        100.0,
+        "stated by the case"
+       ]
+      ],
+      "flows": [
+       [
+        "payment_1",
+        "CAPITAL_REDUCTION",
+        "JINHAI_ASIA_LIMITED",
+        "JINHAI_INDUSTRIAL_CO_LTD",
+        3000000,
+        "2026-09-01"
+       ]
+      ]
+     },
+     "regions": [
+      {
+       "region": "CN",
+       "jurisdictions": [
+        "CN"
+       ],
+       "actions": [],
+       "guaranteed": [
+        [
+         "payment_1.div",
+         "CN",
+         "income",
+         "JINHAI_INDUSTRIAL_CO_LTD",
+         500000.0,
+         [
+          "cn.capital_reduction.split",
+          "cn.ftc.dividend_indirect",
+          "cn.resident.charge"
+         ],
+         true
+        ]
+       ],
+       "best": [],
+       "deadlines": [],
+       "conditions": []
+      }
+     ],
+     "totals": {
+      "CN": [
+       500000.0,
+       0
+      ]
+     },
+     "data_used": [
+      [
+       "group.group_revenue_eur",
+       15000000,
+       "Jinhai Industrial consolidated accounts 2025"
+      ],
+      [
+       "JINHAI_ASIA_LIMITED.after_tax_profit",
+       2400000,
+       "audited accounts 2025: retained profits HKD 2,400,000"
+      ],
+      [
+       "flow:payment_1.accumulated_profits_share",
+       2000000,
+       "special resolution: HKD 2,000,000 of retained profits returned"
+      ],
+      [
+       "JINHAI_ASIA_LIMITED.income_tax_other",
+       "unknown",
+       ""
+      ],
+      [
+       "flow:payment_1.gain.cost_basis",
+       1000000,
+       "half of the HKD 2,000,000 paid for the shares in 2018: the capital was reduced from HKD 2,000,000 to HKD 1,000,000"
+      ]
+     ],
+     "claims": [],
+     "rulings_declared": {},
+     "notes": [],
+     "execution": {
+      "version": 2,
+      "title": "Implementation plan",
+      "status": "conditional",
+      "objective": "Settle the tax on HKD 3,000,000.00 capital reduction from Jinhai Asia Limited to Jinhai Industrial Co., Ltd. at the lowest amount the facts support.",
+      "recommended_course": "Settle the tax on HKD 3,000,000.00 capital reduction from Jinhai Asia Limited to Jinhai Industrial Co., Ltd. at the lowest amount the facts support. Conservative tax: HKD 500,000.00 (Mainland China income tax HKD 500,000.00).",
+      "course_parts": {
+       "objective": "Settle the tax on HKD 3,000,000.00 capital reduction from Jinhai Asia Limited to Jinhai Industrial Co., Ltd. at the lowest amount the facts support.",
+       "conservative": " Conservative tax: HKD 500,000.00 (Mainland China income tax HKD 500,000.00).",
+       "fall": " It can fall to HKD 0.00 if the favourable treatment is supported on: the open treatments.",
+       "start": ""
+      },
+      "tax_position": [
+       {
+        "jurisdiction": "CN",
+        "label": "Mainland China",
+        "conservative": 500000.0,
+        "favourable": 0,
+        "items": "Mainland China income tax HKD 500,000.00"
+       }
+      ],
+      "levers": [],
+      "phases": [
+       {
+        "id": "facts",
+        "title": "Establish the facts behind each payment",
+        "steps": [
+         "step-1",
+         "step-2"
+        ]
+       },
+       {
+        "id": "comply",
+        "title": "File, pay and reconcile",
+        "steps": [
+         "step-3"
+        ]
+       },
+       {
+        "id": "close",
+        "title": "Record and close",
+        "steps": [
+         "step-4"
+        ]
+       }
+      ],
+      "treatment_paths": [
+       {
+        "title": "This strategy's path",
+        "amount": 500000.0,
+        "when": "The guaranteed tax of this strategy, with its rulings taken as the list says. Verify the liability and actual payments before filing.",
+        "steps": [
+         "step-1",
+         "step-2",
+         "step-3"
+        ]
+       }
+      ],
+      "summary": "Complete the tax treatment and compliance work for the recorded transactions.",
+      "comparison": "The recorded arrangement is retained. Alternative structures were not compared; this plan implements and resolves the entered transactions. Scope: income tax only; VAT, GST, stamp duty, customs duty and property taxes are not assessed. This window shows strategy #1 of the list; the other strategies are the alternatives.",
+      "candidate_count": 1,
+      "as_at": "2026-10-20",
+      "currency": "HKD",
+      "next_action": "step-1",
+      "known_facts": [
+       {
+        "flow": "payment_1",
+        "label": "Tax cost basis",
+        "value": 1000000,
+        "unit": "HKD"
+       }
+      ],
+      "steps": [
+       {
+        "id": "step-1",
+        "kind": "evidence",
+        "phase": "facts",
+        "title": "Prepare the capital reduction file",
+        "why": "The treatment of this payment rests on these facts, even where no tax is due on the conservative basis.",
+        "owner": "Jinhai Industrial Co., Ltd. finance, with Jinhai Asia Limited finance",
+        "action": "Jinhai Asia Limited pays Jinhai Industrial Co., Ltd. HKD 3,000,000.00 for capital reduction on 2026-09-01. Separate the capital return from the profit distribution using supported accounts and the actual reduction ratio.",
+        "documents": [
+         "Approved reduction resolution and share register",
+         "Paid-in capital and tax basis ledger",
+         "Accumulated profits and distribution calculation"
+        ],
+        "completion": "A reconciled transaction workpaper with the supporting documents and a named reviewer.",
+        "status": "todo",
+        "flows": [
+         "payment_1"
+        ],
+        "basis": [],
+        "due": "",
+        "depends_on": []
+       },
+       {
+        "id": "step-2",
+        "kind": "missing_evidence",
+        "phase": "facts",
+        "title": "Obtain the facts answered Unknown",
+        "why": "Unknown facts are taken at their least favourable value, so they hold the conservative estimate up until a supported answer replaces them.",
+        "owner": "Assessment owner's tax lead",
+        "action": "Obtain supporting records for: income tax the company pays for the year outside the flows of this case (tax on its own operating profit, before deducting the payments listed in the case; tax on the case's flows is counted by the engine itself, do not double count). Until supported answers are entered and reassessed, keep these facts Unknown and retain the conservative treatment.",
+        "documents": [
+         "tax returns and tax payment certificates"
+        ],
+        "completion": "Each available fact has a reviewed source and the assessment is rerun; unavailable facts remain explicitly Unknown.",
+        "status": "conditional",
+        "flows": [],
+        "basis": [],
+        "due": "",
+        "depends_on": [
+         "step-1"
+        ]
+       },
+       {
+        "id": "step-3",
+        "kind": "reconciliation",
+        "phase": "comply",
+        "title": "Settle the Mainland China tax: HKD 500,000.00",
+        "why": "Conservative Mainland China tax: Mainland China income tax HKD 500,000.00.",
+        "owner": "Jinhai Industrial Co., Ltd. finance and local tax adviser",
+        "action": "Reconcile the transaction income, costs, taxes and any credit with the local accounts and actual payment evidence. Use the conservative position for unresolved treatment; verify credit entitlement separately from proof that tax was paid.",
+        "documents": [
+         "Transaction tax workpaper and local return",
+         "Income and expense ledger",
+         "Foreign tax assessment and receipts, if a credit is claimed"
+        ],
+        "completion": "The local return position, reserve and any permitted credit are approved by the responsible reviewer.",
+        "status": "todo",
+        "flows": [
+         "payment_1.div"
+        ],
+        "basis": [
+         "cn.capital_reduction.split",
+         "cn.ftc.dividend_indirect",
+         "cn.resident.charge"
+        ],
+        "due": "",
+        "depends_on": []
+       },
+       {
+        "id": "step-4",
+        "kind": "signoff",
+        "phase": "close",
+        "title": "Approve the workpack and keep the audit trail",
+        "why": "Closes the plan: who decided what, on which evidence, and what remains open.",
+        "owner": "Assessment owner's finance lead",
+        "action": "Assign each work item, review the conditional decisions and reserve, and retain contracts, computations, approvals and submission receipts. Rerun the assessment when a material fact or treatment changes.",
+        "documents": [
+         "Reviewed transaction workpapers",
+         "Signed decision log",
+         "Filing acknowledgements and payment receipts, where applicable"
+        ],
+        "completion": "The responsible reviewer signs the workpack; unresolved treatments and remaining actions are explicitly recorded.",
+        "status": "todo",
+        "flows": [],
+        "basis": [],
+        "due": "",
+        "depends_on": [
+         "step-3"
+        ]
+       }
+      ],
+      "decision_paths": [],
+      "exclusions": [],
+      "completion_note": "Ready for review means the workpack is generated. It does not mean documents have been approved, filings submitted, taxes paid or authority acceptance obtained.",
+      "strategy": {
+       "id": 1,
+       "guaranteed": 500000.0,
+       "assumes_favourable": [
+        "JINHAI_INDUSTRIAL_CO_LTD.profits_not_mainly_active"
+       ],
+       "labels": {
+        "JINHAI_INDUSTRIAL_CO_LTD.profits_not_mainly_active": "whether the controlled foreign company's profits are mainly not active business income"
+       },
+       "fallback": 2,
+       "fallback_guaranteed": 1100000.0
+      }
+     },
+     "strategies": []
+    }
+   },
+   {
+    "assumes_favourable": [],
+    "cand": {},
+    "guaranteed": 1100000.0,
+    "best": 0.0,
+    "id": 2,
+    "baseline": true,
+    "labels": {},
+    "reasons": {},
+    "fallback": null,
+    "plan": {
+     "cand": {},
+     "guaranteed": 1100000.0,
+     "best": 0.0,
+     "structure": {
+      "entities": [
+       [
+        "JINHAI_INDUSTRIAL_CO_LTD",
+        "CN",
+        "existing"
+       ],
+       [
+        "JINHAI_ASIA_LIMITED",
+        "HK",
+        "existing"
+       ]
+      ],
+      "holds": [
+       [
+        "JINHAI_INDUSTRIAL_CO_LTD",
+        "JINHAI_ASIA_LIMITED",
+        100.0,
+        "stated by the case"
+       ]
+      ],
+      "flows": [
+       [
+        "payment_1",
+        "CAPITAL_REDUCTION",
+        "JINHAI_ASIA_LIMITED",
+        "JINHAI_INDUSTRIAL_CO_LTD",
+        3000000,
+        "2026-09-01"
+       ]
+      ]
+     },
+     "regions": [
+      {
+       "region": "CN",
+       "jurisdictions": [
+        "CN"
+       ],
+       "actions": [],
+       "guaranteed": [
+        [
+         "payment_1.div",
+         "CN",
+         "income",
+         "JINHAI_INDUSTRIAL_CO_LTD",
+         500000.0,
+         [
+          "cn.capital_reduction.split",
+          "cn.ftc.dividend_indirect",
+          "cn.resident.charge"
+         ],
+         true
+        ]
+       ],
+       "best": [],
+       "deadlines": [],
+       "conditions": [
+        [
+         "JINHAI_INDUSTRIAL_CO_LTD.retention_without_reasonable_business_need",
+         "whether the non-distribution of profits lacks a reasonable business need",
+         "cn.cfc.charge",
+         600000.0
+        ],
+        [
+         "JINHAI_INDUSTRIAL_CO_LTD.profits_not_mainly_active",
+         "whether the controlled foreign company's profits are mainly not active business income",
+         "cn.cfc.charge",
+         600000.0
+        ]
+       ]
+      },
+      {
+       "region": "CN∩HK",
+       "jurisdictions": [
+        "CN",
+        "HK"
+       ],
+       "actions": [],
+       "guaranteed": [
+        [
+         "cfc:JINHAI_ASIA_LIMITED>JINHAI_INDUSTRIAL_CO_LTD",
+         "CN",
+         "income",
+         "JINHAI_INDUSTRIAL_CO_LTD",
+         600000.0,
+         [
+          "cn.cfc.charge",
+          "cn.ftc.dividend_indirect"
+         ],
+         true
+        ]
+       ],
+       "best": [],
+       "deadlines": [],
+       "conditions": []
+      }
+     ],
+     "totals": {
+      "CN": [
+       500000.0,
+       0
+      ],
+      "CN∩HK": [
+       600000.0,
+       0
+      ]
+     },
+     "data_used": [
+      [
+       "group.group_revenue_eur",
+       15000000,
+       "Jinhai Industrial consolidated accounts 2025"
+      ],
+      [
+       "JINHAI_ASIA_LIMITED.after_tax_profit",
+       2400000,
+       "audited accounts 2025: retained profits HKD 2,400,000"
+      ],
+      [
+       "flow:payment_1.accumulated_profits_share",
+       2000000,
+       "special resolution: HKD 2,000,000 of retained profits returned"
+      ],
+      [
+       "JINHAI_ASIA_LIMITED.income_tax_other",
+       "unknown",
+       ""
+      ],
+      [
+       "flow:payment_1.gain.cost_basis",
+       1000000,
+       "half of the HKD 2,000,000 paid for the shares in 2018: the capital was reduced from HKD 2,000,000 to HKD 1,000,000"
+      ]
+     ],
+     "claims": [],
+     "rulings_declared": {},
+     "notes": [],
+     "execution": {
+      "version": 2,
+      "title": "Implementation plan",
+      "status": "conditional",
+      "objective": "Settle the tax on HKD 3,000,000.00 capital reduction from Jinhai Asia Limited to Jinhai Industrial Co., Ltd. at the lowest amount the facts support.",
+      "recommended_course": "Settle the tax on HKD 3,000,000.00 capital reduction from Jinhai Asia Limited to Jinhai Industrial Co., Ltd. at the lowest amount the facts support. Conservative tax: HKD 1,100,000.00 (Mainland China income tax HKD 1,100,000.00).",
+      "course_parts": {
+       "objective": "Settle the tax on HKD 3,000,000.00 capital reduction from Jinhai Asia Limited to Jinhai Industrial Co., Ltd. at the lowest amount the facts support.",
+       "conservative": " Conservative tax: HKD 1,100,000.00 (Mainland China income tax HKD 1,100,000.00).",
+       "fall": " It can fall to HKD 0.00 if the favourable treatment is supported on: “whether the non-distribution of profits lacks a reasonable business need”; “whether the controlled foreign company's profits are mainly not active business income”.",
+       "start": ""
+      },
+      "tax_position": [
+       {
+        "jurisdiction": "CN",
+        "label": "Mainland China",
+        "conservative": 1100000.0,
+        "favourable": 0,
+        "items": "Mainland China income tax HKD 1,100,000.00"
+       }
+      ],
+      "levers": [
+       {
+        "condition": "whether the non-distribution of profits lacks a reasonable business need",
+        "impact": 600000.0,
+        "jurisdictions": [
+         "CN"
+        ],
+        "alone": true
+       },
+       {
+        "condition": "whether the controlled foreign company's profits are mainly not active business income",
+        "impact": 600000.0,
+        "jurisdictions": [
+         "CN"
+        ],
+        "alone": true
+       }
+      ],
+      "phases": [
+       {
+        "id": "facts",
+        "title": "Establish the facts behind each payment",
+        "steps": [
+         "step-1",
+         "step-2"
+        ]
+       },
+       {
+        "id": "decide",
+        "title": "Settle the treatments that move the tax",
+        "steps": [
+         "step-3",
+         "step-4"
+        ]
+       },
+       {
+        "id": "comply",
+        "title": "File, pay and reconcile",
+        "steps": [
+         "step-5"
+        ]
+       },
+       {
+        "id": "close",
+        "title": "Record and close",
+        "steps": [
+         "step-6"
+        ]
+       }
+      ],
+      "treatment_paths": [
+       {
+        "title": "This strategy's path",
+        "amount": 1100000.0,
+        "when": "The guaranteed tax of this strategy, with its rulings taken as the list says. Verify the liability and actual payments before filing.",
+        "steps": [
+         "step-1",
+         "step-2",
+         "step-3",
+         "step-4",
+         "step-5"
+        ]
+       }
+      ],
+      "summary": "Complete the tax treatment and compliance work for the recorded transactions.",
+      "comparison": "The recorded arrangement is retained. Alternative structures were not compared; this plan implements and resolves the entered transactions. Scope: income tax only; VAT, GST, stamp duty, customs duty and property taxes are not assessed. This window shows strategy #2 of the list; the other strategies are the alternatives.",
+      "candidate_count": 1,
+      "as_at": "2026-10-20",
+      "currency": "HKD",
+      "next_action": "step-1",
+      "known_facts": [
+       {
+        "flow": "payment_1",
+        "label": "Tax cost basis",
+        "value": 1000000,
+        "unit": "HKD"
+       }
+      ],
+      "steps": [
+       {
+        "id": "step-1",
+        "kind": "evidence",
+        "phase": "facts",
+        "title": "Prepare the capital reduction file",
+        "why": "The treatment of this payment rests on these facts, even where no tax is due on the conservative basis.",
+        "owner": "Jinhai Industrial Co., Ltd. finance, with Jinhai Asia Limited finance",
+        "action": "Jinhai Asia Limited pays Jinhai Industrial Co., Ltd. HKD 3,000,000.00 for capital reduction on 2026-09-01. Separate the capital return from the profit distribution using supported accounts and the actual reduction ratio.",
+        "documents": [
+         "Approved reduction resolution and share register",
+         "Paid-in capital and tax basis ledger",
+         "Accumulated profits and distribution calculation"
+        ],
+        "completion": "A reconciled transaction workpaper with the supporting documents and a named reviewer.",
+        "status": "todo",
+        "flows": [
+         "payment_1"
+        ],
+        "basis": [],
+        "due": "",
+        "depends_on": []
+       },
+       {
+        "id": "step-2",
+        "kind": "missing_evidence",
+        "phase": "facts",
+        "title": "Obtain the facts answered Unknown",
+        "why": "Unknown facts are taken at their least favourable value, so they hold the conservative estimate up until a supported answer replaces them.",
+        "owner": "Assessment owner's tax lead",
+        "action": "Obtain supporting records for: income tax the company pays for the year outside the flows of this case (tax on its own operating profit, before deducting the payments listed in the case; tax on the case's flows is counted by the engine itself, do not double count). Until supported answers are entered and reassessed, keep these facts Unknown and retain the conservative treatment.",
+        "documents": [
+         "tax returns and tax payment certificates"
+        ],
+        "completion": "Each available fact has a reviewed source and the assessment is rerun; unavailable facts remain explicitly Unknown.",
+        "status": "conditional",
+        "flows": [],
+        "basis": [],
+        "due": "",
+        "depends_on": [
+         "step-1"
+        ]
+       },
+       {
+        "id": "step-3",
+        "kind": "condition",
+        "phase": "decide",
+        "title": "Resolve the outstanding tax treatment",
+        "why": "Decides whether the non-distribution of profits lacks a reasonable business need. Supported on its own, it can lower the conservative estimate by up to HKD 600,000.00 (Mainland China); unsupported, the conservative treatment stays.",
+        "owner": "Jinhai Industrial Co., Ltd. tax lead and tax adviser",
+        "action": "Prepare a supported position on: whether the non-distribution of profits lacks a reasonable business need. Record the conclusion and any authority response.",
+        "documents": [
+         "statement of the use of retained profits",
+         "Written treatment analysis and any relevant authority correspondence"
+        ],
+        "completion": "A reviewed treatment memo with evidence; any required authority acceptance is recorded separately.",
+        "status": "conditional",
+        "flows": [
+         "payment_1"
+        ],
+        "basis": [
+         "cn.cfc.charge"
+        ],
+        "due": "",
+        "depends_on": [
+         "step-1"
+        ]
+       },
+       {
+        "id": "step-4",
+        "kind": "condition",
+        "phase": "decide",
+        "title": "Resolve the outstanding tax treatment",
+        "why": "Decides whether the controlled foreign company's profits are mainly not active business income. Supported on its own, it can lower the conservative estimate by up to HKD 600,000.00 (Mainland China); unsupported, the conservative treatment stays.",
+        "owner": "Jinhai Industrial Co., Ltd. tax lead and tax adviser",
+        "action": "Prepare a supported position on: whether the controlled foreign company's profits are mainly not active business income. Record the conclusion and any authority response.",
+        "documents": [
+         "composition of the foreign company's income",
+         "Written treatment analysis and any relevant authority correspondence"
+        ],
+        "completion": "A reviewed treatment memo with evidence; any required authority acceptance is recorded separately.",
+        "status": "conditional",
+        "flows": [
+         "payment_1"
+        ],
+        "basis": [
+         "cn.cfc.charge"
+        ],
+        "due": "",
+        "depends_on": [
+         "step-1"
+        ]
+       },
+       {
+        "id": "step-5",
+        "kind": "reconciliation",
+        "phase": "comply",
+        "title": "Settle the Mainland China tax: HKD 500,000.00",
+        "why": "Conservative Mainland China tax: Mainland China income tax HKD 500,000.00.",
+        "owner": "Jinhai Industrial Co., Ltd. finance and local tax adviser",
+        "action": "Reconcile the transaction income, costs, taxes and any credit with the local accounts and actual payment evidence. Use the conservative position for unresolved treatment; verify credit entitlement separately from proof that tax was paid.",
+        "documents": [
+         "Transaction tax workpaper and local return",
+         "Income and expense ledger",
+         "Foreign tax assessment and receipts, if a credit is claimed"
+        ],
+        "completion": "The local return position, reserve and any permitted credit are approved by the responsible reviewer.",
+        "status": "todo",
+        "flows": [
+         "payment_1.div"
+        ],
+        "basis": [
+         "cn.capital_reduction.split",
+         "cn.ftc.dividend_indirect",
+         "cn.resident.charge"
+        ],
+        "due": "",
+        "depends_on": [
+         "step-3",
+         "step-4"
+        ]
+       },
+       {
+        "id": "step-6",
+        "kind": "signoff",
+        "phase": "close",
+        "title": "Approve the workpack and keep the audit trail",
+        "why": "Closes the plan: who decided what, on which evidence, and what remains open.",
+        "owner": "Assessment owner's finance lead",
+        "action": "Assign each work item, review the conditional decisions and reserve, and retain contracts, computations, approvals and submission receipts. Rerun the assessment when a material fact or treatment changes.",
+        "documents": [
+         "Reviewed transaction workpapers",
+         "Signed decision log",
+         "Filing acknowledgements and payment receipts, where applicable"
+        ],
+        "completion": "The responsible reviewer signs the workpack; unresolved treatments and remaining actions are explicitly recorded.",
+        "status": "todo",
+        "flows": [],
+        "basis": [],
+        "due": "",
+        "depends_on": [
+         "step-5"
+        ]
+       }
+      ],
+      "decision_paths": [
+       {
+        "step": "step-3",
+        "condition": "whether the non-distribution of profits lacks a reasonable business need",
+        "impact": 600000.0,
+        "basis": [
+         "cn.cfc.charge"
+        ],
+        "if_supported": "Record the conclusion and reassess; the conservative estimate can fall by up to HKD 600,000.00, and only the recomputed amount may be used.",
+        "otherwise": "Keep the conservative treatment and its reserve; do not record an unapproved saving."
+       },
+       {
+        "step": "step-4",
+        "condition": "whether the controlled foreign company's profits are mainly not active business income",
+        "impact": 600000.0,
+        "basis": [
+         "cn.cfc.charge"
+        ],
+        "if_supported": "Record the conclusion and reassess; the conservative estimate can fall by up to HKD 600,000.00, and only the recomputed amount may be used.",
+        "otherwise": "Keep the conservative treatment and its reserve; do not record an unapproved saving."
+       }
+      ],
+      "exclusions": [],
+      "completion_note": "Ready for review means the workpack is generated. It does not mean documents have been approved, filings submitted, taxes paid or authority acceptance obtained.",
+      "strategy": {
+       "id": 2,
+       "guaranteed": 1100000.0,
+       "assumes_favourable": [],
+       "labels": {},
+       "fallback": null,
+       "fallback_guaranteed": null
+      }
+     },
+     "strategies": []
+    }
+   }
+  ],
+  "rulings_declared": {},
+  "notes": [],
+  "execution": null
+ },
+ "note": ""
+}

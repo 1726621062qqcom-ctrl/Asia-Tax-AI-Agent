@@ -1,0 +1,116 @@
+{
+ "case": "C:\\Coding\\Projects\\TUM\\project_study_self\\cases\\private\\Demo-1---Singapore-loan-to-Hong-Kong-12a603b2.json",
+ "model": "qwen3.8-flash",
+ "temperature": 0.7,
+ "prompt_version": "2026-10-15-en",
+ "samples": 2,
+ "locate": "retrieval",
+ "k": 5,
+ "patterns": true,
+ "docs": [
+  "demo_1_material-90be6c7132ab"
+ ],
+ "facts": {},
+ "provenance": {},
+ "conflicts": {},
+ "violations": [],
+ "missing": [
+  "payment_1:flow.arms_length_low",
+  "payment_1:flow.arms_length_max",
+  "payment_1:flow.arms_length_value",
+  "payment_1:flow.foreign_tax_rate",
+  "payment_1:flow.receipt_kind",
+  "payment_1:payer.accounting_period_end"
+ ],
+ "rejected": [
+  [
+   "payment_1:flow.arms_length_value",
+   "samples disagree: 250000.0 / null"
+  ]
+ ],
+ "notes": [],
+ "features": {
+  "flows.payment_1.foreign_tax_rate": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_1.arms_length_max": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_1.arms_length_low": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_1.arms_length_value": {
+   "passages": 1,
+   "reads": 2,
+   "values": 1,
+   "nulls": 1,
+   "rejects": 0,
+   "agree": 0.5
+  },
+  "flows.payment_1.receipt_kind": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "roles.MARLOW_HOLDINGS_LIMITED.attrs.accounting_period_end": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  }
+ },
+ "derived_inputs": [
+  "payment_1:payer.hk_tp_small_entity",
+  "payment_1:payer.is_mne_member"
+ ],
+ "external": [
+  [
+   "payment_1:flow.assessment_notice_on",
+   "D",
+   "支付凭证、申报表、评税通知、裁定书"
+  ],
+  [
+   "payment_1:flow.corresponding_adjustment_granted",
+   "D",
+   "关联申报表、同期资料、调整通知书"
+  ],
+  [
+   "payment_1:payee.lender_interest_taxable_in_hk",
+   "D",
+   "贷款合同、财务报表"
+  ]
+ ],
+ "untyped": [
+  "payment_1:payee.ucmt_location",
+  "payment_1:payer.ucmt_location"
+ ],
+ "registry": {},
+ "registry_unmatched": [
+  "MARLOW_CAPITAL_PTE_LTD",
+  "MARLOW_HOLDINGS_LIMITED"
+ ],
+ "usage": {
+  "calls": 12,
+  "prompt_tokens": 6726,
+  "completion_tokens": 135,
+  "cache_hit_tokens": 0,
+  "seconds": 23.45424246788025,
+  "retries": 0,
+  "cached": 0
+ }
+}

@@ -4,13 +4,15 @@ import re
 from datetime import date
 
 from .forms import field_schema
+from ..scope import ADMITTED_KINDS
 
-TRANSACTION_TYPES = {
+ALL_TRANSACTION_TYPES = {
     "DIVIDEND": "Dividend", "SERVICE_FEE": "Service fee", "INTEREST": "Interest", "ROYALTY": "Royalty",
     "SHARE_TRANSFER": "Share disposal", "GOODS": "Goods sale", "CAPITAL_REDUCTION": "Capital reduction",
     "LIQUIDATION": "Liquidation distribution", "IP_TRANSFER": "IP ownership transfer",
     "PROPERTY_TRANSFER": "Property sale", "PROPERTY_RENT": "Property rent",
 }
+TRANSACTION_TYPES = {k: v for k, v in ALL_TRANSACTION_TYPES.items() if k in ADMITTED_KINDS}      # the rest is paused (scope.py)
 
 
 def _number(value, label, low=0, high=None, inclusive=False):
@@ -89,7 +91,7 @@ def build_recorded_case(body, original=None):
         if payer not in roles or payee not in roles or payer == payee:
             raise ValueError("Each transaction needs two different companies")
         if row.get("income") not in TRANSACTION_TYPES:
-            raise ValueError("Choose a supported transaction type")
+            raise ValueError("Choose a supported transaction type: %s (other kinds are paused)" % ", ".join(TRANSACTION_TYPES.values()).lower())
         on = date.fromisoformat(row.get("on") or "")
         dates.append(on)
         tx = {"payer": payer, "payee": payee, "income": row["income"], "amount": _number(row.get("amount"), "Transaction amount"), "on": on.isoformat()}
@@ -110,12 +112,23 @@ def build_recorded_case(body, original=None):
     c = {"case_id": name, "kind": "K6", "template": "recorded", "subject": "GROUP", "currency": body["currency"],
          "roles": roles, "names": names, "members": members, "holds": holds, "transactions": txs, "flows": flows,
          "present": {}, "settled": settled, "event": event, "documents": list((original or {}).get("documents", [])),
-         "notes": ["Assessment of the recorded companies and dated transactions; no alternative structure is inferred."], "provenance": {}}
+         "notes": ["Assessment of the recorded companies and dated transactions; no alternative structure is inferred."], "provenance": {},
+         "description": str(body.get("description") or (original or {}).get("description") or "")[:20000]}
     from ..verify.casecheck import stated_paths
     old_prov = (original or {}).get("provenance", {})
+    quotes = body.get("quotes") if isinstance(body.get("quotes"), dict) else {}   # strategy mode: the sentence each value was read from
+
+    def quote_of(path):
+        if path.startswith("roles."):
+            return quotes.get("companies.%s.loc" % path.split(".")[1], "")
+        if path.startswith("holds."):
+            return quotes.get("ownership." + path.split(".")[1], "")
+        if path.startswith(("transactions.", "settled.")):
+            return quotes.get("transactions." + path.split(".")[1], "")
+        return ""
     for path in stated_paths(c):
         retained = path.startswith("roles.") and ".attrs." in path or path.startswith("flows.") or path.startswith("settled.")
-        c["provenance"][path] = old_prov.get(path) if retained and path in old_prov else {"kind": "reviewed", "source": source, "quote": ""}
+        c["provenance"][path] = old_prov.get(path) if retained and path in old_prov else {"kind": "reviewed", "source": source, "quote": str(quote_of(path) or "")[:600]}
     return c
 
 
@@ -131,6 +144,8 @@ def collection_preview(body, original=None):
                 holds={(h["holder"], h["held"]): HoldEdge(h["holder"], h["held"], h["ratio"], h.get("since"), h.get("cost")) for h in d["holds"]},
                 flows=d["flows"], transactions=d["transactions"], currency=d["currency"], members=set(d["members"]))
     g = RECORDED.build(Event(**d["event"]), {}, case)
+    from .. import scope as scope_mod
+    outside = [x.json(c["names"]) for x in scope_mod.outside(g)]       # decision D52: shown before the case is created
     collection = {}
     for fid, key in sorted(missing_fields(g)):
         mount, name = key.split(".", 1)
@@ -143,4 +158,4 @@ def collection_preview(body, original=None):
         collection[path] = {"path": path, "company": c["names"].get(target), "transaction": fid, **spec}
     return {"summary": {"companies": len(c["roles"]), "ownership": len(c["holds"]), "transactions": len(c["transactions"]),
                         "types": sorted({TRANSACTION_TYPES[x["income"]] for x in c["transactions"].values()})},
-            "collection": list(collection.values()), "scope": "recorded"}
+            "collection": list(collection.values()), "policy": scope_mod.POLICY, "outside": outside}

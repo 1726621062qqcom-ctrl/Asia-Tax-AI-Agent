@@ -28,6 +28,9 @@ from pathlib import Path
 
 from .forms import build_case, field_schema, schemas, typed_value, validate_answers
 from .intake import build_recorded_case, collection_preview, TRANSACTION_TYPES
+from ..engine import Reject
+from ..scope import POLICY as SCOPE_POLICY, check as scope_check, kinds as scope_kinds
+from .describe import GUIDE as DESCRIBE_GUIDE, read_case as describe_case
 
 ROOT = Path(__file__).resolve().parents[2]
 STATIC = Path(__file__).resolve().parent / "static"
@@ -246,7 +249,7 @@ def workspace(path: str):
         ws["status"] = "running"
     elif failed:
         ws["status"] = "error"
-        ws["error"] = {"stage": failed[0], "message": failed[1].get("note") or ""}
+        ws["error"] = {"stage": failed[0], "message": failed[1].get("note") or (q.get("note") if failed[0] == "plan" else "") or ""}
         if failed[0] == "verify" and (d / "casecheck.txt").exists():
             ws["error"]["message"] = (d / "casecheck.txt").read_text(encoding="utf-8").strip()[-1500:]
     elif stages.get("review", {}).get("status") == "waiting":
@@ -268,7 +271,7 @@ def workspace(path: str):
     effective = _read_json(d / "reviewed.json")
     if effective and not running and ws["status"] != "review":
         ws["case"] = effective
-    if ws["status"] == "plan" and ws.get("plan", {}).get("structure") and not ws["plan"].get("execution"):
+    if ws["status"] == "plan" and ws.get("plan", {}).get("structure") and not ws["plan"].get("strategies") and (ws["plan"].get("execution") or {}).get("version", 0) < 2:   # older single workpacks are regenerated, the tax unchanged
         # Add a workpack to older results without changing facts, answers or computed tax.
         from ..execution import build_execution
         ws["plan"]["execution"] = build_execution(ws["plan"], ws["case"], len(ws.get("candidates", [])))
@@ -371,7 +374,12 @@ def save_case(path: str, case: dict):
         missing = template.check_case(event, c)
         if missing:
             raise ValueError("Missing parties: %s" % ", ".join(missing))
-        validate_core(template.build(event, c.present, c))
+        g = template.build(event, c.present, c)
+        validate_core(g)
+        try:
+            scope_check(g, names=case.get("names"))             # decision D52: income tax only
+        except Reject as e:
+            raise ValueError(str(e))
     # Capture legacy input before the first edit so an old result can never appear current after a change.
     if p.exists():
         old_run = latest_run(p.stem, p)
@@ -461,6 +469,52 @@ def evidence(rule_id):
                          "url": docs_.get(x["doc_id"], {}).get("url", "")} for x in rows]}
 
 
+def delete_case(path: str):
+    """A conversation and what belongs to it: the case file, its answers, its uploaded materials, its runs. Only under cases/private."""
+    p = _inside(Path(path))
+    if _rel(p).replace("\\", "/").rsplit("/", 1)[0] != "cases/private" or p.suffix != ".json":
+        raise ValueError("Only conversations under cases/private can be deleted here")
+    if any(j.get("case") == _rel(p) and j["proc"].poll() is None for j in list(JOBS.values())):
+        raise ValueError("Wait for the current analysis to finish")
+    removed = []
+    for f in (p, p.with_suffix("").with_name(p.stem + ".answers.json")):
+        if f.exists():
+            f.unlink(); removed.append(_rel(f))
+    scope_ = hashlib.sha256(_rel(p).encode()).hexdigest()[:16]
+    for d in (ROOT / "cases" / "ui_materials" / scope_, ROOT / "out" / "pipeline" / p.stem, ROOT / "out" / "ui_answers" / scope_):
+        if d.exists():
+            shutil.rmtree(str(d), ignore_errors=True); removed.append(_rel(d))
+    return {"removed": removed}
+
+
+def _agent_setup(body: dict):
+    ws = workspace(body["path"])
+    if ws.get("status") != "plan" or not ws.get("plan"):
+        raise ValueError("The assistant needs a completed plan")
+    plan = ws["plan"]
+    strategies = plan.get("strategies") or []
+    sid = body.get("strategy")
+    strategy = next((s for s in strategies if s.get("id") == sid), strategies[0] if strategies else {"id": 1, "guaranteed": plan.get("guaranteed"), "best": plan.get("best"), "cand": plan.get("cand"), "assumes_favourable": [], "labels": {}, "plan": plan})
+    return ws, plan, strategy, _inside(Path(ws["run"]["dir"]))
+
+
+def agent_reply(body: dict, on_event=None):
+    """One turn of the strategy assistant: scoped to the case's current plan and the chosen strategy (优化方案.md §6)."""
+    from .agent import chat
+    ws, plan, strategy, run_dir = _agent_setup(body)
+    message = str(body.get("message") or "").strip()
+    if not message or len(message) > 4000:
+        raise ValueError("Write a message of up to 4000 characters")
+    model = str((body.get("options") or {}).get("model") or "deepseek-flash")
+    return chat(ws["case"], plan, strategy, message, model, run_dir, on_event)
+
+
+def agent_thread(path: str, strategy):
+    from .agent import load_thread
+    ws, plan, st, run_dir = _agent_setup({"path": path, "strategy": strategy})
+    return {"strategy": st.get("id"), "messages": load_thread(run_dir, st.get("id"))}
+
+
 def start_pipeline(case: str, opts: dict):
     with _LOCK:
         return _start_pipeline(case, opts)
@@ -530,21 +584,35 @@ class Handler(BaseHTTPRequestHandler):
             if u.path == "/api/cases":
                 return self._send(200, cases())
             if u.path == "/api/schema":
-                return self._send(200, dict(schemas(), transaction_types=TRANSACTION_TYPES))
+                return self._send(200, dict(schemas(), transaction_types=TRANSACTION_TYPES, scope={"policy": SCOPE_POLICY, "kinds": scope_kinds()}, describe_guide=DESCRIBE_GUIDE))
             if u.path == "/api/evidence":
                 return self._send(200, evidence(q["rule"]))
+            if u.path == "/api/agent/thread":
+                return self._send(200, agent_thread(q["path"], int(q.get("strategy") or 1)))
             if u.path == "/api/report":
                 ws = workspace(q["path"])
                 if ws["status"] != "plan" or not ws.get("report_available"):
                     return self._send(409, {"error": "A current completed analysis is required"})
+                from ..execution import render_execution
+                if q.get("strategy"):                                              # one strategy's own report
+                    sts = (ws["plan"] or {}).get("strategies") or []
+                    st = next((s for s in sts if str(s.get("id")) == q["strategy"]), None)
+                    plan_ = (st.get("plan") if st else None) or ws["plan"]
+                    if not plan_.get("execution"):
+                        return self._send(404, {"error": "no such strategy"})
+                    taken = ("rulings taken as favourable on this path: " + "; ".join(st["labels"].get(k, k) for k in st["assumes_favourable"])) if st and st.get("assumes_favourable") else "every open ruling taken against the taxpayer (baseline)"
+                    report = "# %s: strategy #%s\n\nGuaranteed tax %s, best case %s; %s.\n\n%s\n" % (
+                        ws["case"].get("case_id", ""), q["strategy"], (st or plan_).get("guaranteed"), (st or plan_).get("best"), taken, render_execution(plan_["execution"]))
+                    name = "strategy-%s.md" % q["strategy"]
+                else:
+                    report = (_inside(Path(ws["run"]["dir"])) / "report.md").read_text(encoding="utf-8")
+                    if "## Implementation plan" not in report and ws["plan"].get("execution"):
+                        report += "\n\n" + render_execution(ws["plan"]["execution"]) + "\n"
+                    name = "tax-analysis.md"
                 self.send_response(200)
                 self.send_header("Content-Type", "text/markdown; charset=utf-8")
-                self.send_header("Content-Disposition", 'attachment; filename="tax-analysis.md"')
+                self.send_header("Content-Disposition", 'attachment; filename="%s"' % name)
                 self.end_headers()
-                report = (_inside(Path(ws["run"]["dir"])) / "report.md").read_text(encoding="utf-8")
-                if "## Implementation plan" not in report and ws["plan"].get("execution"):
-                    from ..execution import render_execution
-                    report += "\n\n" + render_execution(ws["plan"]["execution"]) + "\n"
                 self.wfile.write(report.encode("utf-8"))
                 return
             if u.path == "/api/workspace":
@@ -593,6 +661,27 @@ class Handler(BaseHTTPRequestHandler):
                 return self._send(200, proceed(body["path"], body))
             if u.path == "/api/pipeline/run":
                 return self._send(200, start_pipeline(body["case"], body.get("options", {})))
+            if u.path == "/api/agent/stream":
+                self.send_response(200)
+                self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+                self.send_header("Cache-Control", "no-cache")
+                self.end_headers()
+
+                def emit(kind, data):
+                    try:
+                        self.wfile.write(("event: %s\ndata: %s\n\n" % (kind, json.dumps(data, ensure_ascii=False))).encode("utf-8"))
+                        self.wfile.flush()
+                    except Exception:                                 # noqa: BLE001  a closed stream must not become a second response
+                        pass
+                try:
+                    agent_reply(body, emit)
+                except Exception as e:                              # noqa: BLE001
+                    emit("error", {"error": "%s: %s" % (type(e).__name__, e)})
+                return
+            if u.path == "/api/case/delete":
+                return self._send(200, delete_case(body["path"]))
+            if u.path == "/api/describe":
+                return self._send(200, describe_case(body.get("text", ""), str((body.get("options") or {}).get("model") or "deepseek-flash")))
             return self._send(404, {"error": "no such route"})
         except Exception as e:
             return self._send(400, {"error": "%s: %s" % (type(e).__name__, e)})

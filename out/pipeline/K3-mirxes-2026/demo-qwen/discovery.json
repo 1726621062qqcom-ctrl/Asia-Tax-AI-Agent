@@ -1,0 +1,243 @@
+{
+ "case": "K3-mirxes-2026.json",
+ "run": "out\\pipeline\\K3-mirxes-2026\\demo-qwen",
+ "model": "qwen3.8-flash",
+ "voters": [
+  "source",
+  "residence",
+  "treaty"
+ ],
+ "seconds": 10.8,
+ "usage": {
+  "calls": 3,
+  "prompt_tokens": 4257,
+  "completion_tokens": 1389,
+  "cache_hit_tokens": 0,
+  "seconds": 30.272236824035645,
+  "retries": 0,
+  "cached": 3
+ },
+ "fixed_logic": {
+  "rules": [
+   "cn-sg.div.cap_other@cn",
+   "cn-sg.div.cap_qualified@cn",
+   "cn.reinvest.deferral",
+   "cn.surcharge.local_edu",
+   "cn.surcharge.ucmt",
+   "cn.wht.reduced",
+   "cn.wht.remit",
+   "sg.fsie.charge",
+   "sg.fsie.exempt",
+   "sg.ftc.dta"
+  ],
+  "questions": [
+   "flow:up1.receipt_kind",
+   "ULT.exemption_beneficial"
+  ],
+  "judgements": [
+   "payee.exemption_beneficial on sg.fsie.exempt",
+   "payee.no_adverse_bo_factors on cn-sg.div.cap_qualified@cn",
+   "payee.ppt on cn-sg.ppt@cn",
+   "payee.reasonable_commercial_purpose_absent on cn.gaar"
+  ]
+ },
+ "gaps": [],
+ "minority": [
+  {
+   "jurisdiction": "SG",
+   "kind": "procedure",
+   "flow": "up1",
+   "votes": 1,
+   "issues": [
+    "Verify compliance with documentation requirements to claim exemption for foreign-sourced dividends."
+   ]
+  },
+  {
+   "jurisdiction": "SG",
+   "kind": "residence_status",
+   "flow": "up1",
+   "votes": 1,
+   "issues": [
+    "Confirm MiRXEA's status as a tax resident of Singapore to claim treaty benefits and domestic exemptions."
+   ]
+  }
+ ],
+ "unconfirmed_rules": [],
+ "readings": {
+  "source": [
+   {
+    "flow": "up1",
+    "jurisdiction": "CN",
+    "kind": "withholding",
+    "issue": "Determine if the dividend payment to MiRXEA Pte. Ltd. is subject to Chinese withholding tax on dividends.",
+    "basis": "Enterprise Income Tax Law Article 3(3) and Article 27; Implementation Regulations Article 91",
+    "depends_on": "Whether MiRXEA Pte. Ltd. qualifies as a beneficial owner for treaty relief",
+    "covered": true,
+    "by": "cn.wht.reduced",
+    "why": "The rule cn.wht.reduced applies the standard 10% withholding tax rate on dividends from China to Singapore based on Article 91 of the Implementation Regulations."
+   },
+   {
+    "flow": "up1",
+    "jurisdiction": "CN",
+    "kind": "treaty_relief",
+    "issue": "Assess eligibility for reduced withholding tax rate under the China-Singapore Double Tax Agreement.",
+    "basis": "DTA CN-SG Article 10(2)",
+    "depends_on": "MiRXEA's status as resident of Singapore and beneficial ownership of the dividends",
+    "covered": true,
+    "by": "cn-sg.div.cap_other@cn, cn-sg.div.cap_qualified@cn",
+    "why": "These rules assess eligibility for reduced treaty rates (5% or 10%) under the China-Singapore DTA Article 10(2) by checking conditions like beneficial owner status and holding periods."
+   },
+   {
+    "flow": "up1",
+    "jurisdiction": "CN",
+    "kind": "anti_abuse",
+    "issue": "Examine whether the structure lacks economic substance, potentially denying treaty benefits or triggering General Anti-Avoidance Rule (GAAR).",
+    "basis": "Enterprise Income Tax Law Article 47; Guoshuifa [2009] No. 601 regarding Beneficial Owner",
+    "depends_on": "Substance of MiRXEA Pte. Ltd. in Singapore (e.g., personnel, assets, decision-making)",
+    "covered": true,
+    "by": "payee.exemption_beneficial, payee.no_adverse_bo_factors, payee.ppt, payee.reasonable_commercial_purpose_absent",
+    "why": "The program explicitly lists judgments regarding Beneficial Owner status, Principal Purpose Test (PPT), and General Anti-Avoidance Rule (GAAR/commercial purpose) as conditions determining treaty relief or exemption."
+   },
+   {
+    "flow": "up1",
+    "jurisdiction": "SG",
+    "kind": "exemption",
+    "issue": "Determine if the foreign-sourced dividend received by MiRXEA Pte. Ltd. is exempt from Singapore income tax.",
+    "basis": "Income Tax Act Section 13(8)",
+    "depends_on": "Whether the dividend was subject to headline rate of at least 15% in China before distribution",
+    "covered": true,
+    "by": "sg.fsie.exempt",
+    "why": "The rule sg.fsie.exempt determines if foreign-sourced dividends received by a Singapore resident are exempt from Singapore income tax under Section 13(8)."
+   },
+   {
+    "flow": "up1",
+    "jurisdiction": "SG",
+    "kind": "procedure",
+    "issue": "Verify compliance with documentation requirements to claim exemption for foreign-sourced dividends.",
+    "basis": "Income Tax Act Section 13(8); IRAS guidelines on Foreign Sourced Income Exemption",
+    "depends_on": "Availability of evidence showing foreign tax paid and headline rate in China",
+    "covered": false,
+    "by": "",
+    "why": "While the program asks about receipt kind (remitted/deemed), it does not include specific rules or questions verifying compliance with documentation requirements (such as obtaining certificates or filing specific forms) mandated by IRAS guidelines for claiming the exemption."
+   }
+  ],
+  "residence": [
+   {
+    "flow": "up1",
+    "jurisdiction": "CN",
+    "kind": "withholding",
+    "issue": "Determine the applicable withholding tax rate on dividends paid by Hangzhou Miwei to MiRXEA Pte. Ltd.",
+    "basis": "Enterprise Income Tax Law Art. 3, 27; DTA CN-SG Art. 10(2)",
+    "depends_on": "Whether MiRXEA is considered the beneficial owner and meets the substantial presence requirement for treaty relief",
+    "covered": true,
+    "by": "cn-sg.div.cap_other@cn,cn.wht.reduced",
+    "why": "The rules cn-sg.div.cap_other@cn and cn.wht.reduced determine the applicable withholding tax rate (10% or treaty cap) on dividends paid from China to Singapore."
+   },
+   {
+    "flow": "up1",
+    "jurisdiction": "CN",
+    "kind": "treaty_relief",
+    "issue": "Assess eligibility for reduced withholding tax rate under the China-Singapore Double Tax Agreement.",
+    "basis": "DTA CN-SG Art. 10(2), Protocol Art. 3",
+    "depends_on": "MiRXEA's ownership percentage (100% > 25%) and proof of substance in Singapore",
+    "covered": true,
+    "by": "cn-sg.div.cap_qualified@cn",
+    "why": "The rule cn-sg.div.cap_qualified@cn assesses eligibility for the reduced 5% withholding tax rate under the China-Singapore DTA based on specific conditions like holding period and ownership."
+   },
+   {
+    "flow": "up1",
+    "jurisdiction": "SG",
+    "kind": "exemption",
+    "issue": "Apply Section 13(8) of the Income Tax Act to exempt foreign-sourced dividends received by MiRXEA from Singapore corporate income tax.",
+    "basis": "Income Tax Act s 13(8)",
+    "depends_on": "The dividend being subject to headline tax in China (25% > 15% threshold)",
+    "covered": true,
+    "by": "sg.fsie.exempt",
+    "why": "The rule sg.fsie.exempt applies the exemption for foreign-sourced dividends received by a Singapore entity, corresponding to Section 13(8) of the Income Tax Act."
+   },
+   {
+    "flow": "up1",
+    "jurisdiction": "SG",
+    "kind": "residence_status",
+    "issue": "Confirm MiRXEA's status as a tax resident of Singapore to claim treaty benefits and domestic exemptions.",
+    "basis": "Income Tax Act s 4, s 13(8); DTA CN-SG Art. 4",
+    "depends_on": "Place of management and control in Singapore",
+    "covered": false,
+    "by": "",
+    "why": "While residence certificate is listed as a condition in several rules, there is no specific rule or question dedicated to confirming MiRXEA's tax resident status itself; it is treated merely as an input condition rather than an assessed issue."
+   },
+   {
+    "flow": "up1",
+    "jurisdiction": "CN",
+    "kind": "anti_abuse",
+    "issue": "Evaluate if the arrangement constitutes a conduit structure lacking economic substance, potentially denying treaty benefits.",
+    "basis": "General Anti-Avoidance Rule (GAAR) in Enterprise Income Tax Law Art. 47; Bulletin No. 9 (2018)",
+    "depends_on": "Substance of MiRXEA Pte. Ltd. in Singapore (employees, assets, decision-making)",
+    "covered": true,
+    "by": "cn.gaar,payee.ppt",
+    "why": "The judgments payee.ppt and the rule cn.gaar address anti-abuse provisions (GAAR/PPT) that evaluate whether the arrangement lacks economic substance or has a principal purpose of obtaining treaty benefits."
+   }
+  ],
+  "treaty": [
+   {
+    "flow": "up1",
+    "jurisdiction": "CN",
+    "kind": "withholding",
+    "issue": "Determination of the applicable withholding tax rate on dividends paid by a Chinese resident enterprise to a Singapore parent company.",
+    "basis": "企业所得税法 第三条; DTA CN-SG Art 10",
+    "depends_on": "MiRXEA Pte. Ltd.'s beneficial ownership status and compliance with substance requirements under the China-Singapore Double Tax Agreement.",
+    "covered": true,
+    "by": "cn-sg.div.cap_other@cn, cn-sg.div.cap_qualified@cn",
+    "why": "The program applies specific treaty rate caps (5% and 10%) for dividends from China to Singapore based on ownership conditions."
+   },
+   {
+    "flow": "up1",
+    "jurisdiction": "CN",
+    "kind": "anti_abuse",
+    "issue": "Application of anti-avoidance rules to deny treaty benefits if MiRXEA Pte. Ltd. is deemed to lack commercial substance or if the arrangement's principal purpose is tax avoidance.",
+    "basis": "国家税务总局公告2018年第9号 (Administrative Measures for Non-Resident Taxpayers Enjoying Treaty Benefits)",
+    "depends_on": "Whether MiRXEA Pte. Ltd. has adequate personnel, assets, and activities in Singapore commensurate with its holding function.",
+    "covered": true,
+    "by": "cn.surcharge.local_edu, cn.surcharge.ucmt, cn.wht.reduced, cn.wht.remit, cn.reinvest.deferral, sg.fsie.charge, sg.fsie.exempt, sg.ftc.dta, hk.p2.base, hk.p2.iir, hk.p2.topup, sg.p2.base, sg.p2.mtt, sg.p2.topup, cn.cfc.charge",
+    "why": "The issue of anti-avoidance rules denying treaty benefits is addressed by the 'judgements' section where the program asks for rulings on beneficial ownership (bo_safe_harbour, bo_via_100pct_owner) and Principal Purpose Test (payee.ppt), effectively covering the application of CN-SG Art 10/9号公告 logic."
+   },
+   {
+    "flow": "entity:MiRXEA Pte. Ltd. / MiRXEA (ULT)",
+    "jurisdiction": "SG",
+    "kind": "exemption",
+    "issue": "Eligibility for one-tier corporate income tax exemption on foreign-sourced dividends received from Hangzhou Miwei.",
+    "basis": "Income Tax Act s 13(8); Income Tax (Exemption) Order",
+    "depends_on": "Whether the dividend was subject to headline tax of at least 15% in China (stated as 25%) and whether it is exempt under the participation exemption regime rather than being taxable under s 10(1)(d).",
+    "covered": true,
+    "by": "sg.fsie.exempt",
+    "why": "The rule explicitly exempts foreign-sourced dividends in Singapore subject to conditions like foreign_headline_rate and foreign_taxed, addressing eligibility for the one-tier exemption."
+   },
+   {
+    "flow": "entity:MiRXEA Pte. Ltd. / MiRXEA (ULT)",
+    "jurisdiction": "SG",
+    "kind": "credit",
+    "issue": "Claim for unilateral tax credit for underlying taxes paid in China against Singapore corporate income tax if the dividend is not fully exempt.",
+    "basis": "Income Tax Act s 50",
+    "depends_on": "The classification of the dividend as taxable income under s 10(1)(d) and the amount of foreign tax actually borne.",
+    "covered": true,
+    "by": "sg.ftc.dta",
+    "why": "The rule provides for a credit against Singapore tax for foreign taxes paid, which covers the unilateral tax credit claim if the dividend is not fully exempt."
+   },
+   {
+    "flow": "entity:MiRXEA Pte. Ltd. / MiRXEA (ULT)",
+    "jurisdiction": "SG",
+    "kind": "pillar_two",
+    "issue": "Assessment of Pillar Two Global Anti-Base Erosion (GloBE) rules implications given the group revenue threshold.",
+    "basis": "OECD GloBE Rules; Inclusive Framework on BEPS",
+    "depends_on": "Group consolidated revenue exceeding EUR 750 million (Note: Stated revenue EUR 19.3m is below threshold, but structural readiness for future growth or local implementation may still be relevant depending on specific SG transposition rules which apply to MNE groups >EUR750m).",
+    "covered": true,
+    "by": "hk.p2.base, hk.p2.iir, hk.p2.topup, sg.p2.base, sg.p2.mtt, sg.p2.topup",
+    "why": "The program checks Pillar Two top-up rules including QDMTT and IIR for Singapore and HK entities, directly addressing the GloBE implications mentioned in the issue."
+   }
+  ]
+ },
+ "maintenance": {
+  "agent": false,
+  "proposals": []
+ }
+}

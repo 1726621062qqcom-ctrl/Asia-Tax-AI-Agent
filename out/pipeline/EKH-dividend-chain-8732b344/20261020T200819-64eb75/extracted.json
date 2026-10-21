@@ -1,0 +1,297 @@
+{
+ "case": "C:\\Coding\\Projects\\TUM\\project_study_self\\cases\\private\\EKH-dividend-chain-8732b344.json",
+ "model": "qwen3.8-flash",
+ "temperature": 0.7,
+ "prompt_version": "2026-10-15-en",
+ "samples": 2,
+ "locate": "retrieval",
+ "k": 5,
+ "patterns": true,
+ "docs": [
+  "client_description-8a9715dee41b"
+ ],
+ "facts": {
+  "flows.payment_1.payable_on": "2026-06-30",
+  "flows.payment_1.tax_paid_or_secured": true
+ },
+ "provenance": {
+  "flows.payment_1.payable_on": {
+   "kind": "disclosed",
+   "source": "client_description-8a9715dee41b",
+   "quote": "On 30 June 2026 Shanghai Anxin declared and paid a dividend of CNY 2,000,000 to Best China"
+  },
+  "flows.payment_1.tax_paid_or_secured": {
+   "kind": "disclosed",
+   "source": "client_description-8a9715dee41b",
+   "quote": "Mainland withholding tax of CNY 100,000 was paid on the first dividend."
+  }
+ },
+ "conflicts": {},
+ "violations": [],
+ "missing": [
+  "payment_1:flow.capitalised_from",
+  "payment_1:flow.deductible_at_payer",
+  "payment_1:flow.direct_payment",
+  "payment_1:flow.dividend_from_pre_reorg_profits",
+  "payment_1:flow.foreign_tax_rate",
+  "payment_1:flow.foreign_taxed",
+  "payment_1:flow.receipt_kind",
+  "payment_1:flow.reinvested_in_cn",
+  "payment_1:flow.reinvestment_form",
+  "payment_1:flow.reinvestment_from_distributed_profit",
+  "payment_1:flow.reinvestment_withdrawn",
+  "payment_1:flow.remitted_on",
+  "payment_1:flow.tax_paid_on",
+  "payment_1:flow.underlying_profits_taxed",
+  "payment_1:payee.pure_equity_holding",
+  "payment_1:payee.residence_cert",
+  "payment_2:flow.foreign_tax_rate",
+  "payment_2:flow.foreign_taxed",
+  "payment_2:flow.receipt_kind"
+ ],
+ "rejected": [
+  [
+   "payment_1:flow.foreign_tax_rate",
+   "value not in the quote (quote states 100000)"
+  ]
+ ],
+ "notes": [],
+ "features": {
+  "flows.payment_1.capitalised_from": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_1.deductible_at_payer": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_1.dividend_from_pre_reorg_profits": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_1.direct_payment": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_1.foreign_tax_rate": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 1,
+   "rejects": 1
+  },
+  "flows.payment_1.foreign_taxed": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_1.payable_on": {
+   "passages": 1,
+   "reads": 2,
+   "values": 2,
+   "nulls": 0,
+   "rejects": 0,
+   "agree": 1.0,
+   "quote_len": 90,
+   "figures_in_quote": 3,
+   "score": 0.03333,
+   "channels": [
+    "bm25",
+    "dense"
+   ]
+  },
+  "flows.payment_1.receipt_kind": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_1.reinvested_in_cn": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_1.reinvestment_form": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_1.reinvestment_from_distributed_profit": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_1.reinvestment_withdrawn": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_1.remitted_on": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_1.tax_paid_on": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_1.tax_paid_or_secured": {
+   "passages": 1,
+   "reads": 2,
+   "values": 2,
+   "nulls": 0,
+   "rejects": 0,
+   "agree": 1.0,
+   "quote_len": 71,
+   "figures_in_quote": 1,
+   "score": 0.03333,
+   "channels": [
+    "bm25",
+    "dense"
+   ]
+  },
+  "flows.payment_1.underlying_profits_taxed": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "roles.BEST_CHINA_DEVELOPMENT_L.attrs.pure_equity_holding": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "roles.BEST_CHINA_DEVELOPMENT_L.attrs.residence_cert": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_2.foreign_tax_rate": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_2.foreign_taxed": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  },
+  "flows.payment_2.receipt_kind": {
+   "passages": 1,
+   "reads": 2,
+   "values": 0,
+   "nulls": 2,
+   "rejects": 0
+  }
+ },
+ "derived_inputs": [
+  "payment_1:flow.reinvestment_withdrawn_on",
+  "payment_1:flow.reorg_same_residence",
+  "payment_1:flow.subject_income_taxed_abroad"
+ ],
+ "external": [
+  [
+   "payment_1:flow.assessment_notice_on",
+   "D",
+   "支付凭证、申报表、评税通知、裁定书"
+  ],
+  [
+   "payment_1:flow.determination_on",
+   "D",
+   "支付凭证、申报表、评税通知、裁定书"
+  ],
+  [
+   "payment_1:flow.first_notification_on",
+   "D",
+   "支付凭证、申报表、评税通知、裁定书"
+  ],
+  [
+   "payment_1:flow.foreign_headline_rate",
+   "B",
+   "银行流水、境外完税证明、付款方申报表"
+  ],
+  [
+   "payment_1:payee.bo_safe_harbour",
+   "B",
+   "合同、银行流水、完税证明"
+  ],
+  [
+   "payment_1:payee.registration_filing_compliant",
+   "B",
+   "登记与申报记录、事先裁定书。人员、场所、开支、外包是裁量的证据，随 `Discretion.cites` 输出，不是字段"
+  ],
+  [
+   "payment_1:payee.substance_ruled_adequate",
+   "D",
+   "登记与申报记录、事先裁定书。人员、场所、开支、外包是裁量的证据，随 `Discretion.cites` 输出，不是字段"
+  ],
+  [
+   "payment_2:flow.assessment_notice_on",
+   "D",
+   "支付凭证、申报表、评税通知、裁定书"
+  ],
+  [
+   "payment_2:flow.foreign_headline_rate",
+   "B",
+   "银行流水、境外完税证明、付款方申报表"
+  ]
+ ],
+ "untyped": [
+  "payment_1:payee.ucmt_location",
+  "payment_1:payer.ucmt_location",
+  "payment_2:payee.ucmt_location",
+  "payment_2:payer.ucmt_location"
+ ],
+ "registry": {},
+ "registry_unmatched": [
+  "SHANGHAI_ANXIN_RONG_CHEN",
+  "BEST_CHINA_DEVELOPMENT_L",
+  "EKH_LIMITED"
+ ],
+ "usage": {
+  "calls": 0,
+  "prompt_tokens": 0,
+  "completion_tokens": 0,
+  "cache_hit_tokens": 0,
+  "seconds": 0.0,
+  "retries": 0,
+  "cached": 42
+ }
+}
