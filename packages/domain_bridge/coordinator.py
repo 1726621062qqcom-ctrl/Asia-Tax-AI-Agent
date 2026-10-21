@@ -8,7 +8,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from packages.domain_bridge import state
-from packages.domain_bridge.question_order import eligible, next_question
+from packages.domain_bridge.question_order import eligible, next_question, prepare_questions
 from packages.domain_bridge.bridge import DomainCase, DomainError, run_plan, run_domain
 from packages.chat.store import now
 
@@ -87,10 +87,12 @@ class DomainCoordinator:
         result['facts_hash'] = self.domain_fingerprint(doc)
         result['map_version'] = state.MAP_VERSION
         result['based_on_revision'] = doc['revision'] + 1
+        prepare_questions(result, doc)
         for question in result['questions']:
             question['id'] = 'domain:' + state.digest([result['input_hash'], question['kind'], question['key']])[:24]
             question['based_on_revision'] = doc['revision'] + 1
             question['input_hash'] = result['input_hash']
+        doc['domain_outcome'] = result
         pending = next_question(result['questions'], doc, result['facts_hash'])
         workflow.update(status='active', pending_question_id=pending['id'] if pending else None)
         doc['domain_workflow'] = workflow
@@ -118,7 +120,7 @@ class DomainCoordinator:
     @staticmethod
     def domain_fingerprint(doc):
         return state.digest([state.project_case(doc), state.answers(doc),
-                             (doc.get('domain_workflow') or {}).get('mode', 'plan_structure')])
+                             (doc.get('domain_workflow') or {}).get('mode', 'plan_structure'), doc.get('domain_interview', {})])
 
     @bounded
     def domain_plan(self, owner, case_id, revision, request_id):
@@ -193,7 +195,9 @@ class DomainCoordinator:
             if schema == 'boolean' and not isinstance(value, bool):
                 error('invalid_domain_answer')
         invalidate(doc, clear_domain_actions=kind != 'action', clear_domain_professional=kind != 'action')
-        if kind == 'action':
+        if key.startswith('interview:'):
+            doc.setdefault('domain_interview', {})[key] = {'value': value, 'source': source, 'revision': doc['revision'] + 1}
+        elif kind == 'action':
             doc['domain_answers']['actions'][key] = value
         else:
             state.write(doc, key, value, source)
@@ -262,7 +266,7 @@ class DomainCoordinator:
             return public(doc)
         prior = doc.get('domain_outcome') or {}
         q = next((q for q in prior.get('questions', []) if q['id'] == question_id), None)
-        if not q or q['kind'] not in ('ruling', 'library') or prior.get('stale') or prior.get('facts_hash') != self.domain_fingerprint(doc):
+        if not q or not eligible(q, doc) or q['kind'] not in ('ruling', 'library') or prior.get('stale') or prior.get('facts_hash') != self.domain_fingerprint(doc):
             error('question_changed')
         if (doc.get('domain_workflow') or {}).get('status') == 'paused':
             error('domain_paused')

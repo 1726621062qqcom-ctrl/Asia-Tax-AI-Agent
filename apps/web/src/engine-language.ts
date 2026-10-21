@@ -61,7 +61,8 @@ export function engineText(value: unknown, locale: Locale): string {
   if (locale === 'en') for (const [source, target] of entries) text = text.split(source).join(target);
   return text.replace(/\b[A-Z][A-Z_]+\b/g, token => terms[token]?.[locale === 'en' ? 1 : 0] ?? token);
 }
-export function questionText(question: { prompt: string; key: string }, locale: Locale) {
+export function questionText(question: { prompt: string; key: string; prompt_en?: string }, locale: Locale) {
+  if (locale === 'en' && question.prompt_en) return question.prompt_en;
   // Internal addresses belong to the API, not the question shown to the user.
   const escaped = question.key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return engineText(question.prompt.replace(new RegExp(`[（(]${escaped}[）)]`, 'g'), ''), locale);

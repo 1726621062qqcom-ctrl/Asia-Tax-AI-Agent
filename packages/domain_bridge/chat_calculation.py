@@ -39,7 +39,7 @@ FIELDS = {
     'on': ('股息支付的完整日期（YYYY-MM-DD）', 'full dividend payment date (YYYY-MM-DD)'),
 }
 PERSISTED = ('schema_version', 'migration', 'canonical_fact_records', 'legacy_bindings', 'facts',
-             'domain_definition', 'domain_case', 'domain_answers', 'domain_outcome', 'domain_today',
+             'domain_definition', 'domain_case', 'domain_interview', 'domain_answers', 'domain_outcome', 'domain_today',
              'domain_confirmation', 'domain_workflow', 'domain_deferred', 'integration_runs', 'analyses',
              'fact_history', 'fact_context', 'confirmed_revision', 'confirmed_facts', 'domain_professional_history')
 
@@ -319,15 +319,20 @@ def prepare(workflow, graph):
         reply = summary(result, english)
         pending = current_question(doc)
         if pending:
-            question = re.sub(r'[（(]' + re.escape(pending['key']) + r'[）)]', '', pending['prompt']).strip()
+            question = re.sub(r'[（(]' + re.escape(pending['key']) + r'[）)]', '', (pending.get('prompt_en') if english and pending.get('prompt_en') else pending['prompt'])).strip()
             question = re.sub(r'^请提供[：:]\s*', '', question)
             if pending['key'].endswith('.reinvested_in_cn'):
                 question = ('Are these dividends already being, or planned to be, reinvested in mainland China? '
                             'If not, answer no; the reinvestment details will be skipped.' if english else
                             '这笔股息是否已用于或计划用于中国内地再投资？如果没有，请回答“没有”，后续会跳过再投资相关细节。')
             reply += '\n\n' + ('### 3. Next step — please confirm' if english else '### 3. 下一步：请确认')
+            context_text = pending.get('context_en' if english else 'context_zh')
+            if context_text:
+                reply += '\n\n' + context_text
             reply += '\n\n> ' + question.replace('\n', '\n> ')
             reply += '\n\n' + ('Reply to this question in the chat to continue the calculation.' if english else '请直接在聊天框回答以上问题，我会根据补充信息继续计算。')
+        elif result.get('interview_counts', {}).get('waiting') or result.get('interview_counts', {}).get('needs_policy_review'):
+            reply += ('\n\nSome questions depend on unresolved prerequisites or require review. No missing facts have been assumed; the estimate remains conditional.' if english else '\n\n部分问题因前提尚不明确或需要复核而暂不追问。缺失信息仍保留为未知，当前试算不是最终税额。')
     meta = {**graph['workflow'], 'effective_task': 'calculation', 'status': status,
             'reason_code': 'calculation_result' if result else 'calculation_input_required',
             'tool_calls': tool_calls, 'budget': workflow.budget.snapshot()}

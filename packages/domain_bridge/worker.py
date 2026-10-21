@@ -59,6 +59,8 @@ def _attach_legal_refs(output):
     from tax_graph.engine import RULES_BY_ID
     from tax_graph.params import Params
     params = Params()
+    from tax_graph.engine import P2_THRESHOLD
+    output['interview_parameters'] = {'pillar_revenue_min': min(params[pid] for pid in P2_THRESHOLD.values())}
     mapping = {}
     for rule_id in output.get('citations', []):
         rule = RULES_BY_ID.get(rule_id)
@@ -118,7 +120,16 @@ def _fixed(template, event, case, answers, mode, today):
                 continue
             q = _question_for(key, 'ruling' if need.source == DISCRETION else 'blocking' if need.source == DATA else 'data',
                               _region_of_group(group, graph), [group[0]])
-            questions[key] = _question(q)
+            item = _question(q)
+            prior = questions.get(key)
+            if prior:
+                item['why'] = sorted(set(item['why']) | set(prior['why']))
+                item['dependency_group'] = item['why']
+                item['region'] = sorted(set(item['region']) | set(prior['region']))
+                rank = {'ruling': 0, 'library': 1, 'blocking': 2, 'joint': 3, 'data': 4, 'action': 5}
+                if rank[prior['kind']] < rank[item['kind']]:
+                    item['kind'] = prior['kind']
+            questions[key] = item
     regions = {}
     cites = set()
     for side, labels in (('guaranteed', b.L_hi), ('best', b.L_lo)):

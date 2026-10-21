@@ -166,6 +166,8 @@ export type Case = {
   data_approved: boolean;
 };
 export type DomainQuestion = { id: string; key: string; kind: string; region: string[]; prompt: string;
+  prompt_en?: string; context_zh?: string; context_en?: string;
+  interview_status?: "ready" | "waiting" | "not_applicable" | "needs_policy_review";
   why: string[]; impact: number | null; source_hint: string; forms: string[];
   answer_schema?: { type: string; hint: string } };
 export type DomainOutcome = { status: "needs_input" | "ready" | "blocked" | "unsupported"; release: string;

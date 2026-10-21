@@ -43,7 +43,7 @@ def setup(service, mode='assess_current', bindings=None, doc=None):
 
 def result(doc):
     return {'status': 'needs_input', 'release': '771e452', 'input_hash': state.digest(doc), 'mode': 'assess_current',
-            'currency': 'CNY', 'candidate_count': 1, 'questions': [{'kind': 'data', 'key': 'OP.group_rev',
+            'currency': 'CNY', 'candidate_count': 1, 'questions': [{'kind': 'data', 'key': 'group.group_revenue_eur',
             'prompt': '集团收入？', 'answer_schema': {'type': 'number'}, 'region': ['CN']}], 'citations': []}
 
 
@@ -66,7 +66,7 @@ def test_v1_migration_and_entity_binding_roundtrip(service):
     changed = deepcopy(doc['domain_case']); changed['event']['dividend'] = 3000000
     doc = service.domain_setup(OWNER, doc['id'], doc['revision'], rid(), changed, True, 'assess_current', bindings)
     assert doc['facts']['dividend_amount']['value'] == 3000000
-    assert doc['domain_answers']['data'].get('OP.group_rev') is None
+    assert doc['domain_answers']['data'].get('group.group_revenue_eur') is None
 
 
 def test_unknown_false_and_separate_entities():
@@ -106,7 +106,7 @@ def test_worker_failure_never_commits_answer(service, code):
             service.domain_answer(OWNER, doc['id'], doc['revision'], rid(), q['key'], q['kind'], '123', q['id'])
     assert exc.value.code == code
     saved = service.store.get(OWNER, doc['id'])
-    assert saved['revision'] == doc['revision'] and 'OP.group_rev' not in saved['canonical_fact_records']
+    assert saved['revision'] == doc['revision'] and 'group.group_revenue_eur' not in saved['canonical_fact_records']
 
 
 def test_defer_pause_and_stale_question(service):
@@ -126,7 +126,7 @@ def test_chat_answer_and_retry_share_transaction(service):
         updated = service.message(OWNER, doc['id'], doc['revision'], request, '结构答复：123', True, reply_to_question_id=q['id'])
     replay = service.message(OWNER, doc['id'], doc['revision'], request, '结构答复：123', True, reply_to_question_id=q['id'])
     assert replay == updated
-    assert updated['canonical_fact_records']['OP.group_rev']['value'] == 123
+    assert updated['canonical_fact_records']['group.group_revenue_eur']['value'] == 123
     assert sum(m.get('text') == '结构答复：123' for m in updated['messages']) == 1
     with pytest.raises(WorkflowError) as exc:
         service.message(OWNER, doc['id'], doc['revision'], request, '结构答复：124', True, reply_to_question_id=q['id'])
@@ -180,7 +180,7 @@ def test_real_two_rounds_planner_persist_and_reload(service, real_release):
     if doc['domain_outcome']['status'] == 'blocked':
         assert 'unbounded' in doc['domain_outcome']['note']
     else:
-        assert doc['domain_workflow']['pending_question_id'] is not None
+        assert doc['domain_workflow']['pending_question_id'] is not None or doc['domain_outcome']['interview_counts']['waiting'] > 0
 
 
 def test_currency_missing_rejected_non_cny_explicitly_unsupported(service):

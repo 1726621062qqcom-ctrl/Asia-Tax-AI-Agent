@@ -40,7 +40,7 @@ export default function DomainResult({ result }: { result: Analysis }) {
     <OutcomeView outcome={result.outcome} />
     {result.fsie_assessment && <details open><summary>{say('香港 FSIE 规则核对（同一案情）', 'Hong Kong FSIE rule check (same case)')}</summary>
       <ul>{result.fsie_assessment.nodes.map(n => <li key={n.node}>{n.node}：{n.output}</li>)}</ul></details>}
-    <details open><summary>{say('待补问题', 'Open questions')}</summary><ul>{result.outcome.questions.map(q => <li key={q.id}>[{label(q.kind)}] {questionText(q, locale)}</li>)}</ul></details>
+    <details open><summary>{say('待补问题', 'Open questions')}</summary><ul>{result.outcome.questions.filter(q => !q.interview_status || q.interview_status === "ready").map(q => <li key={q.id}>[{label(q.kind)}] {questionText(q, locale)}</li>)}</ul></details>
     <details><summary>{say('本次依据原文', 'Source excerpts')}</summary><Passages passages={result.passages} /></details>
     <p>{say('引擎版本 ', 'Engine version ')}{result.rule_version.slice(0, 8)}; {say('事实版本 ', 'Facts revision ')}{result.confirmed_revision}; {say('专业核验待完成。', 'professional verification pending.')}</p>
     <button type="button" onClick={() => {

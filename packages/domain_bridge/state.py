@@ -59,6 +59,7 @@ def install(doc, case, bindings):
     from packages.chat.facts import catalog
     ensure(doc)
     case = DomainCase.model_validate(case).model_dump(mode='json')
+    doc['domain_interview'] = {}
     previous = deepcopy(doc.get('facts', {}))
     old_bindings = deepcopy(doc.get('legacy_bindings', {}))
     # Detach old bindings before replacing the domain graph; preserve legacy values.

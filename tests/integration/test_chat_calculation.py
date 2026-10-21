@@ -59,7 +59,8 @@ def test_real_engine_runs_from_chat_and_duplicate_does_not_recalculate(service, 
     assert '税额区间' in reply
     assert '### 1. 税额试算结果' in reply
     assert '### 2. 计算依据与待复核事项' in reply
-    assert '### 3. 下一步：请确认\n\n> ' in reply
+    assert '### 3. 下一步：请确认' in reply
+    assert '\n\n> ' in reply
     assert '**下一项' not in reply
     assert result['workflow']['tool_calls'][0]['tool'] == 'calculate_tax'
     assert result['domain_confirmation'] is None
