@@ -25,7 +25,8 @@ def test_combined_provider_routes_guidance_and_preserves_reference_reader():
     context = TrustedContext(owner='test')
     for kind, expected in [('law', 'sqlite'), ('guidance', 'pg-guidance'), ('ruling', 'pg-rulings')]:
         assert provider.search_evidence(SearchRequest(request_id='r', trace_id='t', query='HK FSIE', kind=kind), context) == expected
-    for unit, expected in [('li|hk.cap112.en#s15M|0|50', 'sqlite'),
+    for unit, expected in [('law|hk.cap112.en#s15M|0|50', 'sqlite'),
+                           ('li|hk.cap112.en#s15M|0|50', 'sqlite'),
                            ('hk_ird_advance_68:section1', 'pg-rulings'), ('hk_ird_fsie_faq:item1', 'pg-guidance')]:
         ref = Reference(evidence_id=unit, unit_id=unit, source_version_id='v1')
         assert provider.get_evidence(ref, 'display', context) == expected

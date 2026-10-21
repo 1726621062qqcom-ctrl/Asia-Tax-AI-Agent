@@ -8,7 +8,7 @@ See the [live workflow acceptance record](REAL_CHAIN_ACCEPTANCE_2026_10_13.md) f
 
 ## Confirm the environment first
 
-1. Install Python dependencies from the project root and build `apps/web`. Install the pinned Li component according to the integrated guide. The installer validates release files; failed validation does not count as a successful installation.
+1. Install Python dependencies from the project root and build `apps/web`. Install the pinned tax engine component according to the integrated guide. The installer validates release files; failed validation does not count as a successful installation.
 2. Configure cloud PostgreSQL, Supabase email authentication, and the model service in the Git-ignored `.env`. Do not put keys in commands, reports, or the repository.
 3. Run `python -m scripts.run_combined` to start the combined route accepted in this round, and confirm that the page, sign-in, and health checks work. Cloud data storage does not mean the frontend and backend have been publicly deployed.
 
@@ -24,4 +24,4 @@ See the [live workflow acceptance record](REAL_CHAIN_ACCEPTANCE_2026_10_13.md) f
 
 Use `check_postgres_acceptance.py` for a complete repeat verification with a disposable database. It creates, migrates, and cleans up a test database, so read the [run guide](../setup/README.md) first and confirm the connection being used. Evaluation reports should distinguish engineering acceptance, live model acceptance, and tax expert approval. Retrievable citations establish traceability but do not independently establish the correctness of a tax judgment.
 
-The current `main` uses the pinned Li component release. Later commits on the C branch, including new traceability checks, require separate comparison and integration and cannot be counted as accepted on `main`. The early `demo/hk-web` also remains a separate branch.
+The current `main` uses the pinned tax engine component release. Later commits on the C branch, including new traceability checks, require separate comparison and integration and cannot be counted as accepted on `main`. The early `demo/hk-web` also remains a separate branch.

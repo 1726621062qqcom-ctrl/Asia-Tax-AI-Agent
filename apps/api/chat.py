@@ -139,7 +139,7 @@ async def message(case_id: UUID, body: Message, request: Request, response: Resp
     if 'text/event-stream' not in request.headers.get('accept', ''):
         return await asyncio.to_thread(call, service.message, workspace, str(case_id), body.revision, str(body.request_id), text, body.data_approved,
                                        body.entry_hint, body.reply_to_question_id, body.locale)
-    if (body.reply_to_question_id or '').startswith('li:') or text.startswith('结构答复：'):
+    if (body.reply_to_question_id or '').startswith(('domain:', 'li:')) or text.startswith('结构答复：'):
         async def domain_events():
             yield ': connected\n\n'
             try:

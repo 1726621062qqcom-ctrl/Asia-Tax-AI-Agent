@@ -1,8 +1,8 @@
-# Audit Record for the Earlier Li Release
+# Audit Record for the Earlier tax engine Release
 
 > This is a historical record for c8a4cf7. The current 771e452 release has resolved the earlier missing items. See the [merged handoff README](../../../setup/README.md) for current installation and acceptance testing entry points.
 
-Audit date: 2026-10-11. Source: LiZiheng / c8a4cf7a59ef9d8895cd115ce2e4df66850b30e2.
+Audit date: 2026-10-11. Source: tax-engine-source / c8a4cf7a59ef9d8895cd115ce2e4df66850b30e2.
 
 Conclusion: the source code and actual database were obtained. The knowledge database can be opened and passed the retrieval spot checks performed in this audit. This release package cannot start the tax_graph domain engine.
 
@@ -18,9 +18,9 @@ Files: release_audit.json stores the complete machine-readable results; missing_
 Reproduce from the B repository root:
 
 ```bash
-python3 docs/implementation/audits/li_2026_10_11/audit_release.py \
-  ../Asia-Tax-AI-Agent-LiZiheng \
-  docs/implementation/audits/li_2026_10_11
+python3 docs/implementation/audits/tax_engine_2026_10_11/audit_release.py \
+  ../Asia-Tax-AI-Agent-tax-engine-source \
+  docs/implementation/audits/tax_engine_2026_10_11
 ```
 
 The script reads the source snapshot and writes only to the audit directory. Successful completion means the audit records were written; inspect compile_passed rather than treating the exit code as release acceptance. The actual rule compilation can be reproduced separately from the source directory:

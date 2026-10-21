@@ -315,7 +315,7 @@ class ChatService(DomainCoordinator):
 
     def message(self, owner: str, case_id: str, revision: int, request_id: str, text: str, data_approved: bool,
                 entry_hint='auto', reply_to_question_id=None, locale='zh') -> dict:
-        if (reply_to_question_id or '').startswith('li:') or text.startswith('结构答复：'):
+        if (reply_to_question_id or '').startswith(('domain:', 'li:')) or text.startswith('结构答复：'):
             return self.domain_message(owner, case_id, revision, request_id, text, reply_to_question_id)
         doc, duplicate = self.load_message(owner, case_id, revision, request_id, text, data_approved,
                                            entry_hint, reply_to_question_id, locale)

@@ -1,4 +1,4 @@
-"""Opt-in live smoke: configured model + isolated PostgreSQL schema + pinned Li.
+"""Opt-in live smoke: configured model + isolated PostgreSQL schema + pinned tax engine.
 
 Only synthetic facts are sent to the model. No URLs, keys, prompts or client data
 are printed. A temporary schema is dropped in finally; public knowledge is read.
@@ -34,7 +34,7 @@ def main():
     parser.add_argument('--system-trust', action='store_true', help='Use OS trusted CA store through installed truststore; never disables TLS verification')
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('--model-only', action='store_true', help='Real model plus isolated SQLite; PostgreSQL remains untested')
-    modes.add_argument('--database-only', action='store_true', help='Real PostgreSQL, Li and knowledge; no model call')
+    modes.add_argument('--database-only', action='store_true', help='Real PostgreSQL, tax engine and knowledge; no model call')
     parser.add_argument('--output', type=Path, default=ROOT / 'data/combined-live-result.json')
     args = parser.parse_args()
     if args.system_trust:
@@ -73,8 +73,8 @@ def main():
                     fixture['event']['dividend'] = 2000000
                     doc = service.domain_setup(owner, doc['id'], doc['revision'], str(uuid4()), fixture, True, 'assess_current', bindings)
                     doc = service.domain_plan(owner, doc['id'], doc['revision'], str(uuid4()))
-                    results['checks']['li_fixed_status'] = doc['domain_outcome']['status']
-                    results['checks']['li_entities'] = [row[0] for row in doc['domain_outcome']['structure']['entities']]
+                    results['checks']['tax_engine_fixed_status'] = doc['domain_outcome']['status']
+                    results['checks']['tax_engine_entities'] = [row[0] for row in doc['domain_outcome']['structure']['entities']]
                     results['checks']['restored'] = store.get(owner, doc['id'])['canonical_fact_records'] == doc['canonical_fact_records']
                     results['status'] = 'passed' if results['checks']['corrected_amount'] == 2000000 and results['checks']['restored'] else 'failed'
                 finally:

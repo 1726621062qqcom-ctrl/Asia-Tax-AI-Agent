@@ -52,7 +52,7 @@ def build_report(doc, owner, provider, partial):
         # Native parent references are recorded as read only when their exact
         # parent reference was replayed and its full hash retained by B.
         native = {p['reference']['unit_id'].split('|')[1] for p in (bundle or {}).get('passages', [])
-                  if p.get('reference', {}).get('unit_id', '').startswith('li|')}
+                  if p.get('reference', {}).get('unit_id', '').startswith(('law|', 'li|'))}
         missing = sorted(set(references) - covered - native)
         if bundle:
             bundle['gaps'].extend('领域引用未在本稿回读：' + cite for cite in missing)

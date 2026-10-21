@@ -74,7 +74,7 @@ def test_fact_and_reference_shortcuts_start_their_own_workflows(chat, text, kind
     assert doc['dialogue']['pending'] == message['question']
     assert doc['orchestration']['active_task']['status'] == doc['workflow']['status'] == 'waiting_user'
     assert doc['orchestration']['active_task']['uses_case'] == (kind == 'fact_intake')
-    assert 'li|' not in message['text']
+    assert 'law|' not in message['text']
     if kind == 'reference_lookup':
         assert doc['dialogue']['pending']['id'].startswith('hybrid:reference:')
         assert ('Which rule or official case' if message['reply_locale'] == 'en' else '你想查哪项规定') in message['text']
@@ -146,7 +146,7 @@ def test_dividend_shortcut_starts_consultation_without_model_or_lookup(chat, tex
     assert doc['dialogue']['pending'] == message['question']
     assert message['question']['task_id'] == doc['orchestration']['active_task']['id']
     assert doc['orchestration']['active_task']['status'] == 'waiting_user'
-    assert 'li|' not in message['text']
+    assert 'law|' not in message['text']
     if doc['messages'][-1]['reply_locale'] == 'en':
         assert 'Please clarify:' in message['text']
     assert chat.store.get('owner', doc['id'])['dialogue']['pending'] == message['question']

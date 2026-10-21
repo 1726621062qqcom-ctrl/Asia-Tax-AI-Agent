@@ -1,11 +1,11 @@
-"""One revisioned fact source; B facts and Li cases are derived projections."""
+"""One revisioned fact source; B facts and tax engine cases are derived projections."""
 from copy import deepcopy
 from hashlib import sha256
 import json
 import re
 
 VERSION = '2.0.0'
-MAP_VERSION = 'li-b-map-2026-10-11'
+MAP_VERSION = 'domain-fact-map-2026-10-11'
 
 
 def digest(value):

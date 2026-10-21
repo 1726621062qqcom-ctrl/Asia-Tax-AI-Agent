@@ -1,4 +1,4 @@
-"""B owns the transaction; Li returns proposals bound to the same fact snapshot."""
+"""B owns the transaction; tax engine returns proposals bound to the same fact snapshot."""
 from copy import deepcopy
 from functools import wraps
 from hashlib import sha256
@@ -87,7 +87,7 @@ class DomainCoordinator:
         result['map_version'] = state.MAP_VERSION
         result['based_on_revision'] = doc['revision'] + 1
         for question in result['questions']:
-            question['id'] = 'li:' + state.digest([result['input_hash'], question['kind'], question['key']])[:24]
+            question['id'] = 'domain:' + state.digest([result['input_hash'], question['kind'], question['key']])[:24]
             question['based_on_revision'] = doc['revision'] + 1
             question['input_hash'] = result['input_hash']
         pending = next((q for q in result['questions'] if q['kind'] in ('data', 'blocking', 'joint', 'action')

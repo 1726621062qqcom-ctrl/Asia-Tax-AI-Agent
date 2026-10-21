@@ -1,6 +1,6 @@
 # Taxrora
 
-The current `main` branch includes the tax chat workspace, A/B integration code, and combined orchestration, shared facts, and database interfaces for the pinned Li component release. See the [setup and run guide](docs/setup/README.md) for installation and operation, and start with the [acceptance testing entry point](docs/verification/README.md) before testing. The Li component is installed at a pinned version; later commits on the C branch do not automatically become part of `main`.
+The current `main` branch includes the tax chat workspace, A/B integration code, and combined orchestration, shared facts, and database interfaces for the pinned tax engine component release. See the [setup and run guide](docs/setup/README.md) for installation and operation, and start with the [acceptance testing entry point](docs/verification/README.md) before testing. The tax engine component is installed at a pinned version; later commits on the C branch do not automatically become part of `main`.
 
 See the [account and authentication guide](docs/project/TAXORA_AUTH.md) for email sign-in and cloud user data configuration.
 
@@ -55,11 +55,11 @@ npm ci
 npm run build
 cd ../..
 # Install Python dependencies first: python -m pip install -e ".[dev]"
-python scripts/install_li_release.py
+python scripts/install_tax_engine_release.py
 python scripts/run_chat.py
 ```
 
-Open <http://127.0.0.1:8000>. Python 3.11+ and Node.js 20.19+ or 22.12+ are required. Configure the cloud `FSIE_DATABASE_URL`, model key, and Supabase email authentication in the root `.env`. Sessions use the same cloud database by default, with no SQLite fallback. Initialize the database with `python -m alembic upgrade head`. The public website is https://taxrora.onrender.com. Both local startup and the Render API entry point use `config/runtime.json` and the same application lifecycle: hybrid orchestration, bounded dynamic tools, and a managed read-only knowledge service. Render installs the pinned Li release during its build. See [deployment and startup](docs/project/RENDER_DEPLOYMENT.md).
+Open <http://127.0.0.1:8000>. Python 3.11+ and Node.js 20.19+ or 22.12+ are required. Configure the cloud `FSIE_DATABASE_URL`, model key, and Supabase email authentication in the root `.env`. Sessions use the same cloud database by default, with no SQLite fallback. Initialize the database with `python -m alembic upgrade head`. The public website is https://taxrora.onrender.com. Both local startup and the Render API entry point use `config/runtime.json` and the same application lifecycle: hybrid orchestration, bounded dynamic tools, and a managed read-only knowledge service. Render installs the pinned tax engine release during its build. See [deployment and startup](docs/project/RENDER_DEPLOYMENT.md).
 
 Source inquiries now retrieve official passages from the cloud before generating explanations with citations. Passage IDs and verbatim quotations must pass validation before the response is saved. Missing evidence or citation validation failures are reported explicitly. See [current testing and handoff](docs/project/evaluations/README.md) for queries covering multiple provisions, limited topic keyword matching, context for short passages, and retesting with a live model. This citation check does not replace tax expert review of the explanation and its applicability.
 

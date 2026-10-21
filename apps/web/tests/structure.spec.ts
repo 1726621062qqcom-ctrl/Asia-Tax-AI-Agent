@@ -60,8 +60,8 @@ test("structure dates use day/month/year and help icon explains the panel", asyn
   expect(body.case_input.holds[0].since).toBe("2020-01-01");
 });
 
-test("structure panel saves a Li case, runs it, and restores the result", async ({ page }) => {
-  test.skip(!process.env.FSIE_LI_RELEASE_DIR, "Pinned Li release is required");
+test("structure panel saves a tax engine case, runs it, and restores the result", async ({ page }) => {
+  test.skip(!process.env.FSIE_TAX_ENGINE_RELEASE_DIR, "Pinned tax engine release is required");
   await page.goto("/");
   await page.getByRole("button", { name: "结构分析", exact: true }).click();
   await page.getByRole("button", { name: "载入合成示例" }).click();
@@ -80,7 +80,7 @@ test("structure panel saves a Li case, runs it, and restores the result", async 
 });
 
 test("current structure supports unknown answer, partial frozen report and export", async ({ page }) => {
-  test.skip(!process.env.FSIE_LI_RELEASE_DIR, "Pinned Li release is required");
+  test.skip(!process.env.FSIE_TAX_ENGINE_RELEASE_DIR, "Pinned tax engine release is required");
   await page.goto("/");
   await page.getByRole("button", { name: "结构分析", exact: true }).click();
   await page.getByRole("button", { name: "载入合成示例" }).click();

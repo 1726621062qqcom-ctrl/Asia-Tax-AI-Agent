@@ -68,7 +68,7 @@ def _library():
 
 
 def _reference(cite: str, start: int, end: int) -> Reference:
-    unit = 'li|' + cite + '|' + str(start) + '|' + str(end)
+    unit = 'law|' + cite + '|' + str(start) + '|' + str(end)
     return Reference(evidence_id=unit, source_version_id=PINNED_DB_SHA256, unit_id=unit)
 
 
@@ -76,7 +76,7 @@ def _span(reference: Reference):
     if reference.source_version_id != PINNED_DB_SHA256 or reference.evidence_id != reference.unit_id:
         raise HTTPException(409, 'version_unavailable')
     parts = reference.unit_id.rsplit('|', 2)
-    if len(parts) != 3 or not parts[0].startswith('li|'):
+    if len(parts) != 3 or not parts[0].startswith(('law|', 'li|')):
         raise HTTPException(422, 'invalid_reference')
     try:
         start, end = int(parts[1]), int(parts[2])
@@ -84,7 +84,7 @@ def _span(reference: Reference):
         raise HTTPException(422, 'invalid_reference') from None
     if start < 0 or end <= start or end - start > 30000:
         raise HTTPException(422, 'invalid_reference')
-    return parts[0][3:], start, end
+    return parts[0].split('|', 1)[1], start, end
 
 
 def _locator_hits(lib, locators):
@@ -146,7 +146,7 @@ def search(body: SearchWire, request: Request):
     if r.kind == 'ruling':
         return SearchResult(request_id=r.request_id, trace_id=r.trace_id, retrieval_id=r.request_id,
                             provider='c', is_synthetic=False, corpus_version=PINNED_DB_SHA256,
-                            status='no_match', coverage=Coverage(status='partial', scope='Li official library',
+                            status='no_match', coverage=Coverage(status='partial', scope='Official law library',
                                                                 missing_requirements=['本资料库不包含独立税务裁定案例']))
     navigation = list(r.locators)
     if not navigation and r.jurisdiction == 'HK' and r.kind != 'guidance':
@@ -207,14 +207,14 @@ def search(body: SearchWire, request: Request):
         evidence.append(Evidence(**reference.model_dump(), source_id=source_id, content_hash=sha256(excerpt.encode()).hexdigest(),
                                  title=hit.title or hit.cite_id, source_type=doc['type'] if doc else 'official',
                                  url=doc['url'] if doc else None, locator=getattr(hit, 'requested_locator', hit.cite_id),
-                                 heading='Li cite: ' + hit.cite_id, jurisdiction=meta['jur'].upper() if meta['jur'] else None,
+                                 heading='Legal source: ' + hit.cite_id, jurisdiction=meta['jur'].upper() if meta['jur'] else None,
                                  topic='dividend' if is_fsie else None, language=hit.lang or '',
                                  effective_from=date.fromisoformat(hit.valid_from) if hit.valid_from else None,
                                  effective_to=cutoff, verification_status='unverified',
                                  model_use='allowed' if official_for_model else 'denied',
                                  model_text=excerpt if official_for_model else None,
                                  display_use='allowed', policy_version='public-hk-official-v1' if official_for_model else 'official-display-only-v1', display_ref=reference,
-                                 locator_spans=getattr(hit, 'locator_spans', []), mapping_version='li-locator-2026-10-11'))
+                                 locator_spans=getattr(hit, 'locator_spans', []), mapping_version='law-locator-2026-10-11'))
     missing = [retrieval_gap] if retrieval_gap and not direct else []
     if truncated:
         missing.append(f'本次只返回前 {max_evidence} 段原文；其余定位条款需另行检索')
@@ -225,7 +225,7 @@ def search(body: SearchWire, request: Request):
                         provider='c', is_synthetic=False, corpus_version=PINNED_DB_SHA256,
                         status='partial' if evidence and missing else 'ok' if evidence else 'no_match', evidence=evidence,
                         coverage=Coverage(status='partial' if missing else 'unchecked',
-                                          scope='Li official library; applicability and professional review pending',
+                                          scope='Official law library; applicability and professional review pending',
                                           missing_requirements=missing, truncated=truncated))
 
 

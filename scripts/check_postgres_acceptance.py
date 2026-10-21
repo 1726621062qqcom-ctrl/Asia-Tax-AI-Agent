@@ -73,7 +73,7 @@ def main():
         counts = re.search(r'(\d+) passed(?:, (\d+) skipped)?', summary)
         result['persistence_tests'] = {'passed': int(counts[1]), 'skipped': int(counts[2] or 0)} if counts else {}
         combined_file = log_dir / 'combined.json'
-        run('combined_http_li_postgres', ['scripts/check_combined_live.py', '--database-only',
+        run('combined_http_tax_engine_postgres', ['scripts/check_combined_live.py', '--database-only',
             '--env-file', str(args.env_file), '--output', str(combined_file)], 180)
         result['combined'] = json.loads(combined_file.read_text())
         result['status'] = 'passed'

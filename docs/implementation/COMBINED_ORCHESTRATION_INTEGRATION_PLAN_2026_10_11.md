@@ -1,22 +1,22 @@
-<a id="zijian--liziheng-编排与数据库联调方案源码核验修订版"></a>
+<a id="combined-编排与数据库联调方案源码核验修订版"></a>
 
-# Zijian × LiZiheng Orchestration and Database Integration Plan (Source-Audited Revision)
+# Session and Tax Engine Integration Plan (Source-Audited Revision)
 
 > Historical design objectives/original checks. The [merged handoff README](../setup/README.md) governs current implementation/configuration/testing; see [acceptance](COMBINED_INTEGRATION_ACCEPTANCE.md) for actual completion/environment blockers.
 
-Date: 2026-10-11. Latest Li release obtained; local rules, engine, and sample checks passed. Initial planning, saving, read-only knowledge, and page integration implemented; see [initial workflow](LI_BRIDGE_MVP_2026_10_11.md). Unified fact migration/full acceptance pending.
+Date: 2026-10-11. Latest tax engine release obtained; local rules, engine, and sample checks passed. Initial planning, saving, read-only knowledge, and page integration implemented; see [initial workflow](TAX_ENGINE_BRIDGE_MVP_2026_10_11.md). Unified fact migration/full acceptance pending.
 
 <a id="1-用大白话说这次要怎么接"></a>
 
 ## 1. Integration in plain language
 
-Zijian converses, remembers cases, handles corrections, persists progress, and generates reviewable reports. Li models companies/ownership/funds as graphs, compares structures/tax bounds, and identifies answers affecting options. Knowledge supplies original evidence/parameters.
+The session orchestrator converses, remembers cases, handles corrections, persists progress, and generates reviewable reports. The tax engine models companies/ownership/funds as graphs, compares structures/tax bounds, and identifies answers affecting options. Knowledge supplies original evidence/parameters.
 
-One assistant presents the system. Zijian sends snapshots to Li, receives questions/results, asks users, saves answers, and resubmits. Fixed contracts connect them; Zijian alone commits case state once per turn.
+One assistant presents the system. The session orchestrator sends snapshots to the tax engine, receives questions/results, asks users, saves answers, and resubmits. Fixed contracts connect them; the session orchestrator alone commits case state once per turn.
 
-PostgreSQL retains cases; Li SQLite/CSV retain versioned knowledge/parameters. Connect services without migrating the entire corpus initially.
+PostgreSQL retains cases; tax engine SQLite/CSV retain versioned knowledge/parameters. Connect services without migrating the entire corpus initially.
 
-Li delivers domain orchestration for structure search, impact analysis, questions, ex-ante calculations, and ex-post requests. `771e452` resolves missing data; next integrate facts/questions/knowledge/reports/databases.
+The tax engine delivers domain orchestration for structure search, impact analysis, questions, ex-ante calculations, and ex-post requests. `771e452` resolves missing data; next integrate facts/questions/knowledge/reports/databases.
 
 <a id="2-这次取得了什么验证到了哪一步"></a>
 
@@ -24,9 +24,9 @@ Li delivers domain orchestration for structure search, impact analysis, question
 
 | Item | Verified | Integration implication |
 |---|---|---|
-| Zijian branch | zijian-Luo, 1de0163bfd718fe8a5e3017a5f32af6b0954b97e; local B matches | Session baseline unchanged |
-| Li branch | LiZiheng, 771e4524961bcc36718db1c9331e7a5f4cda0ce7, Align official data with engine and add reproducible handoff | Code/data/handoff uploaded |
-| Acquisition | Official GitHub fixed-commit codeload/media LFS | Independent Asia-Tax-AI-Agent-LiZiheng-771e452 snapshot; old workspace untouched |
+| Session branch | session baseline, 1de0163bfd718fe8a5e3017a5f32af6b0954b97e; local B matches | Session baseline unchanged |
+| Tax engine baseline | 771e4524961bcc36718db1c9331e7a5f4cda0ce7, Align official data with engine and add reproducible handoff | Code/data/handoff uploaded |
+| Acquisition | Official GitHub fixed-commit codeload/media LFS | Independent Asia-Tax-AI-Agent-tax-engine-source-771e452 snapshot; old workspace untouched |
 | Database | 243703808 bytes, SHA-256 2756d2862330cb746d4103f0e690182fdc9fe7b2436a4ac738b156416aeca143 | LFS match, integrity_check=ok |
 | Contents | 396 documents, 8438 clauses, 390 parameters, 31 interpretation IDs | Ready for next integration |
 | Rules/engine | `python3 -m tax_graph.rules` passed; check_engine 94 candidates, 0 defects | Previous reference-related startup blocker resolved |
@@ -39,7 +39,7 @@ Li delivers domain orchestration for structure search, impact analysis, question
 
 ### 2.1 Previous failures
 
-`c8a4cf7`: 74 missing parameters, 8 statutory references, 146 compiler error lines. Historical audits/li_2026_10_11/release_audit.json, missing_references.csv, compile_errors.txt remain for comparison, not current `771e452` gaps.
+`c8a4cf7`: 74 missing parameters, 8 statutory references, 146 compiler error lines. Historical audits/tax_engine_2026_10_11/release_audit.json, missing_references.csv, compile_errors.txt remain for comparison, not current `771e452` gaps.
 
 <a id="22-新版核验边界"></a>
 
@@ -47,9 +47,9 @@ Li delivers domain orchestration for structure search, impact analysis, question
 
 Independent source/LFS snapshot checked. Local reruns cover rules/engine/fields/extractor/one Meridian case. Initial combined workflow covers B API/local SQLite/planner/HTTP contracts/page build. Full battery, vectors, complete handoff audit, production PostgreSQL, actual model/browser multi-turn, and professional tax acceptance were not completed. Upstream `tax_graph/validation/` is additional evidence.
 
-<a id="3-li-的真实能力与整合取舍"></a>
+<a id="3-tax-engine-的真实能力与整合取舍"></a>
 
-## 3. Actual Li capabilities and choices
+## 3. Actual tax engine capabilities and choices
 
 | Code | Responsibility | Integration |
 |---|---|---|
@@ -72,20 +72,20 @@ Two distinctions:
 
 ```mermaid
 flowchart TD
-    U["User and existing pages"] --> B["Zijian session orchestration: goals, facts, confirmation, resumption"]
+    U["User and existing pages"] --> B["Session orchestration: goals, facts, confirmation, resumption"]
     B --> A["Domain adapter: case graph and answer mapping"]
-    A --> L["Li domain worker: rules, planning, computation"]
+    A --> L["tax engine domain worker: rules, planning, computation"]
     L --> A
     A --> Q["Question routing and result validation"]
     Q --> B
     B --> K["Unified knowledge interface"]
-    K --> S["Li read-only SQLite and accompanying release artifacts"]
+    K --> S["tax engine read-only SQLite and accompanying release artifacts"]
     K --> R["Explicitly configured existing real-ruling source"]
     B --> P["PostgreSQL: commit case and turn results once"]
     P --> U
 ```
 
-B alone writes sessions/cases; Li receives snapshots/returns domain results; knowledge returns sources. No Li callbacks/second conversation state. B controls final approval.
+B alone writes sessions/cases; tax engine receives snapshots/returns domain results; knowledge returns sources. No tax engine callbacks/second conversation state. B controls final approval.
 
 Share turn budget/request_id. One real plan call performs candidate calculation/questions; do not plan then evaluate everything again. Recompute on input changes or explicit reconfirmation. Existing structures use a separate fixed-graph entry.
 
@@ -97,13 +97,13 @@ Share turn budget/request_id. One real plan call performs candidate calculation/
 - plan_structure: explicit comparison request, bounded role/jurisdiction/time/flow/action changes, hi-first. Optimal means within this template candidate set only.
 - review_paid: paid-tax/timing/closed matters; phase-two ex_post/claims with separate field/deadline checks.
 
-These are proposed modes, not existing upstream HTTP endpoints. First acceptance covers existing-structure FSIE plus explicit holding comparison. Only an actual multi-turn Li planner/writeback case establishes dual-orchestration integration.
+These are proposed modes, not existing upstream HTTP endpoints. First acceptance covers existing-structure FSIE plus explicit holding comparison. Only an actual multi-turn tax engine planner/writeback case establishes dual-orchestration integration.
 
 <a id="5-案情如何映射先补共同的数据格式"></a>
 
 ## 5. Mapping cases through a shared format
 
-B has flat facts; Li uses roles/ownership/flows/addressed Answers. Add CaseSchema v2 rather than independently editable duplicate facts.
+B has flat facts; tax engine uses roles/ownership/flows/addressed Answers. Add CaseSchema v2 rather than independently editable duplicate facts.
 
 <a id="51-唯一事实源与迁移"></a>
 
@@ -113,13 +113,13 @@ Add schema_version=2, stable domain_state.entities/holds/flows IDs, canonical_fa
 
 Old facts become derived compatibility views. Migrate each old field to explicit entity/flow once; unclear ownership stays unmapped, never copied across companies. All old APIs use one updater, rebuilding views in the same save. Retain v1 reads/pre-migration snapshots and budget migration explicitly.
 
-Li Case/Answers.data are request projections, not separately editable stores. actions record intent/plan hash; rulings record professional status/object/evidence; library binds releases, not client facts. Distinguish derived tax facts, assumptions, designed structures, confirmed client facts.
+tax engine Case/Answers.data are request projections, not separately editable stores. actions record intent/plan hash; rulings record professional status/object/evidence; library binds releases, not client facts. Distinguish derived tax facts, assumptions, designed structures, confirmed client facts.
 
 <a id="52-首期映射示例"></a>
 
 ### 5.2 Initial mapping examples
 
-| B information | Li position | Required meaning |
+| B information | tax engine position | Required meaning |
 |---|---|---|
 | Entity location/type | Case.roles[HOLD/OP].loc/type | Separate location/incorporation/management/residence; check upstream inferences |
 | Ownership/acquisition/cost | Case.holds[(HOLD,OP)] or hold:HOLD>OP.ratio/since/cost | Percentage units; unknown must not become template 100 |
@@ -128,7 +128,7 @@ Li Case/Answers.data are request projections, not separately editable stores. ac
 | Group metrics | group.<field> | Year/scope/units, not single-entity values |
 | Paid/closed state | Case.settled / closed, Event.as_at | Retain compatibility; later ex-post acceptance |
 
-Dictionary includes types/enums/units/precision/time/source/scenarios/projections/dependencies. Separate false, unknown, unasked, deferred, conflict; unknown never false/0. Deferral is scheduling, not necessarily Li unknown, which may eliminate candidates.
+Dictionary includes types/enums/units/precision/time/source/scenarios/projections/dependencies. Separate false, unknown, unasked, deferred, conflict; unknown never false/0. Deferral is scheduling, not necessarily tax engine unknown, which may eliminate candidates.
 
 Cross-currency sums require dated/sourced conversion rules. Prefer same-currency synthetic cases first. Define/test amount transport/display precision/float tolerances rather than assuming precision.
 
@@ -136,9 +136,9 @@ Cross-currency sums require dated/sourced conversion rules. Prefer same-currency
 
 ## 6. Connecting questions to chat
 
-Retain Li key/kind/region/why/impact/forms/source_hint. Add question_id/input_hash/based_on_revision/candidate_scope/answer_schema/dependency_group. One main question per turn, multiple volunteered fields accepted.
+Retain tax engine key/kind/region/why/impact/forms/source_hint. Add question_id/input_hash/based_on_revision/candidate_scope/answer_schema/dependency_group. One main question per turn, multiple volunteered fields accepted.
 
-| Li kind | Recipient | B behavior |
+| tax engine kind | Recipient | B behavior |
 |---|---|---|
 | blocking/data | User | Actual facts, candidates, current confirmation rules |
 | joint | User | Preserve dependency group; sequential questioning must not drop a jointly material field |
@@ -190,7 +190,7 @@ DomainRequest v1: request_id/deadline/schema_version/mode/scenario/objective/Cas
 
 Responses: needs_input|ready|blocked|unsupported|error plus question semantics, bounds/conditions/candidates/exclusions/citations-parameters/engine_input_hash. Convert frozenset regions to array entries; ISO dates, explicit JSON tuple/enum representations. Infinity/-Infinity use value=null + bound_status, never illegal JSON or zero. Do not send entire evaluations to the frontend.
 
-Add report_kind=structure_plan showing existing/candidate graphs, flow/jurisdiction taxes, modeled bounds, actions, judgments, unmodeled items, evidence/versions. Keep FSIE schema/renderer separate, not Li objects inside old node lists.
+Add report_kind=structure_plan showing existing/candidate graphs, flow/jurisdiction taxes, modeled bounds, actions, judgments, unmodeled items, evidence/versions. Keep FSIE schema/renderer separate, not tax engine objects inside old node lists.
 
 Render guaranteed as the modeled upper tax bound under stated conditions, including planned actions, never actual tax guarantees. Show objective/candidate scope.
 
@@ -198,8 +198,8 @@ Render guaranteed as the modeled upper tax bound under stated conditions, includ
 
 ## 9. Knowledge integration work
 
-1. **IDs:** explicit map between B manifest hk_hkel_iro_cap112 and Li hk.cap112.en. Same law does not mean same text version; avoid dropped search hits.
-2. **Subprovisions:** 21 NODE_LOCATORS plus thresholds versus possibly whole-section Li units. Map parents/spans/hashes/versions/basis. Parent-only is ancestor, not exact.
+1. **IDs:** explicit map between B manifest hk_hkel_iro_cap112 and tax engine hk.cap112.en. Same law does not mean same text version; avoid dropped search hits.
+2. **Subprovisions:** 21 NODE_LOCATORS plus thresholds versus possibly whole-section tax engine units. Map parents/spans/hashes/versions/basis. Parent-only is ancestor, not exact.
 3. **Text/hash:** canonical replacement may leave stale search.Hit snippets/spans; reread final cite_id and locate. Hash actual UTF-8 returned text; lock release/span.
 4. **Dates:** search valid_to exclusive, rule effective_to inclusive, B mostly closed intervals. Expose [from,to), retain originals, convert inclusive ends only when confirmed. Test first/last/next/unknown days.
 5. **Budgets:** share B 45 seconds/3 searches/14 reads. Merge/deduplicate verified child spans in common parents. Test whether 21+ citations fit; gaps explicit, no resets.
@@ -216,7 +216,7 @@ Queries/reads omit full cases/conversations. B constructs authenticated context 
 1. Read owner case/revision; validate request/question IDs; replay receipts without recomputing committed requests.
 2. Validate candidate types/units/conflicts/ownership/confirmation and freeze snapshot.
 3. Pin purpose/dates/release/maps, project Case/Answers; mapping failure prevents erroneous partial calls.
-4. One Li plan or fixed executor; count candidates/time/computation against shared budgets.
+4. One tax engine plan or fixed executor; count candidates/time/computation against shared budgets.
 5. Route questions; at most one main user question, professional/library queues separately; retrieve/validate evidence for available results.
 6. Formal research drafts require latest confirmation or valid partial consent. Exploratory candidates are not confirmed reports.
 7. One revision-checked commit of facts/tasks/pending/results/integration_run/receipt. Concurrent changes return 409 without stale writes. JSON/SSE share it.
@@ -233,20 +233,20 @@ Upstream candidate enumeration lacks integration-ready hard cancellation. Bound 
 | P1 knowledge | Read-only service/maps/v0.2 | Actual search→evidence→hash→page, explicit statute/ruling routes |
 | P2 case/UI | Canonical graph, legacy projection, typed questions/actions/rulings/library/results | Migration/recovery/corrections/unknowns/stale questions/concurrency |
 | P3 domain | Pinned workers, planning/fixed modes, serialization/deadlines | Actual complete examples; bounded/unbounded/no candidates/failures explainable |
-| P4 multi-turn | B→Li→user→B→Li→report→PostgreSQL | Both initial scenarios, evidence/confirmation/versions/replay |
+| P4 multi-turn | B→tax engine→user→B→tax engine→report→PostgreSQL | Both initial scenarios, evidence/confirmation/versions/replay |
 | P5 expansion | IP/services/finance/ex_post/vectors/extractor | Separate professional examples/coverage, capability switches |
 
 P0 upload/integrity/compilation passed locally on `771e452`; formal full audit/versioning remains. Begin P1/P2/P3; P4 requires real integration.
 
-Li supplied the earlier 74 parameters, 8 references, D14–D31, dependencies/cases/package `信息收集.md`. Later updates retain closure; professional interpretations need separate review.
+tax engine supplied the earlier 74 parameters, 8 references, D14–D31, dependencies/cases/package `信息收集.md`. Later updates retain closure; professional interpretations need separate review.
 
-Integration owns shared facts/types/routing/HTTP/results/maps/isolation/budgets/persistence/scripts; these are not all Li delivery gaps.
+Integration owns shared facts/types/routing/HTTP/results/maps/isolation/budgets/persistence/scripts; these are not all tax engine delivery gaps.
 
 Generate battery.py cases in suitable test environments and deliver a fixed representative set: complete/sparse/conflict/unknown/paid/closed. Verify nonzero cases before check_planner. Empty-directory zero defects is not acceptance; generators/gold files do not prove execution.
 
 Estimates from the locally compiling release: P1 2–3 person-days, P2 3–4, P3 2–3, P4 2–3, total 9–13. Excludes professional waiting/P5; reestimate migration/performance surprises. Old knowledge-only 5–8 days is not full dual-orchestration effort.
 
-Proposed locations: apps/knowledge_api, packages/official_adapter, packages/agent/domain_contracts.py, domain_adapters, question_arbiter, chat fact/analysis/storage, frontend questions/structure_plan renderer. config/integration centralizes configuration; separate audit/release scripts. Pin Li in an isolated branch without immediate whole-tree merge.
+Proposed locations: apps/knowledge_api, packages/official_adapter, packages/agent/domain_contracts.py, domain_adapters, question_arbiter, chat fact/analysis/storage, frontend questions/structure_plan renderer. config/integration centralizes configuration; separate audit/release scripts. Pin tax engine in an isolated branch without immediate whole-tree merge.
 
 <a id="12-最低验收矩阵"></a>
 
@@ -258,7 +258,7 @@ Proposed locations: apps/knowledge_api, packages/official_adapter, packages/agen
 | Nonempty tests | Fixed count >0; complete/sparse planners; retain failure details, not exit code alone |
 | Actual knowledge | HTTP reads, IDs/spans/hashes/time/rights agree |
 | Existing Hong Kong structure | No automatic companies/moves; bounded existing-structure result |
-| holding planning | Explicit candidate scope/hi-first; actual Li questions/results |
+| holding planning | Explicit candidate scope/hi-first; actual tax engine questions/results |
 | Engine comparison | Same facts/date/scope/question only; qualitative FSIE nodes are not group-wide taxes; explain differences |
 | Addresses/units | Separate two companies/flows; catch 10 versus 0.1, currencies/dates |
 | Unknowns/intent | Separate unasked/deferred/unknown/false; action yes is not completion; ordinary users cannot approve favorable rulings |
@@ -270,7 +270,7 @@ Proposed locations: apps/knowledge_api, packages/official_adapter, packages/agen
 | Concurrency/replay | 409, one commit, refresh, common JSON/SSE semantics |
 | Dates/versions | Explicit today/on/as_at, correct endpoints, old reports read old releases |
 | Failure/isolation | Compilation disables domain only; actual cancellation; no silent Mock/other-engine substitution |
-| End to end | Dedicated PostgreSQL, actual SQLite/CSV/Li/models with records; doubles not actual acceptance |
+| End to end | Dedicated PostgreSQL, actual SQLite/CSV/tax engine/models with records; doubles not actual acceptance |
 
 At least 10 multi-turn scripts: normal/missing facts/declined actions/professional gaps/library gaps/corrections/pause-resume/replays/concurrency/timeouts. Record versions/calls/sample counts/time/failures. Battery checks invariants; conclusions need independently reviewed examples.
 
@@ -280,7 +280,7 @@ At least 10 multi-turn scripts: normal/missing facts/declined actions/profession
 
 Use implemented B settings: hybrid/fixed entries, local 8010 C, then rerun the same cases for dynamic planner/tools. Dedicated integration PostgreSQL stays isolated.
 
-Proposed FSIE_DOMAIN_MODE=legacy|li_shadow|li, FSIE_KNOWLEDGE_RELEASE=<release_id>, SUPPORTED_DOMAIN_SCENARIOS=<allowlist>. Unified mode prevents mismatched planner/executor versions. Unready li errors explicitly; shadow differences remain internal, not contradictory formal outputs.
+Proposed FSIE_DOMAIN_MODE=legacy|domain_shadow|domain, FSIE_KNOWLEDGE_RELEASE=<release_id>, SUPPORTED_DOMAIN_SCENARIOS=<allowlist>. Unified mode prevents mismatched planner/executor versions. An unavailable tax engine errors explicitly; shadow differences remain internal, not contradictory formal outputs.
 
 Rollback retains v2 reads/single writer before switching old domain paths. Unsupported structures pause without loss. Never flatten v2 multiple entities lossily into v1. Old reports remain pinned, not overwritten by recalculation.
 
@@ -288,7 +288,7 @@ Rollback retains v2 reads/single writer before switching old domain paths. Unsup
 
 ## 14. Evidence and work boundaries
 
-- [Li release](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/commit/771e4524961bcc36718db1c9331e7a5f4cda0ce7)
+- [tax engine release](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/commit/771e4524961bcc36718db1c9331e7a5f4cda0ce7)
 - [Handoff](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/771e4524961bcc36718db1c9331e7a5f4cda0ce7/official/HANDOFF.md)
 - [Operation/examples](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/771e4524961bcc36718db1c9331e7a5f4cda0ce7/tax_graph/README.md)
 - [Planner](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/771e4524961bcc36718db1c9331e7a5f4cda0ce7/tax_graph/planner.py)
@@ -299,4 +299,4 @@ Rollback retains v2 reads/single writer before switching old domain paths. Unsup
 - [B analysis/filtering](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/1de0163bfd718fe8a5e3017a5f32af6b0954b97e/packages/chat/analysis.py)
 - [B storage](https://github.com/ZhihongWu-dev/Asia-Tax-AI-Agent/blob/1de0163bfd718fe8a5e3017a5f32af6b0954b97e/packages/chat/store.py)
 
-Added local integration code/[initial workflow](LI_BRIDGE_MVP_2026_10_11.md) without changing remote branches/existing business databases. Controlled API/service/local case integration passed; full battery/production PostgreSQL/actual multi-turn/professional acceptance remained incomplete. Li capability descriptions derive from code and independent new-release sample checks.
+Added local integration code/[initial workflow](TAX_ENGINE_BRIDGE_MVP_2026_10_11.md) without changing remote branches/existing business databases. Controlled API/service/local case integration passed; full battery/production PostgreSQL/actual multi-turn/professional acceptance remained incomplete. tax engine capability descriptions derive from code and independent new-release sample checks.

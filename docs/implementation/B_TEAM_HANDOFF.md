@@ -2,7 +2,7 @@
 
 # B Module Handoff: Agent, Business Rules, and A/C Integration
 
-Updated: 2026-10-04. Owner: Zijian (B). Branch: `zijian-Luo`.
+Updated: 2026-10-04. Component: session orchestration (B).
 
 Team entry point for implemented workflows, operation/integration, and joint decisions. Historical designs/rules/acceptance remain linked below. Delivery is a Hong Kong corporate foreign-sourced dividend FSIE research prototype. All professional open matters go to **one final advisor review stage**.
 
@@ -254,7 +254,7 @@ Get the branch after saving existing work:
 
 ```sh
 git fetch origin
-git switch --track origin/zijian-Luo
+git switch main
 python3 -m venv .venv
 .venv/bin/pip install -r requirements-b-agent.lock
 .venv/bin/pip install --no-deps -e .

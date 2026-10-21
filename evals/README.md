@@ -6,7 +6,7 @@ This directory stores reproducible evaluation inputs and historical run results;
 |---|---|---|
 | [A-side test records](../docs/project/evaluations/README.md) | Retrieval and chat retesting with 20 questions, plus result spreadsheets | Uses historical questions and criteria; rerun on the current version and manually check citations and answers |
 | [B multi-turn business evaluations](b_workflow/README.md) | 62 synthetic scripts, 135 steps | Expected engineering behavior is not a tax expert gold standard; the historical online workflow did not fully pass |
-| [Integration acceptance record](../docs/implementation/COMBINED_INTEGRATION_ACCEPTANCE.md) | Engineering integration of the pinned Li release, PostgreSQL, and C HTTP | Records results from the previous environment; live models, normal account pages, and professional correctness still require repeat verification |
+| [Integration acceptance record](../docs/implementation/COMBINED_INTEGRATION_ACCEPTANCE.md) | Engineering integration of the pinned tax engine release, PostgreSQL, and C HTTP | Records results from the previous environment; live models, normal account pages, and professional correctness still require repeat verification |
 
 For the next round, fix the questions, versions, and source snapshots before comparing the old and current strategies. For each question, check whether the statutory provisions, cases, and rules cited in the answer can be retrieved, and record recall, citation accuracy, answer correctness, and timings separately. See the [acceptance testing entry point](../docs/verification/README.md) for the detailed execution order.
 

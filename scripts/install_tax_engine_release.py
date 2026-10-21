@@ -1,4 +1,4 @@
-"""Install the immutable Li dependency without merging caches/raw files into Git."""
+"""Install the immutable tax engine dependency without merging caches/raw files into Git."""
 import argparse
 import json
 from pathlib import Path
@@ -34,7 +34,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--system-trust', action='store_true', help='Use OS trusted CA store through installed truststore')
     parser.add_argument('--from-directory', type=Path)
-    parser.add_argument('--target', type=Path, default=ROOT / 'data/li/releases' / PINNED_COMMIT)
+    parser.add_argument('--target', type=Path, default=ROOT / 'data/tax_engine/releases' / PINNED_COMMIT)
     args = parser.parse_args(argv)
     if args.system_trust:
         import truststore
@@ -45,7 +45,7 @@ def main(argv=None):
         print(json.dumps({'status': 'already_installed', 'path': str(target), 'release': PINNED_COMMIT}))
         return 0
     target.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix='.li-install-', dir=target.parent) as temporary:
+    with tempfile.TemporaryDirectory(prefix='.tax-engine-install-', dir=target.parent) as temporary:
         work = Path(temporary)
         release = work / 'release'
         release.mkdir()
@@ -74,7 +74,7 @@ def main(argv=None):
                      release / 'official/official.sqlite', 260_000_000)
         verify_release(release)
         manifest = {'release': PINNED_COMMIT, 'database_sha256': PINNED_DB_SHA256,
-                    'source_sha256': PINNED_SOURCE_SHA256, 'format': 'li-release-v1'}
+                    'source_sha256': PINNED_SOURCE_SHA256, 'format': 'tax-engine-release-v1'}
         (release / 'release.json').write_text(json.dumps(manifest, indent=2) + '\n')
         release.rename(target)
     print(json.dumps({'status': 'installed', 'path': str(target), **manifest}))

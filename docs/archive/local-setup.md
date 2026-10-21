@@ -1,4 +1,4 @@
-> 当前启动方式（2026-10-20）：先安装固定依赖 `python scripts/install_li_release.py`，再运行 `python scripts/run_chat.py`。本地和 Render 均读取 `config/runtime.json`，由 API 自动管理资料服务。以下日期记录中的本地开关状态是历史验收记录，不代表当前机器配置。以 `/health` 的 runtime 字段为准。详见 [部署说明](../project/RENDER_DEPLOYMENT.md)。
+> 当前启动方式（2026-10-20）：先安装固定依赖 `python scripts/install_tax_engine_release.py`，再运行 `python scripts/run_chat.py`。本地和 Render 均读取 `config/runtime.json`，由 API 自动管理资料服务。以下日期记录中的本地开关状态是历史验收记录，不代表当前机器配置。以 `/health` 的 runtime 字段为准。详见 [部署说明](../project/RENDER_DEPLOYMENT.md)。
 
 # 本地测试启动说明
 
@@ -21,7 +21,7 @@
 | 组件 | 运行位置 |
 |---|---|
 | React 前端与 FastAPI 后端 | 本机 127.0.0.1:8000 |
-| 固定 Li 规则引擎、官方 SQLite 资料库及只读检索服务 | 本机；知识服务端口由 combined 启动器动态分配并自动清理 |
+| 固定 tax engine 规则引擎、官方 SQLite 资料库及只读检索服务 | 本机；知识服务端口由 combined 启动器动态分配并自动清理 |
 | 模型 | `.env` 指定的 DeepSeek 服务 |
 | 账号认证 | `.env` 指定的 Supabase 项目 |
 | 案件、对话及原有云端资料查询 | `.env` 指定的 Supabase PostgreSQL |
@@ -32,7 +32,7 @@
 
 - `.env`：本机配置，Git 已忽略；包含凭据，请勿提交或截图分享。
 - `data/local-setup/`：被忽略的旧配置备份、检查结果与依赖版本记录。
-- `data/li/releases/771e4524961bcc36718db1c9331e7a5f4cda0ce7/`：当前主线要求的固定法规/引擎依赖，安装器校验来源代码与 SQLite 哈希。
+- `data/tax_engine/releases/771e4524961bcc36718db1c9331e7a5f4cda0ce7/`：当前主线要求的固定法规/引擎依赖，安装器校验来源代码与 SQLite 哈希。
 - `.venv/`、`apps/web/node_modules/`：本项目独立依赖。
 - `apps/web/dist/`：本地构建后的前端。
 

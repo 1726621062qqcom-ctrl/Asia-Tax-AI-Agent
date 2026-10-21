@@ -37,7 +37,7 @@ for (const [button, hint, task] of [
     await expect(page.locator(".composer-area [role=status]")).toContainText(task);
     if (hint !== "reference_lookup") {
       await expect(page.locator(".message.assistant")).toContainText("这笔收入由个人还是公司收取？");
-      await expect(page.locator(".message.assistant")).not.toContainText("li|");
+      await expect(page.locator(".message.assistant")).not.toContainText("law|");
     } else {
       await expect(page.locator(".message.assistant")).toContainText("你想查哪项规定或哪个官方案例？");
     }

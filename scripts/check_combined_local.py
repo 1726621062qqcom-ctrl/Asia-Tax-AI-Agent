@@ -1,4 +1,4 @@
-"""Real loopback C HTTP + real Li + temporary case SQLite; no model substitute claims."""
+"""Real loopback C HTTP + real tax engine + temporary case SQLite; no model substitute claims."""
 import json
 from pathlib import Path
 import sys

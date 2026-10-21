@@ -1,4 +1,4 @@
-"""Read-only Li release audit. Usage: python audit_release.py SNAPSHOT OUTPUT_DIR."""
+"""Read-only tax engine release audit. Usage: python audit_release.py SNAPSHOT OUTPUT_DIR."""
 import csv
 import hashlib
 import json

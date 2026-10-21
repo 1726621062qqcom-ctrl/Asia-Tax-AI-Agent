@@ -33,7 +33,7 @@ def real_release():
     try:
         verify_release(release_path())
     except DomainError:
-        pytest.skip('Install pinned release with scripts/install_li_release.py')
+        pytest.skip('Install pinned release with scripts/install_tax_engine_release.py')
 
 
 def setup(service, mode='assess_current', bindings=None, doc=None):
@@ -154,7 +154,7 @@ def test_professional_endpoint_requires_role(service, monkeypatch):
     monkeypatch.setenv('FSIE_AGENT_REVIEWER_IDS', '[]')
     doc = setup(service)
     with pytest.raises(WorkflowError) as exc:
-        service.domain_professional(OWNER, doc['id'], doc['revision'], rid(), 'li:fake', 'yes', {}, 'ordinary-user')
+        service.domain_professional(OWNER, doc['id'], doc['revision'], rid(), 'domain:fake', 'yes', {}, 'ordinary-user')
     assert exc.value.code == 'review_forbidden'
 
 

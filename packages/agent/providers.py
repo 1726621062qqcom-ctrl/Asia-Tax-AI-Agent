@@ -238,7 +238,7 @@ class RoutedKnowledgeProvider:
         return self._reference_provider(reference).get_evidence(reference, purpose, context)
 
     def _reference_provider(self, reference):
-        if reference.unit_id.startswith('li|'):
+        if reference.unit_id.startswith(('law|', 'li|')):
             return self.law
         if reference.unit_id.startswith('hk_ird_advance_'):
             return self.rulings

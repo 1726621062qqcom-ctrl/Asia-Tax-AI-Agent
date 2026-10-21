@@ -1,4 +1,4 @@
-"""Validate the case boundary and execute one pinned Li planning round."""
+"""Validate the case boundary and execute one pinned tax engine planning round."""
 from __future__ import annotations
 
 import hashlib
@@ -10,7 +10,7 @@ import sys
 from time import monotonic
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -110,14 +110,25 @@ class DomainCase(Strict):
 
 
 class DomainSettings(BaseSettings):
-    release_dir: str = ''
-    timeout_seconds: int = Field(default=40, ge=1, le=60)
-    model_config = SettingsConfigDict(env_prefix='FSIE_LI_', env_file=ROOT / '.env', extra='ignore')
+    # Legacy aliases only support existing deployments; new configuration uses TAX_ENGINE.
+    release_dir: str = Field(default='', validation_alias=AliasChoices('FSIE_TAX_ENGINE_RELEASE_DIR', 'FSIE_LI_RELEASE_DIR'))
+    timeout_seconds: int = Field(default=40, ge=1, le=60, validation_alias=AliasChoices('FSIE_TAX_ENGINE_TIMEOUT_SECONDS', 'FSIE_LI_TIMEOUT_SECONDS'))
+    model_config = SettingsConfigDict(env_prefix='FSIE_TAX_ENGINE_', env_file=ROOT / '.env', extra='ignore', populate_by_name=True)
 
 
 def release_path(settings: DomainSettings | None = None) -> Path:
     config = settings or DomainSettings()
-    path = Path(config.release_dir or ROOT / 'data/li/releases' / PINNED_COMMIT).resolve()
+    path = Path(config.release_dir or ROOT / 'data/tax_engine/releases' / PINNED_COMMIT).resolve()
+    # A previous deployment may explicitly configure the former default path.
+    old_default = ROOT / 'data/li/releases' / PINNED_COMMIT
+    new_default = ROOT / 'data/tax_engine/releases' / PINNED_COMMIT
+    if path == old_default.resolve() and not path.exists() and new_default.exists():
+        path = new_default.resolve()
+    # Read existing local installations during the naming migration.
+    if not config.release_dir and not path.exists():
+        legacy = ROOT / 'data/li/releases' / PINNED_COMMIT
+        if legacy.exists():
+            path = legacy.resolve()
     if not (path / 'tax_graph/planner.py').is_file() or not (path / 'official/official.sqlite').is_file():
         raise DomainError('domain_unavailable')
     return path
@@ -164,7 +175,7 @@ def run_domain(case: DomainCase, answers: dict, *, today: str, mode: str,
     raw = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(',', ':'))
     facts_hash = hashlib.sha256(raw.encode()).hexdigest()
     env = {key: os.environ[key] for key in ('PATH', 'LANG', 'LC_ALL', 'SYSTEMROOT') if key in os.environ}
-    env.update({'FSIE_LI_RELEASE_DIR': str(path), 'PYTHONIOENCODING': 'utf-8',
+    env.update({'FSIE_TAX_ENGINE_RELEASE_DIR': str(path), 'PYTHONIOENCODING': 'utf-8',
                 'PYTHONPATH': str(ROOT) + os.pathsep + str(path)})
     from packages.agent.budget import current_budget
     budget = current_budget.get()

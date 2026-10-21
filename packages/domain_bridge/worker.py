@@ -1,4 +1,4 @@
-"""One-shot Li worker; JSON in/out, no chat DB or network access."""
+"""One-shot tax engine worker; JSON in/out, no chat DB or network access."""
 from __future__ import annotations
 
 from datetime import date
@@ -145,7 +145,7 @@ def _fixed(template, event, case, answers, mode, today):
 
 
 def main():
-    root = Path(os.environ['FSIE_LI_RELEASE_DIR']).resolve()
+    root = Path(os.environ['FSIE_TAX_ENGINE_RELEASE_DIR']).resolve()
     verify_release(root)
     sys.path.insert(0, str(root))
     from tax_graph.data.domain import Event

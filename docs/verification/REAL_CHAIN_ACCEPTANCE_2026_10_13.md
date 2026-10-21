@@ -19,7 +19,7 @@ Assess retrieval, answering, and traceability separately. A pass at one layer ca
 
 ## Run record
 
-Used the current `main` working tree and pinned Li commit `771e4524961bcc36718db1c9331e7a5f4cda0ce7`. SQLite SHA-256 is `2756d2862330cb746d4103f0e690182fdc9fe7b2436a4ac738b156416aeca143`; the cross-platform manifest hash for 103 source files is `d4c5495302fc9c755eb750d70fc181dc99f58e6905a79709e93845ea7b5d37e9`. Old materials came from cloud PostgreSQL; the actual model was `deepseek-flash`. All questions, company facts, and amounts were synthetic. No keys were written to reports.
+Used the current `main` working tree and pinned tax engine commit `771e4524961bcc36718db1c9331e7a5f4cda0ce7`. SQLite SHA-256 is `2756d2862330cb746d4103f0e690182fdc9fe7b2436a4ac738b156416aeca143`; the cross-platform manifest hash for 103 source files is `d4c5495302fc9c755eb750d70fc181dc99f58e6905a79709e93845ea7b5d37e9`. Old materials came from cloud PostgreSQL; the actual model was `deepseek-flash`. All questions, company facts, and amounts were synthetic. No keys were written to reports.
 
 | Check | Result | Interpretation |
 |---|---|---|

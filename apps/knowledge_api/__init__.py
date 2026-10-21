@@ -1,1 +1,1 @@
-"""Read-only HTTP boundary for the pinned Li official library."""
+"""Read-only HTTP boundary for the pinned tax engine official library."""

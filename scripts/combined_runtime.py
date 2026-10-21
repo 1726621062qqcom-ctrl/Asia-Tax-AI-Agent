@@ -26,7 +26,7 @@ def knowledge_server(*, on_start=None):
     # The C process needs library paths, not model or case-database credentials.
     env = {k: v for k, v in os.environ.items() if k in
            ('PATH', 'HOME', 'TMPDIR', 'SYSTEMROOT', 'LANG', 'LC_ALL')}
-    env.update(FSIE_AGENT_C_TOKEN=token, FSIE_LI_RELEASE_DIR=str(release))
+    env.update(FSIE_AGENT_C_TOKEN=token, FSIE_TAX_ENGINE_RELEASE_DIR=str(release))
     process = subprocess.Popen(
         [sys.executable, '-m', 'uvicorn', 'apps.knowledge_api.main:app',
          '--host', '127.0.0.1', '--port', str(port), '--log-level', 'error'],

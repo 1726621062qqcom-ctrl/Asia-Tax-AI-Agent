@@ -1,4 +1,4 @@
-"""Real pinned Li release through the chat DB and read-only C boundary."""
+"""Real pinned tax engine release through the chat DB and read-only C boundary."""
 import json
 from pathlib import Path
 from unittest.mock import patch
@@ -19,7 +19,7 @@ from packages.domain_bridge.bridge import DomainError, PINNED_COMMIT, release_pa
 try:
     RELEASE = release_path()
 except DomainError:
-    RELEASE = Path(__file__).resolve().parents[2] / 'data/li/releases' / PINNED_COMMIT
+    RELEASE = Path(__file__).resolve().parents[2] / 'data/tax_engine/releases' / PINNED_COMMIT
 HEADERS = {'X-AsiaTax-Request': '1'}
 USER = {'id': '11111111-1111-1111-1111-111111111111', 'email': 'test@example.invalid'}
 
@@ -27,8 +27,8 @@ USER = {'id': '11111111-1111-1111-1111-111111111111', 'email': 'test@example.inv
 @pytest.fixture
 def real_release(monkeypatch):
     if not (RELEASE / 'official/official.sqlite').is_file() or (RELEASE / 'official/official.sqlite').stat().st_size < 1_000_000:
-        pytest.skip('Pinned Li LFS release not installed')
-    monkeypatch.setenv('FSIE_LI_RELEASE_DIR', str(RELEASE))
+        pytest.skip('Pinned tax engine LFS release not installed')
+    monkeypatch.setenv('FSIE_TAX_ENGINE_RELEASE_DIR', str(RELEASE))
     _release.cache_clear()
     yield
     _release.cache_clear()
@@ -170,7 +170,7 @@ def test_existing_b_retriever_gets_bounded_partial_coverage(real_release):
         assert not any(gap.startswith('未定位条款：') for gap in result['gaps'])
 
 
-def test_b_analysis_reads_li_knowledge_without_approving_gaps(real_release):
+def test_b_analysis_reads_law_knowledge_without_approving_gaps(real_release):
     from packages.agent.budget import BudgetedProvider, RunBudget
     from packages.agent.contracts import TrustedContext
     from packages.agent.providers import CKnowledgeProvider

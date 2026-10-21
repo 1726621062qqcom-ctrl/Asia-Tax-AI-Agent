@@ -1,68 +1,68 @@
 # Taxora Integrated Setup and Integration Testing
 
-This document describes how to run the current integrated `main`. The goal is to connect chat, structure calculations, source retrieval, and research reports within one case, so team members can install and retest the system using this guide. The Li component uses the release specified here; later updates on its branch require separate integration. The current delivery is an internal research prototype, and tax interpretations still require review by the responsible professional. Start testing with the [acceptance testing entry point](../verification/README.md).
+This document describes how to run the current integrated `main`. The goal is to connect chat, structure calculations, source retrieval, and research reports within one case, so team members can install and retest the system using this guide. The tax engine component uses the release specified here; later updates on its branch require separate integration. The current delivery is an internal research prototype, and tax interpretations still require review by the responsible professional. Start testing with the [acceptance testing entry point](../verification/README.md).
 
 ## 1. Framework responsibilities
 
-- **Zijian's orchestration** handles interviews, task identification, fact revision/confirmation, pause/resume, case saving, user isolation, and report review. The existing Hybrid/LangGraph workflow is retained.
-- **Li's orchestration** includes structure search, rule calculations, lower/upper bound analysis, follow-up questions, and post-payment request handling. This integration uses the actual `planner.plan` and fixed-structure calculations; Li is not used only as a knowledge retriever.
-- **The knowledge interface** connects Li's statutory/parameter materials to the existing `KnowledgeProvider`. When `combined` is explicitly selected, statutory sources use Li's read-only service and rulings use the existing PostgreSQL materials. Each source retains its original-text version, citations, and hash.
-- **Database responsibilities** remain separate: PostgreSQL stores case progress; Li's SQLite/CSV files are knowledge dependencies from the pinned release. The 244 MB database has not been committed again to this branch.
+- **Session orchestration** handles interviews, task identification, fact revision/confirmation, pause/resume, case saving, user isolation, and report review. The existing Hybrid/LangGraph workflow is retained.
+- **Tax engine orchestration** includes structure search, rule calculations, lower/upper bound analysis, follow-up questions, and post-payment request handling. This integration uses the actual `planner.plan` and fixed-structure calculations; tax engine is not used only as a knowledge retriever.
+- **The knowledge interface** connects the tax engine’s statutory/parameter materials to the existing `KnowledgeProvider`. When `combined` is explicitly selected, statutory sources use the tax engine’s read-only service and rulings use the existing PostgreSQL materials. Each source retains its original-text version, citations, and hash.
+- **Database responsibilities** remain separate: PostgreSQL stores case progress; the tax engine’s SQLite/CSV files are knowledge dependencies from the pinned release. The 244 MB database has not been committed again to this branch.
 
 ```mermaid
 flowchart TD
-  U[Chat and structure analysis page] --> B[Zijian session orchestration / DomainCoordinator]
+  U[Chat and structure analysis page] --> B[Session orchestration / DomainCoordinator]
   B --> F[Single source of facts: canonical_fact_records]
   F --> P[Legacy FSIE facts compatibility view]
-  F --> C[Li Case / Answers projection]
-  P --> G[Zijian FSIE rule chain]
-  C --> L[Li one-shot subprocess: planning or fixed-graph calculation]
+  F --> C[tax engine Case / Answers projection]
+  P --> G[Session FSIE rule chain]
+  C --> L[tax engine one-shot subprocess: planning or fixed-graph calculation]
   L --> Q[Fact / action / professional judgment questions]
   Q --> B
   B --> K[Unified KnowledgeProvider]
-  K --> S[Li official sources: read-only HTTP service / SQLite]
+  K --> S[official law sources: read-only HTTP service / SQLite]
   K --> R[Existing PostgreSQL ruling sources]
   G --> O[Research draft / hash / final review using the same fact version]
   L --> O
   B --> DB[PostgreSQL chat_cases: one commit per complete turn]
 ```
 
-**Only Zijian's orchestration commits a turn.** The Li subprocess receives only a case snapshot, with no model or case database keys. When calculations succeed, answers, results, and run records are saved together; if calculations fail, answers are not saved on their own. `owner` isolates cases, `revision` blocks updates based on old versions, and `request_id` supports replay. Reusing a request ID with different content is rejected.
+**Only Session orchestration commits a turn.** The tax engine subprocess receives only a case snapshot, with no model or case database keys. When calculations succeed, answers, results, and run records are saved together; if calculations fail, answers are not saved on their own. `owner` isolates cases, `revision` blocks updates based on old versions, and `request_id` supports replay. Reusing a request ID with different content is rejected.
 
 ## 2. Implemented features and current boundaries
 
 | Feature | Current behavior |
 |---|---|
 | Shared fact model | Schema `2.0.0`; records values, addresses, sources, units, statuses, revisions, and confirmations; old cases migrate on demand and retain original facts snapshots |
-| Synchronization | Legacy facts and Li inputs are projections of the shared records; bindings are created only for manually confirmed field ownership, and a single fact must not be copied to multiple companies |
+| Synchronization | Legacy facts and tax engine inputs are projections of the shared records; bindings are created only for manually confirmed field ownership, and a single fact must not be copied to multiple companies |
 | Existing structure `assess_current` | Requires explicit `present`; calculates only existing companies/shareholdings and rejects adding or relocating companies; does not silently switch to structure design |
-| Structure comparison `plan_structure` | Calls the Li planner and preserves upstream candidates, question types, and ordering; prioritizes comparing upper tax bounds within the candidate set and does not imply a real-world global optimum |
+| Structure comparison `plan_structure` | Calls the tax engine planner and preserves upstream candidates, question types, and ordering; prioritizes comparing upper tax bounds within the candidate set and does not imply a real-world global optimum |
 | Paid-tax matters `review_paid` | Experimental entry point connected to fixed-graph/claims processing; complete business timing requirements and professional acceptance remain unfinished; do not make this the first acceptance target |
 | Answers and recovery | Type validation, unknown facts, deferral, and pause/resume; outdated questions are rejected, and the case can be restored after refresh |
 | Main chat integration | Run results and the next question are written to the conversation; answer in the structure panel or enter `结构答复：答案` (Chinese command meaning “structure response: answer”). Ordinary chat continues to use the original orchestration |
 | Professional questions | `ruling/library` is unavailable to ordinary users; designated reviewers can submit answers with retrievable evidence, whose hashes are recorded. Current discretion supports only favorable judgments (`yes`), not automatic execution of unfavorable discretionary judgments |
-| Combined research draft | Generated after confirming current facts; incomplete drafts require explicit consent. Existing structures with confirmed legacy field ownership also include Zijian's FSIE rule chain. Both results and gaps are retained. Reports for mapped cases share an evidence cache. Ordinary analysis allows at most 14 evidence retrievals; user-requested combined reports allow 35 (FSIE 7, rulings 7, domain 21). Search is limited to ten attempts (at most five requests, each including one retry). The entire draft shares a 45-second budget; items beyond the budget are recorded individually as gaps |
+| Combined research draft | Generated after confirming current facts; incomplete drafts require explicit consent. Existing structures with confirmed legacy field ownership also include the session layer’s FSIE rule chain. Both results and gaps are retained. Reports for mapped cases share an evidence cache. Ordinary analysis allows at most 14 evidence retrievals; user-requested combined reports allow 35 (FSIE 7, rulings 7, domain 21). Search is limited to ten attempts (at most five requests, each including one retry). The entire draft shares a 45-second budget; items beyond the budget are recorded individually as gaps |
 | Original-text locations | The 21 FSIE locations are retrieved through seven parent provisions, then child passage positions and hashes are validated; unresolved, invalid, or restricted locations remain gaps |
-| Source usage | Li original text may currently be displayed but must not be sent to the model; technical locatability does not establish professional tax review |
+| Source usage | tax engine original text may currently be displayed but must not be sent to the model; technical locatability does not establish professional tax review |
 | Calculation currency | Initial support requires explicit **CNY**; missing currency is rejected, and HKD/SGD returns `unsupported`, with no silent currency conversion. Rule fields such as group revenue in euros still use their specified units |
 
-The initial business form covers dividends from direct shareholdings; advanced JSON supports complex structures. API inputs support the other five templates and two-template combinations, but no claim is made that each has passed business acceptance. Vector retrieval, Li's document extractor, automatic currency conversion, and a multi-user expert collaboration interface are outside this verified delivery. Public hosting is documented in [the deployment guide](../project/RENDER_DEPLOYMENT.md).
+The initial business form covers dividends from direct shareholdings; advanced JSON supports complex structures. API inputs support the other five templates and two-template combinations, but no claim is made that each has passed business acceptance. Vector retrieval, the tax engine’s document extractor, automatic currency conversion, and a multi-user expert collaboration interface are outside this verified delivery. Public hosting is documented in [the deployment guide](../project/RENDER_DEPLOYMENT.md).
 
 ## 3. File guide
 
 | Location | Contents |
 |---|---|
-| `packages/domain_bridge/state.py` | Single source of facts, migration, legacy field bindings, and Li projections |
+| `packages/domain_bridge/state.py` | Single source of facts, migration, legacy field bindings, and tax engine projections |
 | `packages/domain_bridge/coordinator.py` | Transaction coordination for calls, question expiration, answers, pauses, professional responses, and reports |
-| `packages/domain_bridge/bridge.py`, `worker.py` | Case validation, pinned release validation, subprocesses, and actual Li calls |
+| `packages/domain_bridge/bridge.py`, `worker.py` | Case validation, pinned release validation, subprocesses, and actual tax engine calls |
 | `packages/domain_bridge/reporting.py` | Combined research drafts and Markdown with frozen facts/results/evidence |
-| `apps/knowledge_api/main.py` | Li's read-only `/search` and `/evidence` services |
-| `packages/agent/providers.py`, `knowledge.py` | Combined routing for original and Li sources, plus parent/child provision validation |
+| `apps/knowledge_api/main.py` | the tax engine’s read-only `/search` and `/evidence` services |
+| `packages/agent/providers.py`, `knowledge.py` | Combined routing for original and tax engine sources, plus parent/child provision validation |
 | `apps/api/chat.py` | Case, structure, report, and review APIs for signed-in users |
 | `apps/web/src/components/StructurePanel.tsx`, `DomainResult.tsx` | Forms, questions, calculation results, and research draft downloads |
 | `tests/integration/fixtures/holding.synthetic.json` | Shareable synthetic CNY example |
 | `tests/integration/`, `apps/web/tests/structure.spec.ts` | Automated integration regression and browser tests |
-| `scripts/install_li_release.py`, `check_combined_live.py`, `check_postgres_acceptance.py` | Pinned dependency installation, live model/database retesting, and complete disposable PostgreSQL acceptance testing |
+| `scripts/install_tax_engine_release.py`, `check_combined_live.py`, `check_postgres_acceptance.py` | Pinned dependency installation, live model/database retesting, and complete disposable PostgreSQL acceptance testing |
 | `docs/implementation/COMBINED_INTEGRATION_ACCEPTANCE.md` | Actual results from this round, limitations, and follow-up owners |
 
 ## 4. Installation for new team members
@@ -75,16 +75,16 @@ cd Asia-Tax-AI-Agent
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e '.[dev]'
-python scripts/install_li_release.py
+python scripts/install_tax_engine_release.py
 npm --prefix apps/web ci
 npm --prefix apps/web run build
 cp .env.example .env
 ```
 
-The installer downloads code/CSV files and the actual LFS SQLite database from GitHub at pinned commit `771e4524961bcc36718db1c9331e7a5f4cda0ce7`, validates them, and installs them atomically into the ignored directory `data/li/releases/<commit>/`. It does not automatically follow the latest HEAD of the Li branch. If local Python lacks CA certificates, install `truststore` and use `python scripts/install_li_release.py --system-trust`, keeping TLS verification enabled. In network-restricted environments, use a complete snapshot already obtained:
+The installer downloads code/CSV files and the actual LFS SQLite database from GitHub at pinned commit `771e4524961bcc36718db1c9331e7a5f4cda0ce7`, validates them, and installs them atomically into the ignored directory `data/tax_engine/releases/<commit>/`. It does not automatically follow the latest HEAD of the tax engine branch. If local Python lacks CA certificates, install `truststore` and use `python scripts/install_tax_engine_release.py --system-trust`, keeping TLS verification enabled. In network-restricted environments, use a complete snapshot already obtained:
 
 ```sh
-python scripts/install_li_release.py --from-directory /absolute/path/to/Li-release
+python scripts/install_tax_engine_release.py --from-directory /absolute/path/to/tax-engine-release
 ```
 
 The installation must include `official/labels/*.csv`, which is required for rule compilation. Do not copy only `tax_graph/` or only the database. Do not disable validation after a failure; obtain complete materials from the same commit again. The initial online download includes a database of approximately 244 MB.
@@ -109,7 +109,7 @@ FSIE_AGENT_PROVIDER=combined
 FSIE_AGENT_REVIEWER_IDS=[]
 ```
 
-The installation directory is used by default, so `FSIE_LI_RELEASE_DIR` need not be set. Provide an absolute path when using an external complete snapshot. In managed combined mode the API generates an ephemeral token and loopback URL; do not set `FSIE_AGENT_C_TOKEN` or `FSIE_AGENT_C_URL` manually. A separately operated C-only provider still requires explicit endpoint and token configuration.
+The installation directory is used by default, so `FSIE_TAX_ENGINE_RELEASE_DIR` need not be set. Provide an absolute path when using an external complete snapshot. In managed combined mode the API generates an ephemeral token and loopback URL; do not set `FSIE_AGENT_C_TOKEN` or `FSIE_AGENT_C_URL` manually. A separately operated C-only provider still requires explicit endpoint and token configuration.
 
 Run the existing migrations and knowledge loading workflow against a dedicated test database; see the [cloud research workflow](../project/CLOUD_KNOWLEDGE_SLICE.md) and [authentication guide](../project/TAXORA_AUTH.md). `chat_cases` is created during service initialization; changing the URL is not a migration mechanism for existing cases. The original ruling database needs imported tables such as `legal_units/sources`; an empty database reports ruling materials as unavailable.
 
@@ -141,11 +141,11 @@ npm --prefix apps/web run build
 cd apps/web
 npx playwright install chromium
 FSIE_TEST_PYTHON="../../.venv/bin/python" \
-FSIE_LI_RELEASE_DIR="$(pwd)/../../data/li/releases/771e4524961bcc36718db1c9331e7a5f4cda0ce7" \
+FSIE_TAX_ENGINE_RELEASE_DIR="$(pwd)/../../data/tax_engine/releases/771e4524961bcc36718db1c9331e7a5f4cda0ce7" \
 npm test -- --workers=1
 ```
 
-On macOS with Chrome installed, set `PLAYWRIGHT_CHANNEL=chrome` if needed. Browser tests start a temporary SQLite case database, a deterministic model substitute, and the actual Li engine; they do not establish live model/cloud database acceptance. Legacy PostgreSQL integration tests are skipped by default and must be enabled in a dedicated environment using their `FSIE_RUN_INTEGRATION` switch. Without the Li release, related actual-engine tests are skipped; handoff acceptance must inspect skip reasons.
+On macOS with Chrome installed, set `PLAYWRIGHT_CHANNEL=chrome` if needed. Browser tests start a temporary SQLite case database, a deterministic model substitute, and the actual tax engine; they do not establish live model/cloud database acceptance. Legacy PostgreSQL integration tests are skipped by default and must be enabled in a dedicated environment using their `FSIE_RUN_INTEGRATION` switch. Without the tax engine release, related actual-engine tests are skipped; handoff acceptance must inspect skip reasons.
 
 Local retesting of the actual HTTP knowledge service and combined report, without model calls and with a temporary SQLite case database:
 
@@ -159,7 +159,7 @@ The current handoff prioritizes database and combined workflow acceptance. Per t
 python scripts/check_combined_live.py --database-only --env-file .env.integration --output data/combined-database-result.json
 ```
 
-If the database is not ready, add `--model-only` to test two rounds of model and Li interaction separately. The output explicitly identifies SQLite and cannot count as PostgreSQL acceptance. If the model is not ready, add `--database-only` to test actual PostgreSQL, actual C HTTP, Li, and ruling evidence retrieval; the output explicitly marks the model as `not_called`. These two modes are mutually exclusive. When configurations are stored separately, use `--model-env-file` to specify another local model configuration; the database is still read from `--env-file`.
+If the database is not ready, add `--model-only` to test two rounds of model and tax engine interaction separately. The output explicitly identifies SQLite and cannot count as PostgreSQL acceptance. If the model is not ready, add `--database-only` to test actual PostgreSQL, actual C HTTP, tax engine, and ruling evidence retrieval; the output explicitly marks the model as `not_called`. These two modes are mutually exclusive. When configurations are stored separately, use `--model-env-file` to specify another local model configuration; the database is still read from `--env-file`.
 
 When live model acceptance resumes, if macOS Python lacks default CA files, install `truststore` and add `--system-trust` to use certificates already trusted by the system. Always retain HTTPS verification. If `401/invalid_api_key` occurs then, the configuration owner should update the valid key locally.
 
@@ -173,7 +173,7 @@ python scripts/check_postgres_acceptance.py --env-file .env.integration --system
 
 First set `FSIE_DATABASE_URL` in the local `.env.integration` to the dedicated PostgreSQL connection. The server needs pgvector, and the account must be able to create databases. If no server is available, use the existing `infrastructure/postgres/docker-compose.yml` to start a local environment. Use `--system-trust` only when `truststore` is installed; omit it on other machines.
 
-This script creates a random database, runs migrations, imports the rule package, builds official sources, runs `tests/persistence` and actual HTTP/Li combined acceptance, and finally deletes the database it created. It does not migrate or empty the original database in the connection configuration. Source snapshots are stored in an ignored directory, and hash differences between web pages and manifests are recorded. Model tests are explicitly skipped and must be run separately. Outputs and sanitized substep logs default to `data/`.
+This script creates a random database, runs migrations, imports the rule package, builds official sources, runs `tests/persistence` and actual HTTP/tax engine combined acceptance, and finally deletes the database it created. It does not migrate or empty the original database in the connection configuration. Source snapshots are stored in an ignored directory, and hash differences between web pages and manifests are recorded. Model tests are explicitly skipped and must be run separately. Outputs and sanitized substep logs default to `data/`.
 
 On 2026-10-11, this passed with PostgreSQL 17.11 / pgvector 0.8.7: 14 persistence checks passed and two model checks were skipped; ten official source documents produced 697 parsed units; the actual HTTP combined report obtained 21 statutory locations and seven ruling passages. See the sanitized [PostgreSQL acceptance results](../implementation/COMBINED_POSTGRES_RESULT_2026_10_11.json). This round also completed Alembic chat-table metadata and the Source jurisdiction index declaration, verifying that a downgrade preserves chat data and RLS and that an upgrade continues using the same case.
 
@@ -198,15 +198,15 @@ Use only the synthetic example above. At each step, record case ID, mode, revisi
 
 ## 8. Handoff completion criteria and remaining work
 
-Retain the following engineering handoff evidence: Python/build/browser results, pinned release hashes, dedicated PostgreSQL and actual C HTTP/Li retest results, at least one existing-structure case, and one multi-turn planning case. The initial combined workflow described above is complete. Live model acceptance is deferred according to the user's arrangement; the next team member is not required to supply a key first. Run the complete live script when this item resumes. `needs_input`/`blocked` may be correct results, but must not be described as completed exemption conclusions. Model substitutes, synthetic data, and untested dependencies must still be clearly identified.
+Retain the following engineering handoff evidence: Python/build/browser results, pinned release hashes, dedicated PostgreSQL and actual C HTTP/tax engine retest results, at least one existing-structure case, and one multi-turn planning case. The initial combined workflow described above is complete. Live model acceptance is deferred according to the user's arrangement; the next team member is not required to supply a key first. Run the complete live script when this item resumes. `needs_input`/`blocked` may be correct results, but must not be described as completed exemption conclusions. Model substitutes, synthetic data, and untested dependencies must still be clearly identified.
 
 | Follow-up item | Owner | Required work |
 |---|---|---|
 | Live model and combined acceptance (deferred) | Model configuration owner + running team member when resumed | No key or model call is currently required. On resumption, run `--model-only`, then the complete live script with dedicated PostgreSQL; not counted as passed |
 | Page acceptance with normal accounts | Environment owner + running team member | Configure Supabase email authentication and complete section 7 with test accounts; existing automated browser tests use test authentication |
-| Tax interpretations, applicability periods, and professional discretion | Li coordinates knowledge maintainers and the tax lead | Check D14–D31, parameter units, bound conditions, and differences between fixed graphs and the planner; provide sourced approval/rejection records |
+| Tax interpretations, applicability periods, and professional discretion | tax engine coordinates knowledge maintainers and the tax lead | Check D14–D31, parameter units, bound conditions, and differences between fixed graphs and the planner; provide sourced approval/rejection records |
 | Currency conversion and HKD/SGD | Integration team + tax lead | Define exchange rate sources, dates, threshold units, and tax conversion, then add examples and tests; changing currency labels alone is insufficient |
-| Complex templates and paid-tax requests | Integration team + Li | Provide actually working synthetic examples, deadline/closure fields, expected results, and professional review for each template before opening business entry points |
+| Complex templates and paid-tax requests | Integration team + tax engine | Provide actually working synthetic examples, deadline/closure fields, expected results, and professional review for each template before opening business entry points |
 | Expert case collaboration and deployment | Integration team / environment owner | Cross-account review authorization, release configuration, logs/backups, and operating procedures; this round defaults to loopback operation |
 
 ## 9. Troubleshooting and rollback
@@ -218,6 +218,20 @@ Retain the following engineering handoff evidence: Python/build/browser results,
 - `blocked` with `unbounded`: key amounts are unknown, preventing calculation of a bounded option. Supply actual supported amounts or retain a blocked research record.
 - `knowledge_unavailable`: check the port 8010 service, token, and release files; for rulings under `combined`, also check the original knowledge database.
 - `revision_conflict/question_changed`: reload the current case and answer the current question; do not reuse an old question ID.
-- `review_incomplete`: gap/evidence gates are unmet. Current Li materials have not been professionally validated, and a complete engineering run does not automatically satisfy formal approval requirements.
+- `review_incomplete`: gap/evidence gates are unmet. Current tax engine materials have not been professionally validated, and a complete engineering run does not automatically satisfy formal approval requirements.
 
-Before rollback, back up the test/case database, then return to the Git commit before integration. The new schema retains pre-migration fact snapshots. Rolling back the old program does not migrate all domain records back; do not keep editing the same test case to validate the new workflow. A Li version upgrade requires a separate change: review matching materials again, update the pinned commit and both hashes, and rerun the matrix above. Do not modify the runtime directory while presenting it as the old release.
+Before rollback, back up the test/case database, then return to the Git commit before integration. The new schema retains pre-migration fact snapshots. Rolling back the old program does not migrate all domain records back; do not keep editing the same test case to validate the new workflow. A tax engine version upgrade requires a separate change: review matching materials again, update the pinned commit and both hashes, and rerun the matrix above. Do not modify the runtime directory while presenting it as the old release.
+
+## Component naming
+
+Use responsibility-based names: session orchestration, tax engine, and law library.
+Install with `python scripts/install_tax_engine_release.py`; optional overrides are
+`FSIE_TAX_ENGINE_RELEASE_DIR` and `FSIE_TAX_ENGINE_TIMEOUT_SECONDS`. The default is
+`data/tax_engine/releases/<commit>/`. The Render build uses the same installer.
+
+New law references use `law|`; new structure questions use `domain:`. Existing saved
+references, question IDs, environment names and default installation directories
+remain readable through compatibility code. Do not rewrite stored reports: their
+hashes and original references are audit evidence. Historical captured JSON/CSV/log
+files and immutable upstream release contents remain unchanged. Git authorship,
+third-party attribution and actual repository URLs are not component names.

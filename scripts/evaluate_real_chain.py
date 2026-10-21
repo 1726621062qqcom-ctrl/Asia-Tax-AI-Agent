@@ -104,8 +104,8 @@ def main():
               'dataset': 'tests/chat/retrieval_cases.json', 'synthetic': True,
               'model_calls': 0, 'old_path': 'LegacyKnowledgeProvider + cloud PostgreSQL',
               'new_path': 'RoutedKnowledgeProvider + real C loopback HTTP (law) + legacy cloud rulings',
-              'li_release': PINNED_COMMIT, 'li_database_sha256': PINNED_DB_SHA256,
-              'li_source_sha256': PINNED_SOURCE_SHA256, 'rows': []}
+              'tax_engine_release': PINNED_COMMIT, 'tax_engine_database_sha256': PINNED_DB_SHA256,
+              'tax_engine_source_sha256': PINNED_SOURCE_SHA256, 'rows': []}
     with knowledge_server() as (url, token):
         law = CKnowledgeProvider(url, token)
         try:

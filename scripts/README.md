@@ -8,7 +8,7 @@ Common entry points are grouped by purpose below. Use `python scripts/<script_na
 
 - `run_chat.py`: starts FastAPI and the built frontend.
 - `run_combined.py`: starts the built frontend, FastAPI, and the pinned knowledge service, using the accepted hybrid + combined route.
-- `install_li_release.py`: downloads and validates the Li release specified in the integration guide and installs it in a local directory ignored by Git.
+- `install_tax_engine_release.py`: downloads and validates the tax engine release specified in the integration guide and installs it in a local directory ignored by Git.
 
 **Sources and offline checks**
 
@@ -17,7 +17,7 @@ Common entry points are grouped by purpose below. Use `python scripts/<script_na
 
 **Integration and evaluation**
 
-- `check_postgres_acceptance.py`: creates a disposable PostgreSQL database, validates migrations, knowledge building, persistence, and the actual HTTP/Li combined workflow, and cleans up afterward. The originally configured database is not migrated or emptied.
+- `check_postgres_acceptance.py`: creates a disposable PostgreSQL database, validates migrations, knowledge building, persistence, and the actual HTTP/tax engine combined workflow, and cleans up afterward. The originally configured database is not migrated or emptied.
 - `check_combined_live.py`: combined live model and PostgreSQL acceptance testing; also supports mutually exclusive `--model-only` / `--database-only` modes. Use `--model-env-file` for separate configuration. See the [merged README](../docs/setup/README.md) for run instructions.
 - `evaluate_retrieval.py`, `evaluate_chat.py`: rerun the historical A-side retrieval and chat question sets. See the [evaluation records](../docs/project/evaluations/README.md) for interpretation.
 - `evaluate_b_workflow.py`: evaluates B-side multi-turn business scripts. See the [script guide](../evals/b_workflow/README.md) for inputs and known limitations.

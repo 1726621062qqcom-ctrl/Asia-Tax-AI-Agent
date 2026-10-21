@@ -114,12 +114,12 @@ def test_no_permitted_evidence_never_enters_model(scenario):
 
 def test_internal_diagnostics_are_deduplicated_but_retained_for_audit():
     data = bundle('MOCK-07')
-    data['gaps'] = ['资料法域、主题或适用日期不匹配：li|private:1',
-                    '资料法域、主题或适用日期不匹配：li|private:2', '原文版本不可用或校验失败：secret-id']
+    data['gaps'] = ['资料法域、主题或适用日期不匹配：law|private:1',
+                    '资料法域、主题或适用日期不匹配：law|private:2', '原文版本不可用或校验失败：secret-id']
     text = compose_answer(data)['text']
-    assert 'li|' not in text and 'secret-id' not in text
+    assert 'law|' not in text and 'secret-id' not in text
     assert text.count('部分检索结果') == 1
-    assert 'li|private:1' in data['gaps'][0]
+    assert 'law|private:1' in data['gaps'][0]
 
 
 def test_general_fsie_query_uses_relevant_statute_navigation():
