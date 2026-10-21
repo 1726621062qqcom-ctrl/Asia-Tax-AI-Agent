@@ -1,22 +1,22 @@
-/* One palette for every button, including icon buttons and disabled states. */
-:root {
+/* Scope form actions to structure analysis; retain the original chat/navigation controls. */
+.structure-panel {
   --button-bg: #e2ecdf;
   --button-text: #214b3c;
   --button-border: #b9cdb6;
   --button-primary-bg: #245442;
 }
-body button {
+.structure-panel button {
   background: var(--button-bg) !important;
   color: var(--button-text) !important;
   border-color: var(--button-border) !important;
 }
-body button:hover:not(:disabled) { background:#cfdfca !important; color:#173f35 !important; }
-body button:is(.primary-button,.auth-submit,.send-button,.new-case,.structure-run,[type="submit"],[aria-pressed="true"],.selected,.active) {
+.structure-panel button:hover:not(:disabled) { background:#cfdfca !important; color:#173f35 !important; }
+.structure-panel button:is(.primary-button,.structure-run,[type="submit"]) {
   background:var(--button-primary-bg) !important; color:#fff !important; border-color:var(--button-primary-bg) !important;
 }
-body button:is(.primary-button,.auth-submit,.send-button,.new-case,.structure-run,[type="submit"],[aria-pressed="true"],.selected,.active):hover:not(:disabled) {
+.structure-panel button:is(.primary-button,.structure-run,[type="submit"]):hover:not(:disabled) {
   background:#173f35 !important; color:#fff !important;
 }
-body button:disabled { background:#dfe7dc !important; color:#687b6c !important; border-color:#ced9ca !important; opacity:1 !important; cursor:not-allowed; }
-body button:focus-visible { outline:3px solid #608a6a; outline-offset:3px; }
-body button svg { color:inherit; }
+.structure-panel button:disabled { background:#dfe7dc !important; color:#687b6c !important; border-color:#ced9ca !important; opacity:1 !important; cursor:not-allowed; }
+.structure-panel button:focus-visible { outline:3px solid #608a6a; outline-offset:3px; }
+.structure-panel button svg { color:inherit; }
