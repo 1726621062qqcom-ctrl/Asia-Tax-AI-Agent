@@ -48,7 +48,7 @@ def test_xls_reads_real_binary_workbook():
     assert 'A2: 2000000' in r['pages'][0]['text']
 
 
-@pytest.mark.skipif(sys.platform != 'darwin' and not shutil.which('antiword'), reason='legacy converter not installed')
+@pytest.mark.skipif(sys.platform != 'darwin' and not shutil.which('antiword') and not (Path(__file__).resolve().parents[2] / '.tools/usr/bin/antiword').exists(), reason='legacy converter not installed')
 def test_doc_reads_real_binary_word():
     r = asyncio.run(read_document((FIXTURES/'attachment.doc').read_bytes(), '.doc'))
     assert 'CNY 2000000' in r['pages'][0]['text']

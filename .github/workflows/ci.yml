@@ -67,6 +67,9 @@ jobs:
       - name: Check installed dependencies
         run: python -m pip check
 
+      - name: Install and verify cloud legacy Word reader
+        run: bash scripts/install_legacy_word_reader.sh
+
       - name: Run offline test suite
         run: python -m pytest -m "not integration"
 
