@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from packages.domain_bridge import state
 from packages.domain_bridge.coordinator import DomainCoordinator
+from packages.domain_bridge.response_summary import summary
 from packages.agent.budget import current_budget, model_call
 from packages.agent.tools import ToolDecision, tool_catalog
 
@@ -139,42 +140,20 @@ class DraftCoordinator(DomainCoordinator):
         return doc
 
 
-def summary(result, english=False):
-    def bound(key):
-        value = result.get(key) or {}
-        return f"{value['value']:,.2f}" if value.get('status') == 'finite' and value.get('value') is not None else ('not determined' if english else '尚不能确定')
-    if result['status'] == 'unsupported':
-        return ('This engine currently calculates in CNY only. No currency conversion or tax calculation was performed.' if english else '当前计算引擎只支持人民币（CNY）。本次没有换汇，也没有计算税额。')
-    if result['status'] == 'blocked':
-        return ('The engine could not calculate this structure. ' if english else '本次结构暂时无法计算。') + result.get('note', '')
-    lines = [('### 1. Tax estimate' if english else '### 1. 税额试算结果'),
-             (f"Tax range within this model: **{bound('lower')}–{bound('upper')} {result.get('currency', 'CNY')}**."
-              if english else f"本模型范围内的税额区间：**{bound('lower')}–{bound('upper')} {result.get('currency', 'CNY')}**。"),
-             ('This is a conditional range for the saved group structure, not a final tax payable figure.' if english else
-              '这只是当前条件下的试算区间，最终税额还需结合待确认信息和专业复核。'),
-             ('### 2. Calculation basis and limitations' if english else '### 2. 计算依据与待复核事项')]
-    for flow in (result.get('structure') or {}).get('flows', []):
-        locations = {e[0]: e[1] for e in (result.get('structure') or {}).get('entities', [])}
-        names = {'CN': '中国内地公司', 'HK': '香港公司', 'SG': '新加坡公司'} if not english else {'CN': 'Mainland China company', 'HK': 'Hong Kong company', 'SG': 'Singapore company'}
-        payer = names.get(locations.get(flow[2]), flow[2])
-        recipient = names.get(locations.get(flow[3]), flow[3])
-        income = ('股息' if not english else 'dividend') if flow[1] == 'DIVIDEND' else flow[1]
-        lines.append(f"- {payer} → {recipient}：{income} {flow[4]:,.2f} {result.get('currency', 'CNY')} ({flow[5]})")
-    if result.get('unmodelled'):
-        lines.append('- Some matters are outside the model and need review.' if english else '- 另有引擎尚未覆盖的事项，需要单独复核。')
-    professional = sum(q['kind'] in ('ruling', 'library') for q in result.get('questions', []))
-    if professional:
-        lines.append(f'- {professional} items need professional review.' if english else f'- 另有 {professional} 项需要专业判断或资料复核，不能由聊天自动批准。')
-    return '\n\n'.join(lines)
-
-
 def prepare(workflow, graph):
     from packages.chat.service import invalidate, apply_facts
     from packages.agent.tracing import emit
     doc, text = deepcopy(graph['doc']), graph['text']
+    from packages.chat.attachments import attachment_source
+    source = attachment_source(text)
+    if source is not None:
+        text = source
     english = doc.get('_ui_locale') == 'en'
     proposal = CalculationProposal.model_validate(graph['turn'].get('calculation') or {})
     context = deepcopy(doc.get('calculation_context') or {'inputs': saved_inputs(doc)})
+    previous_saved_inputs = deepcopy(context.get('inputs', {}))
+    if source is not None:
+        context['inputs'] = {}
     context.setdefault('inputs', {})
     context['active'] = True
     update = {}
@@ -192,7 +171,7 @@ def prepare(workflow, graph):
         q = current_question(doc)
         answer = proposal.answer
         if not q or not answer or answer.quote not in text or q['kind'] not in ('data', 'blocking', 'joint', 'action'):
-            reply = 'Please answer the current calculation question.' if english else '请回答当前计算问题；旧问题或专业判断不能用普通聊天代替。'
+            reply = 'I could not match this message to a valid pending question. Please open Case details to review the current information, or state what you want analyzed.' if english else '这条消息未能对应到有效的待答问题。请打开案例细节核对当前信息，或直接说明本次希望分析的内容；本轮没有记录答案。'
         else:
             v = answer.value
             schema = q.get('answer_schema', {}).get('type', 'text')
@@ -213,7 +192,7 @@ def prepare(workflow, graph):
                 tool_calls.append({'tool': 'calculate_tax', 'status': 'completed', 'reason_code': 'answer_and_recalculate'})
     else:
         rejected = []
-        previous_inputs = deepcopy(context['inputs'])
+        previous_inputs = deepcopy(previous_saved_inputs if source is not None else context['inputs'])
         for key, fact in proposal.inputs.items():
             if isinstance(fact.value, str) and key in ('amount', 'ratio') and re.fullmatch(r'\d+(?:\.\d+)?', fact.value):
                 fact = fact.model_copy(update={'value': float(fact.value)})
@@ -241,6 +220,11 @@ def prepare(workflow, graph):
         elif re.search(r'两笔|多笔|(?:两家|多家).*分别.*(?:股息|分红)|two dividends|multiple (?:dividends|transactions)', text, re.I):
             context['inputs'] = {}
             reply = 'Please select one transaction and restate its facts.' if english else '这里有多笔交易，请先选定一笔并明确它的金额、公司关系和日期，避免混算。'
+        elif source is not None and any(k in previous_saved_inputs and previous_saved_inputs[k]['value'] != v['value'] for k, v in context['inputs'].items()):
+            changed = [FIELDS[k][english] for k, v in context['inputs'].items() if k in previous_saved_inputs and previous_saved_inputs[k]['value'] != v['value']]
+            reply = ('The attachment differs from the saved case in: ' if english else '附件与当前案例的以下信息不一致：') + '、'.join(changed) + ('。请确认是在更正当前案例，还是另一笔交易；本轮未覆盖旧事实或计算税额。' if not english else '. Please confirm whether this corrects the current case or describes another transaction. No saved facts were overwritten and no tax was calculated.')
+            context['inputs'] = previous_saved_inputs
+            update = {}
         elif rejected:
             reply = ('I could not verify these inputs against your message: ' if english else '以下信息无法从你的原话可靠核对，请明确补充：') + ', '.join(FIELDS.get(k, (k, k))[english] for k in rejected)
         elif not use_saved and (values.get('income') == 'other' or values.get('direct') is False):
@@ -280,7 +264,7 @@ def prepare(workflow, graph):
                     # This adapter preserves the explicit dividend and stated date.
                     retained = {k: deepcopy(v) for k, v in doc.get('canonical_fact_records', {}).items()
                                 if not k.startswith('legacy.') and v.get('origin') != 'model'} if all(
-                                    previous_inputs.get(k) == context['inputs'].get(k) for k in FIELDS if k != 'amount') else {}
+                                    (previous_inputs.get(k) or {}).get('value') == (context['inputs'].get(k) or {}).get('value') for k in FIELDS if k != 'amount') else {}
                     invalidate(doc)
                     mapping = {'payer_jurisdiction': ('payer', 'OP.loc'),
                                'holding_percentage_pct': ('ratio', 'hold:ULT>OP.ratio'),
@@ -293,6 +277,8 @@ def prepare(workflow, graph):
                                      'direct_or_indirect_holding': 'direct'}, 'model')
                     for field in ('receipt_date', 'acquisition_date'):
                         doc.get('fact_context', {}).get('partial_dates', {}).pop(field, None)
+                    previous_interview = deepcopy(doc.get('domain_interview', {}))
+                    previous_deferred = deepcopy(doc.get('domain_deferred', {}))
                     state.install(doc, case, {field: address for field, (_, address) in mapping.items()})
                     for record in doc['canonical_fact_records'].values():
                         if not record['address'].startswith('legacy.'):
@@ -304,7 +290,10 @@ def prepare(workflow, graph):
                     doc['domain_answers'] = {'data': {}, 'actions': {}, 'rulings': {}, 'library': {}}
                     doc['domain_workflow'] = {'mode': 'assess_current', 'status': 'active', 'pending_question_id': None}
                     doc['domain_confirmation'] = None
-                    doc['domain_deferred'] = {}
+                    # Retain interview memory; context checks invalidate it when
+                    # the transaction changes, not merely on recalculation.
+                    doc['domain_interview'] = previous_interview
+                    doc['domain_deferred'] = previous_deferred
                     doc['domain_today'] = None
                 # An explicit new calculation request resumes a saved calculation.
                 doc['domain_workflow']['status'] = 'active'
@@ -317,21 +306,11 @@ def prepare(workflow, graph):
         context['installed_hash'] = DomainCoordinator.domain_fingerprint(doc)
         context['active'] = result['status'] == 'needs_input'
         status = 'completed' if result['status'] == 'ready' else 'waiting_user'
-        reply = summary(result, english)
+        reply = summary(result, english, doc)
         pending = current_question(doc)
         if pending:
-            question = re.sub(r'[（(]' + re.escape(pending['key']) + r'[）)]', '', (pending.get('prompt_en') if english and pending.get('prompt_en') else pending['prompt'])).strip()
-            question = re.sub(r'^请提供[：:]\s*', '', question)
-            if pending['key'].endswith('.reinvested_in_cn'):
-                question = ('Are these dividends already being, or planned to be, reinvested in mainland China? '
-                            'If not, answer no; the reinvestment details will be skipped.' if english else
-                            '这笔股息是否已用于或计划用于中国内地再投资？如果没有，请回答“没有”，后续会跳过再投资相关细节。')
-            reply += '\n\n' + ('### 3. Next step — please confirm' if english else '### 3. 下一步：请确认')
-            context_text = pending.get('context_en' if english else 'context_zh')
-            if context_text:
-                reply += '\n\n' + context_text
-            reply += '\n\n> ' + question.replace('\n', '\n> ')
-            reply += '\n\n' + ('Reply to this question in the chat to continue the calculation.' if english else '请直接在聊天框回答以上问题，我会根据补充信息继续计算。')
+            reply += ('\n\n### 5. Complete the case details\n\nYou can fill in the available missing information together in Case details and submit it once to update the estimate. Choose “Unknown” where needed. The current estimate remains conditional; you can also add information in chat.' if english else
+                      '\n\n### 5. 集中补充案例信息\n\n请打开“案例细节”，一次填写当前可补充的信息，提交后统一更新试算。不清楚的项目可选“暂不清楚”。当前结果仍保留条件，也可以继续在聊天中补充资料。')
         elif result.get('interview_counts', {}).get('waiting') or result.get('interview_counts', {}).get('needs_policy_review'):
             reply += ('\n\nSome questions depend on unresolved prerequisites or require review. No missing facts have been assumed; the estimate remains conditional.' if english else '\n\n部分问题因前提尚不明确或需要复核而暂不追问。缺失信息仍保留为未知，当前试算不是最终税额。')
     meta = {**graph['workflow'], 'effective_task': 'calculation', 'status': status,

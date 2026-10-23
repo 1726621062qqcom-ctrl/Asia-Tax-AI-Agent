@@ -163,7 +163,15 @@ class HybridWorkflow(TurnWorkflow):
         from packages.chat.service import plan_turn, validate_turn, WorkflowError
         doc = deepcopy(state['doc'])
         doc['_entry_hint'] = state['entry_hint']
-        parsed = None if doc.get('calculation_context', {}).get('active') else dialogue.deterministic_turn(doc, state['text'])
+        from packages.chat.attachments import attachment_source
+        new_attachment = attachment_source(state['text']) is not None
+        if new_attachment:
+            # Routing view only: preserve stored facts, but do not carry the old
+            # interview cursor into a newly submitted document request.
+            doc['domain_outcome'] = None
+            doc['calculation_context'] = {'inputs': {}, 'active': False}
+            doc['dialogue'] = {'status': 'suspended', 'pending': None}
+        parsed = None if new_attachment or doc.get('calculation_context', {}).get('active') else dialogue.deterministic_turn(doc, state['text'])
         pending = doc.get('dialogue', {}).get('pending')
         if pending and pending['id'].startswith('hybrid:reference:'):
             # Unknown/pause/resume controls belong to the source query, not a
@@ -192,6 +200,15 @@ class HybridWorkflow(TurnWorkflow):
             parsed = self.original_turner(doc, state['text']) if self.original_turner is plan_turn else \
                 model_call(self.original_turner, doc, state['text'])
         parsed = deepcopy(parsed)
+        if new_attachment and parsed.get('intent') == 'calculation' and (parsed.get('calculation') or {}).get('action') == 'answer':
+            # Retry classification once, rather than discard the document or
+            # apply its contents as an answer to an unrelated old question.
+            doc['_entry_hint'] = 'auto'
+            parsed = self.original_turner(doc, state['text']) if self.original_turner is plan_turn else model_call(self.original_turner, doc, state['text'])
+            if parsed.get('intent') == 'calculation' and (parsed.get('calculation') or {}).get('action') == 'answer':
+                parsed = {'intent': 'clarify', 'facts': {}, 'query': '', 'reply':
+                          'I received the attachment, but could not reliably extract the calculation inputs. No saved facts were changed. Please identify the transaction to analyze.' if doc.get('_ui_locale') == 'en' else
+                          '已收到附件，但本轮未能可靠整理出计算信息，尚未修改已保存的案例。请指出需要分析的那笔交易，或先让我整理附件中的事实。'}
         if (doc.get('_guard_extraction') and not doc.get('facts') and len(state['text']) < 350
                 and re.search(r'材料清单|documents? (?:should|to)|documentation checklist', state['text'], re.I)
                 and not re.search(r'\d', state['text'])):

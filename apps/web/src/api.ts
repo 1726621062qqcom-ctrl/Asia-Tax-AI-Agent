@@ -115,6 +115,8 @@ export const api = {
       request_id: crypto.randomUUID(), report_hash: reportHash, decision, note }),
   domainPlan: (doc: Case, requestId: string) =>
     request<Case>(`/cases/${doc.id}/domain-plan`, "POST", { revision: doc.revision, request_id: requestId }),
+  domainAnswers: (doc: Case, answers: {key: string; kind: string; value: string; question_id: string}[], requestId: string, locale: string) =>
+    request<Case>(`/cases/${doc.id}/domain-answers`, "POST", { revision: doc.revision, request_id: requestId, answers, locale }),
   domainAnswer: (doc: Case, key: string, kind: string, value: string, requestId: string, questionId?: string, disposition = "answer") =>
     request<Case>(`/cases/${doc.id}/domain-answer`, "POST", { revision: doc.revision, request_id: requestId,
       key, kind, value, question_id: questionId, disposition }),

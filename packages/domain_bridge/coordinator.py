@@ -161,7 +161,7 @@ class DomainCoordinator:
         if kind not in ('data', 'blocking', 'joint', 'action'):
             error('domain_answer_restricted')
         if disposition == 'defer':
-            doc.setdefault('domain_deferred', {})[key] = prior['facts_hash']
+            doc.setdefault('domain_deferred', {})[key] = {'context': interview_context(doc)}
             pending = next_question(prior['questions'], doc, prior['facts_hash'])
             doc['domain_workflow']['pending_question_id'] = pending['id'] if pending else None
             return self.finish(owner, doc, revision, request_id)
@@ -205,6 +205,54 @@ class DomainCoordinator:
         doc.get('domain_deferred', {}).pop(key, None)
         self._domain_execute(doc, request_id)
         return self.finish(owner, doc, revision, request_id)
+
+    @bounded
+    def domain_answers_batch(self, owner, case_id, revision, request_id, answers, locale='zh'):
+        """Validate on a private draft, persist atomically and run the engine once."""
+        from packages.chat.service import public
+        doc, duplicate = self.domain_load(owner, case_id, revision, request_id, 'answers_batch', [answers, locale])
+        if duplicate:
+            return public(doc)
+        draft = deepcopy(doc)
+        if not answers or len(answers) > 100 or len({a['key'] for a in answers}) != len(answers):
+            error('invalid_domain_answer')
+
+        class BatchDraft(DomainCoordinator):
+            def domain_load(self, *args):
+                return draft, False
+
+            def finish(self, *args):
+                return draft
+
+            def _domain_execute(self, doc, request_id):
+                # Keep the original question IDs during validation. No engine
+                # runs and no commits until every submitted value is valid.
+                doc['domain_outcome']['stale'] = False
+                doc['domain_outcome']['facts_hash'] = self.domain_fingerprint(doc)
+
+        validator = BatchDraft()
+        # Validate against the displayed snapshot; dependent questions are
+        # collected after recalculation, never silently inferred or approved.
+        prior = draft.get('domain_outcome') or {}
+        if prior.get('stale') or prior.get('facts_hash') != self.domain_fingerprint(draft):
+            error('question_changed')
+        for answer in answers:
+            question = next((q for q in prior.get('questions', []) if q['id'] == answer['question_id']), None)
+            if not question or not eligible(question, draft):
+                error('question_changed')
+        for answer in sorted(answers, key=lambda a: a['kind'] == 'action'):
+            validator.domain_answer(owner, case_id, revision, request_id,
+                                    answer['key'], answer['kind'], answer['value'], answer['question_id'])
+        self._domain_execute(draft, request_id)
+        if draft.get('calculation_context'):
+            draft['calculation_context']['installed_hash'] = self.domain_fingerprint(draft)
+            draft['calculation_context']['active'] = draft['domain_outcome']['status'] == 'needs_input'
+        from packages.domain_bridge.chat_calculation import summary
+        english = locale == 'en'
+        draft['messages'][-1]['text'] = summary(draft['domain_outcome'], english, draft) + (
+            '\n\nThe estimate has been updated. You can review remaining information together in Case details.' if english else
+            '\n\n已根据本次填写更新试算。剩余待补充信息可在“案例细节”中集中查看；不清楚的项目仍保留为条件。')
+        return self.finish(owner, draft, revision, request_id)
 
     @bounded
     def domain_control(self, owner, case_id, revision, request_id, action):

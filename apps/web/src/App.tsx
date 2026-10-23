@@ -1,3 +1,4 @@
+import type { Attachment } from './attachments';
 import HintButton from "./components/HintButton";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -72,13 +73,13 @@ export default function App() {
     setMobileNav(false);
     void createCase();
   }
-  function sendMessage(text: string) {
+  async function sendMessage(text: string, file?: Attachment) {
     if (!current.data_approved && !consent) {
       setShowConsent(true);
-      return;
+      return false;
     }
     setShowConsent(false);
-    void send(text, consent);
+    return send(text, consent, file);
   }
   const modalOpen = mobileNav;
   if (!current)
@@ -218,6 +219,7 @@ export default function App() {
 
             <Composer
               key={current.id}
+              lastSentText={current.messages.filter(m => m.role === "user" && !m.delivery).at(-1)?.text}
               text={drafts[current.id] || ""}
               onChange={changeDraft}
               busy={busy}
@@ -273,6 +275,7 @@ export default function App() {
             onSave={save}
             onSelectSource={setSource}
             onDomainUpdate={applyServerCase}
+            onEditFacts={() => setPanel("facts")}
           />
         </div>
       )}

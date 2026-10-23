@@ -6,7 +6,7 @@ import { OutcomeView } from "./DomainResult";
 import { useLocale } from "../locale";
 import "./structure-panel.css";
 
-type Props = { current: Case; onUpdate: (next: Case) => void };
+type Props = { current: Case; onUpdate: (next: Case) => void; onEditFacts: () => void };
 const sample = {
   template: "holding", currency: "CNY",
   roles: { OP: { loc: "CN", attrs: {} }, ULT: { loc: "HK", attrs: {} } },
@@ -62,7 +62,7 @@ const englishErrors: Record<string, string> = {
   invalid_domain_answer: "Use the answer type requested by the question.",
   review_forbidden: "This account cannot perform the final review.",
 };
-export default function StructurePanel({ current, onUpdate }: Props) {
+export default function StructurePanel({ current, onUpdate, onEditFacts }: Props) {
   const { locale } = useLocale();
   const say = (zh: string, en: string) => locale === "en" ? en : zh;
   const [draft, setDraft] = useState(current.domain_case ? JSON.stringify(current.domain_case, null, 2) : "");
@@ -182,7 +182,8 @@ export default function StructurePanel({ current, onUpdate }: Props) {
     {outcome && <section aria-label={say("结构分析结果", "Structure analysis result")} className="structure-result">
       {outcome.stale && <p role="status">{say("事实已变化，旧结果与问题已过期；请重新运行。", "Facts have changed. Previous results and questions are out of date; run the analysis again.")}</p>}
       <OutcomeView outcome={outcome} />
-      {question && !outcome.stale && current.domain_workflow?.status !== "paused" && <div className="structure-question">
+      {activeQuestions.some(q => ["data", "blocking", "joint", "action"].includes(q.kind)) && <button className="primary-button" onClick={onEditFacts}>{say("前往案例细节，集中补充资料", "Complete missing information in Case details")}</button>}
+      {question && !outcome.stale && current.domain_workflow?.status !== "paused" && <details className="structure-question"><summary>{say("单独回答或暂缓当前问题", "Answer or defer one question")}</summary>
         <strong>{questionText(question, locale)}</strong>
         {(question.context_zh || question.context_en) && <p>{locale === "en" ? question.context_en : question.context_zh}</p>}<p>{say("答案类型：", "Answer type: ")}{engineText(question.answer_schema?.hint || question.answer_schema?.type, locale)} · {question.region.map(r => engineText(r, locale)).join(" / ")}</p>
         {question.source_hint && <p>{say("建议材料：", "Suggested source: ")}{locale === "en" && question.source_hint_en ? question.source_hint_en : engineText(question.source_hint, locale)}</p>}
@@ -191,7 +192,7 @@ export default function StructurePanel({ current, onUpdate }: Props) {
         <div className="structure-actions"><button className="primary-button" disabled={busy} onClick={() => void answer(question)}>{say("提交并重新计算", "Submit and recalculate")}</button>
           <button disabled={busy} onClick={() => void answer(question, "defer", "")}>{say("暂缓此题", "Defer question")}</button>
           {question.kind !== "action" && <button disabled={busy} onClick={() => void answer(question, "answer", "unknown")}>{say("事实未知", "Fact unknown")}</button>}</div>
-      </div>}
+      </details>}
       {outcome.questions.some(q => q.interview_status === "needs_policy_review") && <details><summary>{say("需要人工核对的计算输入", "Calculation inputs requiring review")}</summary><ul>{outcome.questions.filter(q => q.interview_status === "needs_policy_review").map(q => <li key={q.id}>{questionText(q, locale)} — {locale === "en" ? (q.review_reason_en || "The prerequisite policy for this input needs review.") : (q.review_reason || "此项输入的前提条件需要复核，暂不自动提问。")}</li>)}</ul></details>}
       <details><summary>{say("全部待补项", "All open items")} ({activeQuestions.length})</summary><ul>{activeQuestions.map(q => <li key={q.id}>[{engineText(q.kind, locale)}] {questionText(q, locale)}</li>)}</ul></details>
       {withheldCount > 0 && <p role="status">{say(`另有 ${withheldCount} 项因前提未确认、不适用或需要复核而暂不追问；缺口仍保留在试算中。`, `${withheldCount} items await prerequisites, do not apply, or require review. Unresolved gaps remain in the estimate.`)}</p>}

@@ -56,6 +56,8 @@ if __name__ == '__main__':
             'retrieved_at': '2026-09-27T00:00:00+00:00', 'coverage_cutoff': '2026-08-15',
         }]
         def turn(doc, text):
+            if '[Taxrora attachment]' in text and '"thumbnail"' in text:
+                return {'intent': 'chat', 'reply': 'The image contains dividend information. Please verify the OCR amounts.', 'facts': {}, 'query': ''}
             if text == 'STREAM_TEST':
                 import time
                 time.sleep(3)

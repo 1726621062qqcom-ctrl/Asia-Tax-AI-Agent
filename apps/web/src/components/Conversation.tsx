@@ -1,6 +1,7 @@
+import { splitAttachment, imageThumbnail } from '../attachments';
 import HintButton from "./HintButton";
 import { useEffect, useRef } from "react";
-import { FileText, Scale, ArrowDown } from "lucide-react";
+import { FileText, Scale, ArrowDown, Paperclip } from "lucide-react";
 import { useState } from "react";
 import AnswerText from "./AnswerText";
 import {
@@ -227,7 +228,13 @@ export default function Conversation({
         >
           {message.role === "user" ? (
             <div className="user-message-content">
-              <p>{message.text}</p>
+              {splitAttachment(message.text || '').file && <div className="sent-attachment">
+                {imageThumbnail(splitAttachment(message.text || '').file)
+                  ? <img className="sent-image-thumbnail" src={imageThumbnail(splitAttachment(message.text || '').file)} alt={splitAttachment(message.text || '').file!.name} />
+                  : <Paperclip size={16} aria-hidden="true" />}
+                <span title={splitAttachment(message.text || '').file!.name}>{splitAttachment(message.text || '').file!.name}</span>
+              </div>}
+              <p>{splitAttachment(message.text || '').text}</p>
               {message.delivery === "failed" && (
                 <small className="delivery-failed">
                   {translate("发送未完成，可重试", message.reply_locale || locale)}

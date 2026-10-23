@@ -1,3 +1,4 @@
+import { withAttachment, type Attachment } from '../attachments';
 import { useEffect, useRef, useState } from "react";
 import { api, ApiError, type FactPatch } from "../api";
 import type { Case, FieldSpec, Message, EntryHint } from "../workspace";
@@ -119,7 +120,9 @@ export function useWorkspace() {
       throw e;
     }
   }
-  function send(text: string, approved: boolean) {
+  function send(text: string, approved: boolean, file?: Attachment) {
+    const messageText = withAttachment(text, file);
+    let completed = false;
     const doc = storedCurrent,
       requestId = crypto.randomUUID();
     const replyLocale = answerLanguage(text, doc.reply_locale, locale);
@@ -134,12 +137,12 @@ export function useWorkspace() {
             !(
               item.caseId === doc.id &&
               item.message.delivery === "failed" &&
-              item.message.text === text
+              item.message.text === messageText
             ),
         ),
         {
           caseId: doc.id,
-          message: { id: localId, role: "user", text, delivery: "sending", reply_locale: replyLocale },
+          message: { id: localId, role: "user", text: messageText, delivery: "sending", reply_locale: replyLocale },
         },
       ]);
       setDrafts((all) =>
@@ -149,10 +152,11 @@ export function useWorkspace() {
         const abort = new AbortController();
         controller.current = abort;
         setPartial({ caseId: doc.id, text: "" });
-        const next = await api.stream(doc, text, approved, requestId, abort.signal, (chunk, reset) =>
+        const next = await api.stream(doc, messageText, approved, requestId, abort.signal, (chunk, reset) =>
           setPartial(previous => previous?.caseId === doc.id ? { ...previous, text: reset ? "" : previous.text + chunk } : previous),
-          entryHint, text.startsWith("结构答复：") ? doc.domain_workflow?.pending_question_id || null : pending?.id || null, replyLocale);
+          entryHint, file ? null : text.startsWith("结构答复：") ? doc.domain_workflow?.pending_question_id || null : pending?.id || null, replyLocale);
         update(next);
+        completed = true;
         setEntrySelections(all => { const copy = { ...all }; delete copy[doc.id]; return copy; });
         setOutbox((all) => all.filter((item) => item.message.id !== localId));
       } catch (e) {
@@ -178,7 +182,7 @@ export function useWorkspace() {
         controller.current = null;
         setPartial(null);
       }
-    }, doc.id, replyLocale);
+    }, doc.id, replyLocale).then(success => success && completed);
   }
   function save(patch: FactPatch) {
     const doc = current,

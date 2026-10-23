@@ -81,6 +81,14 @@ def health():
     return result
 
 
+@app.middleware("http")
+async def fresh_frontend(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path in ('/', '/index.html'):
+        response.headers['Cache-Control'] = 'no-store'
+    return response
+
+
 frontend = Path(__file__).resolve().parents[1] / "web" / "dist"
 if frontend.is_dir():
     app.mount("/", StaticFiles(directory=frontend, html=True), name="chat_frontend")

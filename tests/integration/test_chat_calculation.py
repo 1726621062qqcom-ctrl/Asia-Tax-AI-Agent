@@ -56,11 +56,11 @@ def test_real_engine_runs_from_chat_and_duplicate_does_not_recalculate(service, 
     assert result['domain_case']['event']['dividend'] == 1000000
     assert result['domain_case']['holds'][0]['ratio'] == 100
     reply = result['messages'][-1]['text']
-    assert '税额区间' in reply
+    assert '试算区间' in reply
     assert '### 1. 税额试算结果' in reply
-    assert '### 2. 计算依据与待复核事项' in reply
-    assert '### 3. 下一步：请确认' in reply
-    assert '\n\n> ' in reply
+    assert '### 2. 区间由哪些金额组成' in reply
+    assert '### 5. 集中补充案例信息' in reply
+    assert '提交后统一更新试算' in reply
     assert '**下一项' not in reply
     assert result['workflow']['tool_calls'][0]['tool'] == 'calculate_tax'
     assert result['domain_confirmation'] is None
@@ -215,7 +215,7 @@ def test_http_sse_displays_engine_result_and_preserves_revision_guard(service, e
             events = [json.loads(line[6:]) for line in response.text.splitlines() if line.startswith('data: ')]
             final = next(event['case'] for event in events if event['type'] == 'done')
             assert final['revision'] == 1 and final['domain_outcome']['upper']
-            assert '税额区间' in final['messages'][-1]['text']
+            assert '试算区间' in final['messages'][-1]['text']
             assert len(final['integration_runs']) == 1
             body['request_id'] = str(uuid4())
             stale = client.post(f"/api/cases/{doc['id']}/messages", headers={'X-AsiaTax-Request': '1'}, json=body)
@@ -297,3 +297,122 @@ def test_reinvestment_followups_require_explicit_applicability(service, engine, 
     if value is not True and pending:
         assert pending['key'].rsplit('.', 1)[-1] not in REINVESTMENT_DETAILS
     assert len(second['integration_runs']) == 2
+
+
+def test_recalculating_same_case_preserves_interview_and_defer_memory(service, engine):
+    from packages.domain_bridge.question_order import interview_context
+    from packages.domain_bridge.chat_calculation import current_question
+    first = send(service, service.store.create(OWNER))
+    pending = current_question(first)
+    deferred = service.domain_answer(OWNER, first['id'], first['revision'], str(uuid4()),
+                                    pending['key'], pending['kind'], None, pending['id'], disposition='defer')
+    assert deferred['domain_deferred'][pending['key']]['context'] == interview_context(deferred)
+    service.turner = lambda *_: turn(VALUES)
+    repeated = send(service, deferred)
+    assert repeated['domain_deferred'] == deferred['domain_deferred']
+    assert current_question(repeated)['key'] != pending['key']
+
+
+def batch_items(doc):
+    return [{'key': q['key'], 'kind': q['kind'], 'question_id': q['id'], 'value': 'unknown'}
+            for q in doc['domain_outcome']['questions']
+            if q.get('interview_status') == 'ready' and q['kind'] in ('data', 'blocking', 'joint')]
+
+
+def test_batch_answers_commit_once_and_recalculate_once(service, engine):
+    doc = send(service, service.store.create(OWNER))
+    items = batch_items(doc)
+    assert len(items) > 1
+    request_id = str(uuid4())
+    result = service.domain_answers_batch(OWNER, doc['id'], doc['revision'], request_id, items)
+    assert result['revision'] == doc['revision'] + 1
+    assert len(result['integration_runs']) == len(doc['integration_runs']) + 1
+    assert len(result['messages']) == len(doc['messages']) + 1
+    assert service.domain_answers_batch(OWNER, doc['id'], doc['revision'], request_id, items)['revision'] == result['revision']
+    for item in items:
+        if item['key'].startswith('interview:'):
+            assert result['domain_interview'][item['key']]['value'] == 'unknown'
+        else:
+            assert result['canonical_fact_records'][item['key']]['value'] == 'unknown'
+
+
+@pytest.mark.parametrize('failure', ['stale_question', 'invalid_value'])
+def test_invalid_batch_rolls_back_all_answers(service, engine, failure):
+    doc = send(service, service.store.create(OWNER))
+    items = batch_items(doc)
+    if failure == 'stale_question':
+        items[-1]['question_id'] = 'invalid'
+    else:
+        boolean = next(q for q in doc['domain_outcome']['questions'] if q.get('answer_schema', {}).get('type') == 'boolean' and any(i['question_id'] == q['id'] for i in items))
+        item = next(i for i in items if i['question_id'] == boolean['id'])
+        items.remove(item)
+        items.append({**item, 'value': 'not a boolean'})
+    with pytest.raises(WorkflowError):
+        service.domain_answers_batch(OWNER, doc['id'], doc['revision'], str(uuid4()), items)
+    saved = service.store.get(OWNER, doc['id'])
+    assert saved['revision'] == doc['revision']
+    assert saved['canonical_fact_records'] == doc['canonical_fact_records']
+    assert saved.get('domain_interview') == doc.get('domain_interview')
+
+
+def test_batch_rejects_hidden_dependent_question(service, engine):
+    doc = send(service, service.store.create(OWNER))
+    hidden = next(q for q in doc['domain_outcome']['questions'] if q.get('interview_status') == 'waiting')
+    with pytest.raises(WorkflowError):
+        service.domain_answers_batch(OWNER, doc['id'], doc['revision'], str(uuid4()), [
+            {'key': hidden['key'], 'kind': hidden['kind'], 'question_id': hidden['id'], 'value': 'yes'}])
+
+
+def attached(text, request='请根据附件计算税额'):
+    import json
+    from packages.chat.attachments import MARKER
+    return request + MARKER + json.dumps({'name': 'case.pdf', 'pages': [{'page': 1, 'text': text}]}, ensure_ascii=False)
+
+
+def test_new_attachment_retries_wrong_answer_route_without_old_question(service, engine):
+    first = send(service, service.store.create(OWNER))
+    seen = []
+    def router(doc, text):
+        from packages.domain_bridge.chat_calculation import current_question
+        seen.append(current_question(doc))
+        return turn(action='answer') if len(seen) == 1 else turn(VALUES)
+    service.turner = router
+    result = send(service, first, attached(TEXT))
+    assert seen == [None, None]
+    assert len(result['integration_runs']) == 2
+    assert '试算区间' in result['messages'][-1]['text']
+
+
+def test_new_attachment_does_not_fill_missing_values_from_old_case(service, engine):
+    first = send(service, service.store.create(OWNER))
+    service.turner = lambda *_: turn({'amount': VALUES['amount']})
+    result = send(service, first, attached('人民币100万元'))
+    assert len(result['integration_runs']) == 1
+    assert '完整日期' in result['messages'][-1]['text']
+    assert result['domain_case'] == first['domain_case']
+
+
+def test_conflicting_attachment_does_not_replace_saved_case(service, engine):
+    first = send(service, service.store.create(OWNER))
+    values = {**VALUES, 'amount': (2000000, '人民币200万元')}
+    service.turner = lambda *_: turn(values)
+    result = send(service, first, attached(TEXT.replace('人民币100万元', '人民币200万元')))
+    assert len(result['integration_runs']) == 1
+    assert '不一致' in result['messages'][-1]['text']
+    assert result['canonical_fact_records'] == first['canonical_fact_records']
+    assert result['calculation_context']['inputs'] == first['calculation_context']['inputs']
+
+
+def test_attachment_summary_does_not_answer_old_question(service, engine):
+    first = send(service, service.store.create(OWNER))
+    service.turner = lambda *_: {'intent': 'chat', 'facts': {}, 'query': '', 'reply': '这是股息资料摘要。'}
+    result = send(service, first, attached(TEXT, '只总结附件，先不计算'))
+    assert result['messages'][-1]['text'] == '这是股息资料摘要。'
+    assert len(result['integration_runs']) == 1
+
+
+def test_attachment_source_quotes_can_span_newlines():
+    from packages.chat.attachments import attachment_source
+    from packages.domain_bridge.chat_calculation import InputFact, supported_value
+    source = attachment_source(attached('香港公司\n直接持有100%股份'))
+    assert supported_value('direct', InputFact(value=True, quote='香港公司\n直接持有'), source)

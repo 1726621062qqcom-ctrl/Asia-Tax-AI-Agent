@@ -52,7 +52,7 @@ class Mutation(BaseModel):
 
 
 class Message(Mutation):
-    text: str = Field(min_length=1, max_length=4000)
+    text: str = Field(min_length=1, max_length=50000)
     data_approved: bool = False
     entry_hint: Literal['auto', 'dividend_consultation', 'fact_intake', 'reference_lookup'] = 'auto'
     reply_to_question_id: str | None = Field(default=None, min_length=1, max_length=200)
@@ -87,6 +87,36 @@ def call(action, *args):
         raise HTTPException(422, "invalid_facts") from None
     except SQLAlchemyError:
         raise HTTPException(503, "storage_unavailable") from None
+
+
+_pdf_slots = asyncio.Semaphore(2)
+
+
+@router.post('/attachments')
+@router.post('/attachments/pdf')
+async def upload_pdf(request: Request, filename: str = Query(min_length=1, max_length=200),
+                     workspace: str = Depends(owner)):
+    from packages.chat.attachments import MAX_BYTES, EXTENSIONS, read_document
+    extension = Path(filename).suffix.lower()
+    if extension not in EXTENSIONS or (request.url.path.endswith('/pdf') and extension != '.pdf'):
+        raise HTTPException(422, 'attachment_type')
+    if _pdf_slots.locked():
+        raise HTTPException(429, 'pdf_busy')
+    async with _pdf_slots:
+        data = bytearray()
+        try:
+            async with asyncio.timeout(30):
+                async for chunk in request.stream():
+                    data.extend(chunk)
+                    if len(data) > MAX_BYTES:
+                        raise HTTPException(413, 'pdf_too_large')
+        except TimeoutError:
+            raise HTTPException(408, 'pdf_timeout') from None
+        try:
+            result = await read_document(bytes(data), extension)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from None
+    return {**result, 'name': filename.replace('\\', '/').split('/')[-1]}
 
 
 @router.get("/session")
@@ -222,6 +252,25 @@ class DomainAnswer(Mutation):
     value: str | float | bool
     question_id: str | None = None
     disposition: Literal['answer', 'defer'] = 'answer'
+
+
+class BatchAnswer(BaseModel):
+    key: str = Field(min_length=1, max_length=200)
+    kind: Literal['data', 'blocking', 'joint', 'action']
+    value: str | float | bool
+    question_id: str
+
+
+class DomainAnswers(Mutation):
+    locale: Literal['zh', 'en'] = 'zh'
+    answers: list[BatchAnswer] = Field(min_length=1, max_length=100)
+
+
+@router.post('/cases/{case_id}/domain-answers')
+def domain_answers(case_id: UUID, body: DomainAnswers, workspace: str = Depends(owner),
+                   service: ChatService = Depends(get_service)):
+    return call(service.domain_answers_batch, workspace, str(case_id), body.revision, str(body.request_id),
+                [answer.model_dump() for answer in body.answers], body.locale)
 
 
 @router.get('/domain/capabilities')

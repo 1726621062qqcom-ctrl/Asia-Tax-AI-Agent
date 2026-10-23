@@ -291,3 +291,25 @@ def test_all_reviewed_ancestor_chains_reject_false_and_unknown_roots():
                 write(key, value)
                 assert not eligible(question, state), (field, key, value)
             write(key, req['value'])
+
+
+def test_deferred_question_stays_skipped_after_unrelated_answer():
+    from packages.domain_bridge.question_order import interview_context
+    state = doc()
+    parent, other = q('reinvested_in_cn'), q('foreign_taxed')
+    state['domain_deferred'] = {parent['key']: {'context': interview_context(state)}}
+    state['canonical_fact_records']['flow:up1.foreign_taxed'] = record(True)
+    assert next_question([parent, q('reinvestment_form'), other], state, 'new-hash') == other
+    state['canonical_fact_records']['event.on'] = record('2027-01-01')
+    assert next_question([parent], state, 'another-hash') == parent
+
+
+def test_interview_context_ignores_confirmation_and_revision_metadata():
+    from packages.domain_bridge.question_order import interview_context
+    state = doc()
+    state['canonical_fact_records']['event.on'] = record('2026-10-11')
+    before = interview_context(state)
+    state['canonical_fact_records']['event.on'].update(revision=10, confirmed_at=12, origin='model', status='candidate')
+    assert interview_context(state) == before
+    state['canonical_fact_records']['event.on']['value'] = '2026-11-15'
+    assert interview_context(state) != before

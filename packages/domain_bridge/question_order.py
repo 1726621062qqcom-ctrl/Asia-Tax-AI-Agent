@@ -11,7 +11,7 @@ from pathlib import Path
 import re
 
 CATALOG = json.loads(Path(__file__).with_name('interview_catalog.json').read_text())
-POLICY_VERSION = 'interview-2026-10-21-v3'
+POLICY_VERSION = 'interview-2026-10-22-v4'
 REINVESTMENT_DETAILS = frozenset({'reinvestment_from_distributed_profit', 'reinvestment_form',
                                 'direct_payment', 'investee_encouraged_industry', 'planned_holding_months'})
 PILLAR_FIELDS = {f for f, v in CATALOG.items() if v['family'] == 'pillar_two'} - {'group_revenue_eur'}
@@ -97,7 +97,9 @@ def parts(key):
 
 
 def interview_context(doc):
-    core = {k: r for k, r in doc.get('canonical_fact_records', {}).items()
+    core = {k: {'value': r.get('value'),
+                'unresolved': r.get('status') in ('unknown', 'conflict', 'deferred')}
+            for k, r in doc.get('canonical_fact_records', {}).items()
             if k.startswith(('event.', 'hold:', 'case.')) or k.endswith('.loc')}
     return sha256(json.dumps([doc.get('domain_definition'), core], sort_keys=True, default=str).encode()).hexdigest()
 
@@ -294,6 +296,13 @@ def prepare_questions(result, doc):
                                   for status in ('ready', 'waiting', 'not_applicable', 'needs_policy_review')}
 
 
+def is_deferred(question, doc, facts_hash):
+    saved = doc.get('domain_deferred', {}).get(question['key'])
+    if isinstance(saved, dict):
+        return saved.get('context') == interview_context(doc)
+    return saved is not None and saved == facts_hash  # older saved sessions
+
+
 def next_question(questions, doc, facts_hash):
     parents = {r['key'] for q in questions for r in requirements(q, doc)}
     def order(q):
@@ -302,4 +311,4 @@ def next_question(questions, doc, facts_hash):
         return priority, q['key'], q['kind']
     return next((q for q in sorted(questions, key=order)
                  if q['kind'] in ('data', 'blocking', 'joint', 'action')
-                 and doc.get('domain_deferred', {}).get(q['key']) != facts_hash and eligible(q, doc)), None)
+                 and not is_deferred(q, doc, facts_hash) and eligible(q, doc)), None)

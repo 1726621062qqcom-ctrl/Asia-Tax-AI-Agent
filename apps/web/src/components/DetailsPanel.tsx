@@ -1,4 +1,5 @@
 import HintButton from "./HintButton";
+import CalculationFacts from "./CalculationFacts";
 import FactEditor from "./FactEditor";
 import KnowledgeSearch from "./KnowledgeSearch";
 import StructurePanel from "./StructurePanel";
@@ -26,6 +27,7 @@ export default function DetailsPanel({
   error,
   onRetry,
   onDomainUpdate,
+  onEditFacts,
 }: {
   panel: Exclude<Panel, null>;
   current: Case;
@@ -38,6 +40,7 @@ export default function DetailsPanel({
   error: string;
   onRetry: () => void;
   onDomainUpdate: (next: Case) => void;
+  onEditFacts: () => void;
   onSelectSource: (id: string) => void;
 }) {
   const { t, locale } = useLocale();
@@ -91,6 +94,10 @@ export default function DetailsPanel({
           </div>
         )}
         {panel === "facts" && (
+          <>
+          {current.domain_outcome && <CalculationFacts key={`${current.id}-${current.revision}`} current={current} busy={busy} onUpdate={onDomainUpdate} />}
+          <details open={!current.domain_outcome}>
+          <summary>{locale === "en" ? "Recorded case facts" : "已记录的案例事实"}</summary>
           <FactEditor
             key={current.id}
             current={current}
@@ -99,8 +106,10 @@ export default function DetailsPanel({
             onSave={onSave}
             onConfirm={onConfirm}
           />
+          </details>
+          </>
         )}
-        {panel === "structure" && <StructurePanel current={current} onUpdate={onDomainUpdate} />}
+        {panel === "structure" && <StructurePanel current={current} onUpdate={onDomainUpdate} onEditFacts={onEditFacts} />}
         {panel === "sources" && (
           <>
             <KnowledgeSearch />
